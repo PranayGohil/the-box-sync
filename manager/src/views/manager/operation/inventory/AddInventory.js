@@ -342,19 +342,15 @@ function AddInventory() {
     <div className="inventory-container">
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid px-3 px-lg-5">
-        <div className="page-title-container mb-4 mt-n3">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
             <Col xs="12" md="7">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
             <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-1 mt-md-0">
-              <Button
-                variant="outline-primary"
-                className="rounded-pill px-4 fw-bold border-2"
-                onClick={() => history.push('/operations/inventory-history')}
-              >
+              <Button variant="outline-primary" className="rounded-pill px-4 fw-bold border-2" onClick={() => history.push('/operations/inventory-history')}>
                 <CsLineIcons icon="arrow-left" size="16" className="me-2" /> Back to History
               </Button>
             </Col>
@@ -393,12 +389,10 @@ function AddInventory() {
                             classNamePrefix="react-select"
                           />
                         </div>
-                        {itemTouched.item_name && itemErrors.item_name && (
-                          <div className="text-danger small mt-1 ps-1 fw-bold">{itemErrors.item_name}</div>
-                        )}
+                        {itemTouched.item_name && itemErrors.item_name && <div className="text-danger small mt-1 ps-1 fw-bold">{itemErrors.item_name}</div>}
                       </Col>
 
-                    {/* Quantity — 5/12 on mobile, 3/12 on desktop */}
+                      {/* Quantity — 5/12 on mobile, 3/12 on desktop */}
                       <Col xs={5} lg={3}>
                         <div className="input-group-label">Quantity</div>
                         <Form.Control
@@ -434,19 +428,12 @@ function AddInventory() {
                           <option value="ml">ml</option>
                           <option value="piece">pc</option>
                         </Form.Select>
-                        {itemTouched.unit && itemErrors.unit && (
-                          <div className="text-danger small mt-1 ps-1 fw-bold">{itemErrors.unit}</div>
-                        )}
+                        {itemTouched.unit && itemErrors.unit && <div className="text-danger small mt-1 ps-1 fw-bold">{itemErrors.unit}</div>}
                       </Col>
 
                       {/* Delete: 2/12 on mobile (inline with Qty+Unit), auto on desktop */}
                       <Col xs={2} lg="auto" className="delete-col">
-                        <button
-                          type="button"
-                          className="remove-btn"
-                          onClick={() => removeItem(index)}
-                          disabled={isSubmitting || values.items.length === 1}
-                        >
+                        <button type="button" className="remove-btn" onClick={() => removeItem(index)} disabled={isSubmitting || values.items.length === 1}>
                           <CsLineIcons icon="bin" size="16" />
                         </button>
                       </Col>
@@ -462,17 +449,8 @@ function AddInventory() {
               </div>
 
               <div className="pt-4 border-top">
-                <Button
-                  type="submit"
-                  variant="outline-primary"
-                  className="rounded-pill px-4 fw-bold border-2"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <Spinner animation="border" size="sm" className="me-2" />
-                  ) : (
-                    <CsLineIcons icon="send" className="me-2" />
-                  )}
+                <Button type="submit" variant="outline-primary" className="rounded-pill px-4 fw-bold border-2" disabled={isSubmitting}>
+                  {isSubmitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="send" className="me-2" />}
                   {isSubmitting ? 'Processing Request...' : 'Submit Inventory Request'}
                 </Button>
               </div>

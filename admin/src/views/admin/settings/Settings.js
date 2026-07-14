@@ -90,16 +90,12 @@ const mobileNavItems = [
   {
     label: 'Account',
     icon: 'user',
-    items: [
-      { label: 'Profile', to: '/settings/profile' },
-    ],
+    items: [{ label: 'Profile', to: '/settings/profile' }],
   },
   {
     label: 'Tax & Charges',
     icon: 'dollar',
-    items: [
-      { label: 'Tax & Charges', to: '/settings/tax-charges' },
-    ],
+    items: [{ label: 'Tax & Charges', to: '/settings/tax-charges' }],
   },
   {
     label: 'Subscription',
@@ -174,14 +170,14 @@ const Settings = () => {
         </div>
       )} */}
       <Row>
-        {(width && width >= lgBreakpoint) ? (
+        {width && width >= lgBreakpoint && (
           <Col xs="auto" className="d-none d-lg-flex">
             <div className="nav flex-column sw-25 mt-2">
               <NavContent activePlans={activePlans} />
             </div>
           </Col>
-        ) : (<div className="pt-7" />)}
-        <Col>
+        )}
+        <Col className="settings-content-col">
           <Switch>
             <Route exact path="/settings" render={() => <Redirect to="/settings/profile" />} />
             <Route exact path="/settings/profile" render={() => <Profile />} />

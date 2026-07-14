@@ -267,66 +267,103 @@ const OrderDetails = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
+    <div className="container-fluid qsr-page-container">
+      <style>{`
+        .qsr-page-container {
+          padding-left: 2rem !important;
+          padding-right: 2rem !important;
+          padding-bottom: 3rem !important;
+          margin-top: 1.5rem !important;
+        }
+        .qsr-page-title-container {
+          margin-bottom: 2rem !important;
+          margin-top: 1.5rem !important;
+          text-align: left !important;
+        }
+        .qsr-page-title {
+          margin-bottom: 0.25rem !important;
+          padding-bottom: 0 !important;
+          font-size: 1.65rem !important;
+          font-weight: 700 !important;
+          color: #1ea8e7 !important;
+          line-height: 1.2 !important;
+        }
+        @media (max-width: 991px) {
+          .qsr-page-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            padding-bottom: 6rem !important;
+            margin-top: 0.25rem !important;
+          }
+          .qsr-page-title-container {
+            margin-top: 0 !important;
+            margin-bottom: 1rem !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .qsr-page-title {
+            font-size: 1.4rem !important;
+          }
+        }
+      `}</style>
       <HtmlHead title={title} description={description} />
-      <section className="scroll-section" id="title">
-        <div className="page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
-          <Row className="g-0 align-items-center gy-3">
-            <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                {title}
-              </h1>
-              <BreadcrumbList items={breadcrumbs} />
-            </Col>
-            <Col xs="12" md="6" className="text-md-end mt-0 d-flex gap-2 justify-content-md-end flex-wrap flex-md-nowrap">
-              <Button
-                variant="outline-primary"
-                onClick={() => history.push('/operations/order-history')}
-                className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
-                style={{ minWidth: '100px', borderColor: '#23b3f4', color: '#23b3f4' }}
-              >
-                <CsLineIcons icon="arrow-left" className="me-2" size="15" /> <span>Back</span>
-              </Button>
-              <Button
-                variant="outline-primary"
-                onClick={handleWhatsAppShare}
-                disabled={sharing || !order}
-                className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
-                style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
-              >
-                {sharing ? (
-                  <>
-                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                    <span className="ms-2">Opening...</span>
-                  </>
-                ) : (
-                  <>
-                    <CsLineIcons icon="whatsapp" className="me-2" size="15" /> <span>WhatsApp</span>
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline-primary"
-                onClick={handlePrint}
-                disabled={printing}
-                className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
-                style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
-              >
-                {printing ? (
-                  <>
-                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                    <span className="ms-2">Printing...</span>
-                  </>
-                ) : (
-                  <>
-                    <CsLineIcons icon="print" className="me-2" size="15" /> <span>Print Invoice</span>
-                  </>
-                )}
-              </Button>
-            </Col>
-          </Row>
-        </div>
-      </section>
+
+      <div className="qsr-page-title-container mt-5 pt-1 mt-md-0 pt-md-0 mb-4">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="qsr-page-title">{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+        <Row className="g-0 mt-3">
+          <Col xs="12" className="d-flex gap-2 flex-wrap justify-content-start">
+            <Button
+              variant="outline-primary"
+              onClick={() => history.push('/operations/order-history')}
+              className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+              style={{ minWidth: '100px', borderColor: '#23b3f4', color: '#23b3f4' }}
+            >
+              <CsLineIcons icon="arrow-left" className="me-2" size="15" /> <span>Back</span>
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={handleWhatsAppShare}
+              disabled={sharing || !order}
+              className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+              style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
+            >
+              {sharing ? (
+                <>
+                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                  <span className="ms-2">Opening...</span>
+                </>
+              ) : (
+                <>
+                  <CsLineIcons icon="whatsapp" className="me-2" size="15" /> <span>WhatsApp</span>
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={handlePrint}
+              disabled={printing}
+              className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+              style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
+            >
+              {printing ? (
+                <>
+                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                  <span className="ms-2">Printing...</span>
+                </>
+              ) : (
+                <>
+                  <CsLineIcons icon="print" className="me-2" size="15" /> <span>Print Invoice</span>
+                </>
+              )}
+            </Button>
+          </Col>
+        </Row>
+      </div>
 
       <Row className="mb-n4">
         <Col xl="5" className="mb-4">

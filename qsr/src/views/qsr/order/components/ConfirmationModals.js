@@ -80,6 +80,35 @@ const modalStyles = `
     background: #f8fafc;
     color: #475569;
   }
+
+  @media (max-width: 575px) {
+    .modal-custom-confirm .modal-footer {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 12px 16px;
+      gap: 8px;
+    }
+    .modal-custom-confirm .modal-footer button {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 8px 16px !important;
+      font-size: 13px !important;
+      height: 38px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 8px !important;
+    }
+    .modal-custom-confirm .btn-qsr-blue {
+      order: 1;
+    }
+    .modal-custom-confirm .btn-qsr-secondary {
+      order: 2;
+    }
+    .modal-custom-confirm .btn-qsr-red {
+      order: 3;
+    }
+  }
 `;
 
 export const LeaveConfirmationModal = ({
@@ -93,7 +122,7 @@ export const LeaveConfirmationModal = ({
   history,
   handleSaveOrder,
   isLoading,
-  canKOT
+  canKOT,
 }) => {
   return (
     <Modal
@@ -110,16 +139,25 @@ export const LeaveConfirmationModal = ({
       <style>{modalStyles}</style>
       <Modal.Header closeButton>
         <Modal.Title>
-          <div style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              color: '#f59e0b',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <CsLineIcons icon="warning" size="20" />
           </div>
           Unsaved Changes
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p className="mb-0">
-          You have unsaved changes. If you leave now, these changes will be lost permanently.
-        </p>
+        <p className="mb-0">You have unsaved changes. If you leave now, these changes will be lost permanently.</p>
       </Modal.Body>
       <Modal.Footer>
         <button
@@ -139,7 +177,7 @@ export const LeaveConfirmationModal = ({
         >
           Discard & Leave
         </button>
-        
+
         {orderStatus === 'Save' && (
           <button
             type="button"
@@ -188,34 +226,31 @@ export const LeaveConfirmationModal = ({
   );
 };
 
-export const CancelOrderModal = ({
-  showCancelModal,
-  setShowCancelModal,
-  handleCancelOrder,
-  isLoading
-}) => {
+export const CancelOrderModal = ({ showCancelModal, setShowCancelModal, handleCancelOrder, isLoading }) => {
   return (
-    <Modal 
-      show={showCancelModal} 
-      onHide={() => setShowCancelModal(false)} 
-      centered 
-      backdrop="static" 
-      keyboard={false}
-      className="modal-custom-confirm"
-    >
+    <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered backdrop="static" keyboard={false} className="modal-custom-confirm">
       <style>{modalStyles}</style>
       <Modal.Header closeButton>
         <Modal.Title>
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#cf2637', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              color: '#cf2637',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <CsLineIcons icon="bin" size="20" />
           </div>
           Cancel Order?
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p className="mb-0">
-          Are you sure you want to cancel this order? This action cannot be undone and all items will be cleared.
-        </p>
+        <p className="mb-0">Are you sure you want to cancel this order? This action cannot be undone and all items will be cleared.</p>
       </Modal.Body>
       <Modal.Footer>
         <button type="button" className="btn-qsr-blue" onClick={() => setShowCancelModal(false)} disabled={isLoading}>

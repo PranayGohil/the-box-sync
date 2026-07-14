@@ -732,16 +732,50 @@ const OrderHistory = () => {
           padding: 0 !important;
           z-index: 2 !important;
         }
+        
+        .mobile-order-history-container {
+          padding-left: 2rem !important;
+          padding-right: 2rem !important;
+          margin-top: 1.5rem !important;
+        }
+        .qsr-page-title-container {
+          margin-bottom: 2rem !important;
+          margin-top: 1.5rem !important;
+          text-align: left !important;
+        }
+        .qsr-page-title {
+          margin-bottom: 0.25rem !important;
+          padding-bottom: 0 !important;
+          font-size: 1.65rem !important;
+          font-weight: 700 !important;
+          color: #1ea8e7 !important;
+          line-height: 1.2 !important;
+        }
+        @media (max-width: 991px) {
+          .mobile-order-history-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            padding-bottom: 6rem !important;
+            margin-top: 0.25rem !important;
+          }
+          .qsr-page-title-container {
+            margin-top: 0 !important;
+            margin-bottom: 1rem !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .qsr-page-title {
+            font-size: 1.4rem !important;
+          }
+        }
       `}</style>
-      <div className="container-fluid pb-5">
+      <div className="container-fluid mobile-order-history-container">
         <HtmlHead title={title} description={description} />
 
-        <div className="page-title-container mb-4 mt-5 pt-1 mt-md-0 pt-md-0">
+        <div className="qsr-page-title-container">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>
-                {title}
-              </h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -966,7 +1000,9 @@ const OrderHistory = () => {
                         </div>
                         <Badge
                           bg={
-                            order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save'
+                            order.order_status === 'Save'
+                              ? 'warning'
+                              : order.order_status === 'Paid' || order.order_status === 'Completed'
                               ? 'success'
                               : order.order_status === 'KOT'
                               ? 'warning'
@@ -980,9 +1016,8 @@ const OrderHistory = () => {
                         </Badge>
                       </div>
 
-                      <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
-                        <Col xs="6">
-                          <div className="text-muted small mb-1">Type</div>
+                      <Row className="mb-3 g-0 border-top pt-2 align-items-center" style={{ borderColor: '#f3f4f6' }}>
+                        <Col xs="6" className="d-flex gap-1 flex-wrap">
                           <Badge
                             bg={
                               order.order_type === 'Dine In'
@@ -993,40 +1028,43 @@ const OrderHistory = () => {
                                 ? 'success'
                                 : 'secondary'
                             }
-                            className="rounded-pill px-3 py-1"
+                            className="rounded-pill px-2 py-1"
+                            style={{ fontSize: '10px', fontWeight: 600 }}
                           >
                             {order.order_type}
                           </Badge>
+                          <Badge
+                            bg={
+                              order.order_source === 'Manager'
+                                ? 'info'
+                                : order.order_source === 'Captain'
+                                ? 'primary'
+                                : order.order_source === 'QSR'
+                                ? 'secondary'
+                                : 'dark'
+                            }
+                            className="rounded-pill px-2 py-1"
+                            style={{ fontSize: '10px', fontWeight: 600 }}
+                          >
+                            {order.order_source}
+                          </Badge>
                         </Col>
-                        <Col xs="6" className="text-end">
-                          <div className="text-muted small">Amount</div>
-                          <div className="fw-bolder text-dark" style={{ fontSize: '15px' }}>
+                        <Col xs="6" className="d-flex justify-content-end align-items-center gap-2">
+                          <span className="text-muted small">Amount</span>
+                          <span className="fw-bolder text-dark" style={{ fontSize: '15px' }}>
                             ₹{parseFloat(order.total_amount).toFixed(2)}
-                          </div>
+                          </span>
                         </Col>
                       </Row>
 
-                      <div className="d-flex justify-content-between align-items-center">
-                        <Badge
-                          bg={
-                            order.order_source === 'Manager'
-                              ? 'info'
-                              : order.order_source === 'Captain'
-                              ? 'primary'
-                              : order.order_source === 'QSR'
-                              ? 'secondary'
-                              : 'dark'
-                          }
-                          className="rounded-pill px-3 py-1"
-                        >
-                          {order.order_source}
-                        </Badge>
+                      <div className="d-flex justify-content-end align-items-center">
                         <div className="d-flex gap-2">
                           <Button
                             variant="outline-primary"
                             size="sm"
                             className="btn-icon btn-icon-only rounded-circle"
                             onClick={() => history.push(`/operations/order-details/${order.id}`)}
+                            title="View Details"
                           >
                             <CsLineIcons icon="eye" size="14" />
                           </Button>
@@ -1036,6 +1074,7 @@ const OrderHistory = () => {
                             className="btn-icon btn-icon-only rounded-circle"
                             onClick={() => handlePrint(order.id)}
                             disabled={printing[order.id]}
+                            title="Print Order"
                           >
                             {printing[order.id] ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="print" size="14" />}
                           </Button>

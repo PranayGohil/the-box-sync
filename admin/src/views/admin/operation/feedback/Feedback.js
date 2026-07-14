@@ -462,14 +462,12 @@ const Feedback = () => {
     <div className="inventory-container">
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid px-lg-5 pb-5">
+      <div className="container-fluid qsr-page-container">
         {/* Page Header */}
-        <div className="page-title-container mb-4 pt-4">
+        <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
             <Col xs="12" md="7">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                {title}
-              </h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
             <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">

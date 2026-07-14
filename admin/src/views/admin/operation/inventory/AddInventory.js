@@ -11,8 +11,6 @@ import { toast } from 'react-toastify';
 import CreatableSelect from 'react-select/creatable';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-
-
 const validationSchema = Yup.object().shape({
   bill_date: Yup.date().required('Date required'),
   bill_number: Yup.string().required('Bill # required'),
@@ -208,16 +206,22 @@ const AddInventory = () => {
     <div className="add-inventory-inventory-container pb-5">
       <style>{customStyles}</style>
       <HtmlHead title={title} />
-      <div className="container-fluid px-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
-              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations', text: 'Operations' }, { to: 'operations/add-inventory', title: 'Add' }]} />
+              <h1 className="qsr-page-title">{title}</h1>
+              <BreadcrumbList
+                items={[
+                  { to: '', text: 'Home' },
+                  { to: 'operations', text: 'Operations' },
+                  { to: 'operations/add-inventory', title: 'Add' },
+                ]}
+              />
             </Col>
             <Col xs="auto" className="d-none d-lg-block">
-              <Button 
-                onClick={() => history.goBack()} 
+              <Button
+                onClick={() => history.goBack()}
                 className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 d-flex align-items-center"
                 style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4', fontWeight: '700' }}
               >
@@ -225,15 +229,15 @@ const AddInventory = () => {
               </Button>
             </Col>
           </Row>
-          
+
           <div className="mt-2 d-lg-none d-flex justify-content-start">
-             <Button 
-                onClick={() => history.goBack()} 
-                className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 d-flex align-items-center"
-                style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4', fontWeight: '700' }}
-              >
-                <CsLineIcons icon="arrow-left" size="16" className="me-2" /> <span className="small">Back</span>
-              </Button>
+            <Button
+              onClick={() => history.goBack()}
+              className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 d-flex align-items-center"
+              style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4', fontWeight: '700' }}
+            >
+              <CsLineIcons icon="arrow-left" size="16" className="me-2" /> <span className="small">Back</span>
+            </Button>
           </div>
         </div>
 
@@ -257,8 +261,8 @@ const AddInventory = () => {
                       onChange={handleChange}
                       isInvalid={touched.bill_date && errors.bill_date}
                     />
-                    <div 
-                      className="position-absolute end-0 top-50 translate-middle-y me-3" 
+                    <div
+                      className="position-absolute end-0 top-50 translate-middle-y me-3"
                       style={{ cursor: 'pointer', zIndex: 5 }}
                       onClick={() => dateInputRef.current?.showPicker()}
                     >
@@ -369,10 +373,17 @@ const AddInventory = () => {
                           onChange={(s) => handleItemChange(idx, 'item_name', s ? s.value : '')}
                           placeholder="Select or type item..."
                           classNamePrefix="react-select"
-                          styles={{ control: (base) => ({ ...base, borderColor: touched.items?.[idx]?.item_name && errors.items?.[idx]?.item_name ? '#dc3545' : base.borderColor }) }}
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              borderColor: touched.items?.[idx]?.item_name && errors.items?.[idx]?.item_name ? '#dc3545' : base.borderColor,
+                            }),
+                          }}
                         />
                       </div>
-                      {touched.items?.[idx]?.item_name && errors.items?.[idx]?.item_name && <div className="text-danger small mt-1">{errors.items[idx].item_name}</div>}
+                      {touched.items?.[idx]?.item_name && errors.items?.[idx]?.item_name && (
+                        <div className="text-danger small mt-1">{errors.items[idx].item_name}</div>
+                      )}
                     </Col>
                     <Col xs={4} lg={2}>
                       <div className="add-inventory-input-group-label d-lg-none">Qty</div>
@@ -383,11 +394,18 @@ const AddInventory = () => {
                         onChange={(e) => handleItemChange(idx, 'item_quantity', e.target.value)}
                         isInvalid={touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity}
                       />
-                      {touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity && <div className="text-danger small mt-1">{errors.items[idx].item_quantity}</div>}
+                      {touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity && (
+                        <div className="text-danger small mt-1">{errors.items[idx].item_quantity}</div>
+                      )}
                     </Col>
                     <Col xs={4} lg={2}>
                       <div className="add-inventory-input-group-label d-lg-none">Unit</div>
-                      <Form.Select className="add-inventory-modern-input" value={item.unit} onChange={(e) => handleItemChange(idx, 'unit', e.target.value)} isInvalid={touched.items?.[idx]?.unit && errors.items?.[idx]?.unit}>
+                      <Form.Select
+                        className="add-inventory-modern-input"
+                        value={item.unit}
+                        onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}
+                        isInvalid={touched.items?.[idx]?.unit && errors.items?.[idx]?.unit}
+                      >
                         <option value="">Unit</option>
                         <option value="kg">kg</option>
                         <option value="g">g</option>
@@ -406,7 +424,9 @@ const AddInventory = () => {
                         onChange={(e) => handleItemChange(idx, 'item_price', e.target.value)}
                         isInvalid={touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price}
                       />
-                      {touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price && <div className="text-danger small mt-1">{errors.items[idx].item_price}</div>}
+                      {touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price && (
+                        <div className="text-danger small mt-1">{errors.items[idx].item_price}</div>
+                      )}
                     </Col>
                     <Col xs="auto" lg="auto" className="d-flex justify-content-end align-items-center">
                       <button type="button" className="add-inventory-remove-btn" onClick={() => removeItem(idx)} disabled={values.items.length === 1}>
@@ -417,9 +437,9 @@ const AddInventory = () => {
                 </div>
               ))}
               <div className="text-start mt-2">
-                <Button 
-                  variant="outline-primary" 
-                  className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 fw-bold d-flex align-items-center" 
+                <Button
+                  variant="outline-primary"
+                  className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 fw-bold d-flex align-items-center"
                   onClick={addItem}
                   style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4' }}
                 >
@@ -473,14 +493,15 @@ const AddInventory = () => {
                       <div className="sw-2 sh-2 rounded-circle bg-warning flex-shrink-0" />
                       <span className="fw-bold text-muted">Pending Balance: ₹ {values.unpaid_amount}</span>
                     </div>
-                    <Button 
-                      type="submit" 
-                      variant="primary" 
-                      className="manage-menu-custom-btn-outline border-primary text-primary shadow-sm px-5 py-3 fw-bold d-flex align-items-center justify-content-center" 
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      className="manage-menu-custom-btn-outline border-primary text-primary shadow-sm px-5 py-3 fw-bold d-flex align-items-center justify-content-center"
                       style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4' }}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="save" className="me-2" />} Complete & Sync Inventory
+                      {isSubmitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="save" className="me-2" />} Complete & Sync
+                      Inventory
                     </Button>
                   </Col>
                 </Row>

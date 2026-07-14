@@ -272,15 +272,12 @@ const NotificationsList = () => {
     <div className="inventory-container">
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid px-lg-5 pb-5">
-        
+      <div className="container-fluid qsr-page-container">
         {/* Page Header */}
-        <div className="page-title-container mb-4 pt-4">
+        <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
             <Col xs="12" md="6">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                {title}
-              </h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
             <Col xs="12" md="6" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
@@ -460,16 +457,10 @@ const NotificationsList = () => {
           <Modal.Title className="fw-bold text-danger">Delete All Notifications</Modal.Title>
         </Modal.Header>
         <Modal.Body className="py-4">
-          <p className="mb-0 text-muted">
-            Are you sure you want to delete all alert notifications? This action is permanent and cannot be undone.
-          </p>
+          <p className="mb-0 text-muted">Are you sure you want to delete all alert notifications? This action is permanent and cannot be undone.</p>
         </Modal.Body>
         <Modal.Footer className="border-0 pt-0 d-flex gap-3">
-          <Button
-            className="px-4 py-2 feedback-custom-btn-outline flex-grow-1 border-2"
-            onClick={() => setShowDeleteAllModal(false)}
-            disabled={clearing}
-          >
+          <Button className="px-4 py-2 feedback-custom-btn-outline flex-grow-1 border-2" onClick={() => setShowDeleteAllModal(false)} disabled={clearing}>
             Cancel
           </Button>
           <Button

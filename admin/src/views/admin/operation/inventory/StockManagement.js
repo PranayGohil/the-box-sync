@@ -368,13 +368,11 @@ const StockManagement = () => {
       <div className="stock-container">
         <style>{customStyles}</style>
         <HtmlHead title={title} description={description} />
-        <div className="container-fluid px-lg-5">
-          <div className="page-title-container mb-4 mt-5 mt-lg-0">
+        <div className="container-fluid qsr-page-container">
+          <div className="qsr-page-title-container">
             <Row className="g-0 align-items-center">
               <Col xs="auto" className="me-auto">
-                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                  {title}
-                </h1>
+                <h1 className="qsr-page-title">{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="auto" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
@@ -384,7 +382,11 @@ const StockManagement = () => {
                 <Button href="/operations/daily-stock-logs" className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2">
                   <CsLineIcons icon="file-text" size="18" className="me-2" /> <span className="d-none d-sm-inline">Audit Logs</span>
                 </Button>
-                <Button href="/operations/wastage-log" className="manage-menu-custom-btn-outline border-danger text-danger shadow-sm border-0 px-4 py-2" style={{color: '#ef4444', borderColor: '#ef4444'}}>
+                <Button
+                  href="/operations/wastage-log"
+                  className="manage-menu-custom-btn-outline border-danger text-danger shadow-sm border-0 px-4 py-2"
+                  style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                >
                   <CsLineIcons icon="bin" size="18" className="me-2" /> <span className="d-none d-sm-inline">Wastage</span>
                 </Button>
               </Col>

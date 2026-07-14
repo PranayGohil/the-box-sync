@@ -528,9 +528,9 @@
   .pos-wrapper {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - var(--nav-size-slim, 72px));
+    height: calc(100vh - 84px);
     overflow: hidden;
-    margin: -24px -12px -24px;
+    margin: 12px -12px -24px !important;
     background: #f1f5f9;
   }
   .pos-body {
@@ -571,17 +571,39 @@
   }
   .pos-categories-btn {
     order: 1;
-    padding: 0.3rem 0.75rem !important;
+    height: 34px !important;
+    padding: 0 0.75rem !important;
+    font-size: 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
   }
   .pos-item-count {
     order: 2;
     margin-left: 0;
+    font-size: 11px;
   }
   .pos-search-wrap {
     order: 3;
     width: auto;
     margin-top: 0;
     flex: 1;
+  }
+  .pos-search-input {
+    height: 34px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .pos-wrapper {
+    margin-left: -12px !important;
+    margin-right: -12px !important;
+  }
+}
+
+@media (max-width: 575px) {
+  .pos-wrapper {
+    margin-left: -12px !important;
+    margin-right: -12px !important;
   }
 }
 

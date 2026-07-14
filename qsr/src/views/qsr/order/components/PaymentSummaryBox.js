@@ -137,19 +137,6 @@ const PaymentSummaryBox = ({
             </button>
           )}
 
-          {/* Print Bill (even if new/unsaved/dirty) */}
-          {/* {showPrintBill && (
-            <button
-              type="button"
-              style={{ ...btnBase, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)' }}
-              onClick={() => handlePrint(orderId)}
-              disabled={printing}
-            >
-              <CsLineIcons icon="print" size="13" />
-              {printing ? 'Printing...' : 'Print Bill'}
-            </button>
-          )} */}
-
           {/* Process Payment — primary CTA */}
           {showPayment && (
             <button

@@ -11,7 +11,7 @@ const LoyaltySettings = () => {
   const { activePlans } = useContext(AuthContext);
   const token = localStorage.getItem('token');
   const [activeTab, setActiveTab] = useState('loyalty');
-  
+
   // Settings State
   const [settings, setSettings] = useState({
     earnRateSpent: 10,
@@ -29,8 +29,8 @@ const LoyaltySettings = () => {
       milestoneThresholdPoints: 500,
       milestoneRewardPoints: 150,
       feedbackActive: false,
-      feedbackRewardPoints: 20
-    }
+      feedbackRewardPoints: 20,
+    },
   });
 
   // Quests & Transactions State
@@ -46,45 +46,45 @@ const LoyaltySettings = () => {
     targetCount: 3,
     rewardType: 'BONUS_POINTS',
     rewardValue: '100',
-    durationDays: 30
+    durationDays: 30,
   });
 
   const fetchSettings = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API}/loyalty/settings`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success && res.data.data) {
         setSettings(res.data.data);
       }
     } catch (err) {
-      console.error("Error loading loyalty settings:", err);
+      console.error('Error loading loyalty settings:', err);
     }
   };
 
   const fetchQuests = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API}/loyalty/quests`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
         setQuests(res.data.data);
       }
     } catch (err) {
-      console.error("Error loading quests:", err);
+      console.error('Error loading quests:', err);
     }
   };
 
   const fetchTransactions = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API}/loyalty/transactions`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
         setHistory(res.data.data);
       }
     } catch (err) {
-      console.error("Error loading transactions:", err);
+      console.error('Error loading transactions:', err);
     }
   };
 
@@ -101,14 +101,14 @@ const LoyaltySettings = () => {
     setLoading(true);
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/loyalty/settings`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
-        toast.success(res.data.message || "Loyalty configurations saved!");
+        toast.success(res.data.message || 'Loyalty configurations saved!');
       }
     } catch (err) {
-      console.error("Error saving settings:", err);
-      toast.error("Failed to save settings");
+      console.error('Error saving settings:', err);
+      toast.error('Failed to save settings');
     } finally {
       setLoading(false);
     }
@@ -119,8 +119,8 @@ const LoyaltySettings = () => {
       ...settings,
       campaigns: {
         ...settings.campaigns,
-        [field]: !settings.campaigns[field]
-      }
+        [field]: !settings.campaigns[field],
+      },
     });
   };
 
@@ -129,38 +129,42 @@ const LoyaltySettings = () => {
       ...settings,
       campaigns: {
         ...settings.campaigns,
-        [field]: parseInt(val, 10) || 0
-      }
+        [field]: parseInt(val, 10) || 0,
+      },
     });
   };
 
   const handleQuestToggle = async (id) => {
     try {
-      const res = await axios.put(`${process.env.REACT_APP_API}/loyalty/quests/toggle/${id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.put(
+        `${process.env.REACT_APP_API}/loyalty/quests/toggle/${id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (res.data.success) {
         toast.success(res.data.message);
         fetchQuests();
       }
     } catch (err) {
-      console.error("Error toggling quest state:", err);
-      toast.error("Failed to toggle quest status");
+      console.error('Error toggling quest state:', err);
+      toast.error('Failed to toggle quest status');
     }
   };
 
   const handleQuestSubmit = async (e) => {
     e.preventDefault();
     if (!newQuest.name || !newQuest.rewardValue) {
-      toast.warning("Please fill out all fields.");
+      toast.warning('Please fill out all fields.');
       return;
     }
     try {
       const res = await axios.post(`${process.env.REACT_APP_API}/loyalty/quests`, newQuest, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
-        toast.success("Food Quest launched successfully!");
+        toast.success('Food Quest launched successfully!');
         setShowQuestModal(false);
         setNewQuest({
           name: '',
@@ -168,28 +172,32 @@ const LoyaltySettings = () => {
           targetCount: 3,
           rewardType: 'BONUS_POINTS',
           rewardValue: '100',
-          durationDays: 30
+          durationDays: 30,
         });
         fetchQuests();
       }
     } catch (err) {
-      console.error("Error adding quest:", err);
-      toast.error(err.response?.data?.message || "Failed to launch quest");
+      console.error('Error adding quest:', err);
+      toast.error(err.response?.data?.message || 'Failed to launch quest');
     }
   };
 
   const runCampaignsManual = async () => {
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API}/loyalty/run-campaigns`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(
+        `${process.env.REACT_APP_API}/loyalty/run-campaigns`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (res.data.success) {
         toast.success(`Retention campaigns completed! Winbacks: ${res.data.stats.winbackTriggered}, Birthdays: ${res.data.stats.birthdayTriggered}`);
         fetchTransactions();
       }
     } catch (err) {
-      console.error("Error triggering manual campaigns:", err);
-      toast.error("Re-engagement campaigns failed to execute");
+      console.error('Error triggering manual campaigns:', err);
+      toast.error('Re-engagement campaigns failed to execute');
     }
   };
 
@@ -463,27 +471,28 @@ const LoyaltySettings = () => {
         }
       `}</style>
 
-      <div className="container-fluid pb-5">
+      <div className="container-fluid qsr-page-container">
         {/* Dynamic Responsive Title & Breadcrumbs */}
-        <Row className="g-3 align-items-center mb-4 crm-page-title-container">
-          <Col xs={12} md={7}>
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-          <Col xs={12} md={5} className="d-flex justify-content-md-end justify-content-start crm-button-group-responsive gap-2">
-            <Button variant="none" className="crm-custom-btn-outline" onClick={runCampaignsManual} disabled={loading}>
-              <CsLineIcons icon="refresh" size="18" className="me-2" />
-              Trigger Schedulers
-            </Button>
-          </Col>
-        </Row>
+        <div className="qsr-page-title-container">
+          <Row className="g-3 align-items-center mb-4">
+            <Col xs={12} md={7}>
+              <h1 className="qsr-page-title">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
+            </Col>
+            <Col xs={12} md={5} className="d-flex justify-content-md-end justify-content-start crm-button-group-responsive gap-2">
+              <Button variant="none" className="crm-custom-btn-outline" onClick={runCampaignsManual} disabled={loading}>
+                <CsLineIcons icon="refresh" size="18" className="me-2" />
+                Trigger Schedulers
+              </Button>
+            </Col>
+          </Row>
+        </div>
 
         {/* Gorgeous Tab Container */}
         <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="crm-nav-tabs border-bottom-0">
-          
           {/* TAB 1: STANDARD LOYALTY */}
-          <Tab 
-            eventKey="loyalty" 
+          <Tab
+            eventKey="loyalty"
             title={
               <span>
                 <CsLineIcons icon="star" className="me-2" size="16" />
@@ -500,13 +509,13 @@ const LoyaltySettings = () => {
                       Points Earn & Redeem Config
                     </h4>
                   </div>
-                  
+
                   <Form onSubmit={handleSettingsSubmit}>
                     <Form.Group className="mb-4">
                       <Form.Check
                         type="switch"
                         id="loyalty-active-switch"
-                        label={settings.isActive ? "Loyalty Engine is Active" : "Loyalty Engine is Disabled"}
+                        label={settings.isActive ? 'Loyalty Engine is Active' : 'Loyalty Engine is Disabled'}
                         checked={settings.isActive}
                         onChange={(e) => setSettings({ ...settings, isActive: e.target.checked })}
                         className="fw-bold crm-text-heading mb-3"
@@ -536,7 +545,8 @@ const LoyaltySettings = () => {
                         />
                       </Col>
                       <Form.Text className="crm-text-muted mt-2 ps-3">
-                        Rule: Every <strong className="text-info">₹{settings.earnRateSpent}</strong> paid automatically credits <strong className="text-info">{settings.earnRatePoints}</strong> loyalty points.
+                        Rule: Every <strong className="text-info">₹{settings.earnRateSpent}</strong> paid automatically credits{' '}
+                        <strong className="text-info">{settings.earnRatePoints}</strong> loyalty points.
                       </Form.Text>
                     </Row>
 
@@ -563,12 +573,13 @@ const LoyaltySettings = () => {
                         />
                       </Col>
                       <Form.Text className="crm-text-muted mt-2 ps-3">
-                        Rule: Cashiers can redeem <strong className="text-info">{settings.redeemRatePoints}</strong> points to apply a <strong className="text-info">₹{settings.redeemRateDiscount}</strong> immediate billing discount.
+                        Rule: Cashiers can redeem <strong className="text-info">{settings.redeemRatePoints}</strong> points to apply a{' '}
+                        <strong className="text-info">₹{settings.redeemRateDiscount}</strong> immediate billing discount.
                       </Form.Text>
                     </Row>
 
                     <Button type="submit" variant="none" className="crm-custom-btn-solid mt-2 w-100 w-md-auto" disabled={loading || !settings.isActive}>
-                      {loading ? "Saving..." : "Save Policies"}
+                      {loading ? 'Saving...' : 'Save Policies'}
                     </Button>
                   </Form>
                 </Card>
@@ -582,10 +593,11 @@ const LoyaltySettings = () => {
                       Program Mechanics
                     </h4>
                   </div>
-                  
+
                   <ul className="crm-info-list crm-text-body">
                     <li>
-                      <strong>Real-Time Billing Profile:</strong> Entering a customer phone number on the POS checkout screen pulls active spend metrics instantly.
+                      <strong>Real-Time Billing Profile:</strong> Entering a customer phone number on the POS checkout screen pulls active spend metrics
+                      instantly.
                     </li>
                     <li>
                       <strong>Zero Manual Calculations:</strong> The server automatically translates bill subtotals into point balances.
@@ -604,242 +616,233 @@ const LoyaltySettings = () => {
 
           {/* TAB 2: BEHAVIORAL CAMPAIGNS */}
           {activePlans.includes('Automated Retention Campaigns') && (
-          <Tab 
-            eventKey="campaigns" 
-            title={
-              <span>
-                <CsLineIcons icon="message" className="me-2" size="16" />
-                Retention Campaigns
-              </span>
-            }
-          >
-            <Form onSubmit={handleSettingsSubmit}>
-              <Row className="g-4">
-                
-                {/* WINBACK */}
-                <Col md={6}>
-                  <Card className="crm-glass-card p-4 border-0">
-                    <div className="d-flex justify-content-between align-items-start mb-3">
-                      <h5 className="fw-bold crm-text-heading mb-0 d-flex align-items-center gap-2">
-                        <CsLineIcons icon="pin" className="crm-text-primary" size="18" />
-                        Win-back Campaign
-                      </h5>
-                      <Form.Check
-                        type="switch"
-                        id="campaigns-winbackActive"
-                        checked={settings.campaigns.winbackActive}
-                        onChange={() => handleCampaignToggle('winbackActive')}
-                        className="m-0"
-                      />
-                    </div>
-                    <p className="crm-text-muted small mb-3">Automated winback reward points for long-lost customers.</p>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="crm-form-label">Inactivity Limit (Days)</Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={settings.campaigns.winbackDays}
-                        onChange={(e) => handleCampaignValueChange('winbackDays', e.target.value)}
-                        disabled={!settings.campaigns.winbackActive}
-                        className="crm-form-control"
-                      />
-                    </Form.Group>
-                    <Form.Group className="mb-2">
-                      <Form.Label className="crm-form-label">Reward Points Balance</Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={settings.campaigns.winbackRewardPoints}
-                        onChange={(e) => handleCampaignValueChange('winbackRewardPoints', e.target.value)}
-                        disabled={!settings.campaigns.winbackActive}
-                        className="crm-form-control"
-                      />
-                    </Form.Group>
-                  </Card>
-                </Col>
+            <Tab
+              eventKey="campaigns"
+              title={
+                <span>
+                  <CsLineIcons icon="message" className="me-2" size="16" />
+                  Retention Campaigns
+                </span>
+              }
+            >
+              <Form onSubmit={handleSettingsSubmit}>
+                <Row className="g-4">
+                  {/* WINBACK */}
+                  <Col md={6}>
+                    <Card className="crm-glass-card p-4 border-0">
+                      <div className="d-flex justify-content-between align-items-start mb-3">
+                        <h5 className="fw-bold crm-text-heading mb-0 d-flex align-items-center gap-2">
+                          <CsLineIcons icon="pin" className="crm-text-primary" size="18" />
+                          Win-back Campaign
+                        </h5>
+                        <Form.Check
+                          type="switch"
+                          id="campaigns-winbackActive"
+                          checked={settings.campaigns.winbackActive}
+                          onChange={() => handleCampaignToggle('winbackActive')}
+                          className="m-0"
+                        />
+                      </div>
+                      <p className="crm-text-muted small mb-3">Automated winback reward points for long-lost customers.</p>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="crm-form-label">Inactivity Limit (Days)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={settings.campaigns.winbackDays}
+                          onChange={(e) => handleCampaignValueChange('winbackDays', e.target.value)}
+                          disabled={!settings.campaigns.winbackActive}
+                          className="crm-form-control"
+                        />
+                      </Form.Group>
+                      <Form.Group className="mb-2">
+                        <Form.Label className="crm-form-label">Reward Points Balance</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={settings.campaigns.winbackRewardPoints}
+                          onChange={(e) => handleCampaignValueChange('winbackRewardPoints', e.target.value)}
+                          disabled={!settings.campaigns.winbackActive}
+                          className="crm-form-control"
+                        />
+                      </Form.Group>
+                    </Card>
+                  </Col>
 
-                {/* BIRTHDAY SPECIAL */}
-                <Col md={6}>
-                  <Card className="crm-glass-card p-4 border-0">
-                    <div className="d-flex justify-content-between align-items-start mb-3">
-                      <h5 className="fw-bold crm-text-heading mb-0 d-flex align-items-center gap-2">
-                        <CsLineIcons icon="gift" className="crm-text-primary" size="18" />
-                        Birthday Special
-                      </h5>
-                      <Form.Check
-                        type="switch"
-                        id="campaigns-birthdayActive"
-                        checked={settings.campaigns.birthdayActive}
-                        onChange={() => handleCampaignToggle('birthdayActive')}
-                        className="m-0"
-                      />
-                    </div>
-                    <p className="crm-text-muted small mb-3">Celebration bonus points during the customer's birthday month.</p>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="crm-form-label">Birthday Reward Points</Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={settings.campaigns.birthdayRewardPoints}
-                        onChange={(e) => handleCampaignValueChange('birthdayRewardPoints', e.target.value)}
-                        disabled={!settings.campaigns.birthdayActive}
-                        className="crm-form-control"
-                      />
-                    </Form.Group>
-                  </Card>
-                </Col>
+                  {/* BIRTHDAY SPECIAL */}
+                  <Col md={6}>
+                    <Card className="crm-glass-card p-4 border-0">
+                      <div className="d-flex justify-content-between align-items-start mb-3">
+                        <h5 className="fw-bold crm-text-heading mb-0 d-flex align-items-center gap-2">
+                          <CsLineIcons icon="gift" className="crm-text-primary" size="18" />
+                          Birthday Special
+                        </h5>
+                        <Form.Check
+                          type="switch"
+                          id="campaigns-birthdayActive"
+                          checked={settings.campaigns.birthdayActive}
+                          onChange={() => handleCampaignToggle('birthdayActive')}
+                          className="m-0"
+                        />
+                      </div>
+                      <p className="crm-text-muted small mb-3">Celebration bonus points during the customer's birthday month.</p>
+                      <Form.Group className="mb-4">
+                        <Form.Label className="crm-form-label">Birthday Reward Points</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={settings.campaigns.birthdayRewardPoints}
+                          onChange={(e) => handleCampaignValueChange('birthdayRewardPoints', e.target.value)}
+                          disabled={!settings.campaigns.birthdayActive}
+                          className="crm-form-control"
+                        />
+                      </Form.Group>
+                    </Card>
+                  </Col>
 
-                {/* MILESTONE */}
-                <Col md={6}>
-                  <Card className="crm-glass-card p-4 border-0">
-                    <div className="d-flex justify-content-between align-items-start mb-3">
-                      <h5 className="fw-bold crm-text-heading mb-0 d-flex align-items-center gap-2">
-                        <CsLineIcons icon="badge" className="crm-text-primary" size="18" />
-                        Loyalty Milestone
-                      </h5>
-                      <Form.Check
-                        type="switch"
-                        id="campaigns-milestoneActive"
-                        checked={settings.campaigns.milestoneActive}
-                        onChange={() => handleCampaignToggle('milestoneActive')}
-                        className="m-0"
-                      />
-                    </div>
-                    <p className="crm-text-muted small mb-3">Surprise bonus points when a points accumulation tier is reached.</p>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="crm-form-label">Tier Threshold (Points)</Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={settings.campaigns.milestoneThresholdPoints}
-                        onChange={(e) => handleCampaignValueChange('milestoneThresholdPoints', e.target.value)}
-                        disabled={!settings.campaigns.milestoneActive}
-                        className="crm-form-control"
-                      />
-                    </Form.Group>
-                    <Form.Group className="mb-2">
-                      <Form.Label className="crm-form-label">Milestone Reward Points</Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={settings.campaigns.milestoneRewardPoints}
-                        onChange={(e) => handleCampaignValueChange('milestoneRewardPoints', e.target.value)}
-                        disabled={!settings.campaigns.milestoneActive}
-                        className="crm-form-control"
-                      />
-                    </Form.Group>
-                  </Card>
-                </Col>
+                  {/* MILESTONE */}
+                  <Col md={6}>
+                    <Card className="crm-glass-card p-4 border-0">
+                      <div className="d-flex justify-content-between align-items-start mb-3">
+                        <h5 className="fw-bold crm-text-heading mb-0 d-flex align-items-center gap-2">
+                          <CsLineIcons icon="badge" className="crm-text-primary" size="18" />
+                          Loyalty Milestone
+                        </h5>
+                        <Form.Check
+                          type="switch"
+                          id="campaigns-milestoneActive"
+                          checked={settings.campaigns.milestoneActive}
+                          onChange={() => handleCampaignToggle('milestoneActive')}
+                          className="m-0"
+                        />
+                      </div>
+                      <p className="crm-text-muted small mb-3">Surprise bonus points when a points accumulation tier is reached.</p>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="crm-form-label">Tier Threshold (Points)</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={settings.campaigns.milestoneThresholdPoints}
+                          onChange={(e) => handleCampaignValueChange('milestoneThresholdPoints', e.target.value)}
+                          disabled={!settings.campaigns.milestoneActive}
+                          className="crm-form-control"
+                        />
+                      </Form.Group>
+                      <Form.Group className="mb-2">
+                        <Form.Label className="crm-form-label">Milestone Reward Points</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={settings.campaigns.milestoneRewardPoints}
+                          onChange={(e) => handleCampaignValueChange('milestoneRewardPoints', e.target.value)}
+                          disabled={!settings.campaigns.milestoneActive}
+                          className="crm-form-control"
+                        />
+                      </Form.Group>
+                    </Card>
+                  </Col>
 
-                {/* FEEDBACK REWARD */}
-                <Col md={6}>
-                  <Card className="crm-glass-card p-4 border-0">
-                    <div className="d-flex justify-content-between align-items-start mb-3">
-                      <h5 className="fw-bold crm-text-heading mb-0 d-flex align-items-center gap-2">
-                        <CsLineIcons icon="form" className="crm-text-primary" size="18" />
-                        Feedback Reward
-                      </h5>
-                      <Form.Check
-                        type="switch"
-                        id="campaigns-feedbackActive"
-                        checked={settings.campaigns.feedbackActive}
-                        onChange={() => handleCampaignToggle('feedbackActive')}
-                        className="m-0"
-                      />
-                    </div>
-                    <p className="crm-text-muted small mb-3">Credits points when order ratings or reviews are submitted.</p>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="crm-form-label">Review Completion Points</Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={settings.campaigns.feedbackRewardPoints}
-                        onChange={(e) => handleCampaignValueChange('feedbackRewardPoints', e.target.value)}
-                        disabled={!settings.campaigns.feedbackActive}
-                        className="crm-form-control"
-                      />
-                    </Form.Group>
-                  </Card>
-                </Col>
+                  {/* FEEDBACK REWARD */}
+                  <Col md={6}>
+                    <Card className="crm-glass-card p-4 border-0">
+                      <div className="d-flex justify-content-between align-items-start mb-3">
+                        <h5 className="fw-bold crm-text-heading mb-0 d-flex align-items-center gap-2">
+                          <CsLineIcons icon="form" className="crm-text-primary" size="18" />
+                          Feedback Reward
+                        </h5>
+                        <Form.Check
+                          type="switch"
+                          id="campaigns-feedbackActive"
+                          checked={settings.campaigns.feedbackActive}
+                          onChange={() => handleCampaignToggle('feedbackActive')}
+                          className="m-0"
+                        />
+                      </div>
+                      <p className="crm-text-muted small mb-3">Credits points when order ratings or reviews are submitted.</p>
+                      <Form.Group className="mb-4">
+                        <Form.Label className="crm-form-label">Review Completion Points</Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={settings.campaigns.feedbackRewardPoints}
+                          onChange={(e) => handleCampaignValueChange('feedbackRewardPoints', e.target.value)}
+                          disabled={!settings.campaigns.feedbackActive}
+                          className="crm-form-control"
+                        />
+                      </Form.Group>
+                    </Card>
+                  </Col>
 
-                <Col md={12} className="text-center mt-3">
-                  <Button type="submit" variant="none" className="crm-custom-btn-solid px-5 py-2 fw-bold" disabled={loading}>
-                    {loading ? "Saving Campaign Parameters..." : "Save Campaign Parameters"}
-                  </Button>
-                </Col>
-              </Row>
-            </Form>
-          </Tab>
+                  <Col md={12} className="text-center mt-3">
+                    <Button type="submit" variant="none" className="crm-custom-btn-solid px-5 py-2 fw-bold" disabled={loading}>
+                      {loading ? 'Saving Campaign Parameters...' : 'Save Campaign Parameters'}
+                    </Button>
+                  </Col>
+                </Row>
+              </Form>
+            </Tab>
           )}
 
           {/* TAB 3: FOOD QUESTS GAMIFICATION */}
           {activePlans.includes('Gamified Loyalty — Food Quests') && (
-          <Tab 
-            eventKey="quests" 
-            title={
-              <span>
-                <CsLineIcons icon="compass" className="me-2" size="16" />
-                Food Quests (Gamified)
-              </span>
-            }
-          >
-            <Card className="crm-glass-card p-4 border-0">
-              <div className="d-flex flex-sm-row flex-column justify-content-between align-items-sm-center align-items-start gap-3 mb-4">
-                <div className="crm-section-header mb-0">
-                  <h4 className="fw-bold crm-text-heading m-0 d-flex align-items-center gap-2">
-                    <CsLineIcons icon="compass" className="crm-text-primary" size="20" />
-                    Gamified Food Quests
-                  </h4>
+            <Tab
+              eventKey="quests"
+              title={
+                <span>
+                  <CsLineIcons icon="compass" className="me-2" size="16" />
+                  Food Quests (Gamified)
+                </span>
+              }
+            >
+              <Card className="crm-glass-card p-4 border-0">
+                <div className="d-flex flex-sm-row flex-column justify-content-between align-items-sm-center align-items-start gap-3 mb-4">
+                  <div className="crm-section-header mb-0">
+                    <h4 className="fw-bold crm-text-heading m-0 d-flex align-items-center gap-2">
+                      <CsLineIcons icon="compass" className="crm-text-primary" size="20" />
+                      Gamified Food Quests
+                    </h4>
+                  </div>
+                  <Button variant="none" className="crm-custom-btn-outline" onClick={() => setShowQuestModal(true)}>
+                    <CsLineIcons icon="plus" size="16" className="me-2" />
+                    Launch New Quest
+                  </Button>
                 </div>
-                <Button variant="none" className="crm-custom-btn-outline" onClick={() => setShowQuestModal(true)}>
-                  <CsLineIcons icon="plus" size="16" className="me-2" />
-                  Launch New Quest
-                </Button>
-              </div>
 
-              {quests.length === 0 ? (
-                <div className="text-center py-5 crm-text-body fw-medium">
-                  No active quests launched yet. Start gamifying by adding a Food Quest!
-                </div>
-              ) : (
-                <Table responsive hover className="crm-table">
-                  <thead>
-                    <tr>
-                      <th>Quest Challenge Title</th>
-                      <th>Requirement Category</th>
-                      <th>Target Count</th>
-                      <th>Reward Type</th>
-                      <th>Reward Amount</th>
-                      <th>Validity</th>
-                      <th>Active Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {quests.map((quest) => (
-                      <tr key={quest._id}>
-                        <td className="fw-bold crm-text-heading">{quest.name}</td>
-                        <td>
-                          <span className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill">
-                            {quest.challengeType}
-                          </span>
-                        </td>
-                        <td className="crm-text-body">{quest.targetCount} orders/items</td>
-                        <td>{quest.rewardType === 'BONUS_POINTS' ? 'Loyalty Points' : 'Menu Coupon'}</td>
-                        <td className="crm-accent-neon">{quest.rewardValue}</td>
-                        <td className="crm-text-body">{quest.durationDays} days</td>
-                        <td>
-                          <Form.Check
-                            type="switch"
-                            checked={quest.isActive}
-                            onChange={() => handleQuestToggle(quest._id)}
-                          />
-                        </td>
+                {quests.length === 0 ? (
+                  <div className="text-center py-5 crm-text-body fw-medium">No active quests launched yet. Start gamifying by adding a Food Quest!</div>
+                ) : (
+                  <Table responsive hover className="crm-table">
+                    <thead>
+                      <tr>
+                        <th>Quest Challenge Title</th>
+                        <th>Requirement Category</th>
+                        <th>Target Count</th>
+                        <th>Reward Type</th>
+                        <th>Reward Amount</th>
+                        <th>Validity</th>
+                        <th>Active Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              )}
-            </Card>
-          </Tab>
+                    </thead>
+                    <tbody>
+                      {quests.map((quest) => (
+                        <tr key={quest._id}>
+                          <td className="fw-bold crm-text-heading">{quest.name}</td>
+                          <td>
+                            <span className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill">{quest.challengeType}</span>
+                          </td>
+                          <td className="crm-text-body">{quest.targetCount} orders/items</td>
+                          <td>{quest.rewardType === 'BONUS_POINTS' ? 'Loyalty Points' : 'Menu Coupon'}</td>
+                          <td className="crm-accent-neon">{quest.rewardValue}</td>
+                          <td className="crm-text-body">{quest.durationDays} days</td>
+                          <td>
+                            <Form.Check type="switch" checked={quest.isActive} onChange={() => handleQuestToggle(quest._id)} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                )}
+              </Card>
+            </Tab>
           )}
 
           {/* TAB 4: POINT LOGS */}
-          <Tab 
-            eventKey="history" 
+          <Tab
+            eventKey="history"
             title={
               <span>
                 <CsLineIcons icon="list" className="me-2" size="16" />
@@ -856,9 +859,7 @@ const LoyaltySettings = () => {
               </div>
 
               {history.length === 0 ? (
-                <div className="text-center py-5 crm-text-body fw-medium">
-                  No points transaction audits recorded yet.
-                </div>
+                <div className="text-center py-5 crm-text-body fw-medium">No points transaction audits recorded yet.</div>
               ) : (
                 <Table responsive hover className="crm-table">
                   <thead>
@@ -875,18 +876,20 @@ const LoyaltySettings = () => {
                   <tbody>
                     {history.map((log) => (
                       <tr key={log._id}>
-                        <td className="fw-medium crm-text-heading">{log.customer_id?.name || "Walk-In Patron"}</td>
+                        <td className="fw-medium crm-text-heading">{log.customer_id?.name || 'Walk-In Patron'}</td>
                         <td className="crm-text-body">{log.customer_id?.phone}</td>
                         <td>
-                          <span className={`badge rounded-pill px-3 py-2 ${
-                            log.type === "EARN" ? "bg-success text-white" : 
-                            log.type === "REDEEM" ? "bg-danger text-white" : "bg-info text-white"
-                          }`}>
+                          <span
+                            className={`badge rounded-pill px-3 py-2 ${
+                              log.type === 'EARN' ? 'bg-success text-white' : log.type === 'REDEEM' ? 'bg-danger text-white' : 'bg-info text-white'
+                            }`}
+                          >
                             {log.type}
                           </span>
                         </td>
-                        <td className={`fw-bold ${log.type === "EARN" || log.type === "BONUS" ? "text-success" : "text-danger"}`}>
-                          {log.type === "EARN" || log.type === "BONUS" ? "+" : "-"}{log.points} pts
+                        <td className={`fw-bold ${log.type === 'EARN' || log.type === 'BONUS' ? 'text-success' : 'text-danger'}`}>
+                          {log.type === 'EARN' || log.type === 'BONUS' ? '+' : '-'}
+                          {log.points} pts
                         </td>
                         <td className="crm-text-body">₹{log.amount}</td>
                         <td className="crm-text-body">{log.description}</td>

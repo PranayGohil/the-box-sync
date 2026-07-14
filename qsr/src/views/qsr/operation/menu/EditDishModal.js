@@ -11,11 +11,26 @@ import CreatableSelect from 'react-select/creatable';
 
 const customStyles = `
   .pill-input {
-    border-radius: 12px !important;
-    padding: 0.7rem 1.2rem !important;
+    border-radius: 10px !important;
+    padding: 0.45rem 1rem !important;
     border: 1px solid #e5e7eb !important;
     background: #ffffff !important;
     transition: all 0.2s ease !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+  }
+  input.pill-input {
+    height: 38px !important;
+  }
+  textarea.pill-input {
+    min-height: 60px !important;
+    height: auto !important;
+  }
+  @media (max-width: 767.98px) {
+    textarea.pill-input {
+      min-height: 130px !important;
+    }
   }
   .pill-input:focus {
     border-color: #23b3f4 !important;
@@ -85,10 +100,10 @@ const customStyles = `
     border-color: #23b3f4 !important;
   }
   .square-delete-btn {
-    width: 48px !important;
-    min-width: 48px !important;
-    height: 48px !important;
-    border-radius: 12px !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -106,11 +121,15 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
   const selectStyles = {
     control: (base, state) => ({
       ...base,
-      borderRadius: '8px',
-      padding: '2px',
+      borderRadius: '10px',
+      padding: '0px',
       border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
       boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
       backgroundColor: '#fff',
+      fontSize: '0.88rem',
+      fontWeight: '600',
+      minHeight: '38px',
+      height: '38px',
       '&:hover': { border: '1px solid #23b3f4' },
     }),
     menuPortal: (base) => ({
@@ -121,41 +140,19 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
 
   const sizeSuggestions = useMemo(() => {
     return Array.from(
-      new Set(
-        menuData.flatMap((c) =>
-          (c.dishes || []).flatMap((d) =>
-            (d.variants || []).map((v) => v.size_name?.trim()).filter(Boolean)
-          )
-        )
-      )
+      new Set(menuData.flatMap((c) => (c.dishes || []).flatMap((d) => (d.variants || []).map((v) => v.size_name?.trim()).filter(Boolean))))
     ).sort();
   }, [menuData]);
 
   const extraSuggestions = useMemo(() => {
-    return Array.from(
-      new Set(
-        menuData.flatMap((c) =>
-          (c.dishes || []).flatMap((d) =>
-            (d.variants || []).map((v) => v.extra?.trim()).filter(Boolean)
-          )
-        )
-      )
-    ).sort();
+    return Array.from(new Set(menuData.flatMap((c) => (c.dishes || []).flatMap((d) => (d.variants || []).map((v) => v.extra?.trim()).filter(Boolean))))).sort();
   }, [menuData]);
 
   const addonSuggestions = useMemo(() => {
     return Array.from(
-      new Set(
-        menuData.flatMap((c) =>
-          (c.dishes || []).flatMap((d) =>
-            (d.addons || []).map((a) => a.addon_name?.trim()).filter(Boolean)
-          )
-        )
-      )
+      new Set(menuData.flatMap((c) => (c.dishes || []).flatMap((d) => (d.addons || []).map((a) => a.addon_name?.trim()).filter(Boolean))))
     ).sort();
   }, [menuData]);
-
-
 
   useEffect(() => {
     if (data?.dish_img) {
@@ -177,14 +174,15 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
       is_special: data?.is_special || false,
       is_available: data?.is_available ?? true,
       hide_on_kot: data?.hide_on_kot || false,
-      variants: (data?.variants && data.variants.length > 0)
-        ? data.variants.map((v) => ({
-          size_name: v.size_name || '',
-          price: v.price || '',
-          extra: v.extra || '',
-          is_available: v.is_available ?? true,
-        }))
-        : [{ size_name: '', price: data?.dish_price || '', extra: '', is_available: true }],
+      variants:
+        data?.variants && data.variants.length > 0
+          ? data.variants.map((v) => ({
+              size_name: v.size_name || '',
+              price: v.price || '',
+              extra: v.extra || '',
+              is_available: v.is_available ?? true,
+            }))
+          : [{ size_name: '', price: data?.dish_price || '', extra: '', is_available: true }],
       addons: data?.addons || [],
       meal_type: data?.meal_type || 'veg',
     },
@@ -267,7 +265,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
         setIsSubmitting(false);
       }
     },
-  },);
+  });
 
   useEffect(() => {
     if (!show) {
@@ -331,7 +329,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                   ]}
                   value={{
                     value: formik.values.meal_type,
-                    label: formik.values.meal_type === 'veg' ? 'Veg' : formik.values.meal_type === 'non-veg' ? 'Non-Veg' : 'Egg'
+                    label: formik.values.meal_type === 'veg' ? 'Veg' : formik.values.meal_type === 'non-veg' ? 'Non-Veg' : 'Egg',
                   }}
                   onChange={(selected) => formik.setFieldValue('meal_type', selected ? selected.value : 'veg')}
                   placeholder="Select type"
@@ -448,8 +446,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                minHeight: '48px',
-                                borderRadius: '12px',
+                                minHeight: '38px',
+                                borderRadius: '10px',
                               }),
                             }}
                             isClearable
@@ -460,9 +458,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                             onChange={(selected) => formik.setFieldValue(`variants[${vIdx}].size_name`, selected ? selected.value : '')}
                             placeholder="e.g. Regular"
                           />
-                          {formik.errors.variants?.[vIdx]?.size_name && (
-                            <div className="text-danger small mt-1">{formik.errors.variants[vIdx].size_name}</div>
-                          )}
+                          {formik.errors.variants?.[vIdx]?.size_name && <div className="text-danger small mt-1">{formik.errors.variants[vIdx].size_name}</div>}
                         </Form.Group>
                       </Col>
                       <Col xs={12} sm={3}>
@@ -477,7 +473,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                             onChange={formik.handleChange}
                             placeholder="Price"
                             className="pill-input"
-                            style={{ height: '48px', borderRadius: '12px' }}
+                            style={{ height: '38px', borderRadius: '10px' }}
                             isInvalid={formik.touched.variants?.[vIdx]?.price && !!formik.errors.variants?.[vIdx]?.price}
                           />
                           {formik.errors.variants?.[vIdx]?.price && <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>}
@@ -493,8 +489,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                minHeight: '48px',
-                                borderRadius: '12px',
+                                minHeight: '38px',
+                                borderRadius: '10px',
                               }),
                             }}
                             isClearable
@@ -559,8 +555,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                minHeight: '48px',
-                                borderRadius: '12px',
+                                minHeight: '38px',
+                                borderRadius: '10px',
                               }),
                             }}
                             isClearable
@@ -586,7 +582,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                             onChange={formik.handleChange}
                             placeholder="Price"
                             className="pill-input"
-                            style={{ height: '48px', borderRadius: '12px' }}
+                            style={{ height: '38px', borderRadius: '10px' }}
                             isInvalid={formik.touched.addons?.[aIdx]?.price && !!formik.errors.addons?.[aIdx]?.price}
                           />
                           {formik.errors.addons?.[aIdx]?.price && <div className="text-danger small mt-1">{formik.errors.addons[aIdx].price}</div>}
@@ -649,7 +645,6 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
           )}
         </Button>
       </Modal.Footer>
-
     </Modal>
   );
 };

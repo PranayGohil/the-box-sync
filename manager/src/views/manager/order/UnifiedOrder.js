@@ -89,8 +89,8 @@ const UnifiedOrder = () => {
   const mode = urlParams.get('mode'); // 'new' | 'edit'
 
   const { activePlans, kotUserExists } = useContext(AuthContext);
-  const canKOT = activePlans ? (activePlans.includes('KOT Panel') && kotUserExists) : false;
-  const backPath = (activePlans && activePlans.includes('Manager') && activePlans.includes('QSR')) ? '/dashboard/manager' : '/dashboard';
+  const canKOT = activePlans ? activePlans.includes('KOT Panel') && kotUserExists : false;
+  const backPath = activePlans && activePlans.includes('Manager') && activePlans.includes('QSR') ? '/dashboard/manager' : '/dashboard';
 
   // Default type from URL path
   const defaultType = location.pathname.includes('dine-in') ? 'Dine In' : location.pathname.includes('delivery') ? 'Delivery' : 'Takeaway';
@@ -280,7 +280,7 @@ const UnifiedOrder = () => {
                 tableNo: custInfo.table_no || '',
                 items: latestRecord.items,
                 kotNo: latestRecord.kotNo,
-                timestamp: latestRecord.timestamp
+                timestamp: latestRecord.timestamp,
               },
               userData,
               setKotPrinting
@@ -319,24 +319,28 @@ const UnifiedOrder = () => {
   // ── Dirty Check ───────────────────────────────────────────────────────────
   const hasUnsavedChanges = () => {
     const initial = initialStateRef.current;
-    const currentEditable = orderItems.filter((i) => i.status !== 'Completed').map((i) => ({
-      dish_name: i.dish_name,
-      quantity: i.quantity,
-      special_notes: i.special_notes || '',
-      dish_price: i.dish_price,
-      status: i.status || 'Pending',
-      selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
-      selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
-    }));
-    const initialEditable = initial.orderItems.filter((i) => i.status !== 'Completed').map((i) => ({
-      dish_name: i.dish_name,
-      quantity: i.quantity,
-      special_notes: i.special_notes || '',
-      dish_price: i.dish_price,
-      status: i.status || 'Pending',
-      selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
-      selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
-    }));
+    const currentEditable = orderItems
+      .filter((i) => i.status !== 'Completed')
+      .map((i) => ({
+        dish_name: i.dish_name,
+        quantity: i.quantity,
+        special_notes: i.special_notes || '',
+        dish_price: i.dish_price,
+        status: i.status || 'Pending',
+        selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
+        selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
+      }));
+    const initialEditable = initial.orderItems
+      .filter((i) => i.status !== 'Completed')
+      .map((i) => ({
+        dish_name: i.dish_name,
+        quantity: i.quantity,
+        special_notes: i.special_notes || '',
+        dish_price: i.dish_price,
+        status: i.status || 'Pending',
+        selected_variant: i.selected_variant ? { name: i.selected_variant.name, price: i.selected_variant.price } : null,
+        selected_addons: (i.selected_addons || []).map((a) => ({ name: a.name, price: a.price })),
+      }));
 
     const currentCust = {
       name: customerInfo.name || '',
@@ -357,8 +361,7 @@ const UnifiedOrder = () => {
       comment: initial.customerInfo.comment || '',
     };
 
-    return JSON.stringify(currentEditable) !== JSON.stringify(initialEditable) ||
-      JSON.stringify(currentCust) !== JSON.stringify(initialCust);
+    return JSON.stringify(currentEditable) !== JSON.stringify(initialEditable) || JSON.stringify(currentCust) !== JSON.stringify(initialCust);
   };
 
   // Guard: only run after initial data is loaded
@@ -370,33 +373,35 @@ const UnifiedOrder = () => {
   // ── CRM Loyalty Settings & Customer Profile Loader ──────────────────────────
   useEffect(() => {
     const token = localStorage.getItem('token');
-    axios.get(`${process.env.REACT_APP_API || 'http://localhost:5000/api'}/loyalty/settings`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => {
+    axios
+      .get(`${process.env.REACT_APP_API || 'http://localhost:5000/api'}/loyalty/settings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
         if (res.data.success) {
           setLoyaltySettings(res.data.data);
         }
       })
-      .catch(err => console.error("Error loading loyalty settings:", err));
+      .catch((err) => console.error('Error loading loyalty settings:', err));
   }, []);
 
   useEffect(() => {
     const { phone } = customerInfo;
     if (phone && phone.length === 10) {
       const token = localStorage.getItem('token');
-      axios.get(`${process.env.REACT_APP_API || 'http://localhost:5000/api'}/loyalty/customer/${phone}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-        .then(res => {
+      axios
+        .get(`${process.env.REACT_APP_API || 'http://localhost:5000/api'}/loyalty/customer/${phone}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
           if (res.data.success && res.data.data) {
             setLoyaltyProfile(res.data.data);
             if ((!customerInfo.name || customerInfo.name === 'Walk-in Customer') && res.data.data.customer.name !== 'Walk-in Customer') {
-              setCustomerInfo(prev => ({ ...prev, name: res.data.data.customer.name }));
+              setCustomerInfo((prev) => ({ ...prev, name: res.data.data.customer.name }));
             }
           }
         })
-        .catch(err => console.error("Error loading customer CRM profile:", err));
+        .catch((err) => console.error('Error loading customer CRM profile:', err));
     } else {
       setLoyaltyProfile(null);
       setIsRedeeming(false);
@@ -464,7 +469,6 @@ const UnifiedOrder = () => {
     }
   };
 
-
   // ── KOT Delta ─────────────────────────────────────────────────────────────
   const computeKOTDelta = (currentItems, snapshotItems) => {
     const delta = [];
@@ -512,7 +516,7 @@ const UnifiedOrder = () => {
 
   // ── Payload Builder ───────────────────────────────────────────────────────
   const buildPayload = (status, completeAll = false) => {
-    const pointsRate = loyaltySettings ? (loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints) : 0.1;
+    const pointsRate = loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1;
     const pointsDiscountAmount = isRedeeming ? Math.round(redeemPoints * pointsRate) : 0;
 
     const orderData = {
@@ -588,7 +592,7 @@ const UnifiedOrder = () => {
       orderInfo: { ...orderData, order_id: orderId },
       customerInfo: custPayload,
       tableId: orderType === 'Dine In' ? tableId : undefined,
-      redeemedPoints: isRedeeming ? redeemPoints : 0
+      redeemedPoints: isRedeeming ? redeemPoints : 0,
     };
   };
 
@@ -818,7 +822,7 @@ const UnifiedOrder = () => {
   };
 
   // ── Derived display helpers ───────────────────────────────────────────────
-  const pointsRate = loyaltySettings ? (loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints) : 0.1;
+  const pointsRate = loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1;
   const pointsDiscountAmount = isRedeeming ? Math.round(redeemPoints * pointsRate) : 0;
 
   const showParcelUI = orderType !== 'Dine In';
@@ -833,51 +837,58 @@ const UnifiedOrder = () => {
       {/* POS Wrapper */}
       <div className="pos-wrapper">
         {/* Top Bar */}
-        <div className="pos-topbar">
-          <Button className="custom-btn-outline" style={{ padding: '0.35rem 1rem', flexShrink: 0 }} onClick={() => handleNavigation(backPath)}>
-            <CsLineIcons icon="arrow-left" size="13" className="me-1" />
-            Back
-          </Button>
-          <div className="pos-title flex-grow-1">
-            {title}
-            {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) && (
-              <span className="ms-2 fw-normal text-muted" style={{ fontSize: '14px' }}>
-                — Table {tableInfo.table_no || customerInfo.table_no}
-              </span>
+        <div className="pos-topbar d-flex align-items-center justify-content-between flex-nowrap gap-2">
+          <div className="d-flex align-items-center gap-2 overflow-hidden flex-grow-1 order-1 order-md-2">
+            <div className="pos-title text-truncate">
+              {title}
+              {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) && (
+                <span className="ms-2 fw-normal text-muted" style={{ fontSize: '14px' }}>
+                  — Table {tableInfo.table_no || customerInfo.table_no}
+                </span>
+              )}
+            </div>
+            {tokenNumber && (
+              <div
+                style={{
+                  border: '1.5px solid #23b3f4',
+                  borderRadius: '50px',
+                  padding: '3px 12px',
+                  color: '#23b3f4',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  flexShrink: 0,
+                }}
+              >
+                Token #{tokenNumber}
+              </div>
+            )}
+            {orderStatus && (
+              <div
+                style={{
+                  border: '1.5px solid #6c757d',
+                  borderRadius: '50px',
+                  padding: '3px 12px',
+                  color: '#6c757d',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  flexShrink: 0,
+                }}
+              >
+                {orderStatus}
+              </div>
             )}
           </div>
-          {tokenNumber && (
-            <div
-              style={{
-                border: '1.5px solid #23b3f4',
-                borderRadius: '50px',
-                padding: '3px 12px',
-                color: '#23b3f4',
-                fontWeight: 700,
-                fontSize: '12px',
-                flexShrink: 0,
-              }}
-            >
-              Token #{tokenNumber}
-            </div>
-          )}
-          {orderStatus && (
-            <div
-              style={{
-                border: '1.5px solid #6c757d',
-                borderRadius: '50px',
-                padding: '3px 12px',
-                color: '#6c757d',
-                fontWeight: 700,
-                fontSize: '12px',
-                flexShrink: 0,
-              }}
-            >
-              {orderStatus}
-            </div>
-          )}
+          <Button
+            className="custom-btn-outline order-2 order-md-1 pos-back-btn"
+            style={{ padding: '0.35rem 1rem', flexShrink: 0 }}
+            onClick={() => handleNavigation(backPath)}
+          >
+            <CsLineIcons icon="arrow-left" size="13" className="me-md-1" />
+            <span className="d-none d-md-inline">Back</span>
+          </Button>
           <Form.Select
             size="sm"
+            className="d-none d-md-inline-block order-md-3"
             value={orderType}
             onChange={(e) => handleOrderTypeChange(e.target.value)}
             disabled={isEditMode || !!tableId}
@@ -897,7 +908,7 @@ const UnifiedOrder = () => {
               </option>
             ))}
           </Form.Select>
-          <div className="d-flex align-items-center gap-1" style={{ flexShrink: 0 }}>
+          <div className="d-none d-md-flex align-items-center gap-1 order-md-4" style={{ flexShrink: 0 }}>
             <span className="text-muted small fw-semibold">Date:</span>
             <Form.Control
               type="datetime-local"
@@ -940,7 +951,7 @@ const UnifiedOrder = () => {
           />
 
           {/* Order Panel */}
-          <div className="pos-order-panel">
+          <div className="pos-order-panel d-none d-xl-flex">
             <div className="pos-order-header">
               <div className="d-flex justify-content-between align-items-center">
                 <div className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>
@@ -982,7 +993,7 @@ const UnifiedOrder = () => {
                     border: '1px dashed rgba(35,179,244,0.3)',
                     fontSize: '11px',
                     color: '#1e293b',
-                    textAlign: 'left'
+                    textAlign: 'left',
                   }}
                 >
                   <div className="d-flex justify-content-between align-items-center mb-1">
@@ -990,8 +1001,12 @@ const UnifiedOrder = () => {
                     <span className="badge bg-info">{loyaltyProfile.customer.loyalty_points || 0} pts available</span>
                   </div>
                   <div className="d-flex justify-content-between mb-1 text-muted">
-                    <span>Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong></span>
-                    <span>Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong></span>
+                    <span>
+                      Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong>
+                    </span>
+                    <span>
+                      Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong>
+                    </span>
                   </div>
 
                   {loyaltyProfile.customer.loyalty_points > 0 && (
@@ -1014,7 +1029,7 @@ const UnifiedOrder = () => {
                       />
                       {isRedeeming && (
                         <span className="fw-bold text-success">
-                          -₹{Math.round(redeemPoints * (loyaltySettings ? (loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints) : 0.1))} off
+                          -₹{Math.round(redeemPoints * (loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1))} off
                         </span>
                       )}
                     </div>
@@ -1057,7 +1072,7 @@ const UnifiedOrder = () => {
                 paymentData={{
                   ...paymentData,
                   discountAmount: parseFloat(paymentData.discountAmount) + pointsDiscountAmount,
-                  total: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount)
+                  total: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount),
                 }}
                 orderId={orderId}
                 handleSaveOrder={handleSaveOrder}
@@ -1088,7 +1103,7 @@ const UnifiedOrder = () => {
           ...paymentData,
           discountAmount: parseFloat(paymentData.discountAmount) + pointsDiscountAmount,
           total: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount),
-          paidAmount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount)
+          paidAmount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount),
         }}
         setPaymentData={setPaymentData}
         isLoading={isLoading}
@@ -1135,7 +1150,7 @@ const UnifiedOrder = () => {
         paymentData={{
           ...paymentData,
           discountAmount: parseFloat(paymentData.discountAmount) + pointsDiscountAmount,
-          total: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount)
+          total: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount),
         }}
         orderId={orderId}
         handleSaveOrder={handleSaveOrder}
@@ -1152,21 +1167,86 @@ const UnifiedOrder = () => {
         paymentHistory={paymentHistory}
         orderType={orderType}
       >
-        <div className="d-flex align-items-center justify-content-between mb-3">
-          <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>
-          <Form.Select
-            size="sm"
-            value={orderType}
-            onChange={(e) => handleOrderTypeChange(e.target.value)}
-            disabled={isEditMode || !!tableId}
-            style={{ maxWidth: '130px', borderRadius: '50px', borderColor: 'rgba(35,179,244,0.3)', color: '#23b3f4', fontWeight: 700 }}
-          >
-            {ORDER_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </Form.Select>
+        <h6 className="mb-2 fw-bold text-muted border-bottom pb-2">Customer Details</h6>
+
+        {/* Row 1: Order Type + Order Date */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ flex: 1 }}>
+            <label
+              style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                color: '#94a3b8',
+                marginBottom: '3px',
+                display: 'block',
+              }}
+            >
+              Order Type
+            </label>
+            <Form.Select
+              size="sm"
+              value={orderType}
+              onChange={(e) => handleOrderTypeChange(e.target.value)}
+              disabled={isEditMode || !!tableId}
+              style={{
+                width: '100%',
+                height: '30px',
+                padding: '0 8px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#1e293b',
+                border: '1.5px solid rgba(226,232,240,0.9)',
+                borderRadius: '6px',
+                outline: 'none',
+                background: '#f8fafc',
+                transition: 'all 0.18s',
+                boxSizing: 'border-box',
+              }}
+            >
+              {ORDER_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </Form.Select>
+          </div>
+          <div style={{ flex: 1.5 }} className="d-md-none">
+            <label
+              style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                color: '#94a3b8',
+                marginBottom: '3px',
+                display: 'block',
+              }}
+            >
+              Order Date
+            </label>
+            <Form.Control
+              type="datetime-local"
+              size="sm"
+              value={orderDate}
+              onChange={(e) => setOrderDate(e.target.value)}
+              style={{
+                width: '100%',
+                height: '30px',
+                padding: '0 8px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#1e293b',
+                border: '1.5px solid rgba(226,232,240,0.9)',
+                borderRadius: '6px',
+                outline: 'none',
+                background: '#f8fafc',
+                transition: 'all 0.18s',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
         </div>
         <CustomerInfoForm
           customerInfo={customerInfo}
@@ -1185,7 +1265,7 @@ const UnifiedOrder = () => {
               border: '1px dashed rgba(35,179,244,0.3)',
               fontSize: '12px',
               color: '#1e293b',
-              textAlign: 'left'
+              textAlign: 'left',
             }}
           >
             <div className="d-flex justify-content-between align-items-center mb-1">
@@ -1193,8 +1273,12 @@ const UnifiedOrder = () => {
               <span className="badge bg-info">{loyaltyProfile.customer.loyalty_points || 0} pts available</span>
             </div>
             <div className="d-flex justify-content-between mb-1 text-muted">
-              <span>Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong></span>
-              <span>Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong></span>
+              <span>
+                Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong>
+              </span>
+              <span>
+                Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong>
+              </span>
             </div>
 
             {loyaltyProfile.customer.loyalty_points > 0 && (
@@ -1217,24 +1301,48 @@ const UnifiedOrder = () => {
                 />
                 {isRedeeming && (
                   <span className="fw-bold text-success">
-                    -₹{Math.round(redeemPoints * (loyaltySettings ? (loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints) : 0.1))} off
+                    -₹{Math.round(redeemPoints * (loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1))} off
                   </span>
                 )}
               </div>
             )}
           </div>
         )}
-        <Form.Group className="mb-3">
-          <Form.Label className="fw-semibold small text-muted">Special Instructions</Form.Label>
+        <div style={{ marginTop: '8px', marginBottom: '8px' }}>
+          <label
+            style={{
+              fontSize: '10px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              color: '#94a3b8',
+              marginBottom: '3px',
+              display: 'block',
+            }}
+          >
+            Special Instructions
+          </label>
           <Form.Control
             as="textarea"
             rows={2}
             value={customerInfo.comment}
             onChange={(e) => setCustomerInfo((prev) => ({ ...prev, comment: e.target.value }))}
             placeholder="Any special instructions..."
-            style={{ borderRadius: '12px', border: '1px solid rgba(35,179,244,0.2)', fontSize: '13px' }}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#1e293b',
+              border: '1.5px solid rgba(226,232,240,0.9)',
+              borderRadius: '6px',
+              outline: 'none',
+              background: '#f8fafc',
+              transition: 'all 0.18s',
+              boxSizing: 'border-box',
+            }}
           />
-        </Form.Group>
+        </div>
       </BottomCartSheet>
       <MobileCartBar orderItems={orderItems} paymentData={paymentData} setShowCartSheet={setShowCartSheet} />
     </>

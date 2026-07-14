@@ -294,7 +294,12 @@ const OrderHistory = () => {
         ['FILTERS APPLIED'],
       ];
       if (exportFilters.fromDate || exportFilters.toDate) {
-        sheetData.push(['Date Range:', `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'}`]);
+        sheetData.push([
+          'Date Range:',
+          `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
+            exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+          }`,
+        ]);
       }
       if (exportFilters.orderStatus) sheetData.push(['Order Status:', exportFilters.orderStatus]);
       if (exportFilters.orderType) sheetData.push(['Order Type:', exportFilters.orderType]);
@@ -305,7 +310,13 @@ const OrderHistory = () => {
       sheetData.push(['Order No', 'Date & Time', 'Customer', 'Table Area', 'Payment Mode', 'Total Amount', 'Status']);
       orders.forEach((order) => {
         const orderDate = new Date(order.order_date);
-        const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
+        const tableDetails = order.table_area
+          ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}`
+          : order.table_no
+          ? `T${order.table_no}`
+          : order.token
+          ? `Token ${order.token}`
+          : 'N/A';
         sheetData.push([
           order.order_no || order._id || '',
           format(orderDate, 'dd-MM-yyyy hh:mm a'),
@@ -318,8 +329,14 @@ const OrderHistory = () => {
       });
       const sheet = XLSX.utils.aoa_to_sheet(sheetData);
       sheet['!cols'] = [{ wch: 20 }, { wch: 18 }, { wch: 20 }, { wch: 12 }, { wch: 18 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }];
-      if (sheet.B7) { sheet.B7.t = 'n'; sheet.B7.z = '"Rs. "#,##0.00'; }
-      if (sheet.C7) { sheet.C7.t = 'n'; sheet.C7.z = '"Rs. "#,##0.00'; }
+      if (sheet.B7) {
+        sheet.B7.t = 'n';
+        sheet.B7.z = '"Rs. "#,##0.00';
+      }
+      if (sheet.C7) {
+        sheet.C7.t = 'n';
+        sheet.C7.z = '"Rs. "#,##0.00';
+      }
       const range = XLSX.utils.decode_range(sheet['!ref']);
       for (let R = tableHeaderRowIndex + 1; R <= range.e.r; R += 1) {
         const cellAddress = XLSX.utils.encode_cell({ r: R, c: 7 });
@@ -339,7 +356,11 @@ const OrderHistory = () => {
       console.error('Export error:', err);
       toast.error(err.message || 'Failed to export orders');
     } finally {
-      setTimeout(() => { setExporting(false); setExportProgress(0); setShowExportModal(false); }, 500);
+      setTimeout(() => {
+        setExporting(false);
+        setExportProgress(0);
+        setShowExportModal(false);
+      }, 500);
     }
   };
 
@@ -401,7 +422,10 @@ const OrderHistory = () => {
       yPosition += 48;
       const totalAmount = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
       const avgOrderValue = totalAmount / orders.length;
-      const cardWidth = 56; const cardHeight = 22; const cardGap = 6; const startX = 15;
+      const cardWidth = 56;
+      const cardHeight = 22;
+      const cardGap = 6;
+      const startX = 15;
       const formatCurrencyForCard = (amount) => `Rs. ${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount || 0)}`;
       const kpiCards = [
         { title: 'TOTAL ORDERS', value: orders.length.toString(), color: [35, 179, 244] },
@@ -425,7 +449,13 @@ const OrderHistory = () => {
       });
       yPosition += cardHeight + 10;
       const activeFilters = [];
-      if (exportFilters.fromDate || exportFilters.toDate) activeFilters.push({ label: 'Date Period', val: `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'}` });
+      if (exportFilters.fromDate || exportFilters.toDate)
+        activeFilters.push({
+          label: 'Date Period',
+          val: `${exportFilters.fromDate ? format(new Date(exportFilters.fromDate), 'dd MMM yyyy') : 'All'} to ${
+            exportFilters.toDate ? format(new Date(exportFilters.toDate), 'dd MMM yyyy') : 'All'
+          }`,
+        });
       if (exportFilters.orderStatus) activeFilters.push({ label: 'Status', val: exportFilters.orderStatus });
       if (exportFilters.orderType) activeFilters.push({ label: 'Type', val: exportFilters.orderType });
       if (exportFilters.paymentType) activeFilters.push({ label: 'Payment', val: exportFilters.paymentType });
@@ -439,7 +469,8 @@ const OrderHistory = () => {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7.5);
         activeFilters.forEach((filt, idx) => {
-          const col = idx % 2; const row = Math.floor(idx / 2);
+          const col = idx % 2;
+          const row = Math.floor(idx / 2);
           const xFilt = col === 0 ? 55 : 130;
           const yFilt = yPosition + 6 + row * 5;
           doc.text(`${filt.label}: `, xFilt, yFilt);
@@ -462,7 +493,13 @@ const OrderHistory = () => {
         head: [['Order No', 'Date & Time', 'Customer', 'Table Area', 'Payment Mode', 'Total Amount', 'Status']],
         body: orders.map((order) => {
           const orderDate = new Date(order.order_date);
-          const tableDetails = order.table_area ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}` : (order.table_no ? `T${order.table_no}` : (order.token ? `Token ${order.token}` : 'N/A'));
+          const tableDetails = order.table_area
+            ? `${order.table_area}${order.table_no ? ` - T${order.table_no}` : ''}`
+            : order.table_no
+            ? `T${order.table_no}`
+            : order.token
+            ? `Token ${order.token}`
+            : 'N/A';
           return [
             order.order_no || (order._id || '').substring(18),
             format(orderDate, 'dd-MM-yy hh:mm a'),
@@ -497,7 +534,9 @@ const OrderHistory = () => {
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(7.5);
           doc.setTextColor(156, 163, 175);
-          doc.text(`${COMPANY_NAME}   |   Order History Report   |   Page ${pageData.pageNumber} of ${totalPagesCount}`, docWidth / 2, docHeight - 9, { align: 'center' });
+          doc.text(`${COMPANY_NAME}   |   Order History Report   |   Page ${pageData.pageNumber} of ${totalPagesCount}`, docWidth / 2, docHeight - 9, {
+            align: 'center',
+          });
         },
       });
       setExportProgress(95);
@@ -509,7 +548,11 @@ const OrderHistory = () => {
       console.error('Export error:', err);
       toast.error(err.message || 'Failed to export orders');
     } finally {
-      setTimeout(() => { setExporting(false); setExportProgress(0); setShowExportModal(false); }, 500);
+      setTimeout(() => {
+        setExporting(false);
+        setExportProgress(0);
+        setShowExportModal(false);
+      }, 500);
     }
   };
 
@@ -574,7 +617,20 @@ const OrderHistory = () => {
         isSorted: sortBy === 'order_status',
         isSortedDesc: sortBy === 'order_status' && sortOrder === 'desc',
         Cell: ({ value }) => (
-          <Badge bg={value === 'Save' ? 'warning' : value === 'Paid' || value === 'Completed' ? 'success' : value === 'KOT' ? 'info' : value === 'Cancelled' ? 'danger' : 'secondary'} className="rounded-pill px-3">
+          <Badge
+            bg={
+              value === 'Save'
+                ? 'warning'
+                : value === 'Paid' || value === 'Completed'
+                ? 'success'
+                : value === 'KOT'
+                ? 'info'
+                : value === 'Cancelled'
+                ? 'danger'
+                : 'secondary'
+            }
+            className="rounded-pill px-3"
+          >
             {value === 'KOT' ? 'Bill Printed' : value}
           </Badge>
         ),
@@ -586,7 +642,7 @@ const OrderHistory = () => {
         disableSortBy: true,
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center gap-2">
-            {row.original.order_status === "Save" ? (
+            {row.original.order_status === 'Save' ? (
               <>
                 <Button
                   variant="outline-primary"
@@ -698,16 +754,19 @@ const OrderHistory = () => {
           padding: 0 !important;
           z-index: 2 !important;
         }
+        @media (max-width: 767px) {
+          .mobile-order-history-container {
+            padding-bottom: 120px !important;
+          }
+        }
       `}</style>
-      <div className="container-fluid qsr-page-container">
+      <div className="container-fluid qsr-page-container mobile-order-history-container">
         <HtmlHead title={title} description={description} />
 
         <div className="qsr-page-title-container">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="qsr-page-title">
-                {title}
-              </h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -803,12 +862,16 @@ const OrderHistory = () => {
                   <Col xs="12" sm="6">
                     <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
                     <Form.Control
-                      type={filters.fromDate ? "date" : "text"}
+                      type={filters.fromDate ? 'date' : 'text'}
                       placeholder="DD/MM/YYYY"
                       value={filters.fromDate}
                       onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                      onFocus={(e) => { e.target.type = 'date'; }}
-                      onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
+                      onFocus={(e) => {
+                        e.target.type = 'date';
+                      }}
+                      onBlur={(e) => {
+                        if (!e.target.value) e.target.type = 'text';
+                      }}
                       className="rounded-pill px-3 border-0 shadow-sm"
                       style={{ height: '44px', fontSize: '14px', paddingRight: '40px' }}
                     />
@@ -816,12 +879,16 @@ const OrderHistory = () => {
                   <Col xs="12" sm="6">
                     <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
                     <Form.Control
-                      type={filters.toDate ? "date" : "text"}
+                      type={filters.toDate ? 'date' : 'text'}
                       placeholder="DD/MM/YYYY"
                       value={filters.toDate}
                       onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                      onFocus={(e) => { e.target.type = 'date'; }}
-                      onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
+                      onFocus={(e) => {
+                        e.target.type = 'date';
+                      }}
+                      onBlur={(e) => {
+                        if (!e.target.value) e.target.type = 'text';
+                      }}
                       className="rounded-pill px-3 border-0 shadow-sm"
                       style={{ height: '44px', fontSize: '14px', paddingRight: '40px' }}
                     />
@@ -833,7 +900,11 @@ const OrderHistory = () => {
         </Collapse>
 
         {data.length === 0 && !loading ? (
-          <Alert variant="info" className="text-center border-0 shadow-sm" style={{ borderRadius: '1rem', backgroundColor: 'rgba(35, 179, 244, 0.05)', color: brandColor }}>
+          <Alert
+            variant="info"
+            className="text-center border-0 shadow-sm"
+            style={{ borderRadius: '1rem', backgroundColor: 'rgba(35, 179, 244, 0.05)', color: brandColor }}
+          >
             <CsLineIcons icon="inbox" size="24" className="me-2" />
             No orders found. {searchTerm || getActiveFilterCount() > 0 ? 'Try adjusting your search or filters.' : 'Orders will appear here once created.'}
           </Alert>
@@ -872,7 +943,17 @@ const OrderHistory = () => {
                           <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, hh:mm a')}</div>
                         </div>
                         <Badge
-                          bg={order.order_status === 'Save' ? 'warning' : order.order_status === 'Paid' || order.order_status === 'Completed' ? 'success' : order.order_status === 'KOT' ? 'warning' : order.order_status === 'Cancelled' ? 'danger' : 'secondary'}
+                          bg={
+                            order.order_status === 'Save'
+                              ? 'warning'
+                              : order.order_status === 'Paid' || order.order_status === 'Completed'
+                              ? 'success'
+                              : order.order_status === 'KOT'
+                              ? 'warning'
+                              : order.order_status === 'Cancelled'
+                              ? 'danger'
+                              : 'secondary'
+                          }
                           className="rounded-pill px-3 py-1"
                         >
                           {order.order_status}
@@ -890,7 +971,7 @@ const OrderHistory = () => {
 
                       <div className="d-flex justify-content-end align-items-center">
                         <div className="d-flex gap-2">
-                          {order.order_status === "Save" ? (
+                          {order.order_status === 'Save' ? (
                             <>
                               <Button
                                 variant="outline-primary"
@@ -968,9 +1049,7 @@ const OrderHistory = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="px-4 pt-4">
-          <p className="text-muted mb-4">
-            Are you sure you want to permanently delete this saved order? This action cannot be undone.
-          </p>
+          <p className="text-muted mb-4">Are you sure you want to permanently delete this saved order? This action cannot be undone.</p>
           <div className="d-flex justify-content-end gap-3 mt-4">
             <Button
               variant="outline-secondary"
@@ -980,12 +1059,7 @@ const OrderHistory = () => {
             >
               Cancel
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteOrder}
-              className="px-4 rounded-pill fw-bold shadow-sm"
-              disabled={loading}
-            >
+            <Button variant="danger" onClick={handleDeleteOrder} className="px-4 rounded-pill fw-bold shadow-sm" disabled={loading}>
               {loading ? <Spinner size="sm" animation="border" /> : 'Delete Order'}
             </Button>
           </div>
@@ -1032,7 +1106,9 @@ const OrderHistory = () => {
                             <div className="text-muted xsmall">Tabular .xlsx</div>
                           </div>
                           <div
-                            className={`sw-3 sh-3 rounded-circle border border-2 d-flex align-items-center justify-content-center ${exportFormat === 'excel' ? 'border-primary' : 'border-separator'}`}
+                            className={`sw-3 sh-3 rounded-circle border border-2 d-flex align-items-center justify-content-center ${
+                              exportFormat === 'excel' ? 'border-primary' : 'border-separator'
+                            }`}
                           >
                             {exportFormat === 'excel' && <div className="sw-1 sh-1 rounded-circle bg-primary" />}
                           </div>
@@ -1054,7 +1130,9 @@ const OrderHistory = () => {
                             <div className="text-muted xsmall">Document .pdf</div>
                           </div>
                           <div
-                            className={`sw-3 sh-3 rounded-circle border border-2 d-flex align-items-center justify-content-center ${exportFormat === 'pdf' ? 'border-primary' : 'border-separator'}`}
+                            className={`sw-3 sh-3 rounded-circle border border-2 d-flex align-items-center justify-content-center ${
+                              exportFormat === 'pdf' ? 'border-primary' : 'border-separator'
+                            }`}
                           >
                             {exportFormat === 'pdf' && <div className="sw-1 sh-1 rounded-circle bg-primary" />}
                           </div>
@@ -1077,24 +1155,32 @@ const OrderHistory = () => {
                         <div className="d-flex flex-column flex-sm-row gap-3">
                           <div className="flex-grow-1 position-relative">
                             <Form.Control
-                              type={exportFilters.fromDate ? "date" : "text"}
+                              type={exportFilters.fromDate ? 'date' : 'text'}
                               placeholder="DD/MM/YYYY"
                               value={exportFilters.fromDate}
                               onChange={(e) => setExportFilters({ ...exportFilters, fromDate: e.target.value })}
-                              onFocus={(e) => { e.target.type = 'date'; }}
-                              onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
+                              onFocus={(e) => {
+                                e.target.type = 'date';
+                              }}
+                              onBlur={(e) => {
+                                if (!e.target.value) e.target.type = 'text';
+                              }}
                               className="border-0 shadow-sm rounded-pill px-4"
                               style={{ height: '48px', fontSize: '14px', paddingRight: '40px' }}
                             />
                           </div>
                           <div className="flex-grow-1 position-relative">
                             <Form.Control
-                              type={exportFilters.toDate ? "date" : "text"}
+                              type={exportFilters.toDate ? 'date' : 'text'}
                               placeholder="DD/MM/YYYY"
                               value={exportFilters.toDate}
                               onChange={(e) => setExportFilters({ ...exportFilters, toDate: e.target.value })}
-                              onFocus={(e) => { e.target.type = 'date'; }}
-                              onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
+                              onFocus={(e) => {
+                                e.target.type = 'date';
+                              }}
+                              onBlur={(e) => {
+                                if (!e.target.value) e.target.type = 'text';
+                              }}
                               className="border-0 shadow-sm rounded-pill px-4"
                               style={{ height: '48px', fontSize: '14px', paddingRight: '40px' }}
                             />

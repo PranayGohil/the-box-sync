@@ -96,19 +96,19 @@ const ManageTable = () => {
   }, []);
 
   const toggleArea = (areaId) => {
-    setExpandedAreas(prev => ({
+    setExpandedAreas((prev) => ({
       ...prev,
-      [areaId]: !prev[areaId]
+      [areaId]: !prev[areaId],
     }));
   };
 
   if (loading) {
     return (
-      <div className="container-fluid pb-5">
+      <div className="container-fluid qsr-page-container">
         <style>{customStyles}</style>
         <HtmlHead title={title} description={description} />
-        <div className="page-title-container mb-3 mt-5 mt-lg-0 text-start">
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+        <div className="qsr-page-title-container text-start">
+          <h1 className="qsr-page-title">{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
         </div>
         <div className="text-center py-5">
@@ -120,15 +120,15 @@ const ManageTable = () => {
   }
 
   return (
-    <div className="container-fluid px-lg-5 pb-5">
+    <div className="container-fluid qsr-page-container">
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
       {/* Header Section */}
-      <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+      <div className="qsr-page-title-container text-start">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto text-start">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
@@ -182,12 +182,14 @@ const ManageTable = () => {
                       backgroundColor: expandedAreas[areaGroup.id] ? '#23b3f4' : '#f3f4f6',
                       color: expandedAreas[areaGroup.id] ? '#fff' : '#6b7280',
                       transition: 'all 0.3s ease',
-                      transform: expandedAreas[areaGroup.id] ? 'rotate(0deg)' : 'rotate(-90deg)'
+                      transform: expandedAreas[areaGroup.id] ? 'rotate(0deg)' : 'rotate(-90deg)',
                     }}
                   >
                     <CsLineIcons icon="chevron-down" size="16" />
                   </div>
-                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '150px' }}>{areaGroup.area}</h2>
+                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '150px' }}>
+                    {areaGroup.area}
+                  </h2>
                 </div>
                 <div className="d-flex align-items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   <Badge
@@ -197,7 +199,7 @@ const ManageTable = () => {
                       backgroundColor: 'rgba(35, 179, 244, 0.1)',
                       color: '#23b3f4',
                       fontSize: '0.85rem',
-                      fontWeight: '700'
+                      fontWeight: '700',
                     }}
                   >
                     {areaGroup.tables.length} {areaGroup.tables.length === 1 ? 'Table' : 'Tables'}
@@ -235,10 +237,7 @@ const ManageTable = () => {
                         <Card className="h-100 border-0 shadow-sm hover-elevate transition-all" style={{ borderRadius: '15px', overflow: 'hidden' }}>
                           <Card.Body className="p-3">
                             <div className="d-flex justify-content-between align-items-start mb-3">
-                              <div
-                                className="d-flex align-items-center justify-content-center bg-light rounded-lg"
-                                style={{ width: '45px', height: '45px' }}
-                              >
+                              <div className="d-flex align-items-center justify-content-center bg-light rounded-lg" style={{ width: '45px', height: '45px' }}>
                                 <CsLineIcons icon="layout-5" size="24" className="text-primary" />
                               </div>
                               <div className="d-flex gap-1">

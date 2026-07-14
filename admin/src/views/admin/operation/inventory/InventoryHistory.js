@@ -19,7 +19,7 @@ import {
   deleteWastageEntry,
   getCorrectionRequests,
   resolveCorrectionRequest,
-  getAIInsights
+  getAIInsights,
 } from 'api/inventory';
 
 // ── Custom Shared Styles ─────────────────────────────────────────────────────
@@ -367,7 +367,9 @@ const DailyTrackerTab = ({ brandColor }) => {
                           {openingLog.log_status === 'manager_verified' ? 'Verified by Manager' : 'Auto Generated'}
                         </Badge>
                       ) : (
-                        <Badge bg="danger" className="px-3 py-2 text-uppercase">Pending</Badge>
+                        <Badge bg="danger" className="px-3 py-2 text-uppercase">
+                          Pending
+                        </Badge>
                       )}
                     </div>
                   </Card.Body>
@@ -387,7 +389,9 @@ const DailyTrackerTab = ({ brandColor }) => {
                           {closingLog.log_status === 'manager_verified' ? 'Verified by Manager' : 'Auto Recorded'}
                         </Badge>
                       ) : (
-                        <Badge bg="danger" className="px-3 py-2 text-uppercase">Pending</Badge>
+                        <Badge bg="danger" className="px-3 py-2 text-uppercase">
+                          Pending
+                        </Badge>
                       )}
                     </div>
                   </Card.Body>
@@ -417,7 +421,7 @@ const DailyTrackerTab = ({ brandColor }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(!report || !report.itemSummary || report.itemSummary.length === 0) ? (
+                  {!report || !report.itemSummary || report.itemSummary.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="text-center text-muted py-5 fw-bold">
                         No daily transactions or tracking logs recorded for this date.
@@ -427,8 +431,8 @@ const DailyTrackerTab = ({ brandColor }) => {
                     report.itemSummary.map((item, idx) => {
                       const openingQty = item.opening;
                       const closingQty = item.closing;
-                      const expected = openingQty !== null ? (openingQty + item.received - item.used - item.wasted) : null;
-                      const variance = (closingQty !== null && expected !== null) ? (closingQty - expected) : null;
+                      const expected = openingQty !== null ? openingQty + item.received - item.used - item.wasted : null;
+                      const variance = closingQty !== null && expected !== null ? closingQty - expected : null;
 
                       return (
                         <tr key={idx}>
@@ -439,15 +443,9 @@ const DailyTrackerTab = ({ brandColor }) => {
                           <td className="text-center font-monospace fw-bold text-secondary">
                             {openingQty !== null ? openingQty.toFixed(2) : <span className="text-muted fw-normal">—</span>}
                           </td>
-                          <td className="text-center font-monospace fw-bold text-info">
-                            {item.received > 0 ? `+${item.received.toFixed(2)}` : '—'}
-                          </td>
-                          <td className="text-center font-monospace fw-bold text-primary">
-                            {item.used > 0 ? `-${item.used.toFixed(2)}` : '—'}
-                          </td>
-                          <td className="text-center font-monospace fw-bold text-danger">
-                            {item.wasted > 0 ? `-${item.wasted.toFixed(2)}` : '—'}
-                          </td>
+                          <td className="text-center font-monospace fw-bold text-info">{item.received > 0 ? `+${item.received.toFixed(2)}` : '—'}</td>
+                          <td className="text-center font-monospace fw-bold text-primary">{item.used > 0 ? `-${item.used.toFixed(2)}` : '—'}</td>
+                          <td className="text-center font-monospace fw-bold text-danger">{item.wasted > 0 ? `-${item.wasted.toFixed(2)}` : '—'}</td>
                           <td className="text-center font-monospace fw-bold text-dark">
                             {expected !== null ? expected.toFixed(2) : <span className="text-muted fw-normal">—</span>}
                           </td>
@@ -543,11 +541,16 @@ const StockControlTab = ({ brandColor }) => {
 
           {lowStockCount > 0 && (
             <Alert variant="warning" className="border-0 shadow-sm rounded-4 d-flex align-items-center gap-3 mb-4 p-3 bg-light-warning">
-              <div className="bg-warning text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+              <div
+                className="bg-warning text-white rounded-circle p-2 d-flex align-items-center justify-content-center"
+                style={{ width: '40px', height: '40px' }}
+              >
                 <CsLineIcons icon="warning-hexagon" size="20" />
               </div>
               <div>
-                <div className="fw-bold text-dark">{lowStockCount} ingredient{lowStockCount > 1 ? 's are' : ' is'} below safety threshold!</div>
+                <div className="fw-bold text-dark">
+                  {lowStockCount} ingredient{lowStockCount > 1 ? 's are' : ' is'} below safety threshold!
+                </div>
                 <div className="text-muted small">Please order/purchase fresh inventory to avoid stockouts.</div>
               </div>
             </Alert>
@@ -558,7 +561,9 @@ const StockControlTab = ({ brandColor }) => {
               <Spinner animation="border" variant="primary" />
             </div>
           ) : stockData.length === 0 ? (
-            <Alert variant="light" className="text-center py-5 border-dashed rounded-4">No tracking items found.</Alert>
+            <Alert variant="light" className="text-center py-5 border-dashed rounded-4">
+              No tracking items found.
+            </Alert>
           ) : (
             <div className="table-responsive">
               <Table hover className="align-middle table-reconcile mb-0">
@@ -578,7 +583,11 @@ const StockControlTab = ({ brandColor }) => {
                       <tr key={idx} className={isBelow ? 'bg-danger-subtle' : ''}>
                         <td>
                           <div className="fw-bold text-dark">{item._id}</div>
-                          {isBelow && <Badge bg="danger" className="text-uppercase small">Low Stock Alert</Badge>}
+                          {isBelow && (
+                            <Badge bg="danger" className="text-uppercase small">
+                              Low Stock Alert
+                            </Badge>
+                          )}
                         </td>
                         <td className="text-center font-monospace fw-bold fs-6">
                           <span className={item.totalStock <= 0 ? 'text-danger' : isBelow ? 'text-warning' : 'text-success'}>
@@ -587,13 +596,17 @@ const StockControlTab = ({ brandColor }) => {
                         </td>
                         <td className="text-center fw-bold">
                           {item.low_stock_threshold > 0 ? (
-                            <Badge bg="light" text="dark" className="border px-3 py-2">Min: {item.low_stock_threshold}</Badge>
+                            <Badge bg="light" text="dark" className="border px-3 py-2">
+                              Min: {item.low_stock_threshold}
+                            </Badge>
                           ) : (
                             <span className="text-muted">—</span>
                           )}
                         </td>
                         <td className="text-center">
-                          <Badge bg="secondary" className="text-uppercase">{item.tracking_level || 'auto'}</Badge>
+                          <Badge bg="secondary" className="text-uppercase">
+                            {item.tracking_level || 'auto'}
+                          </Badge>
                         </td>
                         <td className="text-end">
                           <Button variant="outline-secondary" size="sm" className="rounded-pill" onClick={() => openThresholdModal(item)}>
@@ -638,7 +651,9 @@ const StockControlTab = ({ brandColor }) => {
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowThresholdModal(false)} disabled={isSubmitting}>Cancel</Button>
+          <Button variant="outline-secondary" onClick={() => setShowThresholdModal(false)} disabled={isSubmitting}>
+            Cancel
+          </Button>
           <Button variant="primary" onClick={handleThresholdSave} disabled={isSubmitting}>
             {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Save Settings'}
           </Button>
@@ -698,19 +713,27 @@ const WastageLogsTab = () => {
           </div>
           <div className="d-flex align-items-center gap-2">
             <Form.Control
-              type={fromDate ? "date" : "text"}
+              type={fromDate ? 'date' : 'text'}
               placeholder="dd-mm-yyyy"
-              onFocus={(e) => { e.target.type = "date"; }}
-              onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+              onFocus={(e) => {
+                e.target.type = 'date';
+              }}
+              onBlur={(e) => {
+                if (!e.target.value) e.target.type = 'text';
+              }}
               className="modern-input text-dark"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
             />
             <Form.Control
-              type={toDate ? "date" : "text"}
+              type={toDate ? 'date' : 'text'}
               placeholder="dd-mm-yyyy"
-              onFocus={(e) => { e.target.type = "date"; }}
-              onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+              onFocus={(e) => {
+                e.target.type = 'date';
+              }}
+              onBlur={(e) => {
+                if (!e.target.value) e.target.type = 'text';
+              }}
               className="modern-input text-dark"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
@@ -723,7 +746,9 @@ const WastageLogsTab = () => {
             <Spinner animation="border" variant="primary" />
           </div>
         ) : logs.length === 0 ? (
-          <Alert variant="light" className="text-center py-5 border-dashed m-4">No wastage logs found.</Alert>
+          <Alert variant="light" className="text-center py-5 border-dashed m-4">
+            No wastage logs found.
+          </Alert>
         ) : (
           <div className="table-responsive">
             <Table hover className="align-middle table-reconcile mb-0">
@@ -745,18 +770,19 @@ const WastageLogsTab = () => {
                       <small className="text-muted">{format(new Date(log.date), 'hh:mm a')}</small>
                     </td>
                     <td className="fw-bold text-primary">{log.item_name}</td>
-                    <td className="fw-bold text-danger">-{log.quantity.toFixed(2)} {log.unit}</td>
-                    <td>
-                      <Badge bg={typeColors[log.wastage_type] || 'secondary'} className="text-uppercase">{log.wastage_type}</Badge>
+                    <td className="fw-bold text-danger">
+                      -{log.quantity.toFixed(2)} {log.unit}
                     </td>
-                    <td className="text-muted" style={{ maxWidth: '200px' }}>{log.reason || '—'}</td>
+                    <td>
+                      <Badge bg={typeColors[log.wastage_type] || 'secondary'} className="text-uppercase">
+                        {log.wastage_type}
+                      </Badge>
+                    </td>
+                    <td className="text-muted" style={{ maxWidth: '200px' }}>
+                      {log.reason || '—'}
+                    </td>
                     <td className="pe-4 text-end">
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        disabled={deletingId === log._id}
-                        onClick={() => handleDelete(log._id)}
-                      >
+                      <Button variant="outline-danger" size="sm" disabled={deletingId === log._id} onClick={() => handleDelete(log._id)}>
                         {deletingId === log._id ? 'Deleting...' : 'Delete'}
                       </Button>
                     </td>
@@ -811,9 +837,13 @@ const CorrectionRequestsTab = () => {
       <Card.Body className="p-4">
         <h5 className="fw-bold mb-3">Pending Correction Requests</h5>
         {loading ? (
-          <div className="text-center py-4"><Spinner animation="border" variant="primary" /></div>
+          <div className="text-center py-4">
+            <Spinner animation="border" variant="primary" />
+          </div>
         ) : requests.length === 0 ? (
-          <Alert variant="light" className="text-center py-4 border-dashed mb-0">No pending requests</Alert>
+          <Alert variant="light" className="text-center py-4 border-dashed mb-0">
+            No pending requests
+          </Alert>
         ) : (
           <div className="table-responsive">
             <Table hover className="align-middle table-reconcile mb-0">
@@ -829,33 +859,21 @@ const CorrectionRequestsTab = () => {
                 {requests.map((req) => (
                   <tr key={req._id}>
                     <td className="fw-bold text-dark">{format(new Date(req.log_date), 'dd MMM yyyy')}</td>
-                    <td><Badge bg={req.shift === 'opening' ? 'primary' : 'dark'} className="text-capitalize">{req.shift}</Badge></td>
+                    <td>
+                      <Badge bg={req.shift === 'opening' ? 'primary' : 'dark'} className="text-capitalize">
+                        {req.shift}
+                      </Badge>
+                    </td>
                     <td className="text-muted">"{req.reason}"</td>
                     <td className="text-end">
                       <div className="d-flex justify-content-end gap-1">
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          as={Link}
-                          to="/operations/daily-stock-logs"
-                          disabled={resolvingId === req._id}
-                        >
+                        <Button variant="outline-primary" size="sm" as={Link} to="/operations/daily-stock-logs" disabled={resolvingId === req._id}>
                           Adjust Log
                         </Button>
-                        <Button
-                          variant="outline-success"
-                          size="sm"
-                          disabled={resolvingId === req._id}
-                          onClick={() => handleResolve(req._id, 'approved')}
-                        >
+                        <Button variant="outline-success" size="sm" disabled={resolvingId === req._id} onClick={() => handleResolve(req._id, 'approved')}>
                           Approve
                         </Button>
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          disabled={resolvingId === req._id}
-                          onClick={() => handleResolve(req._id, 'rejected')}
-                        >
+                        <Button variant="outline-danger" size="sm" disabled={resolvingId === req._id} onClick={() => handleResolve(req._id, 'rejected')}>
                           Dismiss
                         </Button>
                       </div>
@@ -871,13 +889,12 @@ const CorrectionRequestsTab = () => {
   );
 };
 
-
 // ── Component: AI Co-pilot Tab ──────────────────────────────────────────────
 const AICopilotTab = () => {
   const [messages, setMessages] = useState([
     {
       sender: 'assistant',
-      text: "Hello! I am your AI Inventory Co-pilot. I can analyze counts, detect stockout risks, track waste anomalies, or draft supplier orders. How can I help you today?",
+      text: 'Hello! I am your AI Inventory Co-pilot. I can analyze counts, detect stockout risks, track waste anomalies, or draft supplier orders. How can I help you today?',
     },
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -891,14 +908,11 @@ const AICopilotTab = () => {
       if (res.data.success) {
         setInsights(res.data);
         if (customQuery) {
-          setMessages((prev) => [
-            ...prev,
-            { sender: 'assistant', text: res.data.conversationalSummary },
-          ]);
+          setMessages((prev) => [...prev, { sender: 'assistant', text: res.data.conversationalSummary }]);
         }
       }
     } catch (err) {
-      toast.error("Failed to load AI Insights");
+      toast.error('Failed to load AI Insights');
     } finally {
       setLoading(false);
     }
@@ -941,9 +955,7 @@ const AICopilotTab = () => {
             <div className="chat-box d-flex flex-column mb-3 flex-grow-1" style={{ minHeight: '350px' }}>
               {messages.map((m, idx) => (
                 <div key={idx} className={m.sender === 'user' ? 'chat-bubble-user align-self-end' : 'chat-bubble-assistant align-self-start'}>
-                  <div style={{ whiteSpace: 'pre-wrap' }}>
-                    {m.text}
-                  </div>
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{m.text}</div>
                 </div>
               ))}
               {loading && (
@@ -956,13 +968,13 @@ const AICopilotTab = () => {
 
             {/* Quick Prompts */}
             <div className="d-flex flex-wrap gap-2 mb-3">
-              <Button className="prompt-btn" size="sm" onClick={() => handleQuickPrompt("Generate Reorder Draft")}>
+              <Button className="prompt-btn" size="sm" onClick={() => handleQuickPrompt('Generate Reorder Draft')}>
                 📋 Draft Supplier Order
               </Button>
-              <Button className="prompt-btn" size="sm" onClick={() => handleQuickPrompt("Identify ingredients at risk of stockout")}>
+              <Button className="prompt-btn" size="sm" onClick={() => handleQuickPrompt('Identify ingredients at risk of stockout')}>
                 ⚠️ Scan Stockout Risks
               </Button>
-              <Button className="prompt-btn" size="sm" onClick={() => handleQuickPrompt("Wastage patterns and anomalies")}>
+              <Button className="prompt-btn" size="sm" onClick={() => handleQuickPrompt('Wastage patterns and anomalies')}>
                 🗑️ Wastage Analysis
               </Button>
             </div>
@@ -1030,7 +1042,11 @@ const AICopilotTab = () => {
                       <div key={idx} className="mb-2 pb-2 border-bottom last-border-0">
                         <div className="fw-bold small text-dark">{w.item_name}</div>
                         <div className="text-muted small">
-                          Wasted: <span className="text-warning fw-bold">{w.weekly_wasted} {w.unit}</span> / Wastage Rate: <span className="text-danger fw-bold">{w.wastage_rate}%</span>
+                          Wasted:{' '}
+                          <span className="text-warning fw-bold">
+                            {w.weekly_wasted} {w.unit}
+                          </span>{' '}
+                          / Wastage Rate: <span className="text-danger fw-bold">{w.wastage_rate}%</span>
                         </div>
                       </div>
                     ))}
@@ -1061,7 +1077,7 @@ const AICopilotTab = () => {
                   disabled={!insights?.reorderList || insights.reorderList.length === 0}
                   onClick={() => {
                     navigator.clipboard.writeText(insights?.reorderDraftText);
-                    toast.success("Purchase order copied to clipboard!");
+                    toast.success('Purchase order copied to clipboard!');
                   }}
                 >
                   Copy Order Text
@@ -1105,9 +1121,13 @@ const RequestedInventory = ({ refreshKey, onRejectClick }) => {
       <Card.Body className="p-4">
         <h5 className="fw-bold mb-3">Requested Inventory</h5>
         {loading ? (
-          <div className="text-center py-4"><Spinner animation="border" variant="primary" /></div>
+          <div className="text-center py-4">
+            <Spinner animation="border" variant="primary" />
+          </div>
         ) : data.length === 0 ? (
-          <Alert variant="light" className="text-center py-4 border-dashed mb-0">No active requests</Alert>
+          <Alert variant="light" className="text-center py-4 border-dashed mb-0">
+            No active requests
+          </Alert>
         ) : (
           <div className="table-responsive">
             <Table hover className="align-middle table-reconcile mb-0">
@@ -1123,11 +1143,18 @@ const RequestedInventory = ({ refreshKey, onRejectClick }) => {
                 {data.map((item) => (
                   <tr key={item._id}>
                     <td>{new Date(item.request_date).toLocaleDateString('en-IN')}</td>
-                    <td><Badge bg="light" text="dark" className="border">{item.category}</Badge></td>
+                    <td>
+                      <Badge bg="light" text="dark" className="border">
+                        {item.category}
+                      </Badge>
+                    </td>
                     <td>
                       {item.items.map((it, i) => (
                         <div key={i} className="small fw-semibold">
-                          {it.item_name} <span className="text-primary">({it.item_quantity} {it.unit})</span>
+                          {it.item_name}{' '}
+                          <span className="text-primary">
+                            ({it.item_quantity} {it.unit})
+                          </span>
                         </div>
                       ))}
                     </td>
@@ -1181,9 +1208,13 @@ const CompletedInventory = ({ refreshKey, history, onDeleteClick }) => {
       <Card.Body className="p-4">
         <h5 className="fw-bold mb-3">Completed Requests</h5>
         {loading ? (
-          <div className="text-center py-4"><Spinner animation="border" variant="success" /></div>
+          <div className="text-center py-4">
+            <Spinner animation="border" variant="success" />
+          </div>
         ) : data.length === 0 ? (
-          <Alert variant="light" className="text-center py-4 border-dashed mb-0">No records found</Alert>
+          <Alert variant="light" className="text-center py-4 border-dashed mb-0">
+            No records found
+          </Alert>
         ) : (
           <div className="table-responsive">
             <Table hover className="align-middle table-reconcile mb-0">
@@ -1256,9 +1287,13 @@ const RejectedInventory = ({ refreshKey, history, onDeleteClick }) => {
       <Card.Body className="p-4">
         <h5 className="fw-bold mb-3">Rejected Requests</h5>
         {loading ? (
-          <div className="text-center py-4"><Spinner animation="border" variant="danger" /></div>
+          <div className="text-center py-4">
+            <Spinner animation="border" variant="danger" />
+          </div>
         ) : data.length === 0 ? (
-          <Alert variant="light" className="text-center py-4 border-dashed mb-0">No records found</Alert>
+          <Alert variant="light" className="text-center py-4 border-dashed mb-0">
+            No records found
+          </Alert>
         ) : (
           <div className="table-responsive">
             <Table hover className="align-middle table-reconcile mb-0">
@@ -1274,7 +1309,11 @@ const RejectedInventory = ({ refreshKey, history, onDeleteClick }) => {
                 {data.map((item) => (
                   <tr key={item._id}>
                     <td>{new Date(item.request_date).toLocaleDateString('en-IN')}</td>
-                    <td><Badge bg="danger" className="text-uppercase">{item.category}</Badge></td>
+                    <td>
+                      <Badge bg="danger" className="text-uppercase">
+                        {item.category}
+                      </Badge>
+                    </td>
                     <td className="text-muted small">"{item.reject_reason || 'No reason provided'}"</td>
                     <td className="text-end">
                       <div className="d-flex justify-content-end gap-1">
@@ -1305,7 +1344,7 @@ const InventoryHistory = () => {
   const breadcrumbs = [
     { to: '', text: 'Home' },
     { to: 'operations/inventory-history', text: 'Operations' },
-    { to: 'operations/inventory-history', title: 'Inventory Control Hub' }
+    { to: 'operations/inventory-history', title: 'Inventory Control Hub' },
   ];
 
   const [activeTab, setActiveTab] = useState('tracker');
@@ -1339,7 +1378,7 @@ const InventoryHistory = () => {
     setIsDeleting(true);
     try {
       await axios.delete(`${process.env.REACT_APP_API}/inventory/delete/${selectedItem._id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setShowDeleteModal(false);
       triggerRefresh();
@@ -1375,11 +1414,11 @@ const InventoryHistory = () => {
     <div className="workstation-container">
       <style>{customStyles}</style>
       <HtmlHead title={title} description="Unified Admin Daily Stock and Inventory tracker hub." />
-      <div className="container-fluid px-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -1411,7 +1450,9 @@ const InventoryHistory = () => {
             <Nav.Link className={activeTab === 'corrections' ? 'active' : ''} onClick={() => setActiveTab('corrections')}>
               <CsLineIcons icon="warning-hexagon" size="16" className="me-2" /> Correction Requests
               {pendingCorrectionCount > 0 && (
-                <Badge bg="danger" className="ms-2 rounded-circle" style={{ fontSize: '0.65rem' }}>{pendingCorrectionCount}</Badge>
+                <Badge bg="danger" className="ms-2 rounded-circle" style={{ fontSize: '0.65rem' }}>
+                  {pendingCorrectionCount}
+                </Badge>
               )}
             </Nav.Link>
           </Nav.Item>
@@ -1460,7 +1501,9 @@ const InventoryHistory = () => {
         {/* Deletion Modal */}
         <Modal show={showDeleteModal} onHide={() => !isDeleting && setShowDeleteModal(false)} centered backdrop="static">
           <Modal.Header closeButton className="border-0 pb-0">
-            <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>Confirm Deletion</Modal.Title>
+            <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+              Confirm Deletion
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body className="py-4">
             <div className="d-flex align-items-center mb-3">

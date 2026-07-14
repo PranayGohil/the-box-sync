@@ -11,8 +11,6 @@ import EditTableModal from './EditTableModal';
 import EditTableAreaModal from './EditTableAreaModal';
 import DeleteTableModal from './DeleteTableModal';
 
-
-
 const ManageTable = () => {
   const title = 'Manage Tables';
   const description = 'Manage restaurant table areas and layouts with a premium responsive design.';
@@ -49,7 +47,7 @@ const ManageTable = () => {
         id: _id,
       }));
       setTableData(transformedTables);
-      
+
       // Expand first area by default
       if (transformedTables.length > 0) {
         setExpandedAreas({ [transformedTables[0].id]: true });
@@ -68,18 +66,18 @@ const ManageTable = () => {
   }, []);
 
   const toggleArea = (areaId) => {
-    setExpandedAreas(prev => ({
+    setExpandedAreas((prev) => ({
       ...prev,
-      [areaId]: !prev[areaId]
+      [areaId]: !prev[areaId],
     }));
   };
 
   if (loading) {
     return (
-      <div className="container-fluid">
+      <div className="container-fluid qsr-page-container">
         <HtmlHead title={title} description={description} />
-        <div className="page-title-container mb-3">
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+        <div className="qsr-page-title-container">
+          <h1 className="qsr-page-title">{title}</h1>
           <BreadcrumbList items={breadcrumbs} />
         </div>
         <div className="text-center py-5">
@@ -91,22 +89,18 @@ const ManageTable = () => {
   }
 
   return (
-    <div className="container-fluid px-lg-5 pb-5">
-      
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
-      
+
       {/* Header Section */}
-      <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+      <div className="qsr-page-title-container text-start">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto text-start">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col xs="12" md="5" className="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
-            <Button 
-              href="/operations/add-table"
-              className="px-4 py-2 rounded-pill d-flex align-items-center manage-table-custom-btn-outline"
-            >
+            <Button href="/operations/add-table" className="px-4 py-2 rounded-pill d-flex align-items-center manage-table-custom-btn-outline">
               <CsLineIcons icon="plus" className="me-2" size="18" stroke="currentColor" />
               Add New Table
             </Button>
@@ -139,36 +133,38 @@ const ManageTable = () => {
           {tableData.map((areaGroup) => (
             <div key={areaGroup.id} className="mb-4">
               {/* Area Header */}
-              <div 
-                className="d-flex justify-content-between align-items-center gap-2 gap-sm-3 mb-2 px-2 px-sm-3 py-3 bg-white shadow-sm cursor-pointer transition-all hover-light" 
+              <div
+                className="d-flex justify-content-between align-items-center gap-2 gap-sm-3 mb-2 px-2 px-sm-3 py-3 bg-white shadow-sm cursor-pointer transition-all hover-light"
                 style={{ borderRadius: '15px', border: '1px solid rgba(0,0,0,0.03)' }}
                 onClick={() => toggleArea(areaGroup.id)}
               >
                 <div className="d-flex align-items-center gap-2 gap-sm-3 min-width-0">
-                  <div 
+                  <div
                     className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
-                    style={{ 
-                      width: '32px', 
-                      height: '32px', 
+                    style={{
+                      width: '32px',
+                      height: '32px',
                       backgroundColor: expandedAreas[areaGroup.id] ? '#1ea8e7' : '#f3f4f6',
                       color: expandedAreas[areaGroup.id] ? '#fff' : '#6b7280',
                       transition: 'all 0.3s ease',
-                      transform: expandedAreas[areaGroup.id] ? 'rotate(0deg)' : 'rotate(-90deg)'
+                      transform: expandedAreas[areaGroup.id] ? 'rotate(0deg)' : 'rotate(-90deg)',
                     }}
                   >
                     <CsLineIcons icon="chevron-down" size="16" />
                   </div>
-                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '150px' }}>{areaGroup.area}</h2>
+                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '150px' }}>
+                    {areaGroup.area}
+                  </h2>
                 </div>
                 <div className="d-flex align-items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                  <Badge 
-                    bg="soft-primary" 
-                    className="rounded-pill px-2 px-sm-3 py-2 flex-shrink-0" 
-                    style={{ 
-                      backgroundColor: 'rgba(30, 168, 231, 0.1)', 
+                  <Badge
+                    bg="soft-primary"
+                    className="rounded-pill px-2 px-sm-3 py-2 flex-shrink-0"
+                    style={{
+                      backgroundColor: 'rgba(30, 168, 231, 0.1)',
                       color: '#1ea8e7',
                       fontSize: '0.85rem',
-                      fontWeight: '700'
+                      fontWeight: '700',
                     }}
                   >
                     {areaGroup.tables.length} {areaGroup.tables.length === 1 ? 'Table' : 'Tables'}
@@ -206,10 +202,7 @@ const ManageTable = () => {
                         <Card className="h-100 border-0 shadow-sm hover-elevate transition-all" style={{ borderRadius: '15px', overflow: 'hidden' }}>
                           <Card.Body className="p-3">
                             <div className="d-flex justify-content-between align-items-start mb-3">
-                              <div 
-                                className="d-flex align-items-center justify-content-center bg-light rounded-lg" 
-                                style={{ width: '45px', height: '45px' }}
-                              >
+                              <div className="d-flex align-items-center justify-content-center bg-light rounded-lg" style={{ width: '45px', height: '45px' }}>
                                 <CsLineIcons icon="layout-5" size="24" className="text-primary" />
                               </div>
                               <div className="d-flex gap-1">
@@ -237,12 +230,12 @@ const ManageTable = () => {
                                 </Button>
                               </div>
                             </div>
-                            
+
                             <div className="mb-2">
                               <span className="text-muted small text-uppercase fw-bold manage-table-ls-1">Table Number</span>
                               <h4 className="fw-bold mb-0">#{table.table_no}</h4>
                             </div>
-                            
+
                             <div className="d-flex align-items-center mt-3 pt-3 border-top">
                               <div className="d-flex align-items-center gap-2">
                                 <CsLineIcons icon="user" size="14" className="text-muted" />
@@ -264,14 +257,14 @@ const ManageTable = () => {
 
       {/* Modals */}
       {selectedTable && (
-        <EditTableModal 
-          show={editTableModalShow} 
+        <EditTableModal
+          show={editTableModalShow}
           handleClose={() => {
             setEditTableModalShow(false);
             setSelectedTable(null);
-          }} 
-          data={selectedTable} 
-          onUpdateSuccess={fetchTableData} 
+          }}
+          data={selectedTable}
+          onUpdateSuccess={fetchTableData}
         />
       )}
 
@@ -298,8 +291,6 @@ const ManageTable = () => {
           onDeleteSuccess={fetchTableData}
         />
       )}
-
-      
     </div>
   );
 };

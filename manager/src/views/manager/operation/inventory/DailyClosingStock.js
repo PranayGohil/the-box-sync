@@ -256,11 +256,7 @@ const DailyClosingStock = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [todayRes, wastageRes, timingsRes] = await Promise.all([
-        getTodayLog(),
-        getWastageLog({ from: today, to: today }),
-        getRestaurantTimings(),
-      ]);
+      const [todayRes, wastageRes, timingsRes] = await Promise.all([getTodayLog(), getWastageLog({ from: today, to: today }), getRestaurantTimings()]);
 
       const { opening: op, closing: cl, liveStock: ls } = todayRes.data;
       setOpening(op);
@@ -274,7 +270,9 @@ const DailyClosingStock = () => {
         setNotes(cl.notes || '');
       } else {
         const stockMap = {};
-        (ls || []).forEach((s) => { stockMap[s._id] = { unit: s.unit, qty: s.totalStock }; });
+        (ls || []).forEach((s) => {
+          stockMap[s._id] = { unit: s.unit, qty: s.totalStock };
+        });
         const baseItems = op
           ? op.items.map((i) => ({ item_name: i.item_name, unit: i.unit, quantity: stockMap[i.item_name]?.qty ?? i.quantity }))
           : (ls || []).map((s) => ({ item_name: s._id, unit: s.unit, quantity: s.totalStock }));
@@ -288,10 +286,16 @@ const DailyClosingStock = () => {
     }
   }, [today]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleQtyChange = (index, value) => {
-    setItems((prev) => { const u = [...prev]; u[index] = { ...u[index], quantity: parseFloat(value) || 0 }; return u; });
+    setItems((prev) => {
+      const u = [...prev];
+      u[index] = { ...u[index], quantity: parseFloat(value) || 0 };
+      return u;
+    });
   };
 
   const isLocked = closing && closing.log_status === 'manager_verified';
@@ -315,8 +319,14 @@ const DailyClosingStock = () => {
   };
 
   const handleCorrectionRequest = async () => {
-    if (!correctionNote.trim()) { toast.error('Please describe what needs to be corrected.'); return; }
-    if (!closing?._id) { toast.error('No closing stock log found to request correction on.'); return; }
+    if (!correctionNote.trim()) {
+      toast.error('Please describe what needs to be corrected.');
+      return;
+    }
+    if (!closing?._id) {
+      toast.error('No closing stock log found to request correction on.');
+      return;
+    }
     try {
       setSendingCorrection(true);
       await createCorrectionRequest({
@@ -343,23 +353,26 @@ const DailyClosingStock = () => {
   const autoDeadline = addOneHour(closeTime);
   const statusCfg = closing ? STATUS_CONFIG[closing.log_status] : null;
 
-
   return (
     <>
       <div className="stock-container">
         <style>{customStyles}</style>
         <HtmlHead title={title} description={description} />
-        <div className="container-fluid px-lg-5">
-          <div className="page-title-container mb-3 mt-n3">
+        <div className="container-fluid qsr-page-container">
+          <div className="qsr-page-title-container">
             <Row className="g-3 align-items-center">
               <Col xs="12" md="7">
-                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+                <h1 className="qsr-page-title">{title}</h1>
                 <BreadcrumbList items={breadcrumbs} />
               </Col>
               <Col xs="12" md="5" className="d-flex justify-content-md-end align-items-center gap-2 mt-3 mt-md-0 flex-wrap">
                 {/* Status badge */}
                 {statusCfg && (
-                  <span className={`verify-badge bg-${statusCfg.bg === 'secondary' ? 'secondary' : statusCfg.bg === 'success' ? 'success' : 'warning'}-subtle text-${statusCfg.bg}`}>
+                  <span
+                    className={`verify-badge bg-${
+                      statusCfg.bg === 'secondary' ? 'secondary' : statusCfg.bg === 'success' ? 'success' : 'warning'
+                    }-subtle text-${statusCfg.bg}`}
+                  >
                     {statusCfg.icon} {statusCfg.label}
                   </span>
                 )}
@@ -393,10 +406,7 @@ const DailyClosingStock = () => {
 
               {/* ── Banner: Closing submitted (Manager Verified — locked) ── */}
               {isLocked && (
-                <Alert
-                  variant="success"
-                  className="d-flex align-items-start gap-3 mb-3"
-                >
+                <Alert variant="success" className="d-flex align-items-start gap-3 mb-3">
                   <span style={{ fontSize: '1.4rem' }}>{statusCfg?.icon}</span>
                   <div>
                     <strong>Closing stock verified and locked for today.</strong>
@@ -410,9 +420,7 @@ const DailyClosingStock = () => {
                         by {closing.recorded_by} at {format(new Date(closing.createdAt), 'hh:mm a')}
                       </span>
                     )}
-                    {closing.edited_by && (
-                      <span className="ms-2 text-muted small">· Edited by Admin ({closing.edited_by})</span>
-                    )}
+                    {closing.edited_by && <span className="ms-2 text-muted small">· Edited by Admin ({closing.edited_by})</span>}
                     <div className="mt-1 text-muted small">
                       To make a correction, click <strong>"Request Correction"</strong> above. Only Admin can modify verified logs.
                     </div>
@@ -427,10 +435,13 @@ const DailyClosingStock = () => {
                   <div className="flex-grow-1">
                     <strong>Closing stock was auto-recorded from live stock (no manager submission).</strong>
                     <span className="ms-2">
-                      <Badge bg="warning" text="dark" className="px-3 py-2">Closing: Auto Recorded</Badge>
+                      <Badge bg="warning" text="dark" className="px-3 py-2">
+                        Closing: Auto Recorded
+                      </Badge>
                     </span>
                     <div className="text-muted small mt-1">
-                      You can adjust the quantities below and click <strong>"Verify &amp; Save Closing Stock"</strong> to confirm — it will become <strong>Closing: Manager Verified</strong>.
+                      You can adjust the quantities below and click <strong>"Verify &amp; Save Closing Stock"</strong> to confirm — it will become{' '}
+                      <strong>Closing: Manager Verified</strong>.
                     </div>
                   </div>
                 </Alert>
@@ -443,8 +454,8 @@ const DailyClosingStock = () => {
                   <div>
                     <strong>Auto-record deadline: {autoDeadline}</strong>
                     <span className="ms-2 text-muted small">
-                      If closing stock is not submitted by <strong>{autoDeadline}</strong> (1 hour after restaurant closing time),
-                      the system will auto-record current live stock as <em>Closing: Auto Recorded</em>.
+                      If closing stock is not submitted by <strong>{autoDeadline}</strong> (1 hour after restaurant closing time), the system will auto-record
+                      current live stock as <em>Closing: Auto Recorded</em>.
                     </span>
                   </div>
                 </Alert>
@@ -462,11 +473,16 @@ const DailyClosingStock = () => {
                     <Card className="stats-card border-0 h-100">
                       <Card.Body className="p-3">
                         <div className="d-flex align-items-center gap-3">
-                          <div className={`bg-${stat.color}-subtle text-${stat.color} rounded-circle d-flex align-items-center justify-content-center`} style={{ width: '40px', height: '40px' }}>
+                          <div
+                            className={`bg-${stat.color}-subtle text-${stat.color} rounded-circle d-flex align-items-center justify-content-center`}
+                            style={{ width: '40px', height: '40px' }}
+                          >
                             <CsLineIcons icon={stat.icon} size="18" />
                           </div>
                           <div>
-                            <div className="text-muted small fw-bold text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>{stat.label}</div>
+                            <div className="text-muted small fw-bold text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                              {stat.label}
+                            </div>
                             <div className={`h4 mb-0 fw-bold text-${stat.color}`}>{stat.val}</div>
                           </div>
                         </div>
@@ -481,7 +497,9 @@ const DailyClosingStock = () => {
                   <Card.Body className="p-0">
                     <div className="p-4 border-bottom bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                       <div>
-                        <div className="section-label mb-1"><CsLineIcons icon="form-check" size="18" /> Closing Stock Quantities</div>
+                        <div className="section-label mb-1">
+                          <CsLineIcons icon="form-check" size="18" /> Closing Stock Quantities
+                        </div>
                         <div className="text-muted small">
                           {closing
                             ? 'Submitted closing stock — read only. Use "Request Correction" to notify Admin.'
@@ -497,42 +515,54 @@ const DailyClosingStock = () => {
                             <th className="py-3">Unit</th>
                             {opening && <th className="py-3">Opening</th>}
                             <th className="py-3 text-danger">Wasted</th>
-                            <th className="py-3 pe-4" style={{ width: '180px' }}>Closing Qty</th>
+                            <th className="py-3 pe-4" style={{ width: '180px' }}>
+                              Closing Qty
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {items.length === 0 ? (
-                            <tr><td colSpan={5} className="text-center text-muted py-5 fw-bold">No stock items found.</td></tr>
-                          ) : items.map((item, idx) => {
-                            const openQty = opening?.items?.find((o) => o.item_name === item.item_name)?.quantity;
-                            const wastedQty = wastageSummary[item.item_name] || 0;
-                            return (
-                              <tr key={idx} className={wastedQty > 0 ? 'bg-danger-subtle' : ''}>
-                                <td className="ps-4">
-                                  <div className="fw-bold text-dark">{item.item_name}</div>
-                                </td>
-                                <td><Badge bg="light" text="dark" className="border">{item.unit || '—'}</Badge></td>
-                                {opening && <td className="text-muted fw-bold">{openQty ?? '—'}</td>}
-                                <td>
-                                  {wastedQty > 0 ? <div className="fw-bold text-danger">-{wastedQty}</div> : <span className="text-light-emphasis">—</span>}
-                                </td>
-                                <td className="pe-4">
-                                  {isLocked ? (
-                                    <div className="fw-bold fs-5 text-primary">{item.quantity}</div>
-                                  ) : (
-                                    <Form.Control
-                                      type="number"
-                                      step="0.01"
-                                      min="0"
-                                      className="modern-input"
-                                      value={item.quantity}
-                                      onChange={(e) => handleQtyChange(idx, e.target.value)}
-                                    />
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
+                            <tr>
+                              <td colSpan={5} className="text-center text-muted py-5 fw-bold">
+                                No stock items found.
+                              </td>
+                            </tr>
+                          ) : (
+                            items.map((item, idx) => {
+                              const openQty = opening?.items?.find((o) => o.item_name === item.item_name)?.quantity;
+                              const wastedQty = wastageSummary[item.item_name] || 0;
+                              return (
+                                <tr key={idx} className={wastedQty > 0 ? 'bg-danger-subtle' : ''}>
+                                  <td className="ps-4">
+                                    <div className="fw-bold text-dark">{item.item_name}</div>
+                                  </td>
+                                  <td>
+                                    <Badge bg="light" text="dark" className="border">
+                                      {item.unit || '—'}
+                                    </Badge>
+                                  </td>
+                                  {opening && <td className="text-muted fw-bold">{openQty ?? '—'}</td>}
+                                  <td>
+                                    {wastedQty > 0 ? <div className="fw-bold text-danger">-{wastedQty}</div> : <span className="text-light-emphasis">—</span>}
+                                  </td>
+                                  <td className="pe-4">
+                                    {isLocked ? (
+                                      <div className="fw-bold fs-5 text-primary">{item.quantity}</div>
+                                    ) : (
+                                      <Form.Control
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        className="modern-input"
+                                        value={item.quantity}
+                                        onChange={(e) => handleQtyChange(idx, e.target.value)}
+                                      />
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
                         </tbody>
                       </Table>
                     </div>
@@ -544,7 +574,9 @@ const DailyClosingStock = () => {
                   <div className="mb-5">
                     <Card className="page-card border-0 mb-4">
                       <Card.Body className="p-4">
-                        <div className="section-label mb-3"><CsLineIcons icon="note" size="18" /> Remarks</div>
+                        <div className="section-label mb-3">
+                          <CsLineIcons icon="note" size="18" /> Remarks
+                        </div>
                         <Form.Group>
                           <Form.Control
                             as="textarea"
@@ -586,11 +618,13 @@ const DailyClosingStock = () => {
         </Modal.Header>
         <Modal.Body>
           <Alert variant="warning" className="py-2">
-            <strong>Closing stock is locked ({statusCfg?.label || 'Submitted'}).</strong> Only Admin can modify it.
-            Describe the correction needed and Admin will update the record.
+            <strong>Closing stock is locked ({statusCfg?.label || 'Submitted'}).</strong> Only Admin can modify it. Describe the correction needed and Admin
+            will update the record.
           </Alert>
           <Form.Group>
-            <Form.Label>Correction Details <span className="text-danger">*</span></Form.Label>
+            <Form.Label>
+              Correction Details <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               as="textarea"
               rows={4}
@@ -601,7 +635,9 @@ const DailyClosingStock = () => {
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowCorrectionModal(false)} disabled={sendingCorrection}>Cancel</Button>
+          <Button variant="outline-secondary" onClick={() => setShowCorrectionModal(false)} disabled={sendingCorrection}>
+            Cancel
+          </Button>
           <Button variant="warning" onClick={handleCorrectionRequest} disabled={sendingCorrection}>
             {sendingCorrection ? <Spinner animation="border" size="sm" /> : 'Send Request to Admin'}
           </Button>

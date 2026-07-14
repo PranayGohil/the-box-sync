@@ -47,7 +47,6 @@ const EditStaff = () => {
     aspect: undefined,
   });
 
-
   // Common restaurant staff positions
   const commonPositions = [
     'Manager',
@@ -124,7 +123,9 @@ const EditStaff = () => {
         return isFileObject(value) ? allowedTypes.includes(value.type) : true;
       }),
 
-    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
+    document_type: Yup.string()
+      .required('Document type is required')
+      .oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
 
     id_number: Yup.string()
       .required('ID number is required')
@@ -173,7 +174,6 @@ const EditStaff = () => {
         if (typeof value === 'string') return true;
         return isFileObject(value) ? allowedTypes.includes(value.type) : true;
       }),
-
   });
 
   const formik = useFormik({
@@ -227,9 +227,7 @@ const EditStaff = () => {
         console.error('Error updating staff:', err);
         const serverError = err.response?.data?.error;
         const serverMessage = err.response?.data?.message;
-        const errorMsg = Array.isArray(serverError)
-          ? serverError.join(', ')
-          : (serverError || serverMessage || 'Update failed. Please try again.');
+        const errorMsg = Array.isArray(serverError) ? serverError.join(', ') : serverError || serverMessage || 'Update failed. Please try again.';
         setFileUploadError(errorMsg);
         toast.error('Update failed.');
       } finally {
@@ -254,7 +252,6 @@ const EditStaff = () => {
       z-index: 5 !important;
     }
   `;
-
 
   useEffect(() => {
     setCountries(Country.getAllCountries());
@@ -284,7 +281,7 @@ const EditStaff = () => {
         const selectedCountry = Country.getAllCountries().find(
           (c) => c.name.toLowerCase() === staff.country?.toLowerCase() || c.isoCode.toLowerCase() === staff.country?.toLowerCase()
         );
-        const countryVal = selectedCountry ? selectedCountry.name : (staff.country || '');
+        const countryVal = selectedCountry ? selectedCountry.name : staff.country || '';
         setFieldValue('country', countryVal);
 
         let stateVal = staff.state || '';
@@ -362,17 +359,13 @@ const EditStaff = () => {
 
   const getSelectedCountryOption = () => {
     if (!values.country) return null;
-    const country = countries.find(
-      (c) => c.name.toLowerCase() === values.country.toLowerCase() || c.isoCode.toLowerCase() === values.country.toLowerCase()
-    );
+    const country = countries.find((c) => c.name.toLowerCase() === values.country.toLowerCase() || c.isoCode.toLowerCase() === values.country.toLowerCase());
     return country ? { label: country.name, value: country.name } : { label: values.country, value: values.country };
   };
 
   const getSelectedStateOption = () => {
     if (!values.state) return null;
-    const stateObj = states.find(
-      (s) => s.name.toLowerCase() === values.state.toLowerCase() || s.isoCode.toLowerCase() === values.state.toLowerCase()
-    );
+    const stateObj = states.find((s) => s.name.toLowerCase() === values.state.toLowerCase() || s.isoCode.toLowerCase() === values.state.toLowerCase());
     return stateObj ? { label: stateObj.name, value: stateObj.name } : { label: values.state, value: values.state };
   };
 
@@ -449,10 +442,10 @@ const EditStaff = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.addEventListener("load", () => {
+    reader.addEventListener('load', () => {
       setCropperState({
         show: true,
-        imageSrc: reader.result?.toString() || "",
+        imageSrc: reader.result?.toString() || '',
         fieldName,
         setPreview,
         aspect,
@@ -486,12 +479,9 @@ const EditStaff = () => {
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
   };
 
-
-
   if (loading.initial) {
     return (
       <div className="container-fluid py-5">
-
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -506,13 +496,11 @@ const EditStaff = () => {
       <style>{calendarStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="container-fluid px-lg-5">
-        <div className="edit-staff-page-title-container mb-4 mt-5 mt-md-n3">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
             <Col md={7}>
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                {title}
-              </h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
             <Col xs="12" md="5" className="d-flex edit-staff-button-group-responsive justify-content-md-end gap-2 mt-3 mt-md-0">
@@ -632,9 +620,7 @@ const EditStaff = () => {
                             <CsLineIcons icon="calendar" size="18" className="text-primary" />
                           </div>
                         </div>
-                        {touched.birth_date && errors.birth_date && (
-                          <div className="text-danger mt-1 small">{errors.birth_date}</div>
-                        )}
+                        {touched.birth_date && errors.birth_date && <div className="text-danger mt-1 small">{errors.birth_date}</div>}
                       </Form.Group>
                     </Col>
                     <Col md={4}>
@@ -659,9 +645,7 @@ const EditStaff = () => {
                             <CsLineIcons icon="calendar" size="18" className="text-primary" />
                           </div>
                         </div>
-                        {touched.joining_date && errors.joining_date && (
-                          <div className="text-danger mt-1 small">{errors.joining_date}</div>
-                        )}
+                        {touched.joining_date && errors.joining_date && <div className="text-danger mt-1 small">{errors.joining_date}</div>}
                       </Form.Group>
                     </Col>
                   </Row>
@@ -809,9 +793,7 @@ const EditStaff = () => {
                           menuPortalTarget={document.body}
                           styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
                         />
-                        {touched.position && errors.position && (
-                          <div className="text-danger mt-1 small fw-bold">{errors.position}</div>
-                        )}
+                        {touched.position && errors.position && <div className="text-danger mt-1 small fw-bold">{errors.position}</div>}
                       </Form.Group>
                     </Col>
                     <Col md={6} xs={12}>
@@ -832,10 +814,7 @@ const EditStaff = () => {
                         </div>
                       </Form.Group>
                     </Col>
-
                   </Row>
-
-
                 </Card.Body>
               </Card>
             </Col>
@@ -913,24 +892,24 @@ const EditStaff = () => {
                       value={
                         values.document_type
                           ? {
-                            label:
-                              values.document_type === 'National Identity Card'
-                                ? 'National Identity Card'
-                                : values.document_type === 'Aadhar Card'
+                              label:
+                                values.document_type === 'National Identity Card'
+                                  ? 'National Identity Card'
+                                  : values.document_type === 'Aadhar Card'
                                   ? 'Aadhar Card'
                                   : values.document_type === 'Pan Card'
-                                    ? 'PAN Card'
-                                    : values.document_type === 'Voter Card'
-                                      ? 'Voter Card'
-                                      : values.document_type === 'Voter ID Card'
-                                        ? 'Voter ID Card'
-                                        : values.document_type === 'Driving License'
-                                          ? 'Driving License'
-                                          : values.document_type === 'Passport'
-                                            ? 'Passport'
-                                            : values.document_type,
-                            value: values.document_type,
-                          }
+                                  ? 'PAN Card'
+                                  : values.document_type === 'Voter Card'
+                                  ? 'Voter Card'
+                                  : values.document_type === 'Voter ID Card'
+                                  ? 'Voter ID Card'
+                                  : values.document_type === 'Driving License'
+                                  ? 'Driving License'
+                                  : values.document_type === 'Passport'
+                                  ? 'Passport'
+                                  : values.document_type,
+                              value: values.document_type,
+                            }
                           : null
                       }
                       onChange={(selected) => setFieldValue('document_type', selected ? selected.value : '')}
@@ -963,7 +942,9 @@ const EditStaff = () => {
                         {frontImagePreview ? (
                           <img src={frontImagePreview} alt="Front" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
                         ) : (
-                          <div className="py-4"><CsLineIcons icon="image" size="32" className="text-muted opacity-20" /></div>
+                          <div className="py-4">
+                            <CsLineIcons icon="image" size="32" className="text-muted opacity-20" />
+                          </div>
                         )}
                       </div>
                       <input
@@ -989,11 +970,7 @@ const EditStaff = () => {
                         </Button>
 
                         {values.document_type !== 'National Identity Card' && values.document_type !== 'Aadhar Card' && (
-                          <Button
-                            className="edit-staff-custom-btn-outline w-100 py-3 mt-2"
-                            type="submit"
-                            disabled={loading.submitting}
-                          >
+                          <Button className="edit-staff-custom-btn-outline w-100 py-3 mt-2" type="submit" disabled={loading.submitting}>
                             {loading.submitting ? (
                               <>
                                 <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
@@ -1017,7 +994,9 @@ const EditStaff = () => {
                           {backImagePreview ? (
                             <img src={backImagePreview} alt="Back" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
                           ) : (
-                            <div className="py-4"><CsLineIcons icon="image" size="32" className="text-muted opacity-20" /></div>
+                            <div className="py-4">
+                              <CsLineIcons icon="image" size="32" className="text-muted opacity-20" />
+                            </div>
                           )}
                         </div>
                         <input
@@ -1042,11 +1021,7 @@ const EditStaff = () => {
                             {backImagePreview ? 'Change Back Image' : 'Upload Back Image'}
                           </Button>
 
-                          <Button
-                            className="edit-staff-custom-btn-outline w-100 py-3 mt-2"
-                            type="submit"
-                            disabled={loading.submitting}
-                          >
+                          <Button className="edit-staff-custom-btn-outline w-100 py-3 mt-2" type="submit" disabled={loading.submitting}>
                             {loading.submitting ? (
                               <>
                                 <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
@@ -1065,14 +1040,16 @@ const EditStaff = () => {
                   </div>
                 </Card.Body>
               </Card>
-
             </Col>
           </Row>
         </Form>
 
         {/* Modern Overlay */}
         {loading.submitting && (
-          <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+            style={{ backgroundColor: 'rgba(255,255,255,0.8)', zIndex: 9999, backdropFilter: 'blur(5px)' }}
+          >
             <Card className="edit-staff-glass-card border-0 p-5 shadow-lg text-center" style={{ maxWidth: '400px' }}>
               <Spinner animation="grow" variant="primary" className="mb-4" />
               <h4 className="fw-bold">Updating Profile</h4>

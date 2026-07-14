@@ -6,8 +6,6 @@ import { Button, Card, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 
-
-
 const QRforFeedback = () => {
   const [feedbackToken, setFeedbackToken] = useState('');
   const [loading, setLoading] = useState(true);
@@ -92,13 +90,11 @@ const QRforFeedback = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
-      
-      
-      <div className="page-title-container mb-4 mt-5 mt-lg-0">
+    <div className="container-fluid qsr-page-container">
+      <div className="qsr-page-title-container text-start">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>Feedback QR Code</h1>
+            <h1 className="qsr-page-title">Feedback QR Code</h1>
             <div className="text-muted mt-1 small">Generate and share a QR code to collect customer feedback</div>
           </Col>
         </Row>
@@ -117,12 +113,7 @@ const QRforFeedback = () => {
                     </div>
 
                     <div className="qrfor-feedback-qr-frame mb-4" ref={qrCodeRef}>
-                      <QRCodeSVG 
-                        size={220} 
-                        value={feedbackLink} 
-                        level="H"
-                        includeMargin={false}
-                      />
+                      <QRCodeSVG size={220} value={feedbackLink} level="H" includeMargin={false} />
                     </div>
 
                     <div className="w-100 mb-5 text-center">
@@ -187,11 +178,7 @@ const QRforFeedback = () => {
                     <CsLineIcons icon="info-circle" size="48" className="text-info mb-3" />
                     <h5 className="fw-bold">No QR Code Generated</h5>
                     <p className="text-muted mb-4">You haven't generated a feedback QR code yet.</p>
-                    <Button
-                      className="qrfor-feedback-custom-btn-solid px-5 py-2"
-                      onClick={generateFeedbackQR}
-                      disabled={generating}
-                    >
+                    <Button className="qrfor-feedback-custom-btn-solid px-5 py-2" onClick={generateFeedbackQR} disabled={generating}>
                       {generating ? <Spinner animation="border" size="sm" /> : 'Create Feedback QR Code'}
                     </Button>
                   </div>
