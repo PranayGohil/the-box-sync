@@ -34,8 +34,6 @@ import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'css/payroll.css';
 
-// mock server register for demo
-import '@mock-api';
 
 // Suppress ResizeObserver loop error overlay in development
 if (typeof window !== 'undefined') {

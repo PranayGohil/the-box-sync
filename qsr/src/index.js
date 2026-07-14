@@ -40,8 +40,6 @@ import './assets/css/components.css';
 import './assets/css/utilities.css';
 import './assets/css/responsive.css';
 
-// mock server register for demo
-import '@mock-api';
 
 // Suppress ResizeObserver loop errors
 if (typeof window !== 'undefined') {

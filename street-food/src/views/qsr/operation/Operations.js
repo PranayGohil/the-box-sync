@@ -18,6 +18,10 @@ import QRforMenu from './menu/QRforMenu';
 
 import FinancialReport from './FinancialReport';
 
+import Customers from './customers/Customers';
+import CustomerOrderHistory from './customers/CustomerOrderHistory';
+import CampaignManager from './campaigns/CampaignManager';
+
 const NavContent = () => {
   const { activePlans } = useContext(AuthContext);
   return (
@@ -105,6 +109,25 @@ const NavContent = () => {
 
         <div className="mb-1">
           <div className="section-header">
+            <CsLineIcons icon="user" size="17" />
+            <span className="align-middle">Customers</span>
+          </div>
+          <div className="sub-menu-container">
+            <Nav.Link as={NavLink} to="/operations/customers" className="px-0" isActive={(match, location) => {
+              return location.pathname === '/operations/customers';
+            }}>
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Manage Customers</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/campaigns" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Campaigns</span>
+            </Nav.Link>
+          </div>
+        </div>
+
+        <div className="mb-1">
+          <div className="section-header">
             <CsLineIcons icon="file-text" size="17" />
             <span className="align-middle">Report</span>
           </div>
@@ -128,6 +151,7 @@ const MobileBottomNav = () => {
   const navItems = [
     { label: 'Order', icon: 'cart', to: '/operations/order-history' },
     { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
+    { label: 'Customers', icon: 'user', to: '/operations/customers' },
     { label: 'Report', icon: 'file-text', to: '/operations/financial-report' },
   ];
 
@@ -203,6 +227,8 @@ const MobileBottomNav = () => {
             isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details');
           } else if (item.label === 'Menu') {
             isActive = pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
+          } else if (item.label === 'Customers') {
+            isActive = pathname.startsWith('/operations/customers') || pathname.startsWith('/operations/campaigns');
           } else {
             isActive = pathname.startsWith(item.to);
           }
@@ -250,6 +276,10 @@ const Operations = () => {
             <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
             <Route exact path="/operations/add-dish" render={() => <AddDishes />} />
             <Route exact path="/operations/qr-for-menu" render={() => <QRforMenu />} />
+
+            <Route exact path="/operations/customers" render={() => <Customers />} />
+            <Route exact path="/operations/customers/:phone" render={() => <CustomerOrderHistory />} />
+            <Route exact path="/operations/campaigns" render={() => <CampaignManager />} />
 
             <Route exact path="/operations/financial-report" render={() => <FinancialReport />} />
           </Switch>

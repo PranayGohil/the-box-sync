@@ -33,8 +33,7 @@ import allRoutes from 'routes.js';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// mock server register for demo
-import '@mock-api';
+
 
 const Main = () => {
   const layoutlessRoutes = useMemo(() => getLayoutlessRoutes({ data: allRoutes }), []);

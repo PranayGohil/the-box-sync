@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Card, Col, Row, Form, Spinner, Alert, Button, Badge, Dropdown, Collapse } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import csInterfaceIcons from 'views/interface/content/icons/data/cs-interface-icons-tags';
+
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import axios from 'axios';
@@ -47,7 +47,7 @@ const ManageMenu = () => {
     }));
   };
 
-  const starFillIcon = csInterfaceIcons.find((icon) => icon.c === 'cs-star-full');
+
 
   const fetchMenuData = async () => {
     try {
