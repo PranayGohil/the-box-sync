@@ -11,8 +11,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthContext } from 'contexts/AuthContext';
 
-
-
 const CustomerInsightsReport = () => {
   const title = 'Customer Insights';
   const description = 'Detailed Customer Analysis and Behavior Patterns';
@@ -141,7 +139,7 @@ const CustomerInsightsReport = () => {
         allData.push(['VISIT FREQUENCY (SEGMENTATION)']);
         allData.push(['Segment', 'Customer Count', 'Percentage']);
         const labels = ['1 Order', '2-4 Orders', '5-9 Orders', '10-19 Orders', '20+ Orders'];
-        reportData.customerSegmentation.forEach(segment => {
+        reportData.customerSegmentation.forEach((segment) => {
           const percentage = totalCustomers > 0 ? ((segment.customerCount / totalCustomers) * 100).toFixed(1) : 0;
           allData.push([labels[segment._id - 1] || 'Other', segment.customerCount, `${percentage}%`]);
         });
@@ -153,7 +151,7 @@ const CustomerInsightsReport = () => {
         allData.push(['LIFETIME VALUE DISTRIBUTION']);
         allData.push(['Value Range', 'Customer Count', 'Percentage']);
         const ranges = ['Rs. 0-1K', 'Rs. 1K-5K', 'Rs. 5K-10K', 'Rs. 10K-25K', 'Rs. 25K-50K', 'Rs. 50K+'];
-        reportData.lifetimeValueDistribution.forEach(item => {
+        reportData.lifetimeValueDistribution.forEach((item) => {
           const percentage = totalCustomers > 0 ? ((item.customerCount / totalCustomers) * 100).toFixed(1) : 0;
           allData.push([ranges[item._id] || 'Elite', item.customerCount, `${percentage}%`]);
         });
@@ -164,7 +162,7 @@ const CustomerInsightsReport = () => {
       if (exportOptions.includeAcquisitionTrend && reportData.acquisitionTrend?.length > 0) {
         allData.push(['ACQUISITION & GROWTH TREND']);
         allData.push(['Date', 'New Customers', 'Retention']);
-        [...reportData.acquisitionTrend].reverse().forEach(item => {
+        [...reportData.acquisitionTrend].reverse().forEach((item) => {
           const dateStr = `${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`;
           const retention = item.newCustomers > 0 ? 'High' : 'Stable';
           allData.push([dateStr, item.newCustomers, retention]);
@@ -194,7 +192,7 @@ const CustomerInsightsReport = () => {
     setExportType('PDF');
     try {
       const doc = new jsPDF();
-      
+
       doc.setFontSize(16);
       doc.text('Customer Insights Report', 105, 15, { align: 'center' });
       doc.setFontSize(10);
@@ -213,25 +211,30 @@ const CustomerInsightsReport = () => {
           ['Repeat Customers', repeatCustomers.toString()],
           ['One-Time Visitors', oneTimeCustomers.toString()],
           ['Repeat Rate', `${repeatRate}%`],
-          ['Avg Lifetime Value', formatCurrencyPDF(reportData.topCustomers?.[0]?.avgOrderValue || 0)]
+          ['Avg Lifetime Value', formatCurrencyPDF(reportData.topCustomers?.[0]?.avgOrderValue || 0)],
         ],
         theme: 'grid',
         headStyles: { fillColor: [35, 179, 244] },
-        margin: { bottom: 15 }
+        margin: { bottom: 15 },
       });
       currentY = doc.lastAutoTable.finalY + 15;
 
       if (exportOptions.includeTopCustomers && reportData.topCustomers?.length > 0) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Customer Ranking', 14, currentY);
-        
-        const rankBody = reportData.topCustomers.slice(0, exportOptions.topCustomersLimit).map((customer, index) => [
-          (index + 1).toString(),
-          customer.customerName || 'Guest',
-          customer.totalOrders.toString(),
-          formatCurrencyPDF(customer.totalSpent)
-        ]);
+
+        const rankBody = reportData.topCustomers
+          .slice(0, exportOptions.topCustomersLimit)
+          .map((customer, index) => [
+            (index + 1).toString(),
+            customer.customerName || 'Guest',
+            customer.totalOrders.toString(),
+            formatCurrencyPDF(customer.totalSpent),
+          ]);
 
         autoTable(doc, {
           startY: currentY + 5,
@@ -239,18 +242,21 @@ const CustomerInsightsReport = () => {
           body: rankBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeSegmentation && reportData.customerSegmentation?.length > 0) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Visit Frequency (Segmentation)', 14, currentY);
-        
+
         const labels = ['1 Order', '2-4 Orders', '5-9 Orders', '10-19 Orders', '20+ Orders'];
-        const segBody = reportData.customerSegmentation.map(segment => {
+        const segBody = reportData.customerSegmentation.map((segment) => {
           const percentage = totalCustomers > 0 ? ((segment.customerCount / totalCustomers) * 100).toFixed(1) : 0;
           return [labels[segment._id - 1] || 'Other', segment.customerCount.toString(), `${percentage}%`];
         });
@@ -261,18 +267,21 @@ const CustomerInsightsReport = () => {
           body: segBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeLifetimeValue && reportData.lifetimeValueDistribution?.length > 0) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Lifetime Value Distribution', 14, currentY);
-        
+
         const ranges = ['Rs. 0-1K', 'Rs. 1K-5K', 'Rs. 5K-10K', 'Rs. 10K-25K', 'Rs. 25K-50K', 'Rs. 50K+'];
-        const ltvBody = reportData.lifetimeValueDistribution.map(item => {
+        const ltvBody = reportData.lifetimeValueDistribution.map((item) => {
           const percentage = totalCustomers > 0 ? ((item.customerCount / totalCustomers) * 100).toFixed(1) : 0;
           return [ranges[item._id] || 'Elite', item.customerCount.toString(), `${percentage}%`];
         });
@@ -283,17 +292,20 @@ const CustomerInsightsReport = () => {
           body: ltvBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeAcquisitionTrend && reportData.acquisitionTrend?.length > 0) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Acquisition & Growth Trend', 14, currentY);
-        
-        const acqBody = [...reportData.acquisitionTrend].reverse().map(item => {
+
+        const acqBody = [...reportData.acquisitionTrend].reverse().map((item) => {
           const dateStr = `${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`;
           const retention = item.newCustomers > 0 ? 'High' : 'Stable';
           return [dateStr, item.newCustomers.toString(), retention];
@@ -305,7 +317,7 @@ const CustomerInsightsReport = () => {
           body: acqBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
       }
 
@@ -339,11 +351,11 @@ const CustomerInsightsReport = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid ps-lg-4 pe-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container no-print">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -354,7 +366,9 @@ const CustomerInsightsReport = () => {
           <Card className="customer-insights-report-interactive-card border-0 mb-4 no-print shadow-sm">
             <Card.Body className="p-4">
               <div className="customer-insights-report-card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Analysis Scope</h2>
+                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                  Analysis Scope
+                </h2>
                 <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
               </div>
               <Row className="g-3">
@@ -381,7 +395,11 @@ const CustomerInsightsReport = () => {
           </Card>
         )}
 
-        {error && <Alert variant="danger" className="mb-4 customer-insights-report-interactive-card border-0">{error}</Alert>}
+        {error && (
+          <Alert variant="danger" className="mb-4 customer-insights-report-interactive-card border-0">
+            {error}
+          </Alert>
+        )}
 
         {reportData && (
           <>
@@ -389,12 +407,26 @@ const CustomerInsightsReport = () => {
             <Card className="customer-insights-report-interactive-card border-0 mb-4 no-print shadow-sm">
               <Card.Body className="p-4 d-flex flex-column flex-md-row gap-3 justify-content-between align-items-md-center">
                 <div className="d-flex gap-3 align-items-center">
-                  <Button variant="outline-success" className="customer-insights-report-custom-btn-outline border-success text-success px-4"
-                    onClick={() => { setExportType('Excel'); setShowExportModal(true); }} disabled={exporting || !reportData}>
+                  <Button
+                    variant="outline-success"
+                    className="customer-insights-report-custom-btn-outline border-success text-success px-4"
+                    onClick={() => {
+                      setExportType('Excel');
+                      setShowExportModal(true);
+                    }}
+                    disabled={exporting || !reportData}
+                  >
                     <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
                   </Button>
-                  <Button variant="outline-danger" className="customer-insights-report-custom-btn-outline border-danger text-danger px-4"
-                    onClick={() => { setExportType('PDF'); setShowExportModal(true); }} disabled={exporting || !reportData}>
+                  <Button
+                    variant="outline-danger"
+                    className="customer-insights-report-custom-btn-outline border-danger text-danger px-4"
+                    onClick={() => {
+                      setExportType('PDF');
+                      setShowExportModal(true);
+                    }}
+                    disabled={exporting || !reportData}
+                  >
                     <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
                   </Button>
                 </div>
@@ -421,7 +453,7 @@ const CustomerInsightsReport = () => {
                         <div className="customer-insights-report-stat-value text-primary">{totalCustomers}</div>
                       </div>
                       <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: brandBg }}>
-                         <CsLineIcons icon="user" size="24" style={{ color: brandColor }} />
+                        <CsLineIcons icon="user" size="24" style={{ color: brandColor }} />
                       </div>
                     </div>
                   </Card.Body>
@@ -436,8 +468,11 @@ const CustomerInsightsReport = () => {
                         <div className="customer-insights-report-stat-value text-success">{repeatCustomers}</div>
                         <div className="smaller fw-bold text-success mt-1">{repeatRate}% Loyalty</div>
                       </div>
-                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-                         <CsLineIcons icon="check-circle" size="24" style={{ color: '#10b981' }} />
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}
+                      >
+                        <CsLineIcons icon="check-circle" size="24" style={{ color: '#10b981' }} />
                       </div>
                     </div>
                   </Card.Body>
@@ -451,7 +486,10 @@ const CustomerInsightsReport = () => {
                         <div className="customer-insights-report-stat-label mb-2">One-Time Visitors</div>
                         <div className="customer-insights-report-stat-value text-warning">{oneTimeCustomers}</div>
                       </div>
-                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}
+                      >
                         <CsLineIcons icon="user" size="24" style={{ color: '#f59e0b' }} />
                       </div>
                     </div>
@@ -464,9 +502,14 @@ const CustomerInsightsReport = () => {
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
                         <div className="customer-insights-report-stat-label mb-2">Avg Lifetime Value</div>
-                        <div className="customer-insights-report-stat-value" style={{ color: '#6366f1' }}>{formatCurrency(reportData.topCustomers?.[0]?.avgOrderValue || 0)}</div>
+                        <div className="customer-insights-report-stat-value" style={{ color: '#6366f1' }}>
+                          {formatCurrency(reportData.topCustomers?.[0]?.avgOrderValue || 0)}
+                        </div>
                       </div>
-                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}>
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}
+                      >
                         <CsLineIcons icon="trend-up" size="24" style={{ color: '#6366f1' }} />
                       </div>
                     </div>
@@ -482,7 +525,9 @@ const CustomerInsightsReport = () => {
                 <Card className="customer-insights-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-0">
                     <div className="p-4 customer-insights-report-card-title-container" style={{ marginBottom: '0' }}>
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Customer Ranking</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                        Customer Ranking
+                      </h2>
                       <CsLineIcons icon="star" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column">
@@ -492,18 +537,24 @@ const CustomerInsightsReport = () => {
                           return (
                             <div key={idx} className={`px-4 py-3 d-flex align-items-center justify-content-between ${highlightClass}`}>
                               <div className="d-flex align-items-center overflow-hidden">
-                                <div className="sw-4 sh-4 rounded-circle d-flex justify-content-center align-items-center fw-bold me-3 text-muted smaller" 
-                                     style={{ backgroundColor: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.02)' }}>
+                                <div
+                                  className="sw-4 sh-4 rounded-circle d-flex justify-content-center align-items-center fw-bold me-3 text-muted smaller"
+                                  style={{ backgroundColor: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.02)' }}
+                                >
                                   {idx + 1}
                                 </div>
                                 <div className="overflow-hidden">
                                   <div className="text-truncate fw-bold small mb-0">{customer.customerName || 'Guest'}</div>
-                                  <div className="text-muted smaller fw-bold" style={{ fontSize: '0.65rem' }}>{customer.totalOrders} visits</div>
+                                  <div className="text-muted smaller fw-bold" style={{ fontSize: '0.65rem' }}>
+                                    {customer.totalOrders} visits
+                                  </div>
                                 </div>
                               </div>
                               <div className="text-end ms-2">
                                 <div className="fw-bold small text-primary">{formatCurrency(customer.totalSpent)}</div>
-                                <div className="text-muted smaller fw-bold" style={{ fontSize: '0.65rem' }}>Total Spent</div>
+                                <div className="text-muted smaller fw-bold" style={{ fontSize: '0.65rem' }}>
+                                  Total Spent
+                                </div>
                               </div>
                             </div>
                           );
@@ -521,7 +572,9 @@ const CustomerInsightsReport = () => {
                 <Card className="customer-insights-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-4">
                     <div className="customer-insights-report-card-title-container">
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Visit Frequency</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                        Visit Frequency
+                      </h2>
                       <CsLineIcons icon="activity" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column gap-3 mt-3">
@@ -552,7 +605,9 @@ const CustomerInsightsReport = () => {
                 <Card className="customer-insights-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-4">
                     <div className="customer-insights-report-card-title-container">
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>LTV Distribution</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                        LTV Distribution
+                      </h2>
                       <CsLineIcons icon="tag" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column gap-3 mt-3">
@@ -588,7 +643,9 @@ const CustomerInsightsReport = () => {
                 <Card className="customer-insights-report-interactive-card border-0 shadow-sm">
                   <Card.Body className="p-4">
                     <div className="customer-insights-report-card-title-container">
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Acquisition & Growth Trend</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                        Acquisition & Growth Trend
+                      </h2>
                       <CsLineIcons icon="trend-up" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="table-responsive mt-3 d-none d-md-block">
@@ -603,36 +660,43 @@ const CustomerInsightsReport = () => {
                         </thead>
                         <tbody>
                           {reportData.acquisitionTrend && reportData.acquisitionTrend.length > 0 ? (
-                            [...reportData.acquisitionTrend].reverse().slice(0, 10).map((item, idx) => {
-                              const totalNew = reportData.acquisitionTrend.reduce((sum, i) => sum + i.newCustomers, 0);
-                              const percentage = totalNew > 0 ? ((item.newCustomers / totalNew) * 100).toFixed(1) : 0;
-                              return (
-                                <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
-                                  <td className="py-3 fw-bold text-dark">
-                                    {`${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`}
-                                  </td>
-                                  <td className="py-3 text-center">
-                                    <Badge bg="rgba(35, 179, 244, 0.1)" className="text-primary px-3 py-2 rounded-pill fw-bold" style={{ fontSize: '0.8rem' }}>
-                                      {item.newCustomers} New
-                                    </Badge>
-                                  </td>
-                                  <td className="py-3">
-                                    <div className="d-flex align-items-center justify-content-center">
-                                      <div className="flex-grow-1 me-3 d-none d-md-block" style={{ maxWidth: '100px' }}>
-                                        <ProgressBar now={percentage * 5} variant="info" className="progress-sm" style={{ height: '4px' }} />
+                            [...reportData.acquisitionTrend]
+                              .reverse()
+                              .slice(0, 10)
+                              .map((item, idx) => {
+                                const totalNew = reportData.acquisitionTrend.reduce((sum, i) => sum + i.newCustomers, 0);
+                                const percentage = totalNew > 0 ? ((item.newCustomers / totalNew) * 100).toFixed(1) : 0;
+                                return (
+                                  <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
+                                    <td className="py-3 fw-bold text-dark">
+                                      {`${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`}
+                                    </td>
+                                    <td className="py-3 text-center">
+                                      <Badge
+                                        bg="rgba(35, 179, 244, 0.1)"
+                                        className="text-primary px-3 py-2 rounded-pill fw-bold"
+                                        style={{ fontSize: '0.8rem' }}
+                                      >
+                                        {item.newCustomers} New
+                                      </Badge>
+                                    </td>
+                                    <td className="py-3">
+                                      <div className="d-flex align-items-center justify-content-center">
+                                        <div className="flex-grow-1 me-3 d-none d-md-block" style={{ maxWidth: '100px' }}>
+                                          <ProgressBar now={percentage * 5} variant="info" className="progress-sm" style={{ height: '4px' }} />
+                                        </div>
+                                        <span className="smaller fw-bold text-muted">{percentage}%</span>
                                       </div>
-                                      <span className="smaller fw-bold text-muted">{percentage}%</span>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 text-end fw-bold text-success">
-                                    {item.newCustomers > 0 ? 'High' : 'Stable'}
-                                  </td>
-                                </tr>
-                              );
-                            })
+                                    </td>
+                                    <td className="py-3 text-end fw-bold text-success">{item.newCustomers > 0 ? 'High' : 'Stable'}</td>
+                                  </tr>
+                                );
+                              })
                           ) : (
                             <tr>
-                              <td colSpan="4" className="text-center text-muted py-5">No acquisition data available</td>
+                              <td colSpan="4" className="text-center text-muted py-5">
+                                No acquisition data available
+                              </td>
                             </tr>
                           )}
                         </tbody>
@@ -642,34 +706,50 @@ const CustomerInsightsReport = () => {
                     {/* Mobile Card View */}
                     <div className="d-block d-md-none mt-3">
                       {reportData.acquisitionTrend && reportData.acquisitionTrend.length > 0 ? (
-                        [...reportData.acquisitionTrend].reverse().slice(0, 10).map((item, idx) => {
-                          const totalNew = reportData.acquisitionTrend.reduce((sum, i) => sum + i.newCustomers, 0);
-                          const percentage = totalNew > 0 ? ((item.newCustomers / totalNew) * 100).toFixed(1) : 0;
-                          return (
-                            <div key={idx} className="p-3 mb-3 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
-                              <div className="d-flex justify-content-between align-items-center mb-2 pb-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                                <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  {`${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`}
+                        [...reportData.acquisitionTrend]
+                          .reverse()
+                          .slice(0, 10)
+                          .map((item, idx) => {
+                            const totalNew = reportData.acquisitionTrend.reduce((sum, i) => sum + i.newCustomers, 0);
+                            const percentage = totalNew > 0 ? ((item.newCustomers / totalNew) * 100).toFixed(1) : 0;
+                            return (
+                              <div key={idx} className="p-3 mb-3 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
+                                <div
+                                  className="d-flex justify-content-between align-items-center mb-2 pb-2"
+                                  style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}
+                                >
+                                  <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+                                    {`${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`}
+                                  </div>
+                                  <Badge bg="rgba(35, 179, 244, 0.1)" className="text-primary px-3 py-1 rounded-pill fw-bold">
+                                    {item.newCustomers} New
+                                  </Badge>
                                 </div>
-                                <Badge bg="rgba(35, 179, 244, 0.1)" className="text-primary px-3 py-1 rounded-pill fw-bold">
-                                  {item.newCustomers} New
-                                </Badge>
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <div>
+                                    <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                                      Growth
+                                    </span>
+                                    <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+                                      {percentage}%
+                                    </span>
+                                  </div>
+                                  <div className="text-end">
+                                    <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                                      Retention
+                                    </span>
+                                    <span className="fw-bold text-success" style={{ fontSize: '0.85rem' }}>
+                                      {item.newCustomers > 0 ? 'High' : 'Stable'}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="d-flex justify-content-between align-items-center">
-                                <div>
-                                  <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Growth</span>
-                                  <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{percentage}%</span>
-                                </div>
-                                <div className="text-end">
-                                  <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Retention</span>
-                                  <span className="fw-bold text-success" style={{ fontSize: '0.85rem' }}>{item.newCustomers > 0 ? 'High' : 'Stable'}</span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })
+                            );
+                          })
                       ) : (
-                        <div className="text-center text-muted py-5 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>No acquisition data available</div>
+                        <div className="text-center text-muted py-5 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
+                          No acquisition data available
+                        </div>
                       )}
                     </div>
                   </Card.Body>
@@ -683,7 +763,9 @@ const CustomerInsightsReport = () => {
       {/* Export Options Modal */}
       <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
         <Modal.Header className="border-0 p-4 pb-0" closeButton>
-          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Export Insights</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>
+            Export Insights
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
           <p className="text-muted smaller fw-bold mb-4">Select analytics modules for the export.</p>
@@ -693,9 +775,9 @@ const CustomerInsightsReport = () => {
               { label: 'Segmentation Analytics', key: 'includeSegmentation' },
               { label: 'Loyalty Analysis', key: 'includeLoyaltyAnalysis' },
               { label: 'Lifetime Value Distribution', key: 'includeLifetimeValue' },
-              { label: 'Growth Trend Visuals', key: 'includeCharts' }
-            ].map(option => (
-              <Form.Check 
+              { label: 'Growth Trend Visuals', key: 'includeCharts' },
+            ].map((option) => (
+              <Form.Check
                 key={option.key}
                 type="switch"
                 id={option.key}
@@ -707,7 +789,9 @@ const CustomerInsightsReport = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0">
-          <Button variant="light" className="customer-insights-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>Cancel</Button>
+          <Button variant="light" className="customer-insights-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>
+            Cancel
+          </Button>
           <Button className="customer-insights-report-custom-btn-outline px-4" onClick={handleExportConfirm}>
             Generate {exportType || 'Report'}
           </Button>
@@ -715,7 +799,14 @@ const CustomerInsightsReport = () => {
       </Modal>
 
       <ToastContainer position="top-end" className="p-3">
-        <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="white" className="customer-insights-report-interactive-card border-0">
+        <Toast
+          show={showToast}
+          onClose={() => setShowToast(false)}
+          delay={3000}
+          autohide
+          bg="white"
+          className="customer-insights-report-interactive-card border-0"
+        >
           <Toast.Body className="p-3 d-flex align-items-center">
             <CsLineIcons icon="check-circle" className="text-success me-2" size="20" />
             <span className="fw-bold smaller text-dark">{toastMessage}</span>

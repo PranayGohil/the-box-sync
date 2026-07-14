@@ -80,6 +80,35 @@ const modalStyles = `
     background: #f8fafc;
     color: #475569;
   }
+
+  @media (max-width: 575px) {
+    .modal-custom-confirm .modal-footer {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 12px 16px;
+      gap: 8px;
+    }
+    .modal-custom-confirm .modal-footer button {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 8px 16px !important;
+      font-size: 13px !important;
+      height: 38px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 8px !important;
+    }
+    .modal-custom-confirm .btn-qsr-blue {
+      order: 1;
+    }
+    .modal-custom-confirm .btn-qsr-secondary {
+      order: 2;
+    }
+    .modal-custom-confirm .btn-qsr-red {
+      order: 3;
+    }
+  }
 `;
 
 export const LeaveConfirmationModal = ({

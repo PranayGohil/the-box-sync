@@ -92,28 +92,14 @@ const NavIconMenu = () => {
   return (
     <>
       <style>{customStyles}</style>
-      {isVerticalOrMobile ? (
-        <div className="menu-icons text-center mb-0" style={{ alignSelf: 'center' }}>
-          <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }} className="logout-text-link">
-            <CsLineIcons icon="logout" size="18" />
-            <span style={{ fontSize: '15px', fontWeight: '700' }}>Logout</span>
-          </a>
-        </div>
-      ) : (
-        <ul className="list-unstyled list-inline text-center menu-icons mb-0">
-          <li className="list-inline-item" title="Search">
-            <a href="#/" onClick={onSearchIconClick}>
-              <CsLineIcons icon="search" size="18" />
-            </a>
-          </li>
-          <li className="list-inline-item" title="Logout">
-            <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
-              <CsLineIcons icon="logout" size="18" />
-            </a>
-          </li>
-          <IconMenuNotifications />
-        </ul>
-      )}
+
+      <div className="menu-icons text-center mb-0" style={{ alignSelf: 'center' }}>
+        <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }} className="logout-text-link">
+          <CsLineIcons icon="logout" size="18" />
+          <span style={{ fontSize: '15px', fontWeight: '700' }}>Logout</span>
+        </a>
+      </div>
+
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
       <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">

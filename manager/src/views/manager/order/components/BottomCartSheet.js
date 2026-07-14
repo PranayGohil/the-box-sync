@@ -182,30 +182,7 @@ const BottomCartSheet = ({
                 {kotPrinting ? '...' : 'Order Print'}
               </button>
             )}
-            {/* Print Bill (even if new/unsaved/dirty) */}
-            {/* {showPrintBill && (
-              <button
-                type="button"
-                style={{
-                  width: '100%',
-                  padding: '0.6rem',
-                  borderRadius: '10px',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  border: '1.5px solid rgba(226,232,240,0.9)',
-                  background: '#f1f5f9',
-                  color: '#475569',
-                  cursor: 'pointer',
-                }}
-                onClick={() => {
-                  setShowCartSheet(false);
-                  handlePrint(orderId);
-                }}
-                disabled={printing}
-              >
-                {printing ? 'Printing...' : 'Print Bill'}
-              </button>
-            )} */}
+
             {/* Cancel Order */}
             {orderId && orderStatus !== 'Paid' && (
               <button

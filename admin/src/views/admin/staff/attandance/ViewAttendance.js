@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
-import {
-  Row, Col, Card, Button, Alert, Spinner, Form, Badge,
-  Modal, ProgressBar, Toast, ToastContainer,
-} from 'react-bootstrap';
+import { Row, Col, Card, Button, Alert, Spinner, Form, Badge, Modal, ProgressBar, Toast, ToastContainer } from 'react-bootstrap';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -17,8 +14,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Document, Packer, Paragraph, Table as DocTable, TableCell, TableRow, TextRun, AlignmentType, WidthType } from 'docx';
 import { format } from 'date-fns';
-
-
 
 const ViewAttendance = () => {
   const { id } = useParams();
@@ -84,9 +79,7 @@ const ViewAttendance = () => {
     };
     const inParsed = parseTime(inTime);
     const outParsed = parseTime(outTime);
-    let totalMinutes =
-      outParsed.hours * 60 + outParsed.minutes -
-      (inParsed.hours * 60 + inParsed.minutes);
+    let totalMinutes = outParsed.hours * 60 + outParsed.minutes - (inParsed.hours * 60 + inParsed.minutes);
     if (totalMinutes < 0) totalMinutes += 24 * 60;
     return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, total: totalMinutes / 60 };
   };
@@ -124,12 +117,7 @@ const ViewAttendance = () => {
     if (statusFilter !== 'all' && att.status !== statusFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      return (
-        att.date.includes(q) ||
-        att.status?.toLowerCase().includes(q) ||
-        att.in_time?.toLowerCase().includes(q) ||
-        att.out_time?.toLowerCase().includes(q)
-      );
+      return att.date.includes(q) || att.status?.toLowerCase().includes(q) || att.in_time?.toLowerCase().includes(q) || att.out_time?.toLowerCase().includes(q);
     }
     return true;
   });
@@ -145,7 +133,10 @@ const ViewAttendance = () => {
     let validShifts = 0;
     attendance.forEach((att) => {
       const hours = calculateWorkingHours(att.in_time, att.out_time);
-      if (hours) { totalHours += hours.total; validShifts++; }
+      if (hours) {
+        totalHours += hours.total;
+        validShifts++;
+      }
     });
 
     setStats({
@@ -161,10 +152,7 @@ const ViewAttendance = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(
-        `${process.env.REACT_APP_API}/attendance/get/${id}`,
-        authHeader()
-      );
+      const response = await axios.get(`${process.env.REACT_APP_API}/attendance/get/${id}`, authHeader());
 
       const { attendance: records, ...staff } = response.data.data;
 
@@ -230,20 +218,25 @@ const ViewAttendance = () => {
 
   const exportToExcel = async () => {
     if (!staffData) return;
-    setExporting(true); setExportProgress(10); setExportType('Excel');
+    setExporting(true);
+    setExportProgress(10);
+    setExportType('Excel');
     try {
       const wb = XLSX.utils.book_new();
 
       if (exportOptions.includeStatistics) {
         setExportProgress(20);
         const dashboardData = [
-          ['ATTENDANCE REPORT DASHBOARD'], [],
+          ['ATTENDANCE REPORT DASHBOARD'],
+          [],
           ['Staff Information'],
           ['Staff ID:', staffData.staff_id],
           ['Name:', `${staffData.f_name} ${staffData.l_name}`],
           ['Position:', staffData.position],
           ['Report Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')],
-          [], ['KEY METRICS'], ['Metric', 'Value'],
+          [],
+          ['KEY METRICS'],
+          ['Metric', 'Value'],
           ['Total Days', stats.totalDays],
           ['Total Present', stats.totalPresent],
           ['Total Absent', stats.totalAbsent],
@@ -257,12 +250,11 @@ const ViewAttendance = () => {
 
       if (exportOptions.includeDetailedRecords) {
         setExportProgress(50);
-        const records = exportOptions.recordsLimit === 'all'
-          ? filteredAttendance
-          : filteredAttendance.slice(0, parseInt(exportOptions.recordsLimit, 10));
+        const records = exportOptions.recordsLimit === 'all' ? filteredAttendance : filteredAttendance.slice(0, parseInt(exportOptions.recordsLimit, 10));
 
         const data = [
-          ['ATTENDANCE RECORDS'], [],
+          ['ATTENDANCE RECORDS'],
+          [],
           ['Check-In Date', 'Status', 'Check-In Time', 'Check-Out Time', 'Check-Out Date', 'Working Hours', 'Shift Type'],
         ];
         records.forEach((att) => {
@@ -293,13 +285,19 @@ const ViewAttendance = () => {
       console.error(err);
       showSuccessToast('Error exporting Excel file');
     } finally {
-      setTimeout(() => { setExporting(false); setExportProgress(0); setExportType(''); }, 500);
+      setTimeout(() => {
+        setExporting(false);
+        setExportProgress(0);
+        setExportType('');
+      }, 500);
     }
   };
 
   const exportToPDF = async () => {
     if (!staffData) return;
-    setExporting(true); setExportProgress(10); setExportType('PDF');
+    setExporting(true);
+    setExportProgress(10);
+    setExportType('PDF');
     try {
       const doc = new jsPDF();
       let yPosition = 20;
@@ -309,22 +307,29 @@ const ViewAttendance = () => {
         doc.setFillColor(30, 168, 231);
         doc.rect(0, 0, 210, 40, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(24); doc.setFont(undefined, 'bold');
+        doc.setFontSize(24);
+        doc.setFont(undefined, 'bold');
         doc.text('ATTENDANCE REPORT', 105, 20, { align: 'center' });
-        doc.setFontSize(14); doc.setFont(undefined, 'normal');
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'normal');
         doc.text(`${staffData.f_name} ${staffData.l_name}`, 105, 30, { align: 'center' });
         yPosition = 50;
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(11);
-        doc.text(`Staff ID: ${staffData.staff_id}`, 20, yPosition); yPosition += 6;
-        doc.text(`Position: ${staffData.position}`, 20, yPosition); yPosition += 6;
-        doc.text(`Report Generated: ${format(new Date(), 'dd MMM yyyy hh:mm a')}`, 20, yPosition); yPosition += 15;
+        doc.text(`Staff ID: ${staffData.staff_id}`, 20, yPosition);
+        yPosition += 6;
+        doc.text(`Position: ${staffData.position}`, 20, yPosition);
+        yPosition += 6;
+        doc.text(`Report Generated: ${format(new Date(), 'dd MMM yyyy hh:mm a')}`, 20, yPosition);
+        yPosition += 15;
       }
 
       if (exportOptions.includeStatistics) {
         setExportProgress(35);
-        doc.setFontSize(16); doc.setFont(undefined, 'bold');
-        doc.text('Performance Summary', 20, yPosition); yPosition += 12;
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text('Performance Summary', 20, yPosition);
+        yPosition += 12;
         const metrics = [
           { label: 'Total Days', value: stats.totalDays.toString(), color: [30, 168, 231] },
           { label: 'Present', value: stats.totalPresent.toString(), color: [16, 185, 129] },
@@ -335,26 +340,35 @@ const ViewAttendance = () => {
           doc.setFillColor(...m.color);
           doc.roundedRect(xPos, yPosition, 55, 30, 3, 3, 'F');
           doc.setTextColor(255, 255, 255);
-          doc.setFontSize(9); doc.setFont(undefined, 'normal');
+          doc.setFontSize(9);
+          doc.setFont(undefined, 'normal');
           doc.text(m.label, xPos + 27.5, yPosition + 10, { align: 'center' });
-          doc.setFontSize(14); doc.setFont(undefined, 'bold');
+          doc.setFontSize(14);
+          doc.setFont(undefined, 'bold');
           doc.text(m.value, xPos + 27.5, yPosition + 22, { align: 'center' });
         });
         yPosition += 45;
-        doc.setTextColor(0, 0, 0); doc.setFontSize(10); doc.setFont(undefined, 'normal');
-        doc.text(`Attendance Rate: ${stats.attendanceRate}%`, 20, yPosition); yPosition += 6;
-        doc.text(`Average Working Hours: ${stats.avgHoursWorked} hours/day`, 20, yPosition); yPosition += 15;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Attendance Rate: ${stats.attendanceRate}%`, 20, yPosition);
+        yPosition += 6;
+        doc.text(`Average Working Hours: ${stats.avgHoursWorked} hours/day`, 20, yPosition);
+        yPosition += 15;
       }
 
       if (exportOptions.includeDetailedRecords) {
         setExportProgress(60);
-        if (yPosition > 200) { doc.addPage(); yPosition = 20; }
-        doc.setFontSize(14); doc.setFont(undefined, 'bold');
-        doc.text('Attendance Records', 20, yPosition); yPosition += 8;
+        if (yPosition > 200) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('Attendance Records', 20, yPosition);
+        yPosition += 8;
 
-        const records = exportOptions.recordsLimit === 'all'
-          ? filteredAttendance
-          : filteredAttendance.slice(0, parseInt(exportOptions.recordsLimit, 10));
+        const records = exportOptions.recordsLimit === 'all' ? filteredAttendance : filteredAttendance.slice(0, parseInt(exportOptions.recordsLimit, 10));
 
         const tableData = records.map((att) => {
           const hours = calculateWorkingHours(att.in_time, att.out_time);
@@ -384,7 +398,8 @@ const ViewAttendance = () => {
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
-        doc.setFontSize(8); doc.setTextColor(128, 128, 128);
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
         doc.text(`${staffData.staff_id} - Attendance Report | Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
       }
       doc.save(`${staffData.staff_id}_Attendance_Report.pdf`);
@@ -394,26 +409,31 @@ const ViewAttendance = () => {
       console.error(err);
       showSuccessToast('Error exporting PDF file');
     } finally {
-      setTimeout(() => { setExporting(false); setExportProgress(0); setExportType(''); }, 500);
+      setTimeout(() => {
+        setExporting(false);
+        setExportProgress(0);
+        setExportType('');
+      }, 500);
     }
   };
 
   const exportToWord = async () => {
     if (!staffData) return;
-    setExporting(true); setExportProgress(10); setExportType('Word');
+    setExporting(true);
+    setExportProgress(10);
+    setExportType('Word');
     try {
       setExportProgress(30);
-      const records = exportOptions.recordsLimit === 'all'
-        ? filteredAttendance
-        : filteredAttendance.slice(0, parseInt(exportOptions.recordsLimit, 10));
+      const records = exportOptions.recordsLimit === 'all' ? filteredAttendance : filteredAttendance.slice(0, parseInt(exportOptions.recordsLimit, 10));
 
       const rows = [
         new TableRow({
           children: ['Check-In Date', 'Status', 'In Time', 'Out Time', 'Out Date', 'Hours'].map(
-            (heading) => new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: heading, bold: true })], alignment: AlignmentType.CENTER })],
-              width: { size: 14, type: WidthType.PERCENTAGE },
-            })
+            (heading) =>
+              new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: heading, bold: true })], alignment: AlignmentType.CENTER })],
+                width: { size: 14, type: WidthType.PERCENTAGE },
+              })
           ),
         }),
         ...records.map((att) => {
@@ -435,18 +455,22 @@ const ViewAttendance = () => {
 
       setExportProgress(60);
       const doc = new Document({
-        sections: [{
-          properties: {},
-          children: [
-            new Paragraph({ text: 'Attendance Report', heading: 'Heading1', alignment: AlignmentType.CENTER }),
-            new Paragraph({ text: `${staffData.f_name} ${staffData.l_name} (${staffData.staff_id})`, alignment: AlignmentType.CENTER }),
-            new Paragraph({ text: `Position: ${staffData.position}`, alignment: AlignmentType.CENTER }),
-            new Paragraph({ text: '' }),
-            new Paragraph({ text: `Total Days: ${stats.totalDays} | Present: ${stats.totalPresent} | Absent: ${stats.totalAbsent} | Rate: ${stats.attendanceRate}%` }),
-            new Paragraph({ text: '' }),
-            new DocTable({ rows }),
-          ],
-        }],
+        sections: [
+          {
+            properties: {},
+            children: [
+              new Paragraph({ text: 'Attendance Report', heading: 'Heading1', alignment: AlignmentType.CENTER }),
+              new Paragraph({ text: `${staffData.f_name} ${staffData.l_name} (${staffData.staff_id})`, alignment: AlignmentType.CENTER }),
+              new Paragraph({ text: `Position: ${staffData.position}`, alignment: AlignmentType.CENTER }),
+              new Paragraph({ text: '' }),
+              new Paragraph({
+                text: `Total Days: ${stats.totalDays} | Present: ${stats.totalPresent} | Absent: ${stats.totalAbsent} | Rate: ${stats.attendanceRate}%`,
+              }),
+              new Paragraph({ text: '' }),
+              new DocTable({ rows }),
+            ],
+          },
+        ],
       });
 
       setExportProgress(90);
@@ -459,11 +483,18 @@ const ViewAttendance = () => {
       console.error(err);
       showSuccessToast('Error exporting Word file');
     } finally {
-      setTimeout(() => { setExporting(false); setExportProgress(0); setExportType(''); }, 500);
+      setTimeout(() => {
+        setExporting(false);
+        setExportProgress(0);
+        setExportType('');
+      }, 500);
     }
   };
 
-  const handleExportClick = (type) => { setShowExportModal(true); setExportType(type); };
+  const handleExportClick = (type) => {
+    setShowExportModal(true);
+    setExportType(type);
+  };
   const handleExportConfirm = () => {
     setShowExportModal(false);
     if (exportType === 'Excel') exportToExcel();
@@ -481,16 +512,13 @@ const ViewAttendance = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
-      
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={main_title} description={description} />
 
-      <div className="page-title-container mb-4 mt-5 mt-md-n3">
+      <div className="qsr-page-title-container">
         <Row className="g-3 align-items-center">
           <Col md={7}>
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-              {staffData ? `${staffData.f_name} ${staffData.l_name}'s Record` : main_title}
-            </h1>
+            <h1 className="qsr-page-title">{staffData ? `${staffData.f_name} ${staffData.l_name}'s Record` : main_title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col md={5} className="d-flex justify-content-md-end">
@@ -514,12 +542,17 @@ const ViewAttendance = () => {
             <Row className="align-items-center g-4">
               <Col md={4} className="border-end d-flex align-items-center gap-4">
                 <div className="sw-10 sh-10 rounded-circle bg-soft-primary d-flex align-items-center justify-content-center text-primary fw-bold display-6 shadow-sm">
-                  {staffData.f_name?.[0]}{staffData.l_name?.[0]}
+                  {staffData.f_name?.[0]}
+                  {staffData.l_name?.[0]}
                 </div>
                 <div>
-                  <h4 className="fw-bold text-dark mb-1">{staffData.f_name} {staffData.l_name}</h4>
+                  <h4 className="fw-bold text-dark mb-1">
+                    {staffData.f_name} {staffData.l_name}
+                  </h4>
                   <div className="text-muted fw-medium d-flex align-items-center gap-2">
-                    <Badge bg="soft-primary" className="text-primary px-3 py-2 rounded-pill">#{staffData.staff_id}</Badge>
+                    <Badge bg="soft-primary" className="text-primary px-3 py-2 rounded-pill">
+                      #{staffData.staff_id}
+                    </Badge>
                     <span>•</span>
                     <span>{staffData.position}</span>
                   </div>
@@ -578,7 +611,11 @@ const ViewAttendance = () => {
               />
             </Col>
             <Col md={1}>
-              <Button className="view-attendance-custom-btn-outline w-100 sh-5 p-0 d-flex align-items-center justify-content-center" onClick={clearFilters} title="Reset Filters">
+              <Button
+                className="view-attendance-custom-btn-outline w-100 sh-5 p-0 d-flex align-items-center justify-content-center"
+                onClick={clearFilters}
+                title="Reset Filters"
+              >
                 <CsLineIcons icon="rotate-left" size="18" />
               </Button>
             </Col>
@@ -598,17 +635,29 @@ const ViewAttendance = () => {
             <Card.Body className="p-4">
               <p className="text-muted small mb-4">Generate detailed attendance reports in various formats for payroll or compliance.</p>
               <div className="d-grid gap-3">
-                <Button className="view-attendance-custom-btn-solid bg-success border-success py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('Excel')} disabled={exporting}>
+                <Button
+                  className="view-attendance-custom-btn-solid bg-success border-success py-3 d-flex align-items-center justify-content-center gap-2"
+                  onClick={() => handleExportClick('Excel')}
+                  disabled={exporting}
+                >
                   <CsLineIcons icon="file-text" size="18" /> Excel Document
                 </Button>
-                <Button className="view-attendance-custom-btn-solid bg-danger border-danger py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('PDF')} disabled={exporting}>
+                <Button
+                  className="view-attendance-custom-btn-solid bg-danger border-danger py-3 d-flex align-items-center justify-content-center gap-2"
+                  onClick={() => handleExportClick('PDF')}
+                  disabled={exporting}
+                >
                   <CsLineIcons icon="file-text" size="18" /> PDF Report
                 </Button>
-                <Button className="view-attendance-custom-btn-solid bg-info border-info py-3 d-flex align-items-center justify-content-center gap-2" onClick={() => handleExportClick('Word')} disabled={exporting}>
+                <Button
+                  className="view-attendance-custom-btn-solid bg-info border-info py-3 d-flex align-items-center justify-content-center gap-2"
+                  onClick={() => handleExportClick('Word')}
+                  disabled={exporting}
+                >
                   <CsLineIcons icon="file-text" size="18" /> Word Document
                 </Button>
               </div>
-              
+
               {exporting && (
                 <div className="mt-4 p-3 bg-light rounded-3 border">
                   <div className="d-flex align-items-center justify-content-between mb-2">
@@ -633,8 +682,12 @@ const ViewAttendance = () => {
                 Attendance Calendar
               </h5>
               <div className="d-flex gap-2">
-                <Badge bg="soft-success" className="text-success px-2 py-1 small rounded-pill fw-bold">Present</Badge>
-                <Badge bg="soft-danger" className="text-danger px-2 py-1 small rounded-pill fw-bold">Absent</Badge>
+                <Badge bg="soft-success" className="text-success px-2 py-1 small rounded-pill fw-bold">
+                  Present
+                </Badge>
+                <Badge bg="soft-danger" className="text-danger px-2 py-1 small rounded-pill fw-bold">
+                  Absent
+                </Badge>
               </div>
             </Card.Header>
             <Card.Body className="p-4 pt-2">
@@ -701,37 +754,66 @@ const ViewAttendance = () => {
                             <small className="text-muted fw-medium">{new Date(att.date).toLocaleDateString('en-IN', { weekday: 'long' })}</small>
                           </td>
                           <td>
-                            <Badge bg={att.status === 'present' ? 'success' : 'danger'} className="view-attendance-status-badge d-inline-flex align-items-center gap-1">
+                            <Badge
+                              bg={att.status === 'present' ? 'success' : 'danger'}
+                              className="view-attendance-status-badge d-inline-flex align-items-center gap-1"
+                            >
                               <CsLineIcons icon={att.status === 'present' ? 'check' : 'close-circle'} size="12" />
                               {att.status}
                             </Badge>
                           </td>
                           <td>
                             <div className="d-flex align-items-center gap-2 text-dark fw-medium">
-                              {att.in_time ? <><CsLineIcons icon="login" size="14" className="text-success" />{att.in_time}</> : '—'}
+                              {att.in_time ? (
+                                <>
+                                  <CsLineIcons icon="login" size="14" className="text-success" />
+                                  {att.in_time}
+                                </>
+                              ) : (
+                                '—'
+                              )}
                             </div>
                           </td>
                           <td>
                             <div className="d-flex align-items-center gap-2 text-dark fw-medium">
-                              {att.out_time ? <><CsLineIcons icon="logout" size="14" className="text-danger" />{att.out_time}</> : 
-                                att.in_time ? <Badge bg="soft-warning" className="text-warning small px-2 py-1 rounded-pill fw-bold">Active</Badge> : '—'}
+                              {att.out_time ? (
+                                <>
+                                  <CsLineIcons icon="logout" size="14" className="text-danger" />
+                                  {att.out_time}
+                                </>
+                              ) : att.in_time ? (
+                                <Badge bg="soft-warning" className="text-warning small px-2 py-1 rounded-pill fw-bold">
+                                  Active
+                                </Badge>
+                              ) : (
+                                '—'
+                              )}
                             </div>
                             {checkoutDate && <div className="small text-muted mt-1">🌙 Out: {formatDateDisplay(checkoutDate)}</div>}
                           </td>
                           <td>
-                            <div className="fw-bold text-primary">
-                              {hours ? `${hours.hours}h ${hours.minutes}m` : '—'}
-                            </div>
+                            <div className="fw-bold text-primary">{hours ? `${hours.hours}h ${hours.minutes}m` : '—'}</div>
                           </td>
                           <td>
                             {att.in_time && att.out_time ? (
-                              <Badge bg={overnight ? 'soft-purple' : 'soft-info'} className={`text-${overnight ? 'purple' : 'info'} px-3 py-2 rounded-pill fw-bold`}>
+                              <Badge
+                                bg={overnight ? 'soft-purple' : 'soft-info'}
+                                className={`text-${overnight ? 'purple' : 'info'} px-3 py-2 rounded-pill fw-bold`}
+                              >
                                 {overnight ? '🌙 Night' : '☀️ Day'}
                               </Badge>
-                            ) : '—'}
+                            ) : (
+                              '—'
+                            )}
                           </td>
                           <td className="text-center">
-                            <Button className="view-attendance-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center mx-auto" onClick={() => { setSelectedAttendance(att); setShowDetailModal(true); }}>
+                            <Button
+                              className="view-attendance-custom-btn-outline p-0 sw-5 sh-5 d-flex align-items-center justify-content-center mx-auto"
+                              onClick={() => {
+                                setSelectedAttendance(att);
+                                setShowDetailModal(true);
+                              }}
+                            >
                               <CsLineIcons icon="eye" size="16" />
                             </Button>
                           </td>
@@ -753,11 +835,15 @@ const ViewAttendance = () => {
           {selectedAttendance && (
             <div className="text-center">
               <div className={`bg-soft-${selectedAttendance.status === 'present' ? 'success' : 'danger'} d-inline-flex p-4 rounded-circle mb-3`}>
-                <CsLineIcons icon={selectedAttendance.status === 'present' ? 'check-circle' : 'close-circle'} size="48" className={`text-${selectedAttendance.status === 'present' ? 'success' : 'danger'}`} />
+                <CsLineIcons
+                  icon={selectedAttendance.status === 'present' ? 'check-circle' : 'close-circle'}
+                  size="48"
+                  className={`text-${selectedAttendance.status === 'present' ? 'success' : 'danger'}`}
+                />
               </div>
               <h4 className="fw-bold mb-1">{formatDateDisplay(selectedAttendance.date)}</h4>
               <p className="text-muted fw-medium">{new Date(selectedAttendance.date).toLocaleDateString('en-IN', { weekday: 'long' })}</p>
-              
+
               <div className="view-attendance-glass-card bg-light border-0 p-4 mt-4 text-start">
                 <Row className="g-4">
                   <Col xs={6}>
@@ -790,7 +876,9 @@ const ViewAttendance = () => {
           )}
         </Modal.Body>
         <Modal.Footer className="border-0">
-          <Button className="view-attendance-custom-btn-solid w-100 py-3" onClick={() => setShowDetailModal(false)}>Close Detail</Button>
+          <Button className="view-attendance-custom-btn-solid w-100 py-3" onClick={() => setShowDetailModal(false)}>
+            Close Detail
+          </Button>
         </Modal.Footer>
       </Modal>
 
@@ -806,17 +894,39 @@ const ViewAttendance = () => {
             <CsLineIcons icon="info-hexagon" size="24" className="text-primary" />
             <div className="small text-dark fw-medium">Customize your report content before generating the file.</div>
           </div>
-          
+
           <Form>
             <h6 className="fw-bold text-muted text-uppercase letter-spacing-1 mb-3">Include Sections</h6>
             <div className="view-attendance-glass-card p-4 border-0 shadow-none bg-light mb-4">
-              <Form.Check className="mb-3 fw-bold" type="switch" label="Staff Personal Details" checked={exportOptions.includeStaffInfo} onChange={(e) => setExportOptions({ ...exportOptions, includeStaffInfo: e.target.checked })} />
-              <Form.Check className="mb-3 fw-bold" type="switch" label="Performance Statistics" checked={exportOptions.includeStatistics} onChange={(e) => setExportOptions({ ...exportOptions, includeStatistics: e.target.checked })} />
-              <Form.Check className="mb-0 fw-bold" type="switch" label="Detailed Daily Logs" checked={exportOptions.includeDetailedRecords} onChange={(e) => setExportOptions({ ...exportOptions, includeDetailedRecords: e.target.checked })} />
+              <Form.Check
+                className="mb-3 fw-bold"
+                type="switch"
+                label="Staff Personal Details"
+                checked={exportOptions.includeStaffInfo}
+                onChange={(e) => setExportOptions({ ...exportOptions, includeStaffInfo: e.target.checked })}
+              />
+              <Form.Check
+                className="mb-3 fw-bold"
+                type="switch"
+                label="Performance Statistics"
+                checked={exportOptions.includeStatistics}
+                onChange={(e) => setExportOptions({ ...exportOptions, includeStatistics: e.target.checked })}
+              />
+              <Form.Check
+                className="mb-0 fw-bold"
+                type="switch"
+                label="Detailed Daily Logs"
+                checked={exportOptions.includeDetailedRecords}
+                onChange={(e) => setExportOptions({ ...exportOptions, includeDetailedRecords: e.target.checked })}
+              />
             </div>
 
             <h6 className="fw-bold text-muted text-uppercase letter-spacing-1 mb-3">Records Limit</h6>
-            <Form.Select className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark" value={exportOptions.recordsLimit} onChange={(e) => setExportOptions({ ...exportOptions, recordsLimit: e.target.value })}>
+            <Form.Select
+              className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark"
+              value={exportOptions.recordsLimit}
+              onChange={(e) => setExportOptions({ ...exportOptions, recordsLimit: e.target.value })}
+            >
               <option value="all">Full History (All Records)</option>
               <option value="30">Recent 30 Days</option>
               <option value="90">Recent 90 Days</option>
@@ -824,7 +934,8 @@ const ViewAttendance = () => {
             </Form.Select>
           </Form>
           <Button variant="primary" onClick={handleExportConfirm}>
-            <CsLineIcons icon="download" className="me-2" />Export {exportType}
+            <CsLineIcons icon="download" className="me-2" />
+            Export {exportType}
           </Button>
         </Modal.Body>
       </Modal>

@@ -23,11 +23,11 @@ import ModalManageCashiers from './ModalManageCashiers';
 const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Hotel Manager', 'Create Cashier'];
 
 const PLAN_DISPLAY_NAMES = {
-  'Manager': 'Manager Panel',
-  'QSR': 'QSR Panel',
+  Manager: 'Manager Panel',
+  QSR: 'QSR Panel',
   'Payroll By The Box': 'TheBoxSync Payroll',
   'Scan For Menu': 'Scan & QR Order',
-  'Feedback': 'QR-based Feedback',
+  Feedback: 'QR-based Feedback',
   'Reservation Manager': 'Reservation Management',
   'Token Management': 'Token Management',
   'Table Management': 'Table Management',
@@ -56,33 +56,42 @@ const ADDON_LABEL_TO_DB = {
 };
 
 const ALLOWED_PLANS_BY_TIER = {
-  'QSR': [
-    'Staff Management',
-    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
-    'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'
-  ],
-  'Café': [
-    'Staff Management',
-    'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu',
-    'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
-  ],
+  QSR: ['Staff Management', 'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice'],
+  Café: ['Staff Management', 'QSR', 'KOT Panel', 'Token Management', 'Scan For Menu', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'],
   'Fine Dine': [
-    'Manager', 'Staff Management',
-    'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Scan For Menu',
-    'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website',
-    'Create Cashier'
+    'Manager',
+    'Staff Management',
+    'Captain Panel',
+    'KOT Panel',
+    'Reservation Manager',
+    'Table Management',
+    'Scan For Menu',
+    'Feedback',
+    'Waiter Calling System',
+    'Dynamic Reports',
+    'Whatsapp-Invoice',
+    'Restaurant Website',
+    'Create Cashier',
   ],
-  'Cloud': [
+  Cloud: ['Staff Management', 'QSR', 'KOT Panel', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'],
+  Chain: [
+    'Manager',
     'Staff Management',
     'QSR',
-    'KOT Panel', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'
+    'Captain Panel',
+    'KOT Panel',
+    'Reservation Manager',
+    'Table Management',
+    'Token Management',
+    'Scan For Menu',
+    'Feedback',
+    'Waiter Calling System',
+    'Dynamic Reports',
+    'Whatsapp-Invoice',
+    'Restaurant Website',
+    'Payroll By The Box',
+    'Create Cashier',
   ],
-  'Chain': [
-    'Manager', 'Staff Management',
-    'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Token Management',
-    'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports',
-    'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box', 'Create Cashier'
-  ]
 };
 
 const getDisplayName = (name) => PLAN_DISPLAY_NAMES[name] || name;
@@ -139,9 +148,11 @@ const Subscription = () => {
         axios.get(`${process.env.REACT_APP_API}/subscription/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }),
-        axios.get(`${process.env.REACT_APP_API}/user/get`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }).catch(() => null),
+        axios
+          .get(`${process.env.REACT_APP_API}/user/get`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          })
+          .catch(() => null),
       ]);
 
       if (userDetailsRes && userDetailsRes.data) {
@@ -152,7 +163,7 @@ const Subscription = () => {
       const userTier = userDetailsRes?.data?.purchasedPlan || 'QSR';
       const allowedPlans = ALLOWED_PLANS_BY_TIER[userTier] || [];
 
-      const activePlanObj = plans.find(p => p.name === `${userTier} Plan` || p.name === userTier) || plans[0];
+      const activePlanObj = plans.find((p) => p.name === `${userTier} Plan` || p.name === userTier) || plans[0];
       const checkFeats = new Set([
         ...activePlanObj.features.billing,
         ...activePlanObj.features.addons,
@@ -162,11 +173,11 @@ const Subscription = () => {
       ]);
 
       const allFeats = new Set();
-      featureCategories.forEach(cat => cat.features.forEach(f => allFeats.add(f)));
+      featureCategories.forEach((cat) => cat.features.forEach((f) => allFeats.add(f)));
 
       setActivePlanFeatures(Array.from(checkFeats));
       const crosses = [];
-      allFeats.forEach(f => {
+      allFeats.forEach((f) => {
         if (!checkFeats.has(f)) crosses.push(f);
       });
       setMissingFeatures(crosses);
@@ -186,11 +197,11 @@ const Subscription = () => {
 
       const checkFeatsArray = Array.from(checkFeats);
       const impliedSubs = checkFeatsArray
-        .filter(feat => PANEL_PLANS.includes(feat))
-        .map(feat => {
-          const existing = enriched.find(sub => sub.plan_name === feat);
+        .filter((feat) => PANEL_PLANS.includes(feat))
+        .map((feat) => {
+          const existing = enriched.find((sub) => sub.plan_name === feat);
           if (existing) return null;
-          
+
           return {
             _id: `implied_${feat}`,
             plan_name: feat,
@@ -199,7 +210,7 @@ const Subscription = () => {
             plan_id: `implied_id_${feat}`,
             formatted_start: 'Included in Plan',
             formatted_end: 'Included in Plan',
-          }
+          };
         })
         .filter(Boolean);
 
@@ -280,22 +291,22 @@ const Subscription = () => {
 
   const handleSendFeatureInquiry = async (featureName) => {
     try {
-      setActionLoading(prev => ({ ...prev, [featureName]: true }));
+      setActionLoading((prev) => ({ ...prev, [featureName]: true }));
       const payload = {
         name: userDetails?.name || 'Admin',
         email2: userDetails?.email || 'Unknown',
         phone: userDetails?.mobile || 'Unknown',
         message: `I am interested in upgrading my plan to include the "${featureName}" feature. Please contact me with pricing and details.`,
-        plan: featureName
+        plan: featureName,
       };
-      
+
       await axios.post(`${process.env.REACT_APP_API}/user/enquiry`, payload);
       toast.success(`Inquiry sent for ${featureName}. Our team will contact you soon for Upgrades & Add-ons and pricing.`);
     } catch (err) {
       console.error(err);
       toast.error('Failed to inquiry: Please try again later.');
     } finally {
-      setActionLoading(prev => ({ ...prev, [featureName]: false }));
+      setActionLoading((prev) => ({ ...prev, [featureName]: false }));
     }
   };
 
@@ -430,11 +441,23 @@ const Subscription = () => {
         accessor: 'status',
         Cell: ({ value }) => {
           if (value === 'active') {
-            return <Badge bg="none" className="subscription-bg-soft-success text-success px-3 py-2 rounded-pill">Active</Badge>;
+            return (
+              <Badge bg="none" className="subscription-bg-soft-success text-success px-3 py-2 rounded-pill">
+                Active
+              </Badge>
+            );
           } else if (value === 'inactive') {
-            return <Badge bg="none" className="subscription-bg-soft-warning text-warning px-3 py-2 rounded-pill">Inactive</Badge>;
+            return (
+              <Badge bg="none" className="subscription-bg-soft-warning text-warning px-3 py-2 rounded-pill">
+                Inactive
+              </Badge>
+            );
           }
-          return <Badge bg="none" className="subscription-bg-soft-danger text-danger px-3 py-2 rounded-pill">{value}</Badge>;
+          return (
+            <Badge bg="none" className="subscription-bg-soft-danger text-danger px-3 py-2 rounded-pill">
+              {value}
+            </Badge>
+          );
         },
       },
       {
@@ -531,7 +554,10 @@ const Subscription = () => {
                 </>
               );
             }
-          } else if (isActive && ['Staff Management', 'Feedback', 'Scan For Menu', 'Reservation Manager', 'Dynamic Reports', 'Restaurant Website'].includes(original.plan_name)) {
+          } else if (
+            isActive &&
+            ['Staff Management', 'Feedback', 'Scan For Menu', 'Reservation Manager', 'Dynamic Reports', 'Restaurant Website'].includes(original.plan_name)
+          ) {
             actionButtons = (
               <Button
                 variant="none"
@@ -562,7 +588,14 @@ const Subscription = () => {
           } else if (isBlocked) {
             if (isBlockedWithQuery) {
               actionButtons = (
-                <Button variant="none" size="sm" className="subscription-custom-btn-outline opacity-50" style={{ width: '30px', height: '30px', padding: 0 }} title="Inquiry Pending" disabled>
+                <Button
+                  variant="none"
+                  size="sm"
+                  className="subscription-custom-btn-outline opacity-50"
+                  style={{ width: '30px', height: '30px', padding: 0 }}
+                  title="Inquiry Pending"
+                  disabled
+                >
                   <CsLineIcons icon="hourglass" size="15" />
                 </Button>
               );
@@ -604,33 +637,32 @@ const Subscription = () => {
 
   if (loading) {
     return (
-      <>
+      <div className="container-fluid qsr-page-container">
         <HtmlHead title={title} description={description} />
-        <Row>
-          <Col>
-            <div className="page-title-container">
-              <h1 className="mb-0 pb-0 display-4">{title}</h1>
+        <div className="qsr-page-title-container">
+          <Row>
+            <Col>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
-            </div>
-            <div className="text-center py-5">
-              <Spinner animation="border" variant="primary" className="mb-3" />
-              <h5>Loading...</h5>
-            </div>
-          </Col>
-        </Row>
-      </>
+            </Col>
+          </Row>
+        </div>
+        <div className="text-center py-5">
+          <Spinner animation="border" variant="primary" className="mb-3" />
+          <h5>Loading...</h5>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="container-fluid pb-5">
-
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4">
+      <div className="qsr-page-title-container">
         <Row className="g-3 align-items-center">
           <Col md={7}>
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
         </Row>
@@ -674,9 +706,21 @@ const Subscription = () => {
                           <span className="subscription-mobile-value mb-0">{getDisplayName(original.plan_name)}</span>
                         </div>
                         <div>
-                          {original.status === 'active' && <Badge bg="none" className="subscription-bg-soft-success text-success rounded-pill">Active</Badge>}
-                          {original.status === 'inactive' && <Badge bg="none" className="subscription-bg-soft-warning text-warning rounded-pill">Inactive</Badge>}
-                          {original.status === 'blocked' && <Badge bg="none" className="subscription-bg-soft-danger text-danger rounded-pill">Blocked</Badge>}
+                          {original.status === 'active' && (
+                            <Badge bg="none" className="subscription-bg-soft-success text-success rounded-pill">
+                              Active
+                            </Badge>
+                          )}
+                          {original.status === 'inactive' && (
+                            <Badge bg="none" className="subscription-bg-soft-warning text-warning rounded-pill">
+                              Inactive
+                            </Badge>
+                          )}
+                          {original.status === 'blocked' && (
+                            <Badge bg="none" className="subscription-bg-soft-danger text-danger rounded-pill">
+                              Blocked
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <Row className="g-2 mb-3">
@@ -690,7 +734,7 @@ const Subscription = () => {
                         </Col>
                       </Row>
                       <div className="pt-3 border-top d-flex justify-content-end align-items-center gap-2">
-                        {row.cells.find(c => c.column.Header === 'Actions')?.render('Cell')}
+                        {row.cells.find((c) => c.column.Header === 'Actions')?.render('Cell')}
                       </div>
                     </div>
                   );
@@ -711,10 +755,15 @@ const Subscription = () => {
                     {activePlanFeatures.map((feat, i) => (
                       <Col key={i} xs={12} sm={6} md={4} lg={3}>
                         <div className="d-flex align-items-center gap-2">
-                          <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '20px', height: '20px', backgroundColor: 'transparent', border: '1.5px solid #4ade80' }}>
+                          <div
+                            className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                            style={{ width: '20px', height: '20px', backgroundColor: 'transparent', border: '1.5px solid #4ade80' }}
+                          >
                             <CsLineIcons icon="check" size="12" style={{ color: '#4ade80' }} />
                           </div>
-                          <span className="fw-medium text-muted" style={{ fontSize: '0.9rem' }}>{feat}</span>
+                          <span className="fw-medium text-muted" style={{ fontSize: '0.9rem' }}>
+                            {feat}
+                          </span>
                         </div>
                       </Col>
                     ))}
@@ -739,7 +788,9 @@ const Subscription = () => {
                   <Card.Body className="p-4 d-flex flex-column">
                     <div className="d-flex justify-content-between align-items-start mb-3">
                       <h5 className="fw-bold mb-0">{getDisplayName(sub.plan_name)}</h5>
-                      <Badge bg="none" className="subscription-bg-soft-warning text-warning rounded-pill">Expired</Badge>
+                      <Badge bg="none" className="subscription-bg-soft-warning text-warning rounded-pill">
+                        Expired
+                      </Badge>
                     </div>
                     <div className="subscription-plan-price mb-3">₹{sub.plan_price}</div>
                     <p className="text-muted small mb-4">
@@ -784,22 +835,29 @@ const Subscription = () => {
           <Row className="g-4">
             {missingFeatures.map((feature, i) => {
               const dbName = ADDON_LABEL_TO_DB[feature];
-              const availablePlan = dbName ? availablePlans.find(p => p.plan_name === dbName) : null;
-              
+              const availablePlan = dbName ? availablePlans.find((p) => p.plan_name === dbName) : null;
+
               return (
                 <Col key={i} sm="12" md="6" lg="4">
                   <Card className="subscription-glass-card border-0 h-100 subscription-plan-card">
                     <Card.Body className="p-4 d-flex flex-column">
                       <div className="d-flex align-items-center gap-2 mb-3">
-                        <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '24px', height: '24px', backgroundColor: 'transparent', border: '1.5px solid #e53e3e' }}>
+                        <div
+                          className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                          style={{ width: '24px', height: '24px', backgroundColor: 'transparent', border: '1.5px solid #e53e3e' }}
+                        >
                           <CsLineIcons icon="close" size="14" style={{ color: '#e53e3e' }} />
                         </div>
-                        <h6 className="fw-bold mb-0" style={{ fontSize: '1.1rem' }}>{feature}</h6>
+                        <h6 className="fw-bold mb-0" style={{ fontSize: '1.1rem' }}>
+                          {feature}
+                        </h6>
                       </div>
-                      
+
                       {availablePlan ? (
                         <>
-                          <div className="subscription-plan-price mb-2" style={{ color: '#1ea8e7' }}>₹{availablePlan.plan_price}</div>
+                          <div className="subscription-plan-price mb-2" style={{ color: '#1ea8e7' }}>
+                            ₹{availablePlan.plan_price}
+                          </div>
                           <div className="text-muted small mb-4">per {availablePlan.plan_duration} month(s)</div>
                           <div className="mt-auto">
                             <Button
@@ -870,10 +928,7 @@ const Subscription = () => {
         <DeletePanelModal show={showDeletePanelModal} handleClose={() => setShowDeletePanelModal(false)} planName={deletePlanName} fetchData={fetchData} />
       )}
 
-      <ModalManageCashiers
-        show={showManageCashiersModal}
-        handleClose={() => setShowManageCashiersModal(false)}
-      />
+      <ModalManageCashiers show={showManageCashiersModal} handleClose={() => setShowManageCashiersModal(false)} />
 
       {showInquiryModal && (
         <RaiseInquiryModal show={showInquiryModal} handleClose={() => setShowInquiryModal(false)} subscriptionName={inquirySubName} fetchData={fetchData} />

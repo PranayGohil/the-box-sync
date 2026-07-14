@@ -128,7 +128,9 @@ const AddStaff = () => {
         (value) => !value || (value && ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(value.type))
       ),
 
-    document_type: Yup.string().required('Document type is required').oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
+    document_type: Yup.string()
+      .required('Document type is required')
+      .oneOf(['National Identity Card', 'Aadhar Card', 'Pan Card', 'Voter Card', 'Voter ID Card', 'Driving License', 'Passport'], 'Invalid document type'),
 
     id_number: Yup.string()
       .required('ID number is required')
@@ -225,9 +227,7 @@ const AddStaff = () => {
         console.error('Error during staff submission:', err);
         const serverError = err.response?.data?.error;
         const serverMessage = err.response?.data?.message;
-        const errorMsg = Array.isArray(serverError)
-          ? serverError.join(', ')
-          : (serverError || serverMessage || 'Staff submission failed. Please try again.');
+        const errorMsg = Array.isArray(serverError) ? serverError.join(', ') : serverError || serverMessage || 'Staff submission failed. Please try again.';
         setFileUploadError(errorMsg);
         toast.error('Add staff failed.');
       } finally {
@@ -253,7 +253,6 @@ const AddStaff = () => {
     }
   `;
 
-
   useEffect(() => {
     const initializeData = async () => {
       try {
@@ -266,7 +265,7 @@ const AddStaff = () => {
           }),
           axios.get(`${process.env.REACT_APP_API}/staff/get-next-id`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          })
+          }),
         ]);
         setPositions(positionsRes.data.data);
         if (nextIdRes.data?.success) {
@@ -381,10 +380,10 @@ const AddStaff = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.addEventListener("load", () => {
+    reader.addEventListener('load', () => {
       setCropperState({
         show: true,
-        imageSrc: reader.result?.toString() || "",
+        imageSrc: reader.result?.toString() || '',
         fieldName,
         setPreview,
         aspect,
@@ -418,12 +417,9 @@ const AddStaff = () => {
     setUploadingFiles((prev) => ({ ...prev, [fieldName]: false }));
   };
 
-
-
   if (loading.initial) {
     return (
       <div className="container-fluid py-5">
-
         <HtmlHead title={title} description={description} />
         <div className="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
           <Spinner animation="border" style={{ color: '#1ea8e7' }} className="mb-3" />
@@ -438,13 +434,11 @@ const AddStaff = () => {
       <style>{calendarStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="container-fluid px-lg-5">
-        <div className="add-staff-page-title-container mb-4 mt-5 mt-md-n3">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
             <Col md={7}>
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                {title}
-              </h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
             <Col xs="12" md="5" className="d-flex add-staff-button-group-responsive justify-content-md-end gap-2 mt-3 mt-md-0">
@@ -563,9 +557,7 @@ const AddStaff = () => {
                             <CsLineIcons icon="calendar" size="18" className="text-primary" />
                           </div>
                         </div>
-                        {touched.birth_date && errors.birth_date && (
-                          <div className="text-danger mt-1 small">{errors.birth_date}</div>
-                        )}
+                        {touched.birth_date && errors.birth_date && <div className="text-danger mt-1 small">{errors.birth_date}</div>}
                       </Form.Group>
                     </Col>
                     <Col md={4}>
@@ -590,9 +582,7 @@ const AddStaff = () => {
                             <CsLineIcons icon="calendar" size="18" className="text-primary" />
                           </div>
                         </div>
-                        {touched.joining_date && errors.joining_date && (
-                          <div className="text-danger mt-1 small">{errors.joining_date}</div>
-                        )}
+                        {touched.joining_date && errors.joining_date && <div className="text-danger mt-1 small">{errors.joining_date}</div>}
                       </Form.Group>
                     </Col>
 
@@ -758,8 +748,6 @@ const AddStaff = () => {
                         </div>
                       </Form.Group>
                     </Col>
-
-
                   </Row>
                 </Card.Body>
               </Card>
@@ -836,24 +824,24 @@ const AddStaff = () => {
                       value={
                         values.document_type
                           ? {
-                            label:
-                              values.document_type === 'National Identity Card'
-                                ? 'National Identity Card'
-                                : values.document_type === 'Aadhar Card'
+                              label:
+                                values.document_type === 'National Identity Card'
+                                  ? 'National Identity Card'
+                                  : values.document_type === 'Aadhar Card'
                                   ? 'Aadhar Card'
                                   : values.document_type === 'Pan Card'
-                                    ? 'PAN Card'
-                                    : values.document_type === 'Voter Card'
-                                      ? 'Voter Card'
-                                      : values.document_type === 'Voter ID Card'
-                                        ? 'Voter ID Card'
-                                        : values.document_type === 'Driving License'
-                                          ? 'Driving License'
-                                          : values.document_type === 'Passport'
-                                            ? 'Passport'
-                                            : values.document_type,
-                            value: values.document_type,
-                          }
+                                  ? 'PAN Card'
+                                  : values.document_type === 'Voter Card'
+                                  ? 'Voter Card'
+                                  : values.document_type === 'Voter ID Card'
+                                  ? 'Voter ID Card'
+                                  : values.document_type === 'Driving License'
+                                  ? 'Driving License'
+                                  : values.document_type === 'Passport'
+                                  ? 'Passport'
+                                  : values.document_type,
+                              value: values.document_type,
+                            }
                           : null
                       }
                       onChange={(selected) => setFieldValue('document_type', selected ? selected.value : '')}

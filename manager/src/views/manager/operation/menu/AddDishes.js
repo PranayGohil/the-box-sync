@@ -14,21 +14,26 @@ import CreatableSelect from 'react-select/creatable';
 
 const customStyles = `
   .pill-input {
-    border-radius: 12px !important;
-    padding: 0.7rem 1.2rem !important;
+    border-radius: 10px !important;
+    padding: 0.45rem 1rem !important;
     border: 1px solid #e5e7eb !important;
     background: #ffffff !important;
     transition: all 0.2s ease !important;
-    font-size: 1rem !important;
+    font-size: 0.88rem !important;
     font-weight: 600 !important;
     color: #334155 !important;
   }
   input.pill-input {
-    height: 48px !important;
+    height: 38px !important;
   }
   textarea.pill-input {
     min-height: 60px !important;
     height: auto !important;
+  }
+  @media (max-width: 767.98px) {
+    textarea.pill-input {
+      min-height: 130px !important;
+    }
   }
   .pill-input:focus {
     border-color: #23b3f4 !important;
@@ -227,37 +232,19 @@ const AddDishes = () => {
 
   const sizeSuggestions = useMemo(() => {
     return Array.from(
-      new Set(
-        fullMenuData.flatMap((c) =>
-          (c.dishes || []).flatMap((d) =>
-            (d.variants || []).map((v) => v.size_name?.trim()).filter(Boolean)
-          )
-        )
-      )
+      new Set(fullMenuData.flatMap((c) => (c.dishes || []).flatMap((d) => (d.variants || []).map((v) => v.size_name?.trim()).filter(Boolean))))
     ).sort();
   }, [fullMenuData]);
 
   const extraSuggestions = useMemo(() => {
     return Array.from(
-      new Set(
-        fullMenuData.flatMap((c) =>
-          (c.dishes || []).flatMap((d) =>
-            (d.variants || []).map((v) => v.extra?.trim()).filter(Boolean)
-          )
-        )
-      )
+      new Set(fullMenuData.flatMap((c) => (c.dishes || []).flatMap((d) => (d.variants || []).map((v) => v.extra?.trim()).filter(Boolean))))
     ).sort();
   }, [fullMenuData]);
 
   const addonSuggestions = useMemo(() => {
     return Array.from(
-      new Set(
-        fullMenuData.flatMap((c) =>
-          (c.dishes || []).flatMap((d) =>
-            (d.addons || []).map((a) => a.addon_name?.trim()).filter(Boolean)
-          )
-        )
-      )
+      new Set(fullMenuData.flatMap((c) => (c.dishes || []).flatMap((d) => (d.addons || []).map((a) => a.addon_name?.trim()).filter(Boolean))))
     ).sort();
   }, [fullMenuData]);
 
@@ -308,14 +295,11 @@ const AddDishes = () => {
       const currentCategory = values.category;
 
       const matchedCategory = fullMenuData.find(
-        (c) => c.category.toLowerCase() === currentCategory.toLowerCase() &&
-               (c.dishes || []).some((d) => d.dish_name.toLowerCase() === name.toLowerCase())
+        (c) => c.category.toLowerCase() === currentCategory.toLowerCase() && (c.dishes || []).some((d) => d.dish_name.toLowerCase() === name.toLowerCase())
       );
 
       if (matchedCategory) {
-        const matchedDish = matchedCategory.dishes.find(
-          (d) => d.dish_name.toLowerCase() === name.toLowerCase()
-        );
+        const matchedDish = matchedCategory.dishes.find((d) => d.dish_name.toLowerCase() === name.toLowerCase());
 
         if (matchedDish) {
           // Autofill existing ID
@@ -337,9 +321,7 @@ const AddDishes = () => {
               }))
             );
           } else {
-            setFieldValue(`dishes[${index}].variants`, [
-              { size_name: '', price: matchedDish.dish_price || '', extra: '', is_available: true },
-            ]);
+            setFieldValue(`dishes[${index}].variants`, [{ size_name: '', price: matchedDish.dish_price || '', extra: '', is_available: true }]);
           }
 
           // Autofill addons
@@ -486,13 +468,11 @@ const AddDishes = () => {
     <>
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid px-lg-5 pb-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container text-start">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto text-start">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                {title}
-              </h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -514,7 +494,7 @@ const AddDishes = () => {
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
                                 borderColor: values.category === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
-                                minHeight: '48px',
+                                minHeight: '38px',
                               }),
                             }}
                             isClearable
@@ -676,7 +656,9 @@ const AddDishes = () => {
                                                       menuPortalTarget={document.body}
                                                       options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
                                                       value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
-                                                      onChange={(selected) => setFieldValue(`dishes[${index}].variants[${vIdx}].size_name`, selected ? selected.value : '')}
+                                                      onChange={(selected) =>
+                                                        setFieldValue(`dishes[${index}].variants[${vIdx}].size_name`, selected ? selected.value : '')
+                                                      }
                                                       placeholder="e.g. Regular"
                                                     />
                                                     <ErrorMessage
@@ -726,7 +708,9 @@ const AddDishes = () => {
                                                       menuPortalTarget={document.body}
                                                       options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
                                                       value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
-                                                      onChange={(selected) => setFieldValue(`dishes[${index}].variants[${vIdx}].extra`, selected ? selected.value : '')}
+                                                      onChange={(selected) =>
+                                                        setFieldValue(`dishes[${index}].variants[${vIdx}].extra`, selected ? selected.value : '')
+                                                      }
                                                       placeholder="e.g. Serves 1-2"
                                                     />
                                                   </BForm.Group>
@@ -794,7 +778,9 @@ const AddDishes = () => {
                                                       menuPortalTarget={document.body}
                                                       options={addonSuggestions.map((opt) => ({ value: opt, label: opt }))}
                                                       value={addon.addon_name ? { value: addon.addon_name, label: addon.addon_name } : null}
-                                                      onChange={(selected) => setFieldValue(`dishes[${index}].addons[${aIdx}].addon_name`, selected ? selected.value : '')}
+                                                      onChange={(selected) =>
+                                                        setFieldValue(`dishes[${index}].addons[${aIdx}].addon_name`, selected ? selected.value : '')
+                                                      }
                                                       placeholder="Add-on Name"
                                                     />
                                                     <ErrorMessage

@@ -243,172 +243,6 @@ const OrderHistory = () => {
     return count;
   };
 
-  // const handlePrint = async (orderId) => {
-  //   setPrinting((prev) => ({ ...prev, [orderId]: true }));
-  //   try {
-  //     const orderResponse = await axios.get(`${process.env.REACT_APP_API}/order/get/${orderId}`, {
-  //       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-  //     });
-
-  //     const userResponse = await axios.get(`${process.env.REACT_APP_API}/user/get`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-
-  //     const order = orderResponse.data.data;
-  //     const userData = userResponse.data;
-
-  //     const printDiv = document.createElement('div');
-  //     printDiv.id = 'printable-invoice';
-  //     printDiv.style.display = 'none';
-  //     document.body.appendChild(printDiv);
-
-  //     printDiv.innerHTML = `
-  //        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; border: 1px solid #ccc; padding: 10px;">
-  //          <div style="text-align: center; margin-bottom: 10px;">
-  //            <h3 style="margin: 10px;">${userData.name}</h3>
-  //            <p style="margin: 0; font-size: 12px;">${userData.address}</p>
-  //            <p style="margin: 0; font-size: 12px;">
-  //              ${userData.city}, ${userData.state} - ${userData.pincode}
-  //            </p>
-  //            <p style="margin: 10px; font-size: 12px;"><strong>Ph.: </strong> ${userData.mobile}</p>
-  //            ${
-  //              userData.fssai_no && userData.fssai_no !== 'null'
-  //                ? `<p style="margin: 10px; font-size: 12px;"><strong>FSSAI No:</strong> ${userData.fssai_no}</p>`
-  //                : ''
-  //            }
-  //            <p style="margin: 10px; font-size: 12px;"><strong>GST No:</strong> ${userData.gst_no}</p>
-  //          </div>
-  //          <hr style="border: 0.5px dashed #ccc;" />
-  //          <p></p>
-  //           <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
-  //            <tr>
-  //              <td style="width: 50%; height: 30px;">
-  //                <strong> Name: </strong> ${order?.customer_name || '(M: 1234567890)'}
-  //              </td>
-  //               <td style="text-align: right;">
-  //                 <strong>${order.order_type}</strong>
-  //              </td>
-  //            </tr>
-  //            <tr>
-  //              <td style="width: 50%; height: 30px;">
-  //                <strong>Date:</strong> ${new Date(order.order_date).toLocaleString()}
-  //              </td>
-  //             <td style="text-align: right;">
-  //                  ${
-  //                    order.table_no
-  //                      ? ` <strong>Table No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.table_no} </span>`
-  //                      : order.token
-  //                      ? ` <strong>Token No: </strong> <span style="margin-left: 5px; font-size: 16px;"> ${order.token} </span>`
-  //                      : ''
-  //                  } </span>
-  //              </td>
-  //            </tr>
-  //            <tr>
-  //              <td colspan="2"><strong>Bill No:</strong> ${order.order_no || order._id}</td>
-  //            </tr>
-  //          </table>
-  //          <hr style="border: 0.5px dashed #ccc;" />
-  //          <table style="width: 100%; font-size: 12px; margin-bottom: 10px;">
-  //            <thead>
-  //              <tr>
-  //                <th style="text-align: left; border-bottom: 1px dashed #ccc">Item</th>
-  //                <th style="text-align: center; border-bottom: 1px dashed #ccc">Qty</th>
-  //                <th style="text-align: center; border-bottom: 1px dashed #ccc">Price</th>
-  //                <th style="text-align: right; border-bottom: 1px dashed #ccc">Amount</th>
-  //              </tr>
-  //            </thead>
-  //            <tbody>
-  //              ${order.order_items
-  //                .map(
-  //                  (item) => `
-  //                <tr>
-  //                  <td>${item.dish_name}</td>
-  //                  <td style="text-align: center;">${item.quantity}</td>
-  //                  <td style="text-align: center;">${item.dish_price}</td>
-  //                  <td style="text-align: right;">₹ ${item.dish_price * item.quantity}</td>
-  //                </tr>
-  //              `
-  //                )
-  //                .join('')}
-  //              <tr>
-  //                <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Sub Total: </strong></td>
-  //                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.sub_total}</td>
-  //              </tr>
-  //              ${
-  //                order.cgst_amount > 0
-  //                  ? `
-  //                <tr>
-  //                  <td colspan="3" style="text-align: right;"><strong>CGST (${order.cgst_percent || 0} %):</strong></td>
-  //                  <td style="text-align: right;">₹ ${order.cgst_amount || 0}</td>
-  //                </tr>`
-  //                  : ''
-  //              }
-  //              ${
-  //                order.sgst_amount > 0
-  //                  ? `
-  //                <tr>
-  //                  <td colspan="3" style="text-align: right;"><strong>SGST (${order.sgst_percent || 0} %):</strong></td>
-  //                  <td style="text-align: right;">₹ ${order.sgst_amount || 0}</td>
-  //                </tr>`
-  //                  : ''
-  //              }
-  //              ${
-  //                order.vat_amount > 0
-  //                  ? `
-  //                <tr>
-  //                  <td colspan="3" style="text-align: right;"><strong>VAT (${order.vat_percent || 0} %):</strong></td>
-  //                  <td style="text-align: right;">₹ ${order.vat_amount || 0}</td>
-  //                </tr>`
-  //                  : ''
-  //              }
-  //              ${
-  //                order.discount_amount > 0
-  //                  ? `
-  //                <tr>
-  //                  <td colspan="3" style="text-align: right;"><strong>Discount: </strong></td>
-  //                  <td style="text-align: right;">- ₹ ${order.discount_amount || 0}</td>
-  //                </tr>`
-  //                  : ''
-  //              }
-  //              <tr>
-  //                <td colspan="3" style="text-align: right;"><strong>Total: </strong></td>
-  //                <td style="text-align: right;">₹ ${order.total_amount}</td>
-  //              </tr>
-  //              <tr>
-  //                <td colspan="3" style="text-align: right; border-top: 1px dashed #ccc"><strong>Paid Amount: </strong></td>
-  //                <td style="text-align: right; border-top: 1px dashed #ccc">₹ ${order.paid_amount || order.bill_amount || 0}</td>
-  //              </tr>
-  //              ${
-  //                order.waveoff_amount !== null && order.waveoff_amount !== undefined && order.waveoff_amount !== 0
-  //                  ? `
-  //                <tr>
-  //                  <td colspan="3" style="text-align: right;"><strong>Waveoff Amount: </strong></td>
-  //                  <td style="text-align: right;"> ₹ ${order.waveoff_amount || 0}</td>
-  //                </tr>`
-  //                  : ''
-  //              }
-  //            </tbody>
-  //          </table>
-  //          <div style="text-align: center; font-size: 12px;">
-  //            <p style="margin: 10px; font-size: 12px;"><strong>Thanks, Visit Again</strong></p>
-  //          </div>
-  //        </div>
-  //      `;
-
-  //     const printWindow = window.open('', '_blank');
-  //     printWindow.document.write(printDiv.innerHTML);
-  //     printWindow.document.close();
-  //     printWindow.print();
-  //     printWindow.close();
-
-  //     document.body.removeChild(printDiv);
-  //     toast.success('Invoice printed successfully!');
-  //   } catch (err) {
-  //     console.error('Error fetching order or user data:', err);
-  //     toast.error('Failed to print invoice. Please try again.');
-  //   } finally {
-  //     setPrinting((prev) => ({ ...prev, [orderId]: false }));
-  //   }
-  // };
-
   const formatCurrencyPDF = (amount) => {
     return `INR ${parseFloat(amount).toFixed(2)}`;
   };
@@ -1072,7 +906,7 @@ const OrderHistory = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
+    <div className="container-fluid qsr-page-container">
       <style>{`
         input[type="date"], input[placeholder="DD/MM/YYYY"] {
           position: relative;
@@ -1098,14 +932,14 @@ const OrderHistory = () => {
       `}</style>
       <HtmlHead title={title} description={description} />
 
-      <section className="scroll-section" id="title">
-        <div className="page-title-container mb-4 mt-5 pt-1 mt-md-0 pt-md-0">
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-            {title}
-          </h1>
-          <BreadcrumbList items={breadcrumbs} />
-        </div>
-      </section>
+      <div className="qsr-page-title-container">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
+            <h1 className="qsr-page-title">{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+      </div>
 
       {error && (
         <Alert variant="danger" className="mb-4">
@@ -1389,7 +1223,9 @@ const OrderHistory = () => {
                         </div>
                         <Badge
                           bg={
-                            order.order_status === 'Paid' || order.order_status === 'Completed' || order.order_status === 'Save'
+                            order.order_status === 'Save'
+                              ? 'warning'
+                              : order.order_status === 'Paid' || order.order_status === 'Completed'
                               ? 'success'
                               : order.order_status === 'KOT'
                               ? 'warning'
@@ -1403,9 +1239,8 @@ const OrderHistory = () => {
                         </Badge>
                       </div>
 
-                      <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
-                        <Col xs="6">
-                          <div className="text-muted small mb-1">Type</div>
+                      <Row className="mb-3 g-0 border-top pt-2 align-items-center" style={{ borderColor: '#f3f4f6' }}>
+                        <Col xs="6" className="d-flex gap-1 flex-wrap">
                           <Badge
                             bg={
                               order.order_type === 'Dine In'
@@ -1416,40 +1251,43 @@ const OrderHistory = () => {
                                 ? 'success'
                                 : 'secondary'
                             }
-                            className="rounded-pill px-3 py-1"
+                            className="rounded-pill px-2 py-1"
+                            style={{ fontSize: '10px', fontWeight: 600 }}
                           >
                             {order.order_type}
                           </Badge>
+                          <Badge
+                            bg={
+                              order.order_source === 'Manager'
+                                ? 'info'
+                                : order.order_source === 'Captain'
+                                ? 'primary'
+                                : order.order_source === 'QSR'
+                                ? 'secondary'
+                                : 'dark'
+                            }
+                            className="rounded-pill px-2 py-1"
+                            style={{ fontSize: '10px', fontWeight: 600 }}
+                          >
+                            {order.order_source}
+                          </Badge>
                         </Col>
-                        <Col xs="6" className="text-end">
-                          <div className="text-muted small">Amount</div>
-                          <div className="fw-bolder text-dark" style={{ fontSize: '15px' }}>
+                        <Col xs="6" className="d-flex justify-content-end align-items-center gap-2">
+                          <span className="text-muted small">Amount</span>
+                          <span className="fw-bolder text-dark" style={{ fontSize: '15px' }}>
                             ₹{parseFloat(order.total_amount).toFixed(2)}
-                          </div>
+                          </span>
                         </Col>
                       </Row>
 
-                      <div className="d-flex justify-content-between align-items-center">
-                        <Badge
-                          bg={
-                            order.order_source === 'Manager'
-                              ? 'info'
-                              : order.order_source === 'Captain'
-                              ? 'primary'
-                              : order.order_source === 'QSR'
-                              ? 'secondary'
-                              : 'dark'
-                          }
-                          className="rounded-pill px-3 py-1"
-                        >
-                          {order.order_source}
-                        </Badge>
+                      <div className="d-flex justify-content-end align-items-center">
                         <div className="d-flex gap-2">
                           <Button
                             variant="outline-primary"
                             size="sm"
                             className="btn-icon btn-icon-only rounded-circle"
                             onClick={() => history.push(`/operations/order-details/${order.id}`)}
+                            title="View Details"
                           >
                             <CsLineIcons icon="eye" size="14" />
                           </Button>
@@ -1459,6 +1297,7 @@ const OrderHistory = () => {
                             className="btn-icon btn-icon-only rounded-circle"
                             onClick={() => handlePrint(order.id)}
                             disabled={printing[order.id]}
+                            title="Print Order"
                           >
                             {printing[order.id] ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="print" size="14" />}
                           </Button>

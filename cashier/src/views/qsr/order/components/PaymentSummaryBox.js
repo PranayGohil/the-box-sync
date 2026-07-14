@@ -137,19 +137,6 @@ const PaymentSummaryBox = ({
             </button>
           )}
 
-          {/* Print Bill (even if new/unsaved/dirty) */}
-          {/* {showPrintBill && (
-            <button
-              type="button"
-              style={{ ...btnBase, background: '#f1f5f9', color: '#475569', border: '1.5px solid rgba(226,232,240,0.9)' }}
-              onClick={() => handlePrint(orderId)}
-              disabled={printing}
-            >
-              <CsLineIcons icon="print" size="13" />
-              {printing ? 'Printing...' : 'Print Bill'}
-            </button>
-          )} */}
-
           {/* Process Payment — primary CTA */}
           {showPayment && (
             <button
@@ -248,7 +235,7 @@ const PaymentSummaryBox = ({
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <div>
                     <Badge bg="dark" className="me-2">Print #{record.kotNo}</Badge>
-                     <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</small>
+                    <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</small>
                   </div>
                   <Button size="sm" variant="outline-primary" onClick={() => onReprintKOT && onReprintKOT(record)} disabled={kotPrinting}>
                     Reprint

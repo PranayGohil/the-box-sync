@@ -93,13 +93,6 @@ const customStyles = `
 
   /* Mobile Optimizations */
   @media (max-width: 768px) {
-    .page-title-container {
-      margin-top: -0.5rem !important;
-    }
-    .page-title-container h1 {
-      font-size: 1.75rem !important;
-      margin-bottom: 0.5rem !important;
-    }
     .mobile-header-stats {
       margin-top: 1rem;
       border-top: 1px solid rgba(0,0,0,0.05);
@@ -179,7 +172,7 @@ const ViewKots = () => {
 
     if (dish.status !== 'Preparing') return;
 
-    const pendingItems = data.order_items.filter(item => item.special_notes !== 'Parcel Charge' && item.status !== 'Completed');
+    const pendingItems = data.order_items.filter((item) => item.special_notes !== 'Parcel Charge' && item.status !== 'Completed');
 
     if (pendingItems.length === 1 && pendingItems[0]._id === dish._id) {
       setConfirmData({ orderSource: data.order_source, orderId: data._id, dishId: dish._id, type: 'SINGLE' });
@@ -231,17 +224,15 @@ const ViewKots = () => {
   }
 
   return (
-    <div className="container-fluid pb-5 mb-5">
+    <div className="container-fluid qsr-page-container">
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
       {/* Header Section */}
-      <div className="page-title-container dashboard-title-container mb-4 mt-4 mt-lg-2 text-start">
+      <div className="qsr-page-title-container dashboard-title-container text-start">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto text-start">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-              {title}
-            </h1>
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col xs="12" md="auto" className="text-md-end mt-3 mt-md-0 mobile-header-stats">
@@ -349,16 +340,27 @@ const ViewKots = () => {
                               <tr key={dish._id || index} className="border-bottom-light">
                                 <td className="px-0 py-3 fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
                                   {dish.dish_name}
-                                  {((dish.selected_variant && dish.selected_variant.size_name) || (Array.isArray(dish.selected_addons) && dish.selected_addons.filter(a => a && a.addon_name).length > 0)) && (
-                                    <div style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2, whiteSpace: 'normal' }}>
+                                  {((dish.selected_variant && dish.selected_variant.size_name) ||
+                                    (Array.isArray(dish.selected_addons) && dish.selected_addons.filter((a) => a && a.addon_name).length > 0)) && (
+                                    <div
+                                      style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', marginTop: '2px', lineHeight: 1.2, whiteSpace: 'normal' }}
+                                    >
                                       {dish.selected_variant && (dish.selected_variant.size_name || dish.selected_variant.extra) && (
                                         <>
                                           {dish.selected_variant.size_name ? `Size: ${dish.selected_variant.size_name}` : ''}
                                           {dish.selected_variant.extra && ` (${dish.selected_variant.extra})`}
                                         </>
                                       )}
-                                      {dish.selected_variant && dish.selected_variant.size_name && Array.isArray(dish.selected_addons) && dish.selected_addons.filter(a => a && a.addon_name).length > 0 && ' • '}
-                                      {Array.isArray(dish.selected_addons) && dish.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ')}
+                                      {dish.selected_variant &&
+                                        dish.selected_variant.size_name &&
+                                        Array.isArray(dish.selected_addons) &&
+                                        dish.selected_addons.filter((a) => a && a.addon_name).length > 0 &&
+                                        ' • '}
+                                      {Array.isArray(dish.selected_addons) &&
+                                        dish.selected_addons
+                                          .filter((a) => a && a.addon_name)
+                                          .map((addon) => addon.addon_name)
+                                          .join(' • ')}
                                     </div>
                                   )}
                                 </td>
@@ -430,9 +432,17 @@ const ViewKots = () => {
       )}
 
       {/* Confirmation Modal for Last Item */}
-      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered contentClassName="border-0 shadow-lg" style={{ borderRadius: '1.5rem' }}>
+      <Modal
+        show={showConfirmModal}
+        onHide={() => setShowConfirmModal(false)}
+        centered
+        contentClassName="border-0 shadow-lg"
+        style={{ borderRadius: '1.5rem' }}
+      >
         <Modal.Header closeButton className="border-0 pb-0">
-          <Modal.Title className="fw-bold" style={{ color: '#23b3f4' }}>Complete KOT?</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: '#23b3f4' }}>
+            Complete KOT?
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="pt-3">
           <p className="text-muted fw-bold mb-0">
@@ -445,16 +455,19 @@ const ViewKots = () => {
           <Button variant="light" className="custom-btn-outline border-0 text-muted" onClick={() => setShowConfirmModal(false)}>
             Cancel
           </Button>
-          <Button className="custom-btn-outline" onClick={() => {
-            if (confirmData) {
-              if (confirmData.type === 'SINGLE') {
-                updateDishStatus(confirmData.orderSource, confirmData.orderId, confirmData.dishId);
-              } else {
-                updateAllDishStatus(confirmData.orderSource, confirmData.orderId);
+          <Button
+            className="custom-btn-outline"
+            onClick={() => {
+              if (confirmData) {
+                if (confirmData.type === 'SINGLE') {
+                  updateDishStatus(confirmData.orderSource, confirmData.orderId, confirmData.dishId);
+                } else {
+                  updateAllDishStatus(confirmData.orderSource, confirmData.orderId);
+                }
               }
-            }
-            setShowConfirmModal(false);
-          }}>
+              setShowConfirmModal(false);
+            }}
+          >
             Confirm
           </Button>
         </Modal.Footer>

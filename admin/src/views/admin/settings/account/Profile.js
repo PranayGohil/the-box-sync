@@ -276,17 +276,17 @@ const Profile = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
 
-      <Row className="g-3 align-items-center mb-4">
-        <Col md={7}>
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
-            {title}
-          </h1>
-          <BreadcrumbList items={breadcrumbs} />
-        </Col>
-      </Row>
+      <div className="qsr-page-title-container">
+        <Row className="g-3 align-items-center">
+          <Col md={7}>
+            <h1 className="qsr-page-title">{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+      </div>
 
       <Formik
         initialValues={{

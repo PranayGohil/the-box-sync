@@ -109,13 +109,13 @@ const PrintConfig = () => {
   }, []);
 
   return (
-    <>
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container">
+      <div className="qsr-page-title-container">
         <Row>
           <Col xs="12" md="7">
-            <h1 className="mb-0 pb-0 display-4">{title}</h1>
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
         </Row>
@@ -146,9 +146,7 @@ const PrintConfig = () => {
                           checked={formik.values.showLogo}
                           onChange={(e) => formik.setFieldValue('showLogo', e.target.checked)}
                         />
-                        <Form.Text className="text-muted">
-                          Toggle displaying the restaurant logo image at the top of customer receipts.
-                        </Form.Text>
+                        <Form.Text className="text-muted">Toggle displaying the restaurant logo image at the top of customer receipts.</Form.Text>
                       </Form.Group>
                     </Col>
 
@@ -161,9 +159,7 @@ const PrintConfig = () => {
                           checked={formik.values.showCustomerDetails}
                           onChange={(e) => formik.setFieldValue('showCustomerDetails', e.target.checked)}
                         />
-                        <Form.Text className="text-muted">
-                          Include the customer's name and details on KOT and customer receipts.
-                        </Form.Text>
+                        <Form.Text className="text-muted">Include the customer's name and details on KOT and customer receipts.</Form.Text>
                       </Form.Group>
                     </Col>
 
@@ -176,30 +172,19 @@ const PrintConfig = () => {
                           checked={formik.values.addQrCode}
                           onChange={(e) => formik.setFieldValue('addQrCode', e.target.checked)}
                         />
-                        <Form.Text className="text-muted">
-                          Include a scan QR code at the bottom of customer receipts.
-                        </Form.Text>
+                        <Form.Text className="text-muted">Include a scan QR code at the bottom of customer receipts.</Form.Text>
                       </Form.Group>
 
                       {formik.values.addQrCode && (
                         <div className="mt-3">
                           <Form.Group className="mb-3">
                             <Form.Label>QR Code Redirection</Form.Label>
-                            <Form.Control
-                              as="select"
-                              name="qrTargetType"
-                              value={formik.values.qrTargetType}
-                              onChange={formik.handleChange}
-                            >
+                            <Form.Control as="select" name="qrTargetType" value={formik.values.qrTargetType} onChange={formik.handleChange}>
                               <option value="feedback">Feedback Collection Form</option>
-                              {hasWebsitePlan && (
-                                <option value="website">Restaurant Website</option>
-                              )}
+                              {hasWebsitePlan && <option value="website">Restaurant Website</option>}
                               <option value="custom">Custom Redirection Link</option>
                             </Form.Control>
-                            <Form.Text className="text-muted">
-                              Select where the receipt's QR code scans to.
-                            </Form.Text>
+                            <Form.Text className="text-muted">Select where the receipt's QR code scans to.</Form.Text>
                           </Form.Group>
 
                           <Form.Group className="mb-3">
@@ -212,12 +197,8 @@ const PrintConfig = () => {
                               onChange={formik.handleChange}
                               isInvalid={formik.touched.qrTitle && formik.errors.qrTitle}
                             />
-                            <Form.Control.Feedback type="invalid">
-                              {formik.errors.qrTitle}
-                            </Form.Control.Feedback>
-                            <Form.Text className="text-muted">
-                              Leave empty to use the default caption for the redirection target.
-                            </Form.Text>
+                            <Form.Control.Feedback type="invalid">{formik.errors.qrTitle}</Form.Control.Feedback>
+                            <Form.Text className="text-muted">Leave empty to use the default caption for the redirection target.</Form.Text>
                           </Form.Group>
 
                           {formik.values.qrTargetType === 'custom' && (
@@ -231,9 +212,7 @@ const PrintConfig = () => {
                                 onChange={formik.handleChange}
                                 isInvalid={formik.touched.qrUrl && formik.errors.qrUrl}
                               />
-                              <Form.Control.Feedback type="invalid">
-                                {formik.errors.qrUrl}
-                              </Form.Control.Feedback>
+                              <Form.Control.Feedback type="invalid">{formik.errors.qrUrl}</Form.Control.Feedback>
                             </Form.Group>
                           )}
                         </div>
@@ -252,18 +231,11 @@ const PrintConfig = () => {
                     <Col xs="12" md="6" className="mb-3">
                       <Form.Group>
                         <Form.Label>Print Paper Width</Form.Label>
-                        <Form.Control
-                          as="select"
-                          name="paperWidth"
-                          value={formik.values.paperWidth}
-                          onChange={formik.handleChange}
-                        >
+                        <Form.Control as="select" name="paperWidth" value={formik.values.paperWidth} onChange={formik.handleChange}>
                           <option value="58mm">58mm (Standard 2-inch Printer)</option>
                           <option value="80mm">80mm (Wide 3-inch Printer)</option>
                         </Form.Control>
-                        <Form.Text className="text-muted">
-                          Specifies the layout constraints to ensure text lines do not overflow.
-                        </Form.Text>
+                        <Form.Text className="text-muted">Specifies the layout constraints to ensure text lines do not overflow.</Form.Text>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -287,9 +259,7 @@ const PrintConfig = () => {
                           onChange={formik.handleChange}
                           isInvalid={formik.touched.headerNote && formik.errors.headerNote}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {formik.errors.headerNote}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{formik.errors.headerNote}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
 
@@ -304,9 +274,7 @@ const PrintConfig = () => {
                           onChange={formik.handleChange}
                           isInvalid={formik.touched.footerNote && formik.errors.footerNote}
                         />
-                        <Form.Control.Feedback type="invalid">
-                          {formik.errors.footerNote}
-                        </Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{formik.errors.footerNote}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                   </Row>
@@ -329,7 +297,7 @@ const PrintConfig = () => {
           </Card>
         </Col>
       </Row>
-    </>
+    </div>
   );
 };
 

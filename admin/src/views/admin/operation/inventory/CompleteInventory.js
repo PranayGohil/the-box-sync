@@ -10,8 +10,6 @@ import { toast } from 'react-toastify';
 import CreatableSelect from 'react-select/creatable';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-
-
 const defaultValues = {
   bill_date: '',
   bill_number: '',
@@ -122,18 +120,20 @@ const CompleteInventory = () => {
   }, [id]);
 
   const previewFiles = (files) => {
-    const previews = Array.from(files).map((file) => {
-      if (file.type.startsWith('image/')) return { type: 'image', name: file.name };
-      if (file.type === 'application/pdf') return { type: 'pdf', name: file.name };
-      return null;
-    }).filter(Boolean);
+    const previews = Array.from(files)
+      .map((file) => {
+        if (file.type.startsWith('image/')) return { type: 'image', name: file.name };
+        if (file.type === 'application/pdf') return { type: 'pdf', name: file.name };
+        return null;
+      })
+      .filter(Boolean);
     setFilePreviews(previews);
   };
 
   const calculateSubTotal = (items) => {
     return items.reduce((sum, item) => {
       if (item.completed && Number(item.item_quantity) > 0 && Number(item.item_price) > 0) {
-        return sum + (item.item_quantity * item.item_price);
+        return sum + item.item_quantity * item.item_price;
       }
       return sum;
     }, 0);
@@ -249,12 +249,18 @@ const CompleteInventory = () => {
     <div className="complete-inventory-inventory-container">
       <style>{customStyles}</style>
       <HtmlHead title="Complete Inventory" />
-      <div className="container-fluid px-3 px-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
             <Col xs={12} md={7}>
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Complete Request</h1>
-              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: `operations/complete-inventory/${id}`, title: 'Complete' }]} />
+              <h1 className="qsr-page-title">Complete Request</h1>
+              <BreadcrumbList
+                items={[
+                  { to: '', text: 'Home' },
+                  { to: 'operations/inventory', text: 'Inventory' },
+                  { to: `operations/complete-inventory/${id}`, title: 'Complete' },
+                ]}
+              />
             </Col>
             <Col xs={12} md={5} className="d-flex flex-wrap justify-content-start justify-content-md-end gap-2 mt-3 mt-md-0">
               <Button variant="outline-secondary" onClick={() => history.goBack()} className="rounded-pill px-4 fw-bold border-2">
@@ -321,19 +327,21 @@ const CompleteInventory = () => {
               <FormikForm>
                 <Card className="complete-inventory-page-card border-0">
                   <Card.Body className="p-4 p-lg-5">
-                    <div className="complete-inventory-section-label"><CsLineIcons icon="file-text" size="18" /> Purchase Verification</div>
+                    <div className="complete-inventory-section-label">
+                      <CsLineIcons icon="file-text" size="18" /> Purchase Verification
+                    </div>
                     <Row className="g-4 mb-5">
                       <Col xs={12} md={3}>
                         <div className="complete-inventory-input-group-label">Bill Date</div>
                         <div className="position-relative">
-                          <Field 
+                          <Field
                             innerRef={dateInputRef}
-                            type="date" 
-                            name="bill_date" 
-                            className={`complete-inventory-modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`} 
+                            type="date"
+                            name="bill_date"
+                            className={`complete-inventory-modern-input form-control ${touched.bill_date && errors.bill_date ? 'is-invalid' : ''}`}
                           />
-                          <div 
-                            className="position-absolute end-0 top-50 translate-middle-y me-3" 
+                          <div
+                            className="position-absolute end-0 top-50 translate-middle-y me-3"
                             style={{ cursor: 'pointer', zIndex: 5 }}
                             onClick={() => dateInputRef.current?.showPicker()}
                           >
@@ -344,21 +352,26 @@ const CompleteInventory = () => {
                       </Col>
                       <Col xs={12} md={3}>
                         <div className="complete-inventory-input-group-label">Bill Number</div>
-                        <Field type="text" name="bill_number" className={`complete-inventory-modern-input form-control ${touched.bill_number && errors.bill_number ? 'is-invalid' : ''}`} placeholder="Enter bill #" />
+                        <Field
+                          type="text"
+                          name="bill_number"
+                          className={`complete-inventory-modern-input form-control ${touched.bill_number && errors.bill_number ? 'is-invalid' : ''}`}
+                          placeholder="Enter bill #"
+                        />
                         {touched.bill_number && errors.bill_number && <div className="text-danger small mt-1">{errors.bill_number}</div>}
                       </Col>
                       <Col xs={12} md={3}>
                         <div className="complete-inventory-input-group-label">Vendor</div>
                         <div className="complete-inventory-select-modern">
-                          <CreatableSelect 
-                            isClearable 
-                            menuPlacement="auto" 
-                            menuPortalTarget={document.body} 
-                            options={(suggestions.vendors || []).map(v => ({ label: v, value: v }))} 
-                            value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null} 
-                            onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')} 
-                            placeholder="Vendor..." 
-                            classNamePrefix="react-select" 
+                          <CreatableSelect
+                            isClearable
+                            menuPlacement="auto"
+                            menuPortalTarget={document.body}
+                            options={(suggestions.vendors || []).map((v) => ({ label: v, value: v }))}
+                            value={values.vendor_name ? { label: values.vendor_name, value: values.vendor_name } : null}
+                            onChange={(s) => setFieldValue('vendor_name', s ? s.value : '')}
+                            placeholder="Vendor..."
+                            classNamePrefix="react-select"
                             styles={{ control: (base) => ({ ...base, borderColor: touched.vendor_name && errors.vendor_name ? '#dc3545' : base.borderColor }) }}
                           />
                         </div>
@@ -367,15 +380,15 @@ const CompleteInventory = () => {
                       <Col xs={12} md={3}>
                         <div className="complete-inventory-input-group-label">Category</div>
                         <div className="complete-inventory-select-modern">
-                          <CreatableSelect 
-                            isClearable 
-                            menuPlacement="auto" 
-                            menuPortalTarget={document.body} 
-                            options={(suggestions.categories || []).map(c => ({ label: c, value: c }))} 
-                            value={values.category ? { label: values.category, value: values.category } : null} 
-                            onChange={(s) => setFieldValue('category', s ? s.value : '')} 
-                            placeholder="Category..." 
-                            classNamePrefix="react-select" 
+                          <CreatableSelect
+                            isClearable
+                            menuPlacement="auto"
+                            menuPortalTarget={document.body}
+                            options={(suggestions.categories || []).map((c) => ({ label: c, value: c }))}
+                            value={values.category ? { label: values.category, value: values.category } : null}
+                            onChange={(s) => setFieldValue('category', s ? s.value : '')}
+                            placeholder="Category..."
+                            classNamePrefix="react-select"
                             styles={{ control: (base) => ({ ...base, borderColor: touched.category && errors.category ? '#dc3545' : base.borderColor }) }}
                           />
                         </div>
@@ -383,19 +396,34 @@ const CompleteInventory = () => {
                       </Col>
                       <Col xs={12} md={12}>
                         <div className="complete-inventory-input-group-label">Final Bill Files</div>
-                        <Form.Control type="file" multiple className="d-none" id="bill-upload" onChange={(e) => { setFieldValue('bill_files', e.currentTarget.files); previewFiles(e.currentTarget.files); }} />
+                        <Form.Control
+                          type="file"
+                          multiple
+                          className="d-none"
+                          id="bill-upload"
+                          onChange={(e) => {
+                            setFieldValue('bill_files', e.currentTarget.files);
+                            previewFiles(e.currentTarget.files);
+                          }}
+                        />
                         <label htmlFor="bill-upload" className="w-100 d-block p-4 text-center border-dashed rounded-4 bg-light cursor-pointer">
                           <CsLineIcons icon="upload" size="24" className="mb-2 text-primary" />
                           <div className="fw-bold text-muted small">Upload Verified Bills</div>
                         </label>
                         <div className="d-flex flex-wrap gap-2 mt-3">
-                          {filePreviews.map((f, i) => <div key={i} className="complete-inventory-file-pill"><CsLineIcons icon={f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...</div>)}
+                          {filePreviews.map((f, i) => (
+                            <div key={i} className="complete-inventory-file-pill">
+                              <CsLineIcons icon={f.type === 'pdf' ? 'file-text' : 'image'} size="14" /> {f.name.substring(0, 15)}...
+                            </div>
+                          ))}
                         </div>
                         {touched.bill_files && errors.bill_files && <div className="text-danger small mt-1 text-center">{errors.bill_files}</div>}
                       </Col>
                     </Row>
 
-                    <div className="complete-inventory-section-label"><CsLineIcons icon="shopping-basket" size="18" /> Verification List</div>
+                    <div className="complete-inventory-section-label">
+                      <CsLineIcons icon="shopping-basket" size="18" /> Verification List
+                    </div>
 
                     {values.items.map((item, idx) => (
                       <div key={idx} className={`complete-inventory-item-row-card ${item.completed ? 'completed' : ''}`}>
@@ -403,10 +431,18 @@ const CompleteInventory = () => {
                           {/* Left Column: Checkbox & Item Description */}
                           <Col xs={12} lg={5} className="d-flex align-items-center">
                             <div className="d-flex align-items-center w-100">
-                              <Field type="checkbox" name={`items[${idx}].completed`} className="form-check-input complete-inventory-custom-check flex-shrink-0" />
+                              <Field
+                                type="checkbox"
+                                name={`items[${idx}].completed`}
+                                className="form-check-input complete-inventory-custom-check flex-shrink-0"
+                              />
                               <div className="ms-3 flex-grow-1">
                                 <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Item Description</div>
-                                <Field name={`items[${idx}].item_name`} readOnly className="complete-inventory-modern-input form-control border-0 bg-transparent fw-bold p-0 h-auto" />
+                                <Field
+                                  name={`items[${idx}].item_name`}
+                                  readOnly
+                                  className="complete-inventory-modern-input form-control border-0 bg-transparent fw-bold p-0 h-auto"
+                                />
                               </div>
                             </div>
                           </Col>
@@ -416,20 +452,26 @@ const CompleteInventory = () => {
                             <Row className="g-2 g-lg-3">
                               <Col xs={3}>
                                 <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Qty</div>
-                                <Field 
-                                  type="number" 
-                                  name={`items[${idx}].item_quantity`} 
-                                  className={`complete-inventory-modern-input form-control ${touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity ? 'is-invalid' : ''}`} 
-                                  disabled={!item.completed} 
+                                <Field
+                                  type="number"
+                                  name={`items[${idx}].item_quantity`}
+                                  className={`complete-inventory-modern-input form-control ${
+                                    touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity ? 'is-invalid' : ''
+                                  }`}
+                                  disabled={!item.completed}
                                 />
-                                {touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity && <div className="text-danger small mt-1">{errors.items[idx].item_quantity}</div>}
+                                {touched.items?.[idx]?.item_quantity && errors.items?.[idx]?.item_quantity && (
+                                  <div className="text-danger small mt-1">{errors.items[idx].item_quantity}</div>
+                                )}
                               </Col>
                               <Col xs={4}>
                                 <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Unit</div>
-                                <Field 
-                                  as="select" 
-                                  name={`items[${idx}].unit`} 
-                                  className={`complete-inventory-modern-input form-control ${touched.items?.[idx]?.unit && errors.items?.[idx]?.unit ? 'is-invalid' : ''}`} 
+                                <Field
+                                  as="select"
+                                  name={`items[${idx}].unit`}
+                                  className={`complete-inventory-modern-input form-control ${
+                                    touched.items?.[idx]?.unit && errors.items?.[idx]?.unit ? 'is-invalid' : ''
+                                  }`}
                                   disabled={!item.completed}
                                 >
                                   <option value="">Unit</option>
@@ -439,17 +481,23 @@ const CompleteInventory = () => {
                                   <option value="ml">ml</option>
                                   <option value="piece">pc</option>
                                 </Field>
-                                {touched.items?.[idx]?.unit && errors.items?.[idx]?.unit && <div className="text-danger small mt-1">{errors.items[idx].unit}</div>}
+                                {touched.items?.[idx]?.unit && errors.items?.[idx]?.unit && (
+                                  <div className="text-danger small mt-1">{errors.items[idx].unit}</div>
+                                )}
                               </Col>
                               <Col xs={5}>
                                 <div className="complete-inventory-input-group-label text-muted small text-uppercase fw-bold mb-1">Price (₹)</div>
-                                <Field 
-                                  type="number" 
-                                  name={`items[${idx}].item_price`} 
-                                  className={`complete-inventory-modern-input form-control ${touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price ? 'is-invalid' : ''}`} 
-                                  disabled={!item.completed} 
+                                <Field
+                                  type="number"
+                                  name={`items[${idx}].item_price`}
+                                  className={`complete-inventory-modern-input form-control ${
+                                    touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price ? 'is-invalid' : ''
+                                  }`}
+                                  disabled={!item.completed}
                                 />
-                                {touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price && <div className="text-danger small mt-1">{errors.items[idx].item_price}</div>}
+                                {touched.items?.[idx]?.item_price && errors.items?.[idx]?.item_price && (
+                                  <div className="text-danger small mt-1">{errors.items[idx].item_price}</div>
+                                )}
                               </Col>
                             </Row>
                           </Col>
@@ -460,10 +508,19 @@ const CompleteInventory = () => {
 
                     <div className="complete-inventory-summary-hub">
                       <Row className="g-4">
-                        <Col xs={12} md={4}><div className="complete-inventory-input-group-label">Sub Total</div><div className="h4 fw-bold text-muted">₹ {values.sub_total}</div></Col>
-                        <Col xs={6} md={4}><div className="complete-inventory-input-group-label">Tax Amount</div><Field type="number" name="tax" className="complete-inventory-modern-input form-control" /></Col>
-                        <Col xs={6} md={4}><div className="complete-inventory-input-group-label">Discount</div><Field type="number" name="discount" className="complete-inventory-modern-input form-control" /></Col>
-                        
+                        <Col xs={12} md={4}>
+                          <div className="complete-inventory-input-group-label">Sub Total</div>
+                          <div className="h4 fw-bold text-muted">₹ {values.sub_total}</div>
+                        </Col>
+                        <Col xs={6} md={4}>
+                          <div className="complete-inventory-input-group-label">Tax Amount</div>
+                          <Field type="number" name="tax" className="complete-inventory-modern-input form-control" />
+                        </Col>
+                        <Col xs={6} md={4}>
+                          <div className="complete-inventory-input-group-label">Discount</div>
+                          <Field type="number" name="discount" className="complete-inventory-modern-input form-control" />
+                        </Col>
+
                         <Col md={12}>
                           <div className="complete-inventory-total-display shadow-sm">
                             <div>
@@ -472,25 +529,33 @@ const CompleteInventory = () => {
                             </div>
                             <div className="complete-inventory-amount-paid-container">
                               <div className="complete-inventory-input-group-label">Amount Paid</div>
-                              <Field 
-                                type="number" 
-                                name="paid_amount" 
-                                className={`complete-inventory-modern-input form-control text-center fw-bold text-primary ${touched.paid_amount && errors.paid_amount ? 'is-invalid' : ''}`} 
-                                style={{fontSize: '1.25rem'}} 
-                                placeholder="0.00" 
+                              <Field
+                                type="number"
+                                name="paid_amount"
+                                className={`complete-inventory-modern-input form-control text-center fw-bold text-primary ${
+                                  touched.paid_amount && errors.paid_amount ? 'is-invalid' : ''
+                                }`}
+                                style={{ fontSize: '1.25rem' }}
+                                placeholder="0.00"
                               />
                               {touched.paid_amount && errors.paid_amount && <div className="text-danger small mt-1 text-center">{errors.paid_amount}</div>}
                             </div>
                           </div>
                         </Col>
-                        
+
                         <Col md={12} className="text-end pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                           <div className="d-flex align-items-center gap-2">
                             <div className="sw-2 sh-2 rounded-circle bg-warning" />
                             <span className="fw-bold text-muted">Balance Due: ₹ {values.unpaid_amount}</span>
                           </div>
-                          <Button type="submit" variant="outline-primary" className="rounded-pill px-5 fw-bold border-2 ms-md-auto w-100 w-md-auto" disabled={submitting}>
-                            {submitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="check-circle" className="me-2" />} Complete Synchronization
+                          <Button
+                            type="submit"
+                            variant="outline-primary"
+                            className="rounded-pill px-5 fw-bold border-2 ms-md-auto w-100 w-md-auto"
+                            disabled={submitting}
+                          >
+                            {submitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="check-circle" className="me-2" />}{' '}
+                            Complete Synchronization
                           </Button>
                         </Col>
                       </Row>
@@ -504,8 +569,15 @@ const CompleteInventory = () => {
       </div>
 
       {submitting && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', zIndex: 9999, backdropFilter: 'blur(10px)' }}>
-          <div className="text-center"><Spinner animation="grow" variant="primary" size="lg" className="mb-4" /><h4 className="fw-bold text-primary">Finalizing Global Synchronization</h4><p className="text-muted">Recording stock entry and financial adjustments...</p></div>
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', zIndex: 9999, backdropFilter: 'blur(10px)' }}
+        >
+          <div className="text-center">
+            <Spinner animation="grow" variant="primary" size="lg" className="mb-4" />
+            <h4 className="fw-bold text-primary">Finalizing Global Synchronization</h4>
+            <p className="text-muted">Recording stock entry and financial adjustments...</p>
+          </div>
         </div>
       )}
     </div>

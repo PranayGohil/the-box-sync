@@ -10,8 +10,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthContext } from 'contexts/AuthContext';
 
-
-
 const FilterSelect = ({ value, onChange, options }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -41,7 +39,9 @@ const FilterSelect = ({ value, onChange, options }) => {
           {options.map((opt) => (
             <div
               key={opt.value}
-              className={`menu-performance-report-filter-select-option${opt.value === value ? ' menu-performance-report-is-selected' : ''}${opt.disabled ? ' menu-performance-report-is-disabled' : ''}`}
+              className={`menu-performance-report-filter-select-option${opt.value === value ? ' menu-performance-report-is-selected' : ''}${
+                opt.disabled ? ' menu-performance-report-is-disabled' : ''
+              }`}
               onMouseDown={(e) => {
                 if (opt.disabled) return;
                 e.preventDefault();
@@ -198,10 +198,10 @@ const MenuPerformanceReport = () => {
         setExportProgress(35);
         allData.push(['PERFORMANCE DISTRIBUTION INSIGHTS']);
         allData.push(['Status', 'Dish Count', '% of Menu']);
-        
-        const topPerformers = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'excellent').length;
-        const stableItems = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'good').length;
-        const lowPerformers = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'poor').length;
+
+        const topPerformers = reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'excellent').length;
+        const stableItems = reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'good').length;
+        const lowPerformers = reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'poor').length;
         const total = reportData.dishPerformance.length;
 
         allData.push(['Top Performers', topPerformers, total > 0 ? `${((topPerformers / total) * 100).toFixed(1)}%` : '0%']);
@@ -215,7 +215,7 @@ const MenuPerformanceReport = () => {
         setExportProgress(50);
         allData.push(['CATEGORY YIELD INSIGHTS']);
         allData.push(['Category', 'Orders', 'Revenue', 'Yield per Dish', '% of Total Revenue']);
-        
+
         reportData.categoryPerformance.forEach((cat) => {
           const percent = reportData.summary.totalRevenue > 0 ? ((cat.totalRevenue / reportData.summary.totalRevenue) * 100).toFixed(1) : 0;
           allData.push([cat.category, cat.orderCount, cat.totalRevenue, cat.avgRevenuePerDish, `${percent}%`]);
@@ -228,7 +228,7 @@ const MenuPerformanceReport = () => {
         setExportProgress(65);
         allData.push(['MEAL TYPE UTILIZATION TRENDS']);
         allData.push(['Meal Type', 'Qty Sold', 'Revenue', 'Orders', '% Revenue', 'Status']);
-        
+
         reportData.mealTypePerformance.forEach((meal) => {
           const percent = reportData.summary.totalRevenue > 0 ? (meal.totalRevenue / reportData.summary.totalRevenue) * 100 : 0;
           const status = percent >= 40 ? 'High Load' : percent >= 20 ? 'Balanced' : 'Light';
@@ -242,9 +242,17 @@ const MenuPerformanceReport = () => {
         setExportProgress(80);
         allData.push(['MENU ITEM PERFORMANCE AUDIT']);
         allData.push(['Rank', 'Dish Name', 'Category', 'Qty Sold', 'Revenue', 'Avg Price', 'Status']);
-        
+
         filteredDishes.forEach((dish, idx) => {
-          allData.push([idx + 1, dish.dishName, dish.category || 'N/A', dish.totalQuantity, dish.totalRevenue, dish.avgPrice, getPerformanceLevel(dish).toUpperCase()]);
+          allData.push([
+            idx + 1,
+            dish.dishName,
+            dish.category || 'N/A',
+            dish.totalQuantity,
+            dish.totalRevenue,
+            dish.avgPrice,
+            getPerformanceLevel(dish).toUpperCase(),
+          ]);
         });
         allData.push([]);
         allData.push([]);
@@ -275,7 +283,7 @@ const MenuPerformanceReport = () => {
     setExportType('PDF');
     try {
       const doc = new jsPDF();
-      
+
       doc.setFontSize(16);
       doc.text('Menu Performance Report', 105, 15, { align: 'center' });
       doc.setFontSize(10);
@@ -299,20 +307,23 @@ const MenuPerformanceReport = () => {
           ],
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includePerformanceDistribution) {
         setExportProgress(35);
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Performance Distribution Insights', 14, currentY);
-        
-        const topPerformers = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'excellent').length;
-        const stableItems = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'good').length;
-        const lowPerformers = reportData.dishPerformance.filter(d => getPerformanceLevel(d) === 'poor').length;
+
+        const topPerformers = reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'excellent').length;
+        const stableItems = reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'good').length;
+        const lowPerformers = reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'poor').length;
         const total = reportData.dishPerformance.length;
 
         autoTable(doc, {
@@ -325,17 +336,20 @@ const MenuPerformanceReport = () => {
           ],
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeCategoryPerformance && reportData.categoryPerformance?.length > 0) {
         setExportProgress(50);
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Category Yield Insights', 14, currentY);
-        
+
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Category', 'Orders', 'Revenue', 'Yield per Dish', '% Rev']],
@@ -345,53 +359,68 @@ const MenuPerformanceReport = () => {
           }),
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeMealTypePerformance && reportData.mealTypePerformance?.length > 0) {
         setExportProgress(65);
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Meal Type Utilization Trends', 14, currentY);
-        
+
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Meal Type', 'Qty Sold', 'Revenue', 'Orders', '% Rev', 'Status']],
           body: reportData.mealTypePerformance.map((meal) => {
             const percent = reportData.summary.totalRevenue > 0 ? (meal.totalRevenue / reportData.summary.totalRevenue) * 100 : 0;
             const status = percent >= 40 ? 'High Load' : percent >= 20 ? 'Balanced' : 'Light';
-            return [meal.mealType || 'Not Specified', meal.totalQuantity.toString(), formatCurrencyPDF(meal.totalRevenue), meal.orderCount.toString(), `${percent.toFixed(1)}%`, status];
+            return [
+              meal.mealType || 'Not Specified',
+              meal.totalQuantity.toString(),
+              formatCurrencyPDF(meal.totalRevenue),
+              meal.orderCount.toString(),
+              `${percent.toFixed(1)}%`,
+              status,
+            ];
           }),
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeAllDishes && filteredDishes?.length > 0) {
         setExportProgress(80);
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Menu Item Performance Audit', 14, currentY);
-        
+
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Rank', 'Dish Name', 'Category', 'Qty Sold', 'Revenue', 'Avg Price', 'Status']],
-          body: filteredDishes.slice(0, 100).map((dish, idx) => [
-            (idx + 1).toString(),
-            dish.dishName,
-            dish.category || 'N/A',
-            dish.totalQuantity.toString(),
-            formatCurrencyPDF(dish.totalRevenue),
-            formatCurrencyPDF(dish.avgPrice),
-            getPerformanceLevel(dish).toUpperCase()
-          ]),
+          body: filteredDishes
+            .slice(0, 100)
+            .map((dish, idx) => [
+              (idx + 1).toString(),
+              dish.dishName,
+              dish.category || 'N/A',
+              dish.totalQuantity.toString(),
+              formatCurrencyPDF(dish.totalRevenue),
+              formatCurrencyPDF(dish.avgPrice),
+              getPerformanceLevel(dish).toUpperCase(),
+            ]),
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
       }
 
@@ -430,13 +459,11 @@ const MenuPerformanceReport = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid ps-lg-4 pe-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container no-print">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>
-                {title}
-              </h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -520,7 +547,9 @@ const MenuPerformanceReport = () => {
                   <div className="flex-grow-1 ms-md-4 mt-3 mt-md-0">
                     <div className="d-flex align-items-center mb-2">
                       <Spinner animation="border" size="sm" className="me-2" style={{ color: brandColor }} />
-                      <span className="smaller fw-bold text-muted">Generating {exportType}... {exportProgress}%</span>
+                      <span className="smaller fw-bold text-muted">
+                        Generating {exportType}... {exportProgress}%
+                      </span>
                     </div>
                     <ProgressBar now={exportProgress} className="progress-sm" variant="info" style={{ height: '6px' }} />
                   </div>
@@ -536,7 +565,9 @@ const MenuPerformanceReport = () => {
                     <div className="d-flex justify-content-between align-items-start">
                       <div>
                         <div className="menu-performance-report-stat-label mb-2">Total Items Sold</div>
-                        <div className="menu-performance-report-stat-value text-primary">{reportData.dishPerformance.reduce((sum, d) => sum + d.totalQuantity, 0)}</div>
+                        <div className="menu-performance-report-stat-value text-primary">
+                          {reportData.dishPerformance.reduce((sum, d) => sum + d.totalQuantity, 0)}
+                        </div>
                         <div className="smaller text-muted fw-bold mt-1">Total quantity sold</div>
                       </div>
                       <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: brandBg }}>
@@ -665,8 +696,13 @@ const MenuPerformanceReport = () => {
                     <div>
                       <div className="fw-bold text-dark smaller">Optimization Recommendation</div>
                       <div className="smaller text-muted">
-                        Top performers contribute to {((reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'excellent').reduce((sum, d) => sum + d.totalRevenue, 0) / reportData.summary.totalRevenue) * 100).toFixed(0)}% of your net revenue. Consider highlighting "Low Performers" in daily specials or optimizing their recipe
-                        costs.
+                        Top performers contribute to{' '}
+                        {(
+                          (reportData.dishPerformance.filter((d) => getPerformanceLevel(d) === 'excellent').reduce((sum, d) => sum + d.totalRevenue, 0) /
+                            reportData.summary.totalRevenue) *
+                          100
+                        ).toFixed(0)}
+                        % of your net revenue. Consider highlighting "Low Performers" in daily specials or optimizing their recipe costs.
                       </div>
                     </div>
                   </div>
@@ -861,7 +897,11 @@ const MenuPerformanceReport = () => {
                   {filteredDishes.map((dish, idx) => {
                     const performance = getPerformanceLevel(dish);
                     return (
-                      <div key={idx} className="p-3 rounded position-relative" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1.5px solid rgba(0,0,0,0.05)' }}>
+                      <div
+                        key={idx}
+                        className="p-3 rounded position-relative"
+                        style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1.5px solid rgba(0,0,0,0.05)' }}
+                      >
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <div className="d-flex align-items-center">
                             <Badge bg={idx < 10 ? 'primary' : 'light'} className={`rounded-pill px-2 py-1 me-2 ${idx < 10 ? '' : 'text-dark'}`}>
@@ -943,7 +983,14 @@ const MenuPerformanceReport = () => {
       </Modal>
 
       <ToastContainer position="top-end" className="p-3">
-        <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="white" className="menu-performance-report-interactive-card border-0">
+        <Toast
+          show={showToast}
+          onClose={() => setShowToast(false)}
+          delay={3000}
+          autohide
+          bg="white"
+          className="menu-performance-report-interactive-card border-0"
+        >
           <Toast.Body className="p-3 d-flex align-items-center">
             <CsLineIcons icon="check-circle" className="text-success me-2" size="20" />
             <span className="fw-bold smaller text-dark">{toastMessage}</span>

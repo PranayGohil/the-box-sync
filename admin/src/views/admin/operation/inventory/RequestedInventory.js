@@ -362,127 +362,125 @@ const RequestedInventory = () => {
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <Row>
-        <Col>
-          <div className="page-title-container mb-4 mt-5 mt-lg-0">
-            <Row className="g-0 align-items-center">
-              <Col xs="auto" className="me-auto">
-                <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
-                <BreadcrumbList items={breadcrumbs} />
-              </Col>
-            </Row>
-          </div>
-
-          {/* Search and controls - Always visible */}
-          <Row className="mb-3">
-            <Col sm="12" md="5" lg="3" xxl="2">
-              <div className="d-flex gap-2">
-                <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
-                  <ControlsSearch onSearch={handleSearch} />
-                </div>
-                <Button
-                  variant={`${showFilters ? 'secondary' : 'outline-secondary'}`}
-                  size="sm"
-                  className="btn-icon btn-icon-only position-relative"
-                  onClick={() => setShowFilters(!showFilters)}
-                  title="Filters"
-                >
-                  <CsLineIcons icon={`${showFilters ? 'close' : 'filter'}`} />
-                  {getActiveFilterCount() > 0 && (
-                    <Badge bg="primary" className="position-absolute top-0 start-100 translate-middle">
-                      {getActiveFilterCount()}
-                    </Badge>
-                  )}
-                </Button>
-              </div>
-            </Col>
-            <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
-              <div className="d-inline-block me-2 text-muted">
-                {loading ? (
-                  'Loading...'
-                ) : (
-                  <>
-                    Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
-                  </>
-                )}
-              </div>
-              <div className="d-inline-block">
-                <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
-              </div>
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container">
+          <Row className="g-0 align-items-center">
+            <Col xs="auto" className="me-auto">
+              <h1 className="qsr-page-title">{title}</h1>
+              <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
+        </div>
 
-          {/* Filter Section */}
-          <Collapse in={showFilters}>
-            <Card className="mb-3">
-              <Card.Body>
-                <div className="d-flex justify-content-between align-items-center">
-                  <h5>Filters</h5>
-                  {getActiveFilterCount() > 0 && (
-                    <Button variant="outline-danger" size="sm" onClick={handleClearFilters}>
-                      <CsLineIcons icon="close" className="me-1" />
-                      Clear
-                    </Button>
-                  )}
-                </div>
+        {/* Search and controls - Always visible */}
+        <Row className="mb-3">
+          <Col sm="12" md="5" lg="3" xxl="2">
+            <div className="d-flex gap-2">
+              <div className="d-inline-block float-md-start me-1 mb-1 mb-md-0 search-input-container w-100 shadow bg-foreground">
+                <ControlsSearch onSearch={handleSearch} />
+              </div>
+              <Button
+                variant={`${showFilters ? 'secondary' : 'outline-secondary'}`}
+                size="sm"
+                className="btn-icon btn-icon-only position-relative"
+                onClick={() => setShowFilters(!showFilters)}
+                title="Filters"
+              >
+                <CsLineIcons icon={`${showFilters ? 'close' : 'filter'}`} />
+                {getActiveFilterCount() > 0 && (
+                  <Badge bg="primary" className="position-absolute top-0 start-100 translate-middle">
+                    {getActiveFilterCount()}
+                  </Badge>
+                )}
+              </Button>
+            </div>
+          </Col>
+          <Col sm="12" md="7" lg="9" xxl="10" className="text-end">
+            <div className="d-inline-block me-2 text-muted">
+              {loading ? (
+                'Loading...'
+              ) : (
+                <>
+                  Showing {data.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, totalRecords)} of {totalRecords} entries
+                </>
+              )}
+            </div>
+            <div className="d-inline-block">
+              <ControlsPageSize pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
+            </div>
+          </Col>
+        </Row>
 
-                <div className="mt-2">
-                  <Row>
-                    {/* Request Date Range */}
-                    <Col md={4} className="mb-3">
-                      <Form.Label className="small text-muted fw-bold">Request Date Range</Form.Label>
-                      <Row>
-                        <Col md={6}>
-                          <Form.Label className="small text-muted">From</Form.Label>
-                          <Form.Control
-                            type="date"
-                            size="sm"
-                            value={filters.requestFromDate}
-                            onChange={(e) => handleFilterChange('requestFromDate', e.target.value)}
-                          />
-                        </Col>
-                        <Col md={6}>
-                          <Form.Label className="small text-muted">To</Form.Label>
-                          <Form.Control
-                            type="date"
-                            size="sm"
-                            value={filters.requestToDate}
-                            onChange={(e) => handleFilterChange('requestToDate', e.target.value)}
-                          />
-                        </Col>
-                      </Row>
-                    </Col>
-                  </Row>
-                </div>
-              </Card.Body>
-            </Card>
-          </Collapse>
-          {loading ? (
-            <Row className="justify-content-center my-5">
-              <Col xs={12} className="text-center">
-                <Spinner animation="border" variant="warning" className="mb-3" />
-                <p>Loading...</p>
+        {/* Filter Section */}
+        <Collapse in={showFilters}>
+          <Card className="mb-3">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center">
+                <h5>Filters</h5>
+                {getActiveFilterCount() > 0 && (
+                  <Button variant="outline-danger" size="sm" onClick={handleClearFilters}>
+                    <CsLineIcons icon="close" className="me-1" />
+                    Clear
+                  </Button>
+                )}
+              </div>
+
+              <div className="mt-2">
+                <Row>
+                  {/* Request Date Range */}
+                  <Col md={4} className="mb-3">
+                    <Form.Label className="small text-muted fw-bold">Request Date Range</Form.Label>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Label className="small text-muted">From</Form.Label>
+                        <Form.Control
+                          type="date"
+                          size="sm"
+                          value={filters.requestFromDate}
+                          onChange={(e) => handleFilterChange('requestFromDate', e.target.value)}
+                        />
+                      </Col>
+                      <Col md={6}>
+                        <Form.Label className="small text-muted">To</Form.Label>
+                        <Form.Control
+                          type="date"
+                          size="sm"
+                          value={filters.requestToDate}
+                          onChange={(e) => handleFilterChange('requestToDate', e.target.value)}
+                        />
+                      </Col>
+                    </Row>
+                  </Col>
+                </Row>
+              </div>
+            </Card.Body>
+          </Card>
+        </Collapse>
+        {loading ? (
+          <Row className="justify-content-center my-5">
+            <Col xs={12} className="text-center">
+              <Spinner animation="border" variant="warning" className="mb-3" />
+              <p>Loading...</p>
+            </Col>
+          </Row>
+        ) : data.length === 0 ? (
+          <Alert variant="info" className="mb-4">
+            <CsLineIcons icon="inbox" className="me-2" />
+            {searchTerm || getActiveFilterCount() > 0 ? 'No results found. Try adjusting your search or filters.' : 'No requested inventory found.'}
+          </Alert>
+        ) : (
+          <>
+            <Row>
+              <Col xs="12" style={{ overflow: 'auto' }}>
+                <Table className="react-table rows" tableInstance={tableInstance} />
+              </Col>
+              <Col xs="12">
+                <TablePagination paginationProps={paginationProps} />
               </Col>
             </Row>
-          ) : data.length === 0 ? (
-            <Alert variant="info" className="mb-4">
-              <CsLineIcons icon="inbox" className="me-2" />
-              {searchTerm || getActiveFilterCount() > 0 ? 'No results found. Try adjusting your search or filters.' : 'No requested inventory found.'}
-            </Alert>
-          ) : (
-            <>
-              <Row>
-                <Col xs="12" style={{ overflow: 'auto' }}>
-                  <Table className="react-table rows" tableInstance={tableInstance} />
-                </Col>
-                <Col xs="12">
-                  <TablePagination paginationProps={paginationProps} />
-                </Col>
-              </Row>
-            </>
-          )}
-        </Col>
-      </Row>
+          </>
+        )}
+      </div>
 
       {/* Reject Confirmation Modal */}
       <Modal
@@ -494,9 +492,7 @@ const RequestedInventory = () => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>
-            Request Reject? 
-          </Modal.Title>
+          <Modal.Title>Request Reject?</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>Are you sure you want to reject this request for inventory?</p>

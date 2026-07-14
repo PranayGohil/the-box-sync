@@ -182,14 +182,14 @@ const StaffProfile = () => {
   }
 
   return (
-    <div className="container-fluid pb-5 text-start">
+    <div className="container-fluid qsr-page-container text-start">
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 mt-5 mt-md-n3">
+      <div className="qsr-page-title-container">
         <Row className="g-3 align-items-center">
           <Col md={7}>
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
+            <h1 className="qsr-page-title">
               {staff.f_name} {staff.l_name}
             </h1>
             <BreadcrumbList items={breadcrumbs} />
@@ -221,19 +221,26 @@ const StaffProfile = () => {
                           alt="profile"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+                            e.target.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
                           }}
                         />
                       )}
                     </div>
                   </div>
-                  <h4 className="fw-bold mb-1 text-dark">{staff.f_name} {staff.l_name}</h4>
-                  <div className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill mb-3" style={{ fontSize: '0.8rem', backgroundColor: '#e0f2fe', color: '#0369a1' }}>
+                  <h4 className="fw-bold mb-1 text-dark">
+                    {staff.f_name} {staff.l_name}
+                  </h4>
+                  <div
+                    className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill mb-3"
+                    style={{ fontSize: '0.8rem', backgroundColor: '#e0f2fe', color: '#0369a1' }}
+                  >
                     {staff.position}
                   </div>
                   <div className="text-muted small d-flex align-items-center justify-content-center gap-1 mb-4">
                     <CsLineIcons icon="pin" size="14" />
-                    <span>{staff.city}, {staff.state}</span>
+                    <span>
+                      {staff.city}, {staff.state}
+                    </span>
                   </div>
                 </div>
 
@@ -266,7 +273,7 @@ const StaffProfile = () => {
                       </div>
                       <h5 className="fw-bold mb-0">Employment & Contact Information</h5>
                     </div>
-                    
+
                     <Row className="g-4 mb-4">
                       <Col md={4}>
                         <div className="staff-profile-info-label">Staff ID</div>
@@ -304,7 +311,9 @@ const StaffProfile = () => {
                       </Col>
                       <Col md={8}>
                         <div className="staff-profile-info-label">Residential Address</div>
-                        <div className="staff-profile-info-value">{staff.address}, {staff.city}, {staff.state}, {staff.country}</div>
+                        <div className="staff-profile-info-value">
+                          {staff.address}, {staff.city}, {staff.state}, {staff.country}
+                        </div>
                       </Col>
                     </Row>
                   </Card.Body>
@@ -333,7 +342,9 @@ const StaffProfile = () => {
                       </Col>
                     </Row>
 
-                    <h6 className="fw-bold text-muted mb-3 text-uppercase xsmall letter-spacing-1" style={{ fontSize: '0.75rem' }}>Document Scans</h6>
+                    <h6 className="fw-bold text-muted mb-3 text-uppercase xsmall letter-spacing-1" style={{ fontSize: '0.75rem' }}>
+                      Document Scans
+                    </h6>
                     <Row className="g-4">
                       {staff.front_image && (
                         <Col md={6}>

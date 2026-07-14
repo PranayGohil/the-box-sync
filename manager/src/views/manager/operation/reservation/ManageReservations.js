@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Row, Col, Card, Button, Badge, Alert, Form,
-  Modal, Table, Spinner, Nav, Tab, OverlayTrigger, Tooltip,
-} from 'react-bootstrap';
+import { Row, Col, Card, Button, Badge, Alert, Form, Modal, Table, Spinner, Nav, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -306,8 +303,6 @@ const customStyles = `
   }
 `;
 
-
-
 // ─── Timeline Grid ─────────────────────────────────────────────────────────
 const TimelineGrid = ({ date }) => {
   const [data, setData] = useState(null);
@@ -318,7 +313,8 @@ const TimelineGrid = ({ date }) => {
     if (!date) return;
     setLoading(true);
     setData(null);
-    axios.get(`${API}/reservation/timeline`, { params: { date }, headers: auth() })
+    axios
+      .get(`${API}/reservation/timeline`, { params: { date }, headers: auth() })
       .then((r) => {
         const d = r.data.data;
         setData(d);
@@ -328,7 +324,9 @@ const TimelineGrid = ({ date }) => {
       .finally(() => setLoading(false));
   }, [date]);
 
-  useEffect(() => { fetchTimeline(); }, [fetchTimeline]);
+  useEffect(() => {
+    fetchTimeline();
+  }, [fetchTimeline]);
 
   if (loading) {
     return (
@@ -343,7 +341,11 @@ const TimelineGrid = ({ date }) => {
   const { groups, areas } = data;
 
   if (!groups || groups.length === 0) {
-    return <Alert variant="info" className="rounded-3 fw-bold text-start">No service periods configured. Add periods in the Slot Settings tab.</Alert>;
+    return (
+      <Alert variant="info" className="rounded-3 fw-bold text-start">
+        No service periods configured. Add periods in the Slot Settings tab.
+      </Alert>
+    );
   }
 
   const currentGroup = groups.find((g) => g.group_id === activeGroup) || groups[0];
@@ -361,12 +363,14 @@ const TimelineGrid = ({ date }) => {
               className={`timeline-group-radio-pill ${isActive ? 'active' : ''}`}
               onClick={() => setActiveGroup(g.group_id)}
               style={
-                isActive ? {
-                  background: `${indicatorBg}14`,
-                  borderColor: indicatorBg,
-                  color: indicatorBg,
-                  boxShadow: `0 4px 12px ${indicatorBg}26`,
-                } : {}
+                isActive
+                  ? {
+                      background: `${indicatorBg}14`,
+                      borderColor: indicatorBg,
+                      color: indicatorBg,
+                      boxShadow: `0 4px 12px ${indicatorBg}26`,
+                    }
+                  : {}
               }
             >
               <div
@@ -384,7 +388,9 @@ const TimelineGrid = ({ date }) => {
       </div>
 
       {periodSlots.length === 0 ? (
-        <Alert variant="light" className="border rounded-3 fw-bold text-center py-4">No slots in this period for the selected date.</Alert>
+        <Alert variant="light" className="border rounded-3 fw-bold text-center py-4">
+          No slots in this period for the selected date.
+        </Alert>
       ) : (
         <>
           <div className="timeline-grid-wrapper d-none d-lg-block" style={{ overflowX: 'auto', borderRadius: '1rem', border: '1px solid #f1f5f9' }}>
@@ -399,11 +405,33 @@ const TimelineGrid = ({ date }) => {
                   </th>
                 </tr>
                 <tr className="table-light" style={{ background: '#f8fafc' }}>
-                  <th style={{ minWidth: 110, position: 'sticky', left: 0, background: '#f8fafc', zIndex: 1, padding: '10px 14px', border: '1px solid #eef2f6', fontWeight: 700, color: '#475569', fontSize: 11, textTransform: 'uppercase' }}>Table</th>
+                  <th
+                    style={{
+                      minWidth: 110,
+                      position: 'sticky',
+                      left: 0,
+                      background: '#f8fafc',
+                      zIndex: 1,
+                      padding: '10px 14px',
+                      border: '1px solid #eef2f6',
+                      fontWeight: 700,
+                      color: '#475569',
+                      fontSize: 11,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Table
+                  </th>
                   {periodSlots.map((s) => (
-                    <th key={s.slot_start} className="text-center" style={{ minWidth: 80, fontSize: 11, padding: '10px 14px', border: '1px solid #eef2f6', fontWeight: 700, color: '#475569' }}>
+                    <th
+                      key={s.slot_start}
+                      className="text-center"
+                      style={{ minWidth: 80, fontSize: 11, padding: '10px 14px', border: '1px solid #eef2f6', fontWeight: 700, color: '#475569' }}
+                    >
                       <div>{s.slot_start}</div>
-                      <div className="text-muted" style={{ fontSize: 9 }}>–{s.slot_end}</div>
+                      <div className="text-muted" style={{ fontSize: 9 }}>
+                        –{s.slot_end}
+                      </div>
                     </th>
                   ))}
                 </tr>
@@ -420,7 +448,17 @@ const TimelineGrid = ({ date }) => {
                     </tr>
                     {(area.tables || []).map((tbl) => (
                       <tr key={tbl.table_id}>
-                        <td style={{ position: 'sticky', left: 0, background: '#fff', zIndex: 1, fontSize: 13, padding: '10px 14px', border: '1px solid #eef2f6' }}>
+                        <td
+                          style={{
+                            position: 'sticky',
+                            left: 0,
+                            background: '#fff',
+                            zIndex: 1,
+                            fontSize: 13,
+                            padding: '10px 14px',
+                            border: '1px solid #eef2f6',
+                          }}
+                        >
                           <div className="fw-bold text-dark">T{tbl.table_no}</div>
                           <small className="text-muted fw-medium">{tbl.max_person}p</small>
                         </td>
@@ -435,8 +473,14 @@ const TimelineGrid = ({ date }) => {
                                   overlay={
                                     <Tooltip>
                                       {booking.customer_name} · {booking.num_persons}p
-                                      <br />{STATUS_META[booking.status]?.label}
-                                      {booking.group_name && <><br />{booking.group_name}</>}
+                                      <br />
+                                      {STATUS_META[booking.status]?.label}
+                                      {booking.group_name && (
+                                        <>
+                                          <br />
+                                          {booking.group_name}
+                                        </>
+                                      )}
                                     </Tooltip>
                                   }
                                 >
@@ -444,9 +488,12 @@ const TimelineGrid = ({ date }) => {
                                     className="rounded text-white d-flex align-items-center justify-content-center fw-bold"
                                     style={{
                                       background: STATUS_COLORS[booking.status] || '#6c757d',
-                                      height: 36, fontSize: 10, cursor: 'default',
-                                      overflow: 'hidden', padding: '0 4px',
-                                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                      height: 36,
+                                      fontSize: 10,
+                                      cursor: 'default',
+                                      overflow: 'hidden',
+                                      padding: '0 4px',
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                                     }}
                                   >
                                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -476,10 +523,12 @@ const TimelineGrid = ({ date }) => {
                 </div>
                 <Row className="g-3">
                   {(area.tables || []).map((tbl) => {
-                    const tableBookings = periodSlots.map(s => {
-                      const cellKey = `${currentGroup.group_id}::${s.slot_start}`;
-                      return { slot: s, booking: tbl.slots?.[cellKey] };
-                    }).filter(x => x.booking);
+                    const tableBookings = periodSlots
+                      .map((s) => {
+                        const cellKey = `${currentGroup.group_id}::${s.slot_start}`;
+                        return { slot: s, booking: tbl.slots?.[cellKey] };
+                      })
+                      .filter((x) => x.booking);
 
                     return (
                       <Col xs={12} key={tbl.table_id}>
@@ -494,17 +543,25 @@ const TimelineGrid = ({ date }) => {
                                 {tbl.max_person} Guests Max
                               </Badge>
                             </div>
-                            
+
                             {tableBookings.length === 0 ? (
-                              <div className="text-muted small fw-medium bg-white p-3 rounded-3 text-center border" style={{ borderStyle: 'dashed !important' }}>
+                              <div
+                                className="text-muted small fw-medium bg-white p-3 rounded-3 text-center border"
+                                style={{ borderStyle: 'dashed !important' }}
+                              >
                                 No bookings for this period
                               </div>
                             ) : (
                               <div className="d-flex flex-column gap-2">
                                 {tableBookings.map(({ slot, booking }, idx) => (
-                                  <div key={`${slot.slot_start}-${idx}`} className="bg-white p-2 rounded-3 border d-flex justify-content-between align-items-center shadow-sm">
+                                  <div
+                                    key={`${slot.slot_start}-${idx}`}
+                                    className="bg-white p-2 rounded-3 border d-flex justify-content-between align-items-center shadow-sm"
+                                  >
                                     <div>
-                                      <div className="fw-bold text-dark mb-1" style={{ fontSize: '0.9rem' }}>{booking.customer_name}</div>
+                                      <div className="fw-bold text-dark mb-1" style={{ fontSize: '0.9rem' }}>
+                                        {booking.customer_name}
+                                      </div>
                                       <div className="d-flex align-items-center gap-2">
                                         <Badge bg="light" text="dark" className="fw-bold" style={{ fontSize: '0.7rem' }}>
                                           {slot.slot_start} - {slot.slot_end}
@@ -515,7 +572,10 @@ const TimelineGrid = ({ date }) => {
                                       </div>
                                     </div>
                                     <div className="text-end">
-                                      <Badge bg={STATUS_META[booking.status]?.variant || 'secondary'} style={{ borderRadius: '50px', padding: '4px 8px', fontSize: '0.7rem' }}>
+                                      <Badge
+                                        bg={STATUS_META[booking.status]?.variant || 'secondary'}
+                                        style={{ borderRadius: '50px', padding: '4px 8px', fontSize: '0.7rem' }}
+                                      >
                                         {STATUS_META[booking.status]?.label || booking.status}
                                       </Badge>
                                     </div>
@@ -540,14 +600,15 @@ const TimelineGrid = ({ date }) => {
         {Object.entries(STATUS_COLORS).map(([status, color]) => (
           <div key={status} className="d-flex align-items-center gap-2">
             <div style={{ width: 14, height: 14, background: color, borderRadius: 4 }} />
-            <small className="text-muted fw-bold" style={{ fontSize: '0.8rem' }}>{STATUS_META[status]?.label}</small>
+            <small className="text-muted fw-bold" style={{ fontSize: '0.8rem' }}>
+              {STATUS_META[status]?.label}
+            </small>
           </div>
         ))}
       </div>
     </div>
   );
 };
-
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────
 const ManageReservations = () => {
@@ -587,30 +648,40 @@ const ManageReservations = () => {
     }),
   };
 
-  const fetchReservations = useCallback(async (page = 1) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page, limit: 20 });
-      if (statusFilter !== 'all') params.set('status', statusFilter);
-      if (dateFilter) params.set('date', dateFilter);
-      const res = await axios.get(`${API}/reservation/all?${params}`, { headers: auth() });
-      setReservations(res.data.data);
-      setPagination(res.data.pagination);
-      if (res.data.counts) {
-        setCounts(res.data.counts);
+  const fetchReservations = useCallback(
+    async (page = 1) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ page, limit: 20 });
+        if (statusFilter !== 'all') params.set('status', statusFilter);
+        if (dateFilter) params.set('date', dateFilter);
+        const res = await axios.get(`${API}/reservation/all?${params}`, { headers: auth() });
+        setReservations(res.data.data);
+        setPagination(res.data.pagination);
+        if (res.data.counts) {
+          setCounts(res.data.counts);
+        }
+      } catch {
+        toast.error('Failed to load reservations.');
+      } finally {
+        setLoading(false);
       }
-    } catch { toast.error('Failed to load reservations.'); }
-    finally { setLoading(false); }
-  }, [statusFilter, dateFilter]);
+    },
+    [statusFilter, dateFilter]
+  );
 
-  useEffect(() => { fetchReservations(1); }, [fetchReservations]);
+  useEffect(() => {
+    fetchReservations(1);
+  }, [fetchReservations]);
 
   const quickAction = async (endpoint, id, msg) => {
     try {
       await axios.patch(`${API}/reservation/${endpoint}/${id}`, {}, { headers: auth() });
       toast.success(msg);
       fetchReservations(pagination.page);
-    } catch (err) { toast.error(err.response?.data?.message || 'Action failed.'); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Action failed.');
+    }
   };
 
   const handleConfirmAction = async () => {
@@ -638,79 +709,94 @@ const ManageReservations = () => {
 
   const ActionButtons = ({ r }) => (
     <div className="d-flex gap-1 flex-wrap">
-      {r.status === 'pending' && <>
-        <Button 
-          size="sm" 
-          variant="success" 
-          title="Approve" 
-          className='reservations-action-btn btn btn-success' 
-          onClick={() => setApproveTarget(r)}
-        >
-          <CsLineIcons icon="check" size="14" style={{ stroke: '#fff' }} />
-        </Button>
-        <Button 
-          size="sm" 
-          variant="outline-danger" 
-          title="Reject" 
-          className='reservations-action-btn btn btn-outline-danger' 
-          style={{ border: '1px solid #cf2637', color: '#cf2637' }}
-          onClick={() => setRejectTarget(r)}
-        >
-          <CsLineIcons icon="close" size="14" />
-        </Button>
-      </>}
-      {r.status === 'approved' && <>
-        <Button 
-          size="sm" 
-          variant="info" 
-          title="Activate (Reserve Tables)" 
-          className='reservations-action-btn btn btn-info' 
-          style={{ backgroundColor: '#23b3f4', borderColor: '#23b3f4' }}
-          onClick={() => { setConfirmTarget(r); setConfirmAction('activate'); }}
-        >
-          <CsLineIcons icon="bookmark" size="14" style={{ stroke: '#fff' }} />
-        </Button>
-        <Button 
-          size="sm" 
-          variant="outline-danger" 
-          title="Cancel" 
-          className='reservations-action-btn btn btn-outline-danger' 
-          style={{ border: '1px solid #cf2637', color: '#cf2637' }}
-          onClick={() => { setConfirmTarget(r); setConfirmAction('cancel'); }}
-        >
-          <CsLineIcons icon="slash" size="14" />
-        </Button>
-      </>}
-      {r.status === 'reserved' && <>
-        <Button 
-          size="sm" 
-          variant="primary" 
-          title="Seat" 
-          className='reservations-action-btn btn btn-primary' 
-          style={{ backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
-          onClick={() => { setConfirmTarget(r); setConfirmAction('seat'); }}
-        >
-          <CsLineIcons icon="check-circle" size="14" style={{ stroke: '#fff' }} />
-        </Button>
-        <Button 
-          size="sm" 
-          variant="outline-secondary" 
-          title="No-Show" 
-          className='reservations-action-btn btn btn-outline-secondary' 
-          style={{ border: '1px solid #64748b', color: '#64748b' }}
-          onClick={() => { setConfirmTarget(r); setConfirmAction('no-show'); }}
-        >
-          <CsLineIcons icon="close-circle" size="14" />
-        </Button>
-      </>}
+      {r.status === 'pending' && (
+        <>
+          <Button size="sm" variant="success" title="Approve" className="reservations-action-btn btn btn-success" onClick={() => setApproveTarget(r)}>
+            <CsLineIcons icon="check" size="14" style={{ stroke: '#fff' }} />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline-danger"
+            title="Reject"
+            className="reservations-action-btn btn btn-outline-danger"
+            style={{ border: '1px solid #cf2637', color: '#cf2637' }}
+            onClick={() => setRejectTarget(r)}
+          >
+            <CsLineIcons icon="close" size="14" />
+          </Button>
+        </>
+      )}
+      {r.status === 'approved' && (
+        <>
+          <Button
+            size="sm"
+            variant="info"
+            title="Activate (Reserve Tables)"
+            className="reservations-action-btn btn btn-info"
+            style={{ backgroundColor: '#23b3f4', borderColor: '#23b3f4' }}
+            onClick={() => {
+              setConfirmTarget(r);
+              setConfirmAction('activate');
+            }}
+          >
+            <CsLineIcons icon="bookmark" size="14" style={{ stroke: '#fff' }} />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline-danger"
+            title="Cancel"
+            className="reservations-action-btn btn btn-outline-danger"
+            style={{ border: '1px solid #cf2637', color: '#cf2637' }}
+            onClick={() => {
+              setConfirmTarget(r);
+              setConfirmAction('cancel');
+            }}
+          >
+            <CsLineIcons icon="slash" size="14" />
+          </Button>
+        </>
+      )}
+      {r.status === 'reserved' && (
+        <>
+          <Button
+            size="sm"
+            variant="primary"
+            title="Seat"
+            className="reservations-action-btn btn btn-primary"
+            style={{ backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
+            onClick={() => {
+              setConfirmTarget(r);
+              setConfirmAction('seat');
+            }}
+          >
+            <CsLineIcons icon="check-circle" size="14" style={{ stroke: '#fff' }} />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            title="No-Show"
+            className="reservations-action-btn btn btn-outline-secondary"
+            style={{ border: '1px solid #64748b', color: '#64748b' }}
+            onClick={() => {
+              setConfirmTarget(r);
+              setConfirmAction('no-show');
+            }}
+          >
+            <CsLineIcons icon="close-circle" size="14" />
+          </Button>
+        </>
+      )}
       {r.status === 'seated' && (
-        <Button 
-          size="sm" 
-          variant="secondary" 
-          title="Complete" 
-          className='reservations-action-btn btn btn-secondary' 
+        <Button
+          size="sm"
+          variant="secondary"
+          title="Complete"
+          className="reservations-action-btn btn btn-secondary"
           style={{ backgroundColor: '#475569', borderColor: '#475569' }}
-          onClick={() => { setConfirmTarget(r); setConfirmAction('complete'); }}
+          onClick={() => {
+            setConfirmTarget(r);
+            setConfirmAction('complete');
+          }}
         >
           <CsLineIcons icon="check-square" size="14" style={{ stroke: '#fff' }} />
         </Button>
@@ -723,15 +809,15 @@ const ManageReservations = () => {
       <HtmlHead title={title} />
       <style>{customStyles}</style>
 
-      <div className="container-fluid px-lg-5 pb-5 text-start">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="container-fluid qsr-page-container text-start">
+        <div className="qsr-page-title-container">
           <Row className="g-0 align-items-center">
             <Col xs="12" md="8">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
             <Col xs="12" md="4" className="d-flex justify-content-md-end align-items-center gap-2 mt-3 mt-md-0">
-              <Button 
+              <Button
                 className={`reservations-modal-btn-${activeTab === 'config' ? 'solid' : 'outline'} px-4 py-2 d-inline-flex align-items-center gap-2`}
                 onClick={() => setActiveTab('config')}
               >
@@ -746,12 +832,19 @@ const ManageReservations = () => {
           <Col xs={12} sm={6} lg={3}>
             <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #ffc107' }}>
               <Card.Body className="p-0 d-flex align-items-center gap-3">
-                <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(255, 193, 7, 0.1)' }}>
+                <div
+                  className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle"
+                  style={{ width: 48, height: 48, background: 'rgba(255, 193, 7, 0.1)' }}
+                >
                   <CsLineIcons icon="clock" size="20" style={{ stroke: '#ffc107' }} />
                 </div>
                 <div>
-                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Pending Review</div>
-                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>{counts.pending}</h3>
+                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>
+                    Pending Review
+                  </div>
+                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>
+                    {counts.pending}
+                  </h3>
                 </div>
               </Card.Body>
             </Card>
@@ -759,12 +852,19 @@ const ManageReservations = () => {
           <Col xs={12} sm={6} lg={3}>
             <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #198754' }}>
               <Card.Body className="p-0 d-flex align-items-center gap-3">
-                <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(25, 135, 84, 0.1)' }}>
+                <div
+                  className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle"
+                  style={{ width: 48, height: 48, background: 'rgba(25, 135, 84, 0.1)' }}
+                >
                   <CsLineIcons icon="check-circle" size="20" style={{ stroke: '#198754' }} />
                 </div>
                 <div>
-                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Approved</div>
-                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>{counts.approved}</h3>
+                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>
+                    Approved
+                  </div>
+                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>
+                    {counts.approved}
+                  </h3>
                 </div>
               </Card.Body>
             </Card>
@@ -772,12 +872,19 @@ const ManageReservations = () => {
           <Col xs={12} sm={6} lg={3}>
             <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #0d6efd' }}>
               <Card.Body className="p-0 d-flex align-items-center gap-3">
-                <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(13, 110, 253, 0.1)' }}>
+                <div
+                  className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle"
+                  style={{ width: 48, height: 48, background: 'rgba(13, 110, 253, 0.1)' }}
+                >
                   <CsLineIcons icon="user" size="20" style={{ color: '#0d6efd' }} />
                 </div>
                 <div>
-                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Seated Guests</div>
-                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>{counts.seated}</h3>
+                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>
+                    Seated Guests
+                  </div>
+                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>
+                    {counts.seated}
+                  </h3>
                 </div>
               </Card.Body>
             </Card>
@@ -785,12 +892,19 @@ const ManageReservations = () => {
           <Col xs={12} sm={6} lg={3}>
             <Card className="reservations-stat-card border-0 shadow-sm rounded-4 p-3 bg-white" style={{ borderLeft: '4px solid #23b3f4' }}>
               <Card.Body className="p-0 d-flex align-items-center gap-3">
-                <div className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle" style={{ width: 48, height: 48, background: 'rgba(35, 179, 244, 0.1)' }}>
+                <div
+                  className="stat-icon-wrapper d-flex align-items-center justify-content-center rounded-circle"
+                  style={{ width: 48, height: 48, background: 'rgba(35, 179, 244, 0.1)' }}
+                >
                   <CsLineIcons icon="calendar" size="20" style={{ color: '#23b3f4' }} />
                 </div>
                 <div>
-                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>Total Active</div>
-                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>{counts.total}</h3>
+                  <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em', fontSize: '10px' }}>
+                    Total Active
+                  </div>
+                  <h3 className="mb-0 fw-extrabold text-dark mt-1" style={{ fontSize: '20px', fontWeight: 800 }}>
+                    {counts.total}
+                  </h3>
                 </div>
               </Card.Body>
             </Card>
@@ -812,7 +926,6 @@ const ManageReservations = () => {
           </Nav>
 
           <Tab.Content>
-            
             {/* ── LIST TAB ── */}
             <Tab.Pane eventKey="list">
               {/* Filters */}
@@ -820,7 +933,9 @@ const ManageReservations = () => {
                 <Card.Body className="p-0">
                   <Row className="g-4 align-items-end">
                     <Col xs={12} md={5} lg={6}>
-                      <span className="small fw-bold text-muted text-uppercase mb-2 d-block" style={{ letterSpacing: '0.05em' }}>Status Filter</span>
+                      <span className="small fw-bold text-muted text-uppercase mb-2 d-block" style={{ letterSpacing: '0.05em' }}>
+                        Status Filter
+                      </span>
                       <Select
                         value={{
                           label: statusFilter === 'all' ? 'All' : STATUS_META[statusFilter]?.label || statusFilter,
@@ -835,23 +950,28 @@ const ManageReservations = () => {
                         styles={selectStyles}
                       />
                     </Col>
-                    
+
                     <Col xs={12} sm={8} md={4} lg={4}>
-                      <Form.Label className="small fw-bold text-muted text-uppercase mb-2" style={{ letterSpacing: '0.05em' }}>Date</Form.Label>
-                      <Form.Control 
-                        type="date" 
-                        value={dateFilter} 
-                        onChange={(e) => setDateFilter(e.target.value)} 
+                      <Form.Label className="small fw-bold text-muted text-uppercase mb-2" style={{ letterSpacing: '0.05em' }}>
+                        Date
+                      </Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
                         className="reservations-pill-input shadow-sm bg-white w-100"
                         style={{ height: '44px' }}
                       />
                     </Col>
-                    
+
                     <Col xs={12} sm={4} md={3} lg={2}>
-                      <Button 
+                      <Button
                         className="reservations-modal-btn-outline w-100 py-2 d-flex align-items-center justify-content-center"
                         style={{ height: '44px' }}
-                        onClick={() => { setDateFilter(''); setStatusFilter('all'); }}
+                        onClick={() => {
+                          setDateFilter('');
+                          setStatusFilter('all');
+                        }}
                       >
                         Reset
                       </Button>
@@ -895,14 +1015,14 @@ const ManageReservations = () => {
                         <tbody>
                           {(() => {
                             const statusOrder = {
-                              pending: 1,      // Requests
-                              seated: 2,       // Seated
-                              approved: 3,     // Approved / Reserved
+                              pending: 1, // Requests
+                              seated: 2, // Seated
+                              approved: 3, // Approved / Reserved
                               reserved: 4,
-                              completed: 5,    // Completed
-                              rejected: 6,     // Cancelled / Rejected / No-Show
+                              completed: 5, // Completed
+                              rejected: 6, // Cancelled / Rejected / No-Show
                               cancelled: 7,
-                              no_show: 8
+                              no_show: 8,
                             };
                             const sorted = [...reservations].sort((a, b) => {
                               const orderA = statusOrder[a.status] || 99;
@@ -915,10 +1035,17 @@ const ManageReservations = () => {
                                   <div className="fw-bold text-dark">{r.customer_name}</div>
                                   <small className="text-muted fw-medium">{r.customer_phone}</small>
                                 </td>
-                                <td><small className="fw-bold text-alternate">{fmtDate(r.reservation_date)}</small></td>
+                                <td>
+                                  <small className="fw-bold text-alternate">{fmtDate(r.reservation_date)}</small>
+                                </td>
                                 <td>
                                   {r.group_name && (
-                                    <Badge bg="light" text="dark" className="border mb-2 d-inline-flex align-items-center gap-1 fw-bold text-secondary px-2 py-1" style={{ fontSize: 10, borderRadius: '50px' }}>
+                                    <Badge
+                                      bg="light"
+                                      text="dark"
+                                      className="border mb-2 d-inline-flex align-items-center gap-1 fw-bold text-secondary px-2 py-1"
+                                      style={{ fontSize: 10, borderRadius: '50px' }}
+                                    >
                                       {r.group_name}
                                     </Badge>
                                   )}
@@ -928,7 +1055,9 @@ const ManageReservations = () => {
                                       {r.slot_start} – {r.slot_end}
                                     </Badge>
                                   </div>
-                                  <div style={{ fontSize: 10 }} className="text-muted mt-1 fw-medium">{r.slots?.length} slot{r.slots?.length > 1 ? 's' : ''}</div>
+                                  <div style={{ fontSize: 10 }} className="text-muted mt-1 fw-medium">
+                                    {r.slots?.length} slot{r.slots?.length > 1 ? 's' : ''}
+                                  </div>
                                 </td>
                                 <td>
                                   <div className="d-flex align-items-center gap-1 fw-bold text-dark">
@@ -940,20 +1069,33 @@ const ManageReservations = () => {
                                   {r.assigned_tables?.length ? (
                                     <div className="d-flex flex-wrap gap-1">
                                       {r.assigned_tables.map((t) => (
-                                        <Badge key={t.table_id} bg="light" text="dark" className="border fw-bold text-dark px-2 py-1" style={{ borderRadius: '50px' }}>
+                                        <Badge
+                                          key={t.table_id}
+                                          bg="light"
+                                          text="dark"
+                                          className="border fw-bold text-dark px-2 py-1"
+                                          style={{ borderRadius: '50px' }}
+                                        >
                                           {t.area_name} · T{t.table_no}
                                         </Badge>
                                       ))}
                                     </div>
-                                  ) : <span className="text-muted small fw-medium">—</span>}
+                                  ) : (
+                                    <span className="text-muted small fw-medium">—</span>
+                                  )}
                                 </td>
                                 <td>
-                                  <Badge bg={STATUS_META[r.status]?.variant || 'secondary'} style={{ borderRadius: '50px', padding: '6px 14px', fontSize: '0.8rem' }}>
+                                  <Badge
+                                    bg={STATUS_META[r.status]?.variant || 'secondary'}
+                                    style={{ borderRadius: '50px', padding: '6px 14px', fontSize: '0.8rem' }}
+                                  >
                                     {r.auto_activated && r.status === 'reserved' && '⚡ '}
                                     {STATUS_META[r.status]?.label || r.status}
                                   </Badge>
                                 </td>
-                                <td><ActionButtons r={r} /></td>
+                                <td>
+                                  <ActionButtons r={r} />
+                                </td>
                               </tr>
                             ));
                           })()}
@@ -965,14 +1107,14 @@ const ManageReservations = () => {
                       <Row className="g-3">
                         {(() => {
                           const statusOrder = {
-                            pending: 1,      // Requests
-                            seated: 2,       // Seated
-                            approved: 3,     // Approved / Reserved
+                            pending: 1, // Requests
+                            seated: 2, // Seated
+                            approved: 3, // Approved / Reserved
                             reserved: 4,
-                            completed: 5,    // Completed
-                            rejected: 6,     // Cancelled / Rejected / No-Show
+                            completed: 5, // Completed
+                            rejected: 6, // Cancelled / Rejected / No-Show
                             cancelled: 7,
-                            no_show: 8
+                            no_show: 8,
                           };
                           const sorted = [...reservations].sort((a, b) => {
                             const orderA = statusOrder[a.status] || 99;
@@ -985,7 +1127,9 @@ const ManageReservations = () => {
                                 <Card.Body className="p-3">
                                   <div className="d-flex justify-content-between align-items-start mb-2">
                                     <div>
-                                      <div className="fw-bold text-dark" style={{ fontSize: '1.1rem' }}>{r.customer_name}</div>
+                                      <div className="fw-bold text-dark" style={{ fontSize: '1.1rem' }}>
+                                        {r.customer_name}
+                                      </div>
                                       <small className="text-muted fw-medium">{r.customer_phone}</small>
                                     </div>
                                     <Badge
@@ -996,7 +1140,7 @@ const ManageReservations = () => {
                                       {STATUS_META[r.status]?.label || r.status}
                                     </Badge>
                                   </div>
-                                  
+
                                   {r.group_name && (
                                     <Badge
                                       bg="light"
@@ -1009,11 +1153,21 @@ const ManageReservations = () => {
                                   )}
 
                                   <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
-                                    <Badge bg="light" text="dark" className="border fw-bold text-alternate px-2 py-1" style={{ borderRadius: '50px', fontSize: 10 }}>
+                                    <Badge
+                                      bg="light"
+                                      text="dark"
+                                      className="border fw-bold text-alternate px-2 py-1"
+                                      style={{ borderRadius: '50px', fontSize: 10 }}
+                                    >
                                       <CsLineIcons icon="calendar" size={10} className="me-1" style={{ stroke: '#23b3f4' }} />
                                       {fmtDate(r.reservation_date)}
                                     </Badge>
-                                    <Badge bg="light" text="dark" className="border fw-bold text-alternate px-2 py-1" style={{ borderRadius: '50px', fontSize: 10 }}>
+                                    <Badge
+                                      bg="light"
+                                      text="dark"
+                                      className="border fw-bold text-alternate px-2 py-1"
+                                      style={{ borderRadius: '50px', fontSize: 10 }}
+                                    >
                                       <CsLineIcons icon="clock" size={10} className="me-1" style={{ stroke: '#23b3f4' }} />
                                       {r.slot_start} – {r.slot_end}
                                     </Badge>
@@ -1021,14 +1175,18 @@ const ManageReservations = () => {
 
                                   <Row className="g-2 mb-3">
                                     <Col xs={4}>
-                                      <div className="small text-muted fw-bold text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Guests</div>
+                                      <div className="small text-muted fw-bold text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                                        Guests
+                                      </div>
                                       <div className="d-flex align-items-center gap-1 fw-bold text-dark" style={{ fontSize: '0.9rem' }}>
                                         <CsLineIcons icon="user" size={14} style={{ color: '#23b3f4' }} />
                                         {r.num_persons}
                                       </div>
                                     </Col>
                                     <Col xs={8}>
-                                      <div className="small text-muted fw-bold text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Tables</div>
+                                      <div className="small text-muted fw-bold text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                                        Tables
+                                      </div>
                                       {r.assigned_tables?.length ? (
                                         <div className="d-flex flex-wrap gap-1">
                                           {r.assigned_tables.map((t) => (
@@ -1065,21 +1223,23 @@ const ManageReservations = () => {
 
               {pagination.pages > 1 && (
                 <div className="d-flex justify-content-center align-items-center gap-3 mb-4">
-                  <Button 
-                    size="sm" 
-                    variant="outline-secondary" 
-                    className='reservations-action-btn btn btn-outline-secondary' 
-                    disabled={pagination.page === 1} 
+                  <Button
+                    size="sm"
+                    variant="outline-secondary"
+                    className="reservations-action-btn btn btn-outline-secondary"
+                    disabled={pagination.page === 1}
                     onClick={() => fetchReservations(pagination.page - 1)}
                   >
                     <CsLineIcons icon="chevron-left" size="14" />
                   </Button>
-                  <span className="align-self-center small text-muted fw-bold">Page {pagination.page} of {pagination.pages}</span>
-                  <Button 
-                    size="sm" 
-                    variant="outline-secondary" 
-                    className='reservations-action-btn btn btn-outline-secondary' 
-                    disabled={pagination.page === pagination.pages} 
+                  <span className="align-self-center small text-muted fw-bold">
+                    Page {pagination.page} of {pagination.pages}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline-secondary"
+                    className="reservations-action-btn btn btn-outline-secondary"
+                    disabled={pagination.page === pagination.pages}
                     onClick={() => fetchReservations(pagination.page + 1)}
                   >
                     <CsLineIcons icon="chevron-right" size="14" />
@@ -1095,20 +1255,20 @@ const ManageReservations = () => {
                   <Row className="g-3 align-items-center">
                     <Col xs="auto">
                       <Form.Group className="d-flex align-items-center gap-3">
-                        <Form.Label className="small fw-bold text-muted text-uppercase mb-0" style={{ letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Timeline Date</Form.Label>
-                        <Form.Control 
-                          type="date" 
-                          value={timelineDate} 
-                          onChange={(e) => setTimelineDate(e.target.value)} 
+                        <Form.Label className="small fw-bold text-muted text-uppercase mb-0" style={{ letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                          Timeline Date
+                        </Form.Label>
+                        <Form.Control
+                          type="date"
+                          value={timelineDate}
+                          onChange={(e) => setTimelineDate(e.target.value)}
                           className="reservations-pill-input shadow-sm bg-white"
                           style={{ height: '40px', width: '180px' }}
                         />
                       </Form.Group>
                     </Col>
                     <Col xs="auto" className="ms-md-auto">
-                      <p className="text-muted small mb-0 fw-medium">
-                        Visual slot × table grid. Hover cells to see customer details.
-                      </p>
+                      <p className="text-muted small mb-0 fw-medium">Visual slot × table grid. Hover cells to see customer details.</p>
                     </Col>
                   </Row>
                 </Card.Body>
@@ -1128,22 +1288,32 @@ const ManageReservations = () => {
                 </Card.Body>
               </Card>
             </Tab.Pane>
-
           </Tab.Content>
         </Tab.Container>
       </div>
 
-
-
-      <ApproveModal show={!!approveTarget} reservation={approveTarget} onClose={() => setApproveTarget(null)} onSuccess={() => fetchReservations(pagination.page)} />
-      <RejectModal show={!!rejectTarget} reservation={rejectTarget} onClose={() => setRejectTarget(null)} onSuccess={() => fetchReservations(pagination.page)} />
-      <ConfirmActionModal 
-        show={!!confirmAction} 
-        action={confirmAction} 
-        reservation={confirmTarget} 
+      <ApproveModal
+        show={!!approveTarget}
+        reservation={approveTarget}
+        onClose={() => setApproveTarget(null)}
+        onSuccess={() => fetchReservations(pagination.page)}
+      />
+      <RejectModal
+        show={!!rejectTarget}
+        reservation={rejectTarget}
+        onClose={() => setRejectTarget(null)}
+        onSuccess={() => fetchReservations(pagination.page)}
+      />
+      <ConfirmActionModal
+        show={!!confirmAction}
+        action={confirmAction}
+        reservation={confirmTarget}
         loading={confirmLoading}
-        onClose={() => { setConfirmTarget(null); setConfirmAction(null); }} 
-        onConfirm={handleConfirmAction} 
+        onClose={() => {
+          setConfirmTarget(null);
+          setConfirmAction(null);
+        }}
+        onConfirm={handleConfirmAction}
       />
     </>
   );

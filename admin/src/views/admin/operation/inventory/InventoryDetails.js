@@ -7,8 +7,6 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-
-
 const InventoryDetails = () => {
   const { id } = useParams();
   const history = useHistory();
@@ -175,12 +173,18 @@ const InventoryDetails = () => {
     <div className="inventory-details-details-container">
       <style>{customStyles}</style>
       <HtmlHead title="Inventory Details" />
-      <div className="container-fluid px-3 px-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
             <Col xs={12} md={7}>
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>Inventory Details</h1>
-              <BreadcrumbList items={[{ to: '', text: 'Home' }, { to: 'operations/inventory', text: 'Inventory' }, { to: '', title: 'Details' }]} />
+              <h1 className="qsr-page-title">Inventory Details</h1>
+              <BreadcrumbList
+                items={[
+                  { to: '', text: 'Home' },
+                  { to: 'operations/inventory', text: 'Inventory' },
+                  { to: '', title: 'Details' },
+                ]}
+              />
             </Col>
             <Col xs={12} md={5} className="d-flex flex-wrap justify-content-start justify-content-md-end gap-2 mt-3 mt-md-0">
               <Button variant="outline-secondary" onClick={() => history.push('/operations/inventory-history')} className="rounded-pill px-4 fw-bold border-2">
@@ -210,7 +214,10 @@ const InventoryDetails = () => {
               </div>
             </div>
           </div>
-          <Badge bg={inventory.status === 'Completed' ? 'success' : inventory.status === 'Rejected' ? 'danger' : 'warning'} className="inventory-details-status-badge shadow-sm">
+          <Badge
+            bg={inventory.status === 'Completed' ? 'success' : inventory.status === 'Rejected' ? 'danger' : 'warning'}
+            className="inventory-details-status-badge shadow-sm"
+          >
             {inventory.status}
           </Badge>
         </div>
@@ -301,19 +308,30 @@ const InventoryDetails = () => {
                 <Row className="g-2 text-center">
                   <Col xs={6}>
                     <div className="p-2 rounded-3 bg-light" style={{ border: '1px solid #f1f5f9' }}>
-                      <div className="text-muted small fw-bold" style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quantity</div>
-                      <div className="fw-bold text-dark mt-0.5">{item.item_quantity} {item.unit}</div>
+                      <div className="text-muted small fw-bold" style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Quantity
+                      </div>
+                      <div className="fw-bold text-dark mt-0.5">
+                        {item.item_quantity} {item.unit}
+                      </div>
                     </div>
                   </Col>
                   <Col xs={6}>
                     <div className="p-2 rounded-3 bg-light" style={{ border: '1px solid #f1f5f9' }}>
-                      <div className="text-muted small fw-bold" style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Unit Price</div>
+                      <div className="text-muted small fw-bold" style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Unit Price
+                      </div>
                       <div className="fw-bold text-dark mt-0.5">₹ {item.item_price || '0.00'}</div>
                     </div>
                   </Col>
                   <Col xs={12}>
-                    <div className="p-2 rounded-3 d-flex justify-content-between align-items-center mt-1" style={{ backgroundColor: '#e0f2fe', border: '1px solid #bae6fd' }}>
-                      <span className="fw-bold text-primary small text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Item Subtotal</span>
+                    <div
+                      className="p-2 rounded-3 d-flex justify-content-between align-items-center mt-1"
+                      style={{ backgroundColor: '#e0f2fe', border: '1px solid #bae6fd' }}
+                    >
+                      <span className="fw-bold text-primary small text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                        Item Subtotal
+                      </span>
                       <span className="fw-bold text-primary">₹ {(item.item_quantity * (item.item_price || 0)).toFixed(2)}</span>
                     </div>
                   </Col>
@@ -425,20 +443,10 @@ const InventoryDetails = () => {
           </div>
         </Modal.Body>
         <Modal.Footer className="border-0 pt-0">
-          <Button 
-            variant="outline-secondary" 
-            onClick={() => setShowDeleteModal(false)} 
-            disabled={deleting}
-            className="rounded-pill px-4 fw-bold border-2"
-          >
+          <Button variant="outline-secondary" onClick={() => setShowDeleteModal(false)} disabled={deleting} className="rounded-pill px-4 fw-bold border-2">
             Cancel
           </Button>
-          <Button 
-            variant="outline-danger" 
-            onClick={handleDelete} 
-            disabled={deleting}
-            className="rounded-pill px-4 fw-bold border-2"
-          >
+          <Button variant="outline-danger" onClick={handleDelete} disabled={deleting} className="rounded-pill px-4 fw-bold border-2">
             {deleting ? (
               <>
                 <Spinner as="span" animation="border" size="sm" className="me-2" />

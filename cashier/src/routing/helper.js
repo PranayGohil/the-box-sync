@@ -294,66 +294,83 @@ export const filterRoutesByPlans = (routesObj, activePlans = [], cashierType = '
 
   const qsrComponents = routesObj.qsrComponents || {};
 
-  const mainMenuItems = (routesObj.mainMenuItems || []).map(item => {
-    const newItem = { ...item };
+  const mainMenuItems = (routesObj.mainMenuItems || [])
+    .map((item) => {
+      const newItem = { ...item };
 
-    // Redirect filtering
-    if (newItem.redirect && newItem.to && newItem.to.endsWith('/dashboard')) {
-      const clonedItem = { ...newItem };
-      const localAppRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
-      if (cashierType === 'dine-in') {
-        clonedItem.to = `${localAppRoot}/dashboard/manager`;
-      } else {
-        clonedItem.to = `${localAppRoot}/dashboard/qsr`;
+      // Redirect filtering
+      if (newItem.redirect && newItem.to && newItem.to.endsWith('/dashboard')) {
+        const clonedItem = { ...newItem };
+        const localAppRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
+        if (!hasManager && hasQsr) {
+          clonedItem.to = `${localAppRoot}/dashboard/qsr`;
+        } else if (hasManager && hasQsr) {
+          // Both plans: redirect based on cashierType preference
+          clonedItem.to = cashierType === 'dine-in' ? `${localAppRoot}/dashboard/manager` : `${localAppRoot}/dashboard/qsr`;
+        } else {
+          clonedItem.to = `${localAppRoot}/dashboard/manager`;
+        }
+        return clonedItem;
       }
-      return clonedItem;
-    }
 
-    // 1. Dashboard filtering
-    if (newItem.path && newItem.path.endsWith('/dashboard')) {
-      const clonedItem = { ...newItem };
-      const localAppRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
-      delete clonedItem.subs;
-      if (cashierType === 'dine-in') {
-        clonedItem.component = newItem.component; // It's named manager.dashboard in routes.js
-        clonedItem.path = `${localAppRoot}/dashboard/manager`;
-      } else {
-        clonedItem.component = qsrComponents.dashboard;
-        clonedItem.path = `${localAppRoot}/dashboard/qsr`;
+      // 1. Dashboard filtering
+      if (newItem.path && newItem.path.endsWith('/dashboard')) {
+        const clonedItem = { ...newItem };
+        const localAppRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
+        if (hasManager && hasQsr) {
+          // Both plans active — show both sub-items like manager panel
+          clonedItem.subs = [
+            { path: '/manager', label: 'Manager Dashboard', component: clonedItem.component },
+            { path: '/qsr', label: 'QSR Dashboard', component: qsrComponents.dashboard },
+          ];
+          delete clonedItem.component;
+        } else if (!hasQsr || cashierType === 'dine-in') {
+          // Only Manager plan or dine-in cashier
+          delete clonedItem.subs;
+          clonedItem.component = newItem.component;
+          clonedItem.path = `${localAppRoot}/dashboard/manager`;
+        } else {
+          // Only QSR plan or qsr cashier
+          delete clonedItem.subs;
+          clonedItem.component = qsrComponents.dashboard;
+          clonedItem.path = `${localAppRoot}/dashboard/qsr`;
+        }
+        return clonedItem;
       }
-      return clonedItem;
-    }
 
-    // 2. Staff Management filter
-    if (newItem.path && newItem.path.endsWith('/staff') && !hasStaff) {
-      return null;
-    }
-
-    // 3. KOT Panel filter
-    if (newItem.path && newItem.path.endsWith('/kot') && !hasKot) {
-      return null;
-    }
-
-    // 4. POS Orders filter
-    if (newItem.path && newItem.path.endsWith('/order')) {
-      const clonedItem = { ...newItem };
-      if (clonedItem.subs) {
-        clonedItem.subs = clonedItem.subs.map(sub => ({ ...sub })).filter(sub => {
-          if (['/dine-in', '/takeaway', '/delivery'].includes(sub.path) && cashierType !== 'dine-in') {
-            return false;
-          }
-          if (sub.path === '/qsr-pos' && cashierType !== 'qsr') {
-            return false;
-          }
-          return true;
-        });
+      // 2. Staff Management filter
+      if (newItem.path && newItem.path.endsWith('/staff') && !hasStaff) {
+        return null;
       }
-      if (!clonedItem.subs || clonedItem.subs.length === 0) return null;
-      return clonedItem;
-    }
 
-    return newItem;
-  }).filter(Boolean);
+      // 3. KOT Panel filter
+      if (newItem.path && newItem.path.endsWith('/kot') && !hasKot) {
+        return null;
+      }
+
+      // 4. POS Orders filter
+      if (newItem.path && newItem.path.endsWith('/order')) {
+        const clonedItem = { ...newItem };
+        if (clonedItem.subs) {
+          clonedItem.subs = clonedItem.subs
+            .map((sub) => ({ ...sub }))
+            .filter((sub) => {
+              if (['/dine-in', '/takeaway', '/delivery'].includes(sub.path) && cashierType !== 'dine-in') {
+                return false;
+              }
+              if (sub.path === '/qsr-pos' && cashierType !== 'qsr') {
+                return false;
+              }
+              return true;
+            });
+        }
+        if (!clonedItem.subs || clonedItem.subs.length === 0) return null;
+        return clonedItem;
+      }
+
+      return newItem;
+    })
+    .filter(Boolean);
 
   return { ...routesObj, mainMenuItems };
 };

@@ -204,17 +204,14 @@ const ViewStaff = () => {
       </div>
     );
   }
-
   return (
-    <div className="view-staff-staff-container pb-5 text-start">
+    <div className="view-staff-staff-container text-start">
       <style>{customStyles}</style>
-      <div className="container-fluid ps-lg-4 pe-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-md-n3">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
             <Col xs="12">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-                Manage Staff
-              </h1>
+              <h1 className="qsr-page-title">Manage Staff</h1>
               <div className="text-muted mt-1 small">Overview of your restaurant team</div>
             </Col>
           </Row>

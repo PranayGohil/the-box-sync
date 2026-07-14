@@ -36,8 +36,8 @@ const AddTable = () => {
 
   const queryParams = new URLSearchParams(location.search);
   const queryArea = queryParams.get('area') || '';
-  const isFromManageTable = (location.state?.fromManageTable || false) || !!queryArea;
-  const prefilledArea = isFromManageTable ? (location.state?.area || queryArea) : '';
+  const isFromManageTable = location.state?.fromManageTable || false || !!queryArea;
+  const prefilledArea = isFromManageTable ? location.state?.area || queryArea : '';
 
   useEffect(() => {
     const fetchDiningAreas = async () => {
@@ -184,14 +184,12 @@ const AddTable = () => {
   };
 
   return (
-    <div className="container-fluid px-lg-5 pb-5">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
-      <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+      <div className="qsr-page-title-container text-start">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto text-start">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>
-              {title}
-            </h1>
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
         </Row>
@@ -235,11 +233,7 @@ const AddTable = () => {
                   <h5 className="fw-bold text-dark mb-4">Table Configuration</h5>
                   <div className="d-flex flex-column gap-3">
                     {formik.values.tables.map((table, index) => (
-                      <div
-                        key={index}
-                        className="p-3 p-md-4 rounded-xl border-0 shadow-sm"
-                        style={{ background: '#f8fafc', borderRadius: '1.25rem' }}
-                      >
+                      <div key={index} className="p-3 p-md-4 rounded-xl border-0 shadow-sm" style={{ background: '#f8fafc', borderRadius: '1.25rem' }}>
                         <Row className="g-2 g-md-3 align-items-end">
                           <Col xs={12} md={5}>
                             <Form.Label className="fw-bold small text-muted mb-1">Table No.</Form.Label>

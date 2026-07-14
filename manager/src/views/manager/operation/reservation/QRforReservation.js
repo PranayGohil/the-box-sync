@@ -85,66 +85,59 @@ const customStyles = `
 `;
 
 const QRforReservation = () => {
-    const { currentUser, setCurrentUser } = useContext(AuthContext);
-    const qrRef = useRef(null);
+  const { currentUser, setCurrentUser } = useContext(AuthContext);
+  const qrRef = useRef(null);
 
-    const existingToken = currentUser?.restaurant_token || currentUser?.feedbackToken || null;
-    const [token, setToken] = useState(existingToken);
-    const [generating, setGenerating] = useState(false);
-    const [copying, setCopying] = useState(false);
-    const [loading, setLoading] = useState(true);
+  const existingToken = currentUser?.restaurant_token || currentUser?.feedbackToken || null;
+  const [token, setToken] = useState(existingToken);
+  const [generating, setGenerating] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-    const reservationUrl = token ? `${LANDING_BASE}/reservation.html?token=${token}` : null;
+  const reservationUrl = token ? `${LANDING_BASE}/reservation.html?token=${token}` : null;
 
-    useEffect(() => {
-        if (currentUser?.restaurant_token) {
-            setToken(currentUser.restaurant_token);
-        }
-        const timer = setTimeout(() => setLoading(false), 500);
-        return () => clearTimeout(timer);
-    }, [currentUser]);
+  useEffect(() => {
+    if (currentUser?.restaurant_token) {
+      setToken(currentUser.restaurant_token);
+    }
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, [currentUser]);
 
-    const handleGenerate = async () => {
-        if (token && !window.confirm(
-            'Regenerating the token will invalidate the existing QR code and URL.\n\n' +
-            'Any printed QR codes will stop working. Continue?'
-        )) return;
+  const handleGenerate = async () => {
+    if (!window.confirm('Regenerating the token will invalidate the existing QR code and URL.\n\nAny printed QR codes will stop working. Continue?')) return;
 
-        setGenerating(true);
-        try {
-            const res = await axios.post(
-                `${API}/reservation/generate-token`,
-                {},
-                { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-            );
-            const newToken = res.data.restaurant_token;
-            setToken(newToken);
-            setCurrentUser?.((u) => ({ ...u, restaurant_token: newToken }));
-            toast.success('New reservation token generated!');
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to generate token.');
-        } finally {
-            setGenerating(false);
-        }
-    };
+    setGenerating(true);
+    try {
+      const res = await axios.post(`${API}/reservation/generate-token`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const newToken = res.data.restaurant_token;
+      setToken(newToken);
+      setCurrentUser?.((u) => ({ ...u, restaurant_token: newToken }));
+      toast.success('New reservation token generated!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to generate token.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
-    const handleCopy = async () => {
-        if (!reservationUrl) return;
-        setCopying(true);
-        try {
-            await navigator.clipboard.writeText(reservationUrl);
-            toast.success('URL copied to clipboard!');
-        } catch {
-            toast.error('Failed to copy URL.');
-        } finally {
-            setTimeout(() => setCopying(false), 600);
-        }
-    };
+  const handleCopy = async () => {
+    if (!reservationUrl) return;
+    setCopying(true);
+    try {
+      await navigator.clipboard.writeText(reservationUrl);
+      toast.success('URL copied to clipboard!');
+    } catch {
+      toast.error('Failed to copy URL.');
+    } finally {
+      setTimeout(() => setCopying(false), 600);
+    }
+  };
 
-    const handlePrint = () => {
-        if (!qrRef.current) return;
-        const win = window.open('', '_blank');
-        win.document.write(`
+  const handlePrint = () => {
+    if (!qrRef.current) return;
+    const win = window.open('', '_blank');
+    win.document.write(`
           <html>
           <head>
             <title>Reservation QR Code — ${currentUser?.name || 'Restaurant'}</title>
@@ -164,140 +157,130 @@ const QRforReservation = () => {
           </body>
           </html>
         `);
-        win.document.close();
-        win.print();
-        win.close();
-    };
+    win.document.close();
+    win.print();
+    win.close();
+  };
 
-    if (loading) {
-        return (
-            <div className="d-flex align-items-center justify-content-center py-5">
-                <Spinner animation="border" style={{ color: '#23b3f4' }} />
-            </div>
-        );
-    }
-
+  if (loading) {
     return (
-        <div className="container-fluid px-lg-5 pb-5">
-            <style>{customStyles}</style>
-
-            <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
-                <Row className="g-0 align-items-center">
-                    <Col xs="auto" className="me-auto text-start">
-                        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>Reservation QR Code</h1>
-                        <div className="text-muted mt-1 small">Generate and share your restaurant's feedback link</div>
-                    </Col>
-                </Row>
-            </div>
-
-            <Row className="justify-content-center mt-5">
-                <Col lg={8} xl={7}>
-                    <Card className="qrfor-reservation-glass-card border-0 overflow-hidden">
-                        <Card.Body className="p-0">
-                            <div className="qrfor-reservation-qr-container-box p-4 p-md-5">
-                                {token ? (
-                                    <>
-                                        <div className="text-center mb-5">
-                                            <h4 className="fw-bold text-dark mb-2">Table Booking QR</h4>
-                                            <p className="text-muted small">Scan the QR code to reserve a table:</p>
-                                        </div>
-
-                                        <div className="qrfor-reservation-qr-frame mb-4" ref={qrRef}>
-                                            <QRCodeSVG
-                                                value={reservationUrl}
-                                                size={220}
-                                                level="H"
-                                                includeMargin={false}
-                                            />
-                                        </div>
-
-                                        <div className="w-100 mb-5 text-center">
-                                            <div className="qrfor-reservation-url-pill d-inline-block px-4 mx-auto shadow-sm">
-                                                <CsLineIcons icon="link" size="14" className="me-2" style={{ color: '#23b3f4' }} />
-                                                {reservationUrl}
-                                            </div>
-                                        </div>
-
-                                        <div className="d-flex flex-column flex-sm-row justify-content-center gap-3 w-100 px-md-5 mb-5">
-                                            <Button
-                                                className="qrfor-reservation-custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-                                                onClick={handlePrint}
-                                                disabled={generating}
-                                            >
-                                                <CsLineIcons icon="print" size="18" />
-                                                Print QR Code
-                                            </Button>
-
-                                            <Button
-                                                className="qrfor-reservation-custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-                                                onClick={handleCopy}
-                                                disabled={copying || generating}
-                                            >
-                                                {copying ? (
-                                                    <>
-                                                        <Spinner animation="border" size="sm" />
-                                                        Copied!
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <CsLineIcons icon="copy" size="18" />
-                                                        Copy URL
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div>
-
-                                        <div className="text-center w-100 pt-4 border-top">
-                                            <Alert variant="warning" className="text-start mx-auto d-flex mb-4" style={{ maxWidth: 480 }}>
-                                                <div className="d-flex align-items-center">
-                                                    <CsLineIcons icon="warning-hexagon" className="me-2 text-warning" />
-                                                </div>
-                                                <small className="text-muted" style={{ fontSize: '0.8rem' }}>
-                                                    <strong>Regenerating</strong> will invalidate this QR code and URL.
-                                                    Update or reprint any physical QR codes after regenerating.
-                                                </small>
-                                            </Alert>
-
-                                            <Button
-                                                className="qrfor-reservation-custom-btn-solid px-5 py-2 d-inline-flex align-items-center gap-2"
-                                                onClick={handleGenerate}
-                                                disabled={generating}
-                                            >
-                                                {generating ? (
-                                                    <>
-                                                        <Spinner animation="border" size="sm" />
-                                                        Generating...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <CsLineIcons icon="refresh-horizontal" size="18" />
-                                                        Regenerate QR Code
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="text-center py-5">
-                                        <CsLineIcons icon="calendar-check" size="48" className="mb-3" style={{ color: '#23b3f4' }} />
-                                        <h5 className="fw-bold">No QR Code Generated</h5>
-                                        <p className="text-muted mb-4">You haven't generated a table booking QR code yet.</p>
-                                        <Button
-                                            className="qrfor-reservation-custom-btn-solid px-5 py-2"
-                                            onClick={handleGenerate}
-                                            disabled={generating}
-                                        >
-                                            {generating ? <Spinner animation="border" size="sm" /> : 'Create Reservation QR Code'}
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </div>
+      <div className="d-flex align-items-center justify-content-center py-5">
+        <Spinner animation="border" style={{ color: '#23b3f4' }} />
+      </div>
     );
+  }
+
+  return (
+    <div className="container-fluid qsr-page-container">
+      <style>{customStyles}</style>
+
+      <div className="qsr-page-title-container text-start">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto text-start">
+            <h1 className="qsr-page-title">Reservation QR Code</h1>
+            <div className="text-muted mt-1 small">Generate and share your restaurant's feedback link</div>
+          </Col>
+        </Row>
+      </div>
+
+      <Row className="justify-content-center mt-5">
+        <Col lg={8} xl={7}>
+          <Card className="qrfor-reservation-glass-card border-0 overflow-hidden">
+            <Card.Body className="p-0">
+              <div className="qrfor-reservation-qr-container-box p-4 p-md-5">
+                {token ? (
+                  <>
+                    <div className="text-center mb-5">
+                      <h4 className="fw-bold text-dark mb-2">Table Booking QR</h4>
+                      <p className="text-muted small">Scan the QR code to reserve a table:</p>
+                    </div>
+
+                    <div className="qrfor-reservation-qr-frame mb-4" ref={qrRef}>
+                      <QRCodeSVG value={reservationUrl} size={220} level="H" includeMargin={false} />
+                    </div>
+
+                    <div className="w-100 mb-5 text-center">
+                      <div className="qrfor-reservation-url-pill d-inline-block px-4 mx-auto shadow-sm">
+                        <CsLineIcons icon="link" size="14" className="me-2" style={{ color: '#23b3f4' }} />
+                        {reservationUrl}
+                      </div>
+                    </div>
+
+                    <div className="d-flex flex-column flex-sm-row justify-content-center gap-3 w-100 px-md-5 mb-5">
+                      <Button
+                        className="qrfor-reservation-custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        onClick={handlePrint}
+                        disabled={generating}
+                      >
+                        <CsLineIcons icon="print" size="18" />
+                        Print QR Code
+                      </Button>
+
+                      <Button
+                        className="qrfor-reservation-custom-btn-outline px-4 py-2 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        onClick={handleCopy}
+                        disabled={copying || generating}
+                      >
+                        {copying ? (
+                          <>
+                            <Spinner animation="border" size="sm" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <CsLineIcons icon="copy" size="18" />
+                            Copy URL
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="text-center w-100 pt-4 border-top">
+                      <Alert variant="warning" className="text-start mx-auto d-flex mb-4" style={{ maxWidth: 480 }}>
+                        <div className="d-flex align-items-center">
+                          <CsLineIcons icon="warning-hexagon" className="me-2 text-warning" />
+                        </div>
+                        <small className="text-muted" style={{ fontSize: '0.8rem' }}>
+                          <strong>Regenerating</strong> will invalidate this QR code and URL. Update or reprint any physical QR codes after regenerating.
+                        </small>
+                      </Alert>
+
+                      <Button
+                        className="qrfor-reservation-custom-btn-solid px-5 py-2 d-inline-flex align-items-center gap-2"
+                        onClick={handleGenerate}
+                        disabled={generating}
+                      >
+                        {generating ? (
+                          <>
+                            <Spinner animation="border" size="sm" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <CsLineIcons icon="refresh-horizontal" size="18" />
+                            Regenerate QR Code
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-5">
+                    <CsLineIcons icon="calendar-check" size="48" className="mb-3" style={{ color: '#23b3f4' }} />
+                    <h5 className="fw-bold">No QR Code Generated</h5>
+                    <p className="text-muted mb-4">You haven't generated a table booking QR code yet.</p>
+                    <Button className="qrfor-reservation-custom-btn-solid px-5 py-2" onClick={handleGenerate} disabled={generating}>
+                      {generating ? <Spinner animation="border" size="sm" /> : 'Create Reservation QR Code'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </div>
+  );
 };
 
 export default QRforReservation;

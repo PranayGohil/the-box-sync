@@ -165,8 +165,6 @@ const TaxAndCharges = () => {
     containerFormik.setFieldValue('containers', updated);
   };
 
-  
-
   if (loading) {
     return (
       <div className="container-fluid py-5 text-center">
@@ -177,26 +175,22 @@ const TaxAndCharges = () => {
   }
 
   return (
-    <div className="container-fluid pb-5">
-      
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
-      
-      <Row className="g-3 align-items-center mb-4 tax-and-charges-page-title-container">
-        <Col xs={12} md={7}>
-          <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-          <BreadcrumbList items={breadcrumbs} />
-        </Col>
-      </Row>
+
+      <div className="qsr-page-title-container">
+        <Row className="g-3 align-items-center">
+          <Col xs={12} md={7}>
+            <h1 className="qsr-page-title">{title}</h1>
+            <BreadcrumbList items={breadcrumbs} />
+          </Col>
+        </Row>
+      </div>
 
       <Row className="g-4">
         {/* GST SECTION */}
         <Col lg={12}>
-          <Formik
-            initialValues={gstProfile}
-            validationSchema={gstValidationSchema}
-            onSubmit={handleGstSubmit}
-            enableReinitialize
-          >
+          <Formik initialValues={gstProfile} validationSchema={gstValidationSchema} onSubmit={handleGstSubmit} enableReinitialize>
             {({ values, errors, touched, handleChange, handleBlur, handleSubmit, resetForm }) => (
               <Form onSubmit={handleSubmit}>
                 <Card className="tax-and-charges-glass-card border-0 mb-4">
@@ -226,7 +220,7 @@ const TaxAndCharges = () => {
                             onChange={(e) => handleChange({ target: { name: 'gst_no', value: e.target.value.toUpperCase() } })}
                             disabled={!gstEditMode || gstSaving}
                             isInvalid={touched.gst_no && errors.gst_no}
-                            className={!gstEditMode ? "bg-light border-0" : ""}
+                            className={!gstEditMode ? 'bg-light border-0' : ''}
                           />
                           <Form.Control.Feedback type="invalid">{errors.gst_no}</Form.Control.Feedback>
                         </Form.Group>
@@ -234,26 +228,56 @@ const TaxAndCharges = () => {
                       <Col xs={4} md={2}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">CGST (%)</Form.Label>
-                          <Form.Control type="number" name="cgst" value={values.cgst} onChange={handleChange} disabled={!gstEditMode || gstSaving} className={!gstEditMode ? "bg-light border-0" : ""} />
+                          <Form.Control
+                            type="number"
+                            name="cgst"
+                            value={values.cgst}
+                            onChange={handleChange}
+                            disabled={!gstEditMode || gstSaving}
+                            className={!gstEditMode ? 'bg-light border-0' : ''}
+                          />
                         </Form.Group>
                       </Col>
                       <Col xs={4} md={2}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">SGST (%)</Form.Label>
-                          <Form.Control type="number" name="sgst" value={values.sgst} onChange={handleChange} disabled={!gstEditMode || gstSaving} className={!gstEditMode ? "bg-light border-0" : ""} />
+                          <Form.Control
+                            type="number"
+                            name="sgst"
+                            value={values.sgst}
+                            onChange={handleChange}
+                            disabled={!gstEditMode || gstSaving}
+                            className={!gstEditMode ? 'bg-light border-0' : ''}
+                          />
                         </Form.Group>
                       </Col>
                       <Col xs={4} md={2}>
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">VAT (%)</Form.Label>
-                          <Form.Control type="number" name="vat" value={values.vat} onChange={handleChange} disabled={!gstEditMode || gstSaving} className={!gstEditMode ? "bg-light border-0" : ""} />
+                          <Form.Control
+                            type="number"
+                            name="vat"
+                            value={values.vat}
+                            onChange={handleChange}
+                            disabled={!gstEditMode || gstSaving}
+                            className={!gstEditMode ? 'bg-light border-0' : ''}
+                          />
                         </Form.Group>
                       </Col>
                     </Row>
 
                     {gstEditMode && (
                       <div className="d-flex tax-and-charges-button-group-responsive gap-3 mt-4">
-                        <Button variant="none" className="tax-and-charges-custom-btn-outline" onClick={() => { resetForm(); setGstEditMode(false); }}>Cancel</Button>
+                        <Button
+                          variant="none"
+                          className="tax-and-charges-custom-btn-outline"
+                          onClick={() => {
+                            resetForm();
+                            setGstEditMode(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
                         <Button variant="none" className="tax-and-charges-custom-btn-outline" type="submit" disabled={gstSaving}>
                           {gstSaving ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size="18" />} Save Tax
                         </Button>
@@ -296,7 +320,7 @@ const TaxAndCharges = () => {
                             value={container.name}
                             onChange={containerFormik.handleChange}
                             disabled={!containerEditMode || containerSaving}
-                            className={!containerEditMode ? "bg-light border-0" : ""}
+                            className={!containerEditMode ? 'bg-light border-0' : ''}
                           />
                         </Form.Group>
                       </Col>
@@ -305,7 +329,14 @@ const TaxAndCharges = () => {
                           <Form.Label className="small fw-bold opacity-75">Volume / Size</Form.Label>
                           <Row className="g-2">
                             <Col xs={6}>
-                              <Form.Control type="number" name={`containers.${index}.sizeValue`} value={container.sizeValue} onChange={containerFormik.handleChange} disabled={!containerEditMode || containerSaving} className={!containerEditMode ? "bg-light border-0" : ""} />
+                              <Form.Control
+                                type="number"
+                                name={`containers.${index}.sizeValue`}
+                                value={container.sizeValue}
+                                onChange={containerFormik.handleChange}
+                                disabled={!containerEditMode || containerSaving}
+                                className={!containerEditMode ? 'bg-light border-0' : ''}
+                              />
                             </Col>
                             <Col xs={6}>
                               {containerEditMode ? (
@@ -336,9 +367,18 @@ const TaxAndCharges = () => {
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Price (₹)</Form.Label>
                           <div className="d-flex gap-2">
-                            <Form.Control type="number" name={`containers.${index}.price`} value={container.price} onChange={containerFormik.handleChange} disabled={!containerEditMode || containerSaving} className={!containerEditMode ? "bg-light border-0" : ""} />
+                            <Form.Control
+                              type="number"
+                              name={`containers.${index}.price`}
+                              value={container.price}
+                              onChange={containerFormik.handleChange}
+                              disabled={!containerEditMode || containerSaving}
+                              className={!containerEditMode ? 'bg-light border-0' : ''}
+                            />
                             {containerEditMode && (
-                              <Button variant="none" className="text-danger p-0" onClick={() => removeContainer(index)}><CsLineIcons icon="bin" size="18" /></Button>
+                              <Button variant="none" className="text-danger p-0" onClick={() => removeContainer(index)}>
+                                <CsLineIcons icon="bin" size="18" />
+                              </Button>
                             )}
                           </div>
                         </Form.Group>
@@ -349,11 +389,18 @@ const TaxAndCharges = () => {
 
                 {containerEditMode && (
                   <div className="mt-4">
-                    <Button variant="none" className="tax-and-charges-custom-btn-outline mb-3 w-100 w-md-auto" onClick={addContainer} disabled={containerSaving}>
+                    <Button
+                      variant="none"
+                      className="tax-and-charges-custom-btn-outline mb-3 w-100 w-md-auto"
+                      onClick={addContainer}
+                      disabled={containerSaving}
+                    >
                       <CsLineIcons icon="plus" size="18" /> Add Type
                     </Button>
                     <div className="d-flex tax-and-charges-button-group-responsive gap-3">
-                      <Button variant="none" className="tax-and-charges-custom-btn-outline" onClick={() => setContainerEditMode(false)}>Cancel</Button>
+                      <Button variant="none" className="tax-and-charges-custom-btn-outline" onClick={() => setContainerEditMode(false)}>
+                        Cancel
+                      </Button>
                       <Button variant="none" className="tax-and-charges-custom-btn-outline" type="submit" disabled={containerSaving}>
                         {containerSaving ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="save" size="18" />} Save Matrix
                       </Button>

@@ -11,17 +11,20 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { enIN } from 'date-fns/locale';
 import { AuthContext } from 'contexts/AuthContext';
 
-
-
 const FilterSelect = ({ value, onChange, options }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
     document.addEventListener('mousedown', handler);
     document.addEventListener('touchstart', handler);
-    return () => { document.removeEventListener('mousedown', handler); document.removeEventListener('touchstart', handler); };
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
   }, []);
 
   const selected = options.find((o) => o.value === value);
@@ -37,9 +40,21 @@ const FilterSelect = ({ value, onChange, options }) => {
           {options.map((opt) => (
             <div
               key={opt.value}
-              className={`sales-report-filter-select-option${opt.value === value ? ' sales-report-is-selected' : ''}${opt.disabled ? ' sales-report-is-disabled' : ''}`}
-              onMouseDown={(e) => { if (opt.disabled) return; e.preventDefault(); onChange(opt.value); setOpen(false); }}
-              onTouchEnd={(e) => { if (opt.disabled) return; e.preventDefault(); onChange(opt.value); setOpen(false); }}
+              className={`sales-report-filter-select-option${opt.value === value ? ' sales-report-is-selected' : ''}${
+                opt.disabled ? ' sales-report-is-disabled' : ''
+              }`}
+              onMouseDown={(e) => {
+                if (opt.disabled) return;
+                e.preventDefault();
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              onTouchEnd={(e) => {
+                if (opt.disabled) return;
+                e.preventDefault();
+                onChange(opt.value);
+                setOpen(false);
+              }}
             >
               {opt.label}
             </div>
@@ -240,14 +255,16 @@ const SalesReport = () => {
         allData.push([]);
         allData.push([]);
       }
-      
+
       if (exportOptions.includeRevenueTrends) {
         allData.push(['REVENUE TRENDS']);
         allData.push(['Date Period', 'Total Revenue', 'Total Orders', 'Order Average']);
-        [...reportData.revenue.data].sort((a, b) => getItemDate(a) - getItemDate(b)).forEach(item => {
-          const orderAvg = item.orderCount > 0 ? item.value / item.orderCount : 0;
-          allData.push([formatTrendDate(item), item.value, item.orderCount, orderAvg]);
-        });
+        [...reportData.revenue.data]
+          .sort((a, b) => getItemDate(a) - getItemDate(b))
+          .forEach((item) => {
+            const orderAvg = item.orderCount > 0 ? item.value / item.orderCount : 0;
+            allData.push([formatTrendDate(item), item.value, item.orderCount, orderAvg]);
+          });
         allData.push([]);
         allData.push([]);
       }
@@ -265,7 +282,7 @@ const SalesReport = () => {
       if (exportOptions.includeOrderTypes) {
         allData.push(['ORDER TYPE BREAKDOWN']);
         allData.push(['Order Type', 'Orders', 'Revenue', 'Percentage']);
-        reportData.orders.data.forEach(order => {
+        reportData.orders.data.forEach((order) => {
           const percentage = ((order.totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1);
           allData.push([order.category, order.count, order.totalRevenue, `${percentage}%`]);
         });
@@ -274,7 +291,7 @@ const SalesReport = () => {
       }
 
       const sheet = XLSX.utils.aoa_to_sheet(allData);
-      
+
       // Auto-size columns slightly for better readability
       const colWidths = [{ wch: 25 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
       sheet['!cols'] = colWidths;
@@ -296,7 +313,7 @@ const SalesReport = () => {
     setExportType('PDF');
     try {
       const doc = new jsPDF();
-      
+
       doc.setFontSize(16);
       doc.text('Sales Report', 105, 15, { align: 'center' });
       doc.setFontSize(10);
@@ -314,51 +331,57 @@ const SalesReport = () => {
           body: [
             ['Total Revenue', formatCurrencyPDF(reportData.revenue.summary.totalRevenue)],
             ['Total Orders', reportData.revenue.summary.totalOrders.toString()],
-            ['Average Order Value', formatCurrencyPDF(reportData.revenue.summary.averageOrderValue)]
+            ['Average Order Value', formatCurrencyPDF(reportData.revenue.summary.averageOrderValue)],
           ],
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeRevenueTrends) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Revenue Trends', 14, currentY);
-        
+
         const revBody = [...reportData.revenue.data]
           .sort((a, b) => getItemDate(a) - getItemDate(b))
-          .map(item => [
-            formatTrendDate(item), 
-            formatCurrencyPDF(item.value), 
+          .map((item) => [
+            formatTrendDate(item),
+            formatCurrencyPDF(item.value),
             item.orderCount.toString(),
-            formatCurrencyPDF(item.orderCount > 0 ? item.value / item.orderCount : 0)
+            formatCurrencyPDF(item.orderCount > 0 ? item.value / item.orderCount : 0),
           ]);
-          
+
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Date Period', 'Total Revenue', 'Total Orders', 'Order Average']],
           body: revBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeTopDishes) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Dish Performance Ranking', 14, currentY);
-        
+
         const dishBody = reportData.dishes.data.map((dish, index) => [
           (index + 1).toString(),
           dish.dishName,
           dish.category || 'Main Course',
           dish.totalQuantity.toString(),
-          formatCurrencyPDF(dish.totalRevenue)
+          formatCurrencyPDF(dish.totalRevenue),
         ]);
 
         autoTable(doc, {
@@ -367,21 +390,24 @@ const SalesReport = () => {
           body: dishBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeOrderTypes) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Order Type Breakdown', 14, currentY);
-        
+
         const typeBody = reportData.orders.data.map((order) => [
           order.category,
           order.count.toString(),
           formatCurrencyPDF(order.totalRevenue),
-          `${((order.totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1)}%`
+          `${((order.totalRevenue / reportData.revenue.summary.totalRevenue) * 100).toFixed(1)}%`,
         ]);
 
         autoTable(doc, {
@@ -390,7 +416,7 @@ const SalesReport = () => {
           body: typeBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
       }
 
@@ -428,11 +454,11 @@ const SalesReport = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid ps-lg-4 pe-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container no-print">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -443,28 +469,22 @@ const SalesReport = () => {
           <Card className="sales-report-interactive-card sales-report-filter-card border-0 mb-4 no-print shadow-sm">
             <Card.Body className="p-4">
               <div className="sales-report-card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Report Filters</h2>
+                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                  Report Filters
+                </h2>
                 <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
               </div>
               <Row className="g-3">
                 <Col xs={12} md={3}>
                   <Form.Group>
                     <Form.Label className="sales-report-stat-label mb-2">Start Date</Form.Label>
-                    <Form.Control
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
+                    <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                   </Form.Group>
                 </Col>
                 <Col xs={12} md={3}>
                   <Form.Group>
                     <Form.Label className="sales-report-stat-label mb-2">End Date</Form.Label>
-                    <Form.Control
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
+                    <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                   </Form.Group>
                 </Col>
                 <Col xs={12} md={2}>
@@ -507,7 +527,11 @@ const SalesReport = () => {
           </Card>
         )}
 
-        {error && <Alert variant="danger" className="mb-4 sales-report-interactive-card border-0">{error}</Alert>}
+        {error && (
+          <Alert variant="danger" className="mb-4 sales-report-interactive-card border-0">
+            {error}
+          </Alert>
+        )}
 
         {reportData && (
           <>
@@ -515,10 +539,20 @@ const SalesReport = () => {
             <Card className="sales-report-interactive-card border-0 mb-4 no-print shadow-sm">
               <Card.Body className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <div className="d-flex gap-3 align-items-center">
-                  <Button variant="outline-success" className="sales-report-custom-btn-outline border-success text-success px-4" onClick={() => handleExportClick('Excel')} disabled={exporting}>
+                  <Button
+                    variant="outline-success"
+                    className="sales-report-custom-btn-outline border-success text-success px-4"
+                    onClick={() => handleExportClick('Excel')}
+                    disabled={exporting}
+                  >
                     <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
                   </Button>
-                  <Button variant="outline-danger" className="sales-report-custom-btn-outline border-danger text-danger px-4" onClick={() => handleExportClick('PDF')} disabled={exporting}>
+                  <Button
+                    variant="outline-danger"
+                    className="sales-report-custom-btn-outline border-danger text-danger px-4"
+                    onClick={() => handleExportClick('PDF')}
+                    disabled={exporting}
+                  >
                     <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
                   </Button>
                 </div>
@@ -559,7 +593,10 @@ const SalesReport = () => {
                         <div className="sales-report-stat-label mb-2">Total Orders</div>
                         <div className="sales-report-stat-value">{reportData.revenue.summary.totalOrders}</div>
                       </div>
-                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}
+                      >
                         <CsLineIcons icon="cart" size="24" style={{ color: '#10b981' }} />
                       </div>
                     </div>
@@ -574,7 +611,10 @@ const SalesReport = () => {
                         <div className="sales-report-stat-label mb-2">Avg Order Value</div>
                         <div className="sales-report-stat-value">{formatCurrency(reportData.revenue.summary.averageOrderValue)}</div>
                       </div>
-                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}>
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}
+                      >
                         <CsLineIcons icon="trend-up" size="24" style={{ color: '#6366f1' }} />
                       </div>
                     </div>
@@ -606,7 +646,9 @@ const SalesReport = () => {
                 <Card className="sales-report-interactive-card border-0 shadow-sm">
                   <Card.Body className="p-4">
                     <div className="sales-report-card-title-container">
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Revenue Trends</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                        Revenue Trends
+                      </h2>
                       <CsLineIcons icon="chart-4" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="table-responsive d-none d-md-block">
@@ -637,17 +679,29 @@ const SalesReport = () => {
                       {sortedRevenueData.map((item, idx) => (
                         <div key={idx} className="p-3 mb-3 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
                           <div className="d-flex justify-content-between align-items-center mb-2 pb-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                            <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{formatTrendDate(item)}</div>
-                            <div className="fw-bold text-primary" style={{ fontSize: '0.95rem' }}>{formatCurrency(item.value)}</div>
+                            <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+                              {formatTrendDate(item)}
+                            </div>
+                            <div className="fw-bold text-primary" style={{ fontSize: '0.95rem' }}>
+                              {formatCurrency(item.value)}
+                            </div>
                           </div>
                           <div className="d-flex justify-content-between align-items-center">
                             <div>
-                              <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Total Orders</span>
-                              <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{item.orderCount}</span>
+                              <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                                Total Orders
+                              </span>
+                              <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+                                {item.orderCount}
+                              </span>
                             </div>
                             <div className="text-end">
-                              <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Order Avg</span>
-                              <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{formatCurrency(item.orderCount > 0 ? item.value / item.orderCount : 0)}</span>
+                              <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                                Order Avg
+                              </span>
+                              <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+                                {formatCurrency(item.orderCount > 0 ? item.value / item.orderCount : 0)}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -661,7 +715,9 @@ const SalesReport = () => {
                 <Card className="sales-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-0">
                     <div className="p-4 sales-report-card-title-container" style={{ marginBottom: '0' }}>
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Dish Performance Ranking</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                        Dish Performance Ranking
+                      </h2>
                       <CsLineIcons icon="burger" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column">
@@ -670,18 +726,24 @@ const SalesReport = () => {
                         return (
                           <div key={idx} className={`px-4 py-3 d-flex align-items-center justify-content-between ${highlightClass}`}>
                             <div className="d-flex align-items-center overflow-hidden">
-                              <div className="sw-4 sh-4 rounded-circle d-flex justify-content-center align-items-center fw-bold me-3 text-muted smaller" 
-                                   style={{ backgroundColor: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.02)' }}>
+                              <div
+                                className="sw-4 sh-4 rounded-circle d-flex justify-content-center align-items-center fw-bold me-3 text-muted smaller"
+                                style={{ backgroundColor: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.02)' }}
+                              >
                                 {idx + 1}
                               </div>
                               <div className="overflow-hidden">
                                 <div className="text-truncate fw-bold small mb-0">{dish.dishName}</div>
-                                <div className="text-muted smaller fw-bold text-truncate" style={{ fontSize: '0.65rem' }}>{dish.category || 'Main Course'}</div>
+                                <div className="text-muted smaller fw-bold text-truncate" style={{ fontSize: '0.65rem' }}>
+                                  {dish.category || 'Main Course'}
+                                </div>
                               </div>
                             </div>
                             <div className="text-end ms-2">
                               <div className="fw-bold small text-primary">{dish.totalQuantity} items</div>
-                              <div className="text-muted smaller fw-bold" style={{ fontSize: '0.65rem' }}>{formatCurrency(dish.totalRevenue)}</div>
+                              <div className="text-muted smaller fw-bold" style={{ fontSize: '0.65rem' }}>
+                                {formatCurrency(dish.totalRevenue)}
+                              </div>
                             </div>
                           </div>
                         );
@@ -695,7 +757,9 @@ const SalesReport = () => {
                 <Card className="sales-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-4">
                     <div className="sales-report-card-title-container">
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Order Type Breakdown</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                        Order Type Breakdown
+                      </h2>
                       <CsLineIcons icon="destination" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column gap-4 mt-3">
@@ -705,11 +769,14 @@ const SalesReport = () => {
                           <div key={idx}>
                             <div className="d-flex justify-content-between align-items-center mb-2">
                               <div className="d-flex align-items-center overflow-hidden">
-                                <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3" style={{ backgroundColor: brandBg }}>
-                                  <CsLineIcons 
-                                    icon={order.category === 'Dine In' ? 'main-course' : order.category === 'Takeaway' ? 'burger' : 'destination'} 
-                                    size="18" 
-                                    style={{ color: brandColor }} 
+                                <div
+                                  className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3"
+                                  style={{ backgroundColor: brandBg }}
+                                >
+                                  <CsLineIcons
+                                    icon={order.category === 'Dine In' ? 'main-course' : order.category === 'Takeaway' ? 'burger' : 'destination'}
+                                    size="18"
+                                    style={{ color: brandColor }}
                                   />
                                 </div>
                                 <div className="overflow-hidden">
@@ -738,7 +805,9 @@ const SalesReport = () => {
       {/* Export Options Modal */}
       <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
         <Modal.Header className="border-0 p-4 pb-0" closeButton>
-          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Export {exportType} Report</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>
+            Export {exportType} Report
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
           <p className="text-muted smaller fw-bold mb-4">Select which sections to include in your generated file.</p>
@@ -748,9 +817,9 @@ const SalesReport = () => {
               { id: 'includeRevenueTrends', label: 'Detailed Revenue Trends', key: 'includeRevenueTrends' },
               { id: 'includeTopDishes', label: 'Top Dish Performance', key: 'includeTopDishes' },
               { id: 'includeOrderTypes', label: 'Order Type Breakdown', key: 'includeOrderTypes' },
-              { id: 'includeCharts', label: 'Charts & Visualizations', key: 'includeCharts' }
-            ].map(option => (
-              <Form.Check 
+              { id: 'includeCharts', label: 'Charts & Visualizations', key: 'includeCharts' },
+            ].map((option) => (
+              <Form.Check
                 key={option.id}
                 type="switch"
                 id={option.id}
@@ -762,8 +831,12 @@ const SalesReport = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0">
-          <Button variant="light" className="sales-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>Close</Button>
-          <Button className="sales-report-custom-btn-outline px-4" onClick={handleExportConfirm}>Start Exporting</Button>
+          <Button variant="light" className="sales-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>
+            Close
+          </Button>
+          <Button className="sales-report-custom-btn-outline px-4" onClick={handleExportConfirm}>
+            Start Exporting
+          </Button>
         </Modal.Footer>
       </Modal>
 

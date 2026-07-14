@@ -526,14 +526,17 @@
 /* Mobile */
 @media (max-width: 1199px) {
   .pos-wrapper {
-    height: auto;
-    overflow: visible;
-    margin: 0;
-    background: transparent;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 84px);
+    overflow: hidden;
+    margin: 12px -15px -24px !important;
+    background: #f1f5f9;
   }
   .pos-body {
     flex-direction: column;
-    overflow: visible;
+    flex: 1;
+    overflow: hidden;
   }
   .pos-order-panel {
     width: 100%;
@@ -541,33 +544,84 @@
     border-top: 1px solid rgba(226, 232, 240, 0.9);
   }
   .pos-menu-area {
-    min-height: 60vh;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
   }
   .pos-menu-grid {
-    max-height: 55vh;
+    flex: 1;
+    max-height: none;
+    overflow-y: auto;
+    padding-bottom: 90px;
   }
   .pos-topbar {
     padding: 10px 12px;
     gap: 8px;
   }
   .pos-title {
-    font-size: 16px;
+    font-size: 15px;
+  }
+  .pos-back-btn {
+    padding: 0 !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
   }
   .pos-menu-filters {
     padding: 8px 10px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
   }
   .pos-categories-btn {
     order: 1;
+    height: 30px !important;
+    padding: 0 0.6rem !important;
+    font-size: 11px !important;
+    display: inline-flex !important;
+    align-items: center !important;
   }
   .pos-search-wrap {
     order: 3;
-    width: 100%;
-    margin-top: 8px;
+    width: auto;
+    margin-top: 0;
+    flex: 1;
+  }
+  .pos-search-wrap .search-icon {
+    left: 8px !important;
+  }
+  .pos-search-clear {
+    right: 6px !important;
+  }
+  .pos-search-input {
+    height: 30px !important;
+    font-size: 11px !important;
+    padding-left: 28px !important;
+    padding-right: 22px !important;
   }
   .pos-item-count {
     order: 2;
-    margin-left: auto;
+    margin-left: 0;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 767px) {
+  .pos-wrapper {
+    margin-left: -12px !important;
+    margin-right: -12px !important;
+  }
+}
+
+@media (max-width: 575px) {
+  .pos-wrapper {
+    margin-left: -12px !important;
+    margin-right: -12px !important;
   }
 }
 

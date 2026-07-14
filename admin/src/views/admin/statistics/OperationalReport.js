@@ -10,8 +10,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthContext } from 'contexts/AuthContext';
 
-
-
 const OperationalReport = () => {
   const brandColor = '#23b3f4';
   const brandBg = 'rgba(35, 179, 244, 0.08)';
@@ -155,15 +153,7 @@ const OperationalReport = () => {
 
         reportData.waiterPerformance.forEach((waiter, idx) => {
           const performance = waiter.totalRevenue >= avgRevenue * 1.2 ? 'Excellent' : waiter.totalRevenue >= avgRevenue * 0.8 ? 'Good' : 'Needs Improvement';
-          allData.push([
-            idx + 1,
-            waiter.waiter,
-            waiter.totalOrders,
-            waiter.totalRevenue,
-            waiter.avgOrderValue,
-            waiter.tablesServed,
-            performance,
-          ]);
+          allData.push([idx + 1, waiter.waiter, waiter.totalOrders, waiter.totalRevenue, waiter.avgOrderValue, waiter.tablesServed, performance]);
         });
         allData.push([]);
         allData.push([]);
@@ -230,7 +220,7 @@ const OperationalReport = () => {
 
       const sheet = XLSX.utils.aoa_to_sheet(allData);
       sheet['!cols'] = [{ wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
-      
+
       XLSX.utils.book_append_sheet(wb, sheet, 'Operational Report');
 
       XLSX.writeFile(wb, `Operational_Report_${startDate}_to_${endDate}.xlsx`);
@@ -253,7 +243,7 @@ const OperationalReport = () => {
     setExportType('PDF');
     try {
       const doc = new jsPDF();
-      
+
       const busiestHour = getBusiestHour();
       const busiestDay = getBusiestDay();
 
@@ -279,16 +269,19 @@ const OperationalReport = () => {
           ],
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeWaiterPerformance && reportData.waiterPerformance?.length > 0) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Staff Performance Ranking', 14, currentY);
-        
+
         const avgRevenue = reportData.waiterPerformance.reduce((sum, w) => sum + w.totalRevenue, 0) / reportData.waiterPerformance.length;
 
         const waiterBody = reportData.waiterPerformance.map((waiter, index) => {
@@ -300,7 +293,7 @@ const OperationalReport = () => {
             formatCurrencyPDF(waiter.totalRevenue),
             formatCurrencyPDF(waiter.avgOrderValue),
             waiter.tablesServed.toString(),
-            performance
+            performance,
           ];
         });
 
@@ -310,24 +303,29 @@ const OperationalReport = () => {
           body: waiterBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeTablePerformance && reportData.tablePerformance?.length > 0) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Table Utilization Matrix', 14, currentY);
-        
-        const tableBody = reportData.tablePerformance.slice(0, 50).map((table, index) => [
-          (index + 1).toString(),
-          table.tableNo,
-          table.tableArea || 'GENERAL',
-          table.orderCount.toString(),
-          formatCurrencyPDF(table.totalRevenue),
-          table.totalPersons.toString()
-        ]);
+
+        const tableBody = reportData.tablePerformance
+          .slice(0, 50)
+          .map((table, index) => [
+            (index + 1).toString(),
+            table.tableNo,
+            table.tableArea || 'GENERAL',
+            table.orderCount.toString(),
+            formatCurrencyPDF(table.totalRevenue),
+            table.totalPersons.toString(),
+          ]);
 
         autoTable(doc, {
           startY: currentY + 5,
@@ -335,27 +333,25 @@ const OperationalReport = () => {
           body: tableBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includePeakHours && reportData.peakHours?.length > 0) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Hourly Load Analysis', 14, currentY);
-        
+
         const maxOrders = Math.max(...reportData.peakHours.map((h) => h.orderCount));
-        
-        const hoursBody = reportData.peakHours.map(hour => {
+
+        const hoursBody = reportData.peakHours.map((hour) => {
           const activityPercent = maxOrders > 0 ? (hour.orderCount / maxOrders) * 100 : 0;
           const activityLevel = activityPercent >= 80 ? 'Peak' : activityPercent >= 50 ? 'Busy' : activityPercent >= 25 ? 'Moderate' : 'Slow';
-          return [
-            `${hour.hour}:00 - ${hour.hour + 1}:00`,
-            hour.orderCount.toString(),
-            formatCurrencyPDF(hour.totalRevenue),
-            activityLevel
-          ];
+          return [`${hour.hour}:00 - ${hour.hour + 1}:00`, hour.orderCount.toString(), formatCurrencyPDF(hour.totalRevenue), activityLevel];
         });
 
         autoTable(doc, {
@@ -364,21 +360,24 @@ const OperationalReport = () => {
           body: hoursBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeDayOfWeek && reportData.dayOfWeekAnalysis?.length > 0) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Weekly Performance', 14, currentY);
-        
-        const dayBody = reportData.dayOfWeekAnalysis.map(day => [
+
+        const dayBody = reportData.dayOfWeekAnalysis.map((day) => [
           day.dayName,
           day.orderCount.toString(),
           formatCurrencyPDF(day.totalRevenue),
-          formatCurrencyPDF(day.avgOrderValue)
+          formatCurrencyPDF(day.avgOrderValue),
         ]);
 
         autoTable(doc, {
@@ -387,22 +386,25 @@ const OperationalReport = () => {
           body: dayBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
         currentY = doc.lastAutoTable.finalY + 15;
       }
 
       if (exportOptions.includeAreaPerformance && reportData.areaPerformance?.length > 0) {
-        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
         doc.setFontSize(12);
         doc.text('Area Performance Analytics', 14, currentY);
-        
-        const areaBody = reportData.areaPerformance.map(area => [
+
+        const areaBody = reportData.areaPerformance.map((area) => [
           area.area,
           area.tableCount.toString(),
           area.orderCount.toString(),
           formatCurrencyPDF(area.totalRevenue),
-          formatCurrencyPDF(area.avgOrderValue)
+          formatCurrencyPDF(area.avgOrderValue),
         ]);
 
         autoTable(doc, {
@@ -411,7 +413,7 @@ const OperationalReport = () => {
           body: areaBody,
           theme: 'grid',
           headStyles: { fillColor: [35, 179, 244] },
-          margin: { bottom: 15 }
+          margin: { bottom: 15 },
         });
       }
 
@@ -457,11 +459,11 @@ const OperationalReport = () => {
   return (
     <>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid ps-lg-4 pe-lg-5">
-        <div className="page-title-container mb-4 mt-5 mt-lg-0 no-print">
+      <div className="container-fluid qsr-page-container">
+        <div className="qsr-page-title-container no-print">
           <Row className="g-0 align-items-center">
             <Col xs="auto" className="me-auto">
-              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: brandColor }}>{title}</h1>
+              <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
           </Row>
@@ -471,7 +473,9 @@ const OperationalReport = () => {
           <Card className="operational-report-interactive-card border-0 mb-4 no-print shadow-sm">
             <Card.Body className="p-4">
               <div className="operational-report-card-title-container">
-                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Operational Parameters</h2>
+                <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                  Operational Parameters
+                </h2>
                 <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
               </div>
               <Row className="g-3 align-items-end">
@@ -494,7 +498,11 @@ const OperationalReport = () => {
           </Card>
         )}
 
-        {error && <Alert variant="danger" className="mb-4 operational-report-interactive-card border-0">{error}</Alert>}
+        {error && (
+          <Alert variant="danger" className="mb-4 operational-report-interactive-card border-0">
+            {error}
+          </Alert>
+        )}
 
         {reportData && (
           <>
@@ -502,10 +510,20 @@ const OperationalReport = () => {
             <Card className="operational-report-interactive-card border-0 mb-4 no-print shadow-sm">
               <Card.Body className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <div className="d-flex gap-3 align-items-center">
-                  <Button variant="outline-success" className="operational-report-custom-btn-outline border-success text-success px-4" onClick={() => handleExportClick('Excel')} disabled={exporting}>
+                  <Button
+                    variant="outline-success"
+                    className="operational-report-custom-btn-outline border-success text-success px-4"
+                    onClick={() => handleExportClick('Excel')}
+                    disabled={exporting}
+                  >
                     <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
                   </Button>
-                  <Button variant="outline-danger" className="operational-report-custom-btn-outline border-danger text-danger px-4" onClick={() => handleExportClick('PDF')} disabled={exporting}>
+                  <Button
+                    variant="outline-danger"
+                    className="operational-report-custom-btn-outline border-danger text-danger px-4"
+                    onClick={() => handleExportClick('PDF')}
+                    disabled={exporting}
+                  >
                     <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
                   </Button>
                 </div>
@@ -513,7 +531,9 @@ const OperationalReport = () => {
                   <div className="flex-grow-1 ms-md-4 mt-3 mt-md-0">
                     <div className="d-flex align-items-center mb-2">
                       <Spinner animation="border" size="sm" className="me-2" style={{ color: brandColor }} />
-                      <span className="smaller fw-bold text-muted">Generating {exportType}... {exportProgress}%</span>
+                      <span className="smaller fw-bold text-muted">
+                        Generating {exportType}... {exportProgress}%
+                      </span>
                     </div>
                     <ProgressBar now={exportProgress} className="progress-sm" variant="info" style={{ height: '6px' }} />
                   </div>
@@ -548,7 +568,10 @@ const OperationalReport = () => {
                         <div className="operational-report-stat-value text-warning">{busiestHour ? `${busiestHour.hour}:00` : 'N/A'}</div>
                         <div className="smaller text-muted fw-bold mt-1">{busiestHour ? `${busiestHour.orderCount} orders` : 'No data'}</div>
                       </div>
-                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}
+                      >
                         <CsLineIcons icon="clock" size="24" style={{ color: '#f59e0b' }} />
                       </div>
                     </div>
@@ -564,7 +587,10 @@ const OperationalReport = () => {
                         <div className="operational-report-stat-value text-success">{busiestDay ? busiestDay.dayName : 'N/A'}</div>
                         <div className="smaller text-muted fw-bold mt-1">{busiestDay ? `${busiestDay.orderCount} orders` : 'No data'}</div>
                       </div>
-                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}
+                      >
                         <CsLineIcons icon="calendar" size="24" style={{ color: '#10b981' }} />
                       </div>
                     </div>
@@ -580,7 +606,10 @@ const OperationalReport = () => {
                         <div className="operational-report-stat-value text-info">{reportData.tablePerformance?.length || 0}</div>
                         <div className="smaller text-muted fw-bold mt-1">Tables served</div>
                       </div>
-                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)' }}>
+                      <div
+                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
+                        style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)' }}
+                      >
                         <CsLineIcons icon="layout-5" size="24" style={{ color: '#06b6d4' }} />
                       </div>
                     </div>
@@ -593,7 +622,9 @@ const OperationalReport = () => {
             <Card className="operational-report-interactive-card border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
                 <div className="operational-report-card-title-container">
-                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Staff Performance Ranking</h2>
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                    Staff Performance Ranking
+                  </h2>
                   <CsLineIcons icon="star" size="18" style={{ color: brandColor }} />
                 </div>
                 <div className="table-responsive mt-3">
@@ -612,17 +643,26 @@ const OperationalReport = () => {
                     <tbody>
                       {reportData.waiterPerformance.map((waiter, idx) => {
                         const avgRevenue = reportData.waiterPerformance.reduce((sum, w) => sum + w.totalRevenue, 0) / reportData.waiterPerformance.length;
-                        const performance = waiter.totalRevenue >= avgRevenue * 1.2 ? 'excellent' : waiter.totalRevenue >= avgRevenue * 0.8 ? 'good' : 'needs-improvement';
+                        const performance =
+                          waiter.totalRevenue >= avgRevenue * 1.2 ? 'excellent' : waiter.totalRevenue >= avgRevenue * 0.8 ? 'good' : 'needs-improvement';
                         return (
                           <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
-                            <td className="py-3"><Badge bg={idx < 3 ? 'primary' : 'light'} className={`rounded-pill px-3 py-2 ${idx < 3 ? '' : 'text-dark'}`}>{idx + 1}</Badge></td>
+                            <td className="py-3">
+                              <Badge bg={idx < 3 ? 'primary' : 'light'} className={`rounded-pill px-3 py-2 ${idx < 3 ? '' : 'text-dark'}`}>
+                                {idx + 1}
+                              </Badge>
+                            </td>
                             <td className="py-3 fw-bold text-dark">{waiter.waiter}</td>
                             <td className="py-3 text-end fw-bold text-muted smaller">{waiter.totalOrders}</td>
                             <td className="py-3 text-end fw-bold text-primary">{formatCurrency(waiter.totalRevenue)}</td>
                             <td className="py-3 text-end fw-bold text-dark smaller d-none d-md-table-cell">{formatCurrency(waiter.avgOrderValue)}</td>
                             <td className="py-3 text-end fw-bold text-muted smaller d-none d-lg-table-cell">{waiter.tablesServed}</td>
                             <td className="py-3 text-center d-none d-sm-table-cell">
-                              <Badge bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'warning'} className="rounded-pill px-3 py-2 fw-bold" style={{ fontSize: '0.65rem' }}>
+                              <Badge
+                                bg={performance === 'excellent' ? 'success' : performance === 'good' ? 'info' : 'warning'}
+                                className="rounded-pill px-3 py-2 fw-bold"
+                                style={{ fontSize: '0.65rem' }}
+                              >
                                 {performance === 'excellent' ? '⭐ TOP PERFORMER' : performance === 'good' ? '👍 STABLE' : '📈 IMPROVING'}
                               </Badge>
                             </td>
@@ -639,7 +679,9 @@ const OperationalReport = () => {
             <Card className="operational-report-interactive-card border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
                 <div className="operational-report-card-title-container">
-                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Table Utilization Matrix</h2>
+                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                    Table Utilization Matrix
+                  </h2>
                   <CsLineIcons icon="grid-5" size="18" style={{ color: brandColor }} />
                 </div>
                 <div className="table-responsive mt-3">
@@ -659,7 +701,11 @@ const OperationalReport = () => {
                       {reportData.tablePerformance.map((table, idx) => (
                         <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                           <td className="py-3 fw-bold text-dark">{table.tableNo}</td>
-                          <td className="py-3 d-none d-sm-table-cell"><Badge bg="light" className="text-dark rounded-pill px-3 py-2 smaller">{table.tableArea || 'GENERAL'}</Badge></td>
+                          <td className="py-3 d-none d-sm-table-cell">
+                            <Badge bg="light" className="text-dark rounded-pill px-3 py-2 smaller">
+                              {table.tableArea || 'GENERAL'}
+                            </Badge>
+                          </td>
                           <td className="py-3 text-end fw-bold text-muted smaller">{table.orderCount}</td>
                           <td className="py-3 text-end fw-bold text-success">{formatCurrency(table.totalRevenue)}</td>
                           <td className="py-3 text-end fw-bold text-dark smaller d-none d-md-table-cell">{formatCurrency(table.avgOrderValue)}</td>
@@ -679,18 +725,22 @@ const OperationalReport = () => {
                 <Card className="operational-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-4">
                     <div className="operational-report-card-title-container">
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Hourly Load Analysis</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                        Hourly Load Analysis
+                      </h2>
                       <CsLineIcons icon="activity" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column gap-3 mt-3">
                       {reportData.peakHours.map((hour, idx) => {
-                        const maxOrders = Math.max(...reportData.peakHours.map(h => h.orderCount));
+                        const maxOrders = Math.max(...reportData.peakHours.map((h) => h.orderCount));
                         const activityPercent = (hour.orderCount / maxOrders) * 100;
                         const level = activityPercent >= 80 ? 'danger' : activityPercent >= 50 ? 'warning' : 'info';
                         return (
                           <div key={idx}>
                             <div className="d-flex justify-content-between align-items-center mb-1">
-                              <span className="smaller fw-bold text-dark">{hour.hour}:00 - {hour.hour + 1}:00</span>
+                              <span className="smaller fw-bold text-dark">
+                                {hour.hour}:00 - {hour.hour + 1}:00
+                              </span>
                               <span className={`smaller fw-bold text-${level}`}>{hour.orderCount} Orders</span>
                             </div>
                             <ProgressBar now={activityPercent} variant={level} className="progress-sm" style={{ height: '4px' }} />
@@ -706,14 +756,16 @@ const OperationalReport = () => {
                 <Card className="operational-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-4">
                     <div className="operational-report-card-title-container">
-                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Weekly Performance</h2>
+                      <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                        Weekly Performance
+                      </h2>
                       <CsLineIcons icon="trend-up" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column gap-4 mt-3">
                       {(() => {
                         if (!reportData.dayOfWeekAnalysis || reportData.dayOfWeekAnalysis.length === 0) return null;
                         const avgRevenue = reportData.dayOfWeekAnalysis.reduce((sum, d) => sum + d.totalRevenue, 0) / reportData.dayOfWeekAnalysis.length;
-                        
+
                         return reportData.dayOfWeekAnalysis.map((day, idx) => {
                           const isBest = day.totalRevenue >= avgRevenue * 1.2;
                           const isSlow = day.totalRevenue < avgRevenue * 0.8;
@@ -724,7 +776,10 @@ const OperationalReport = () => {
                           return (
                             <div key={idx} className="d-flex align-items-center justify-content-between">
                               <div className="d-flex align-items-center overflow-hidden">
-                                <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0" style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                                <div
+                                  className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0"
+                                  style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
+                                >
                                   <span className="fw-bold smaller text-muted">{day.dayName.substring(0, 1)}</span>
                                 </div>
                                 <div className="overflow-hidden">
@@ -734,7 +789,9 @@ const OperationalReport = () => {
                               </div>
                               <div className="text-end ms-2 flex-shrink-0">
                                 <div className="fw-bold text-primary smaller">{formatCurrency(day.totalRevenue)}</div>
-                                <Badge bg={badgeBg} className={`rounded-pill px-2 py-1 ${textClass}`} style={{ fontSize: '0.6rem' }}>{badgeText}</Badge>
+                                <Badge bg={badgeBg} className={`rounded-pill px-2 py-1 ${textClass}`} style={{ fontSize: '0.6rem' }}>
+                                  {badgeText}
+                                </Badge>
                               </div>
                             </div>
                           );
@@ -751,19 +808,26 @@ const OperationalReport = () => {
               <Card className="operational-report-interactive-card border-0 shadow-sm mb-4">
                 <Card.Body className="p-4">
                   <div className="operational-report-card-title-container">
-                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>Area Performance Analytics</h2>
+                    <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                      Area Performance Analytics
+                    </h2>
                     <CsLineIcons icon="pin" size="18" style={{ color: brandColor }} />
                   </div>
                   <Row className="g-3 mt-1">
                     {reportData.areaPerformance.map((area, idx) => (
                       <Col lg="4" key={idx}>
-                        <Card className="operational-report-interactive-card border-0 p-3 h-100" style={{ background: 'rgba(0,0,0,0.01) !important', border: '1px solid rgba(0,0,0,0.05) !important' }}>
+                        <Card
+                          className="operational-report-interactive-card border-0 p-3 h-100"
+                          style={{ background: 'rgba(0,0,0,0.01) !important', border: '1px solid rgba(0,0,0,0.05) !important' }}
+                        >
                           <div className="d-flex justify-content-between align-items-start mb-3">
                             <div>
                               <div className="fw-bold text-dark mb-0">{area.area}</div>
                               <div className="smaller text-muted fw-bold">{area.tableCount} Tables</div>
                             </div>
-                            <Badge bg="primary" style={{ backgroundColor: brandColor }}>{area.orderCount} orders</Badge>
+                            <Badge bg="primary" style={{ backgroundColor: brandColor }}>
+                              {area.orderCount} orders
+                            </Badge>
                           </div>
                           <div className="d-flex justify-content-between mb-1">
                             <span className="smaller text-muted fw-bold">Revenue:</span>
@@ -787,20 +851,22 @@ const OperationalReport = () => {
       {/* Export Modal */}
       <Modal show={showExportModal} onHide={() => setShowExportModal(false)} centered contentClassName="interactive-card border-0 shadow-lg">
         <Modal.Header className="border-0 p-4 pb-0" closeButton>
-          <Modal.Title className="fw-bold" style={{ color: brandColor }}>Operational Intelligence Export</Modal.Title>
+          <Modal.Title className="fw-bold" style={{ color: brandColor }}>
+            Operational Intelligence Export
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
           <p className="text-muted smaller fw-bold mb-4">Select performance modules to include in your {exportType} analysis.</p>
           <Form className="d-flex flex-column gap-3">
-             {[
+            {[
               { label: 'Staff Performance Ranking', key: 'includeWaiterPerformance' },
               { label: 'Table Utilization Matrix', key: 'includeTablePerformance' },
               { label: 'Peak Hourly Load Analysis', key: 'includePeakHours' },
               { label: 'Weekly Performance Trends', key: 'includeDayOfWeek' },
               { label: 'Area Optimization Data', key: 'includeAreaPerformance' },
-              { label: 'Executive Insights', key: 'includeInsights' }
-            ].map(option => (
-              <Form.Check 
+              { label: 'Executive Insights', key: 'includeInsights' },
+            ].map((option) => (
+              <Form.Check
                 key={option.key}
                 type="switch"
                 id={option.key}
@@ -812,8 +878,12 @@ const OperationalReport = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0">
-          <Button variant="light" className="operational-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>Cancel</Button>
-          <Button className="operational-report-custom-btn-outline px-4" onClick={handleExportConfirm}>Generate Intelligence Report</Button>
+          <Button variant="light" className="operational-report-custom-btn-outline border-0 text-muted" onClick={() => setShowExportModal(false)}>
+            Cancel
+          </Button>
+          <Button className="operational-report-custom-btn-outline px-4" onClick={handleExportConfirm}>
+            Generate Intelligence Report
+          </Button>
         </Modal.Footer>
       </Modal>
 

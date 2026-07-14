@@ -12,7 +12,6 @@ import EditDishModal from './EditDishModal';
 import EditDishCategoryModal from './EditDishCategoryModal';
 import DeleteDishModal from './DeleteDishModal';
 
-
 const ManageMenu = () => {
   const title = 'Manage Menu';
   const description = 'Dynamic menu table with search and pagination';
@@ -41,9 +40,9 @@ const ManageMenu = () => {
   const [expandedCategories, setExpandedCategories] = useState({});
 
   const toggleCategory = (catId) => {
-    setExpandedCategories(prev => ({
+    setExpandedCategories((prev) => ({
       ...prev,
-      [catId]: !prev[catId]
+      [catId]: !prev[catId],
     }));
   };
 
@@ -162,7 +161,7 @@ const ManageMenu = () => {
   }
 
   return (
-    <div className="container-fluid px-lg-5 pb-5">
+    <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
       <style>{`
         .hover-elevate {
@@ -179,24 +178,18 @@ const ManageMenu = () => {
           background-color: #f8fafc !important;
         }
       `}</style>
-      <div className="page-title-container mb-4 mt-5 mt-lg-0 text-start">
+      <div className="qsr-page-title-container text-start">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto text-start">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#23b3f4' }}>{title}</h1>
+            <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col xs="12" md="5" className="d-flex flex-column flex-sm-row justify-content-md-end gap-2 mt-3 mt-md-0">
-            <Button
-              onClick={() => history.push('/operations/qr-for-menu')}
-              className="manage-menu-custom-btn-outline shadow-sm border-0"
-            >
+            <Button onClick={() => history.push('/operations/qr-for-menu')} className="manage-menu-custom-btn-outline shadow-sm border-0">
               <CsLineIcons icon="bookmark" className="me-2" size="18" />
               QR for Menu
             </Button>
-            <Button
-              onClick={() => history.push('/operations/add-dish')}
-              className="manage-menu-custom-btn-outline shadow-sm border-0"
-            >
+            <Button onClick={() => history.push('/operations/add-dish')} className="manage-menu-custom-btn-outline shadow-sm border-0">
               <CsLineIcons icon="plus" className="me-2" size="18" />
               Add New Dish
             </Button>
@@ -229,7 +222,14 @@ const ManageMenu = () => {
                 { value: 'non-veg', label: 'Non-Veg Only' },
                 { value: 'egg', label: 'Contains Egg' },
               ]}
-              value={filters.meal_type ? { value: filters.meal_type, label: filters.meal_type === 'veg' ? 'Veg Only' : filters.meal_type === 'non-veg' ? 'Non-Veg Only' : 'Contains Egg' } : { value: '', label: 'All Meal Types' }}
+              value={
+                filters.meal_type
+                  ? {
+                      value: filters.meal_type,
+                      label: filters.meal_type === 'veg' ? 'Veg Only' : filters.meal_type === 'non-veg' ? 'Non-Veg Only' : 'Contains Egg',
+                    }
+                  : { value: '', label: 'All Meal Types' }
+              }
               onChange={(selected) => handleFilter('meal_type', selected ? selected.value : '')}
               placeholder="Meal Type"
               styles={{
@@ -256,7 +256,7 @@ const ManageMenu = () => {
           <Col xs={12} sm={6} md={3}>
             <Select
               classNamePrefix="react-select"
-              options={[{ value: '', label: 'All Categories' }, ...categoryOptions.map(cat => ({ value: cat, label: cat }))]}
+              options={[{ value: '', label: 'All Categories' }, ...categoryOptions.map((cat) => ({ value: cat, label: cat }))]}
               value={filters.category ? { value: filters.category, label: filters.category } : { value: '', label: 'All Categories' }}
               onChange={(selected) => handleFilter('category', selected ? selected.value : '')}
               placeholder="Category"
@@ -316,9 +316,14 @@ const ManageMenu = () => {
                   >
                     <CsLineIcons icon="folder" size="16" />
                   </div>
-                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '100%' }}>{category.category}</h2>
+                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '100%' }}>
+                    {category.category}
+                  </h2>
                 </div>
-                <div className="d-flex align-items-center justify-content-between justify-content-sm-end gap-2 w-100 w-sm-auto mt-2 mt-sm-0 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="d-flex align-items-center justify-content-between justify-content-sm-end gap-2 w-100 w-sm-auto mt-2 mt-sm-0 flex-shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Badge
                     bg="none"
                     className="rounded-pill px-2 px-sm-3 py-2 flex-shrink-0"
@@ -331,7 +336,10 @@ const ManageMenu = () => {
                       variant="light"
                       size="sm"
                       className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 flex-shrink-0"
-                      onClick={() => { setSelectedCategory(category); setEditCategoryModalShow(true); }}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setEditCategoryModalShow(true);
+                      }}
                       title="Edit Category"
                     >
                       <CsLineIcons icon="edit" size="15" />
@@ -340,7 +348,14 @@ const ManageMenu = () => {
                       variant="light"
                       size="sm"
                       className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-primary flex-shrink-0"
-                      onClick={() => history.push('/operations/add-dish', { category: category.category, counter: category.counter, hide_on_kot: category.hide_on_kot, fromManageMenu: true })}
+                      onClick={() =>
+                        history.push('/operations/add-dish', {
+                          category: category.category,
+                          counter: category.counter,
+                          hide_on_kot: category.hide_on_kot,
+                          fromManageMenu: true,
+                        })
+                      }
                       title="Add Dish to Category"
                     >
                       <CsLineIcons icon="plus" size="15" />
@@ -357,19 +372,24 @@ const ManageMenu = () => {
                       <Col xs={12} sm={6} md={4} lg={3} xxl={2} key={dish.id || dish._id}>
                         <div className="pos-menu-card h-100 position-relative">
                           {/* Meal-type dot — identical to MenuGrid */}
-                          <div className={`pos-type-dot ${(dish.meal_type || 'veg') === 'veg' ? 'veg-dot' : (dish.meal_type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'}`} style={{ left: '8px' }} />
+                          <div
+                            className={`pos-type-dot ${
+                              (dish.meal_type || 'veg') === 'veg' ? 'veg-dot' : (dish.meal_type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'
+                            }`}
+                            style={{ left: '8px' }}
+                          />
 
                           {/* Management buttons — absolute top-right overlay, icon-only, ManageTable link style */}
-                          <div
-                            className="position-absolute d-flex gap-1"
-                            style={{ top: '6px', right: '6px', zIndex: 2 }}
-                          >
+                          <div className="position-absolute d-flex gap-1" style={{ top: '6px', right: '6px', zIndex: 2 }}>
                             <Button
                               variant="link"
                               size="sm"
                               className="btn-icon btn-icon-only shadow-sm rounded-circle border-0"
                               style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
-                              onClick={() => { setSelectedDish(dish); setEditMenuModalShow(true); }}
+                              onClick={() => {
+                                setSelectedDish(dish);
+                                setEditMenuModalShow(true);
+                              }}
                               title="Edit Dish"
                             >
                               <CsLineIcons icon="edit" size="14" />
@@ -379,7 +399,10 @@ const ManageMenu = () => {
                               size="sm"
                               className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-danger"
                               style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
-                              onClick={() => { setDishToDelete(dish); setDeleteDishModalShow(true); }}
+                              onClick={() => {
+                                setDishToDelete(dish);
+                                setDeleteDishModalShow(true);
+                              }}
                               title="Delete Dish"
                             >
                               <CsLineIcons icon="bin" size="14" />
@@ -406,22 +429,22 @@ const ManageMenu = () => {
                           <div className="pos-menu-details">
                             {dish.is_special && (
                               <div className="pos-special-star">
-                                <span role="img" aria-label="special">⭐</span>
+                                <span role="img" aria-label="special">
+                                  ⭐
+                                </span>
                               </div>
                             )}
-                            <div className="pos-dish-name">
-                              {dish.dish_name}
-                            </div>
+                            <div className="pos-dish-name">{dish.dish_name}</div>
 
                             {/* Price: range for variants, flat otherwise */}
                             <div className="pos-dish-price">
                               {dish.has_variants && Array.isArray(dish.variants) && dish.variants.length > 0
                                 ? (() => {
-                                  const prices = dish.variants.map((v) => Number(v.price) || 0);
-                                  const min = Math.min(...prices);
-                                  const max = Math.max(...prices);
-                                  return min === max ? `₹${min}` : `₹${min} – ₹${max}`;
-                                })()
+                                    const prices = dish.variants.map((v) => Number(v.price) || 0);
+                                    const min = Math.min(...prices);
+                                    const max = Math.max(...prices);
+                                    return min === max ? `₹${min}` : `₹${min} – ₹${max}`;
+                                  })()
                                 : `₹${dish.dish_price || 0}`}
                             </div>
 
@@ -430,7 +453,11 @@ const ManageMenu = () => {
                               <div className="text-muted mt-1" style={{ fontSize: '10px', lineHeight: '1.4' }}>
                                 {dish.variants.map((v, idx) => (
                                   <div key={idx} className="d-flex gap-1 align-items-baseline flex-wrap">
-                                    {v.size_name && <span className="fw-semibold" style={{ color: '#334155' }}>{v.size_name}:</span>}
+                                    {v.size_name && (
+                                      <span className="fw-semibold" style={{ color: '#334155' }}>
+                                        {v.size_name}:
+                                      </span>
+                                    )}
                                     <span style={{ color: '#23b3f4', fontWeight: 700 }}>₹{v.price}</span>
                                     {v.extra && <span style={{ fontStyle: 'italic', fontSize: '9px', color: '#94a3b8' }}>({v.extra})</span>}
                                   </div>
@@ -440,7 +467,10 @@ const ManageMenu = () => {
 
                             {/* Customizable label (matches MenuGrid) */}
                             {(dish.has_variants || (Array.isArray(dish.addons) && dish.addons.length > 0)) && (
-                              <div className="text-primary fw-bold" style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                              <div
+                                className="text-primary fw-bold"
+                                style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}
+                              >
                                 Customizable
                               </div>
                             )}
@@ -457,7 +487,13 @@ const ManageMenu = () => {
       )}
 
       {selectedDish && (
-        <EditDishModal show={editMenuModalShow} handleClose={() => setEditMenuModalShow(false)} data={selectedDish} fetchMenuData={fetchMenuData} menuData={menuData} />
+        <EditDishModal
+          show={editMenuModalShow}
+          handleClose={() => setEditMenuModalShow(false)}
+          data={selectedDish}
+          fetchMenuData={fetchMenuData}
+          menuData={menuData}
+        />
       )}
 
       {selectedCategory && (

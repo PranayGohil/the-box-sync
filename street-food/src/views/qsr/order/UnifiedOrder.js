@@ -81,26 +81,28 @@ const getLocalDateTimeString = (date = new Date()) => {
 };
 
 const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
-  <div className="position-relative d-inline-block" style={{ cursor: 'pointer', minWidth: '190px' }} onClick={onClick}>
+  <div className="position-relative w-100" style={{ cursor: 'pointer' }} onClick={onClick}>
     <Form.Control
       size="sm"
       value={value}
       ref={ref}
       readOnly
       style={{
-        borderRadius: '50px',
-        borderColor: 'rgba(35,179,244,0.35)',
-        color: '#23b3f4',
-        fontWeight: 700,
+        width: '100%',
+        height: '30px',
+        padding: '0 30px 0 8px',
         fontSize: '12px',
-        padding: '0.15rem 2rem 0.15rem 0.75rem',
+        fontWeight: 600,
+        color: '#1e293b',
+        border: '1.5px solid rgba(226,232,240,0.9)',
+        borderRadius: '6px',
+        background: '#f8fafc',
         cursor: 'pointer',
-        background: '#fff',
-        textAlign: 'center',
+        boxSizing: 'border-box',
       }}
     />
-    <span className="position-absolute end-0 top-50 translate-middle-y pe-3" style={{ pointerEvents: 'none', color: '#23b3f4' }}>
-      <CsLineIcons icon="calendar" size="14" />
+    <span className="position-absolute end-0 top-50 translate-middle-y pe-2" style={{ pointerEvents: 'none', color: '#94a3b8' }}>
+      <CsLineIcons icon="calendar" size="13" />
     </span>
   </div>
 ));
@@ -1041,12 +1043,63 @@ const UnifiedOrder = () => {
         paymentHistory={paymentHistory}
         orderType={orderType}
       >
-        {/* Date control for mobile opened cart */}
-        <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-          <div className="d-flex align-items-center gap-2">
-            <span className="text-muted small fw-bold text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>
-              Date:
-            </span>
+        <h6 className="mb-2 fw-bold text-muted border-bottom pb-2">Customer Details</h6>
+
+        {/* Row 1: Order Type + Order Date */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ flex: 1 }}>
+            <label
+              style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                color: '#94a3b8',
+                marginBottom: '3px',
+                display: 'block',
+              }}
+            >
+              Order Type
+            </label>
+            <Form.Select
+              size="sm"
+              value={orderType}
+              onChange={(e) => handleOrderTypeChange(e.target.value)}
+              disabled={isEditMode}
+              style={{
+                width: '100%',
+                height: '30px',
+                padding: '0 8px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#1e293b',
+                border: '1.5px solid rgba(226,232,240,0.9)',
+                borderRadius: '6px',
+                outline: 'none',
+                background: '#f8fafc',
+                transition: 'all 0.18s',
+                boxSizing: 'border-box',
+              }}
+            >
+              <option value="Takeaway">Takeaway</option>
+              <option value="Dine In">Dine In</option>
+              <option value="Delivery">Delivery</option>
+            </Form.Select>
+          </div>
+          <div style={{ flex: 1.5 }}>
+            <label
+              style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                color: '#94a3b8',
+                marginBottom: '3px',
+                display: 'block',
+              }}
+            >
+              Order Date
+            </label>
             <DatePicker
               showTimeSelect
               timeFormat="hh:mm a"
@@ -1060,9 +1113,6 @@ const UnifiedOrder = () => {
           </div>
         </div>
 
-        <div className="d-flex align-items-center justify-content-between mb-3">
-          <h6 className="mb-0 fw-bold text-muted border-bottom pb-2 flex-grow-1">Customer Details</h6>
-        </div>
         <CustomerInfoForm
           customerInfo={customerInfo}
           setCustomerInfo={setCustomerInfo}
