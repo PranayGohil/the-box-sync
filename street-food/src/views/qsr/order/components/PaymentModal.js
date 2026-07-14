@@ -30,8 +30,6 @@ const PaymentModal = ({
   };
 
   const labelStyle = { fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: '#94a3b8', marginBottom: '5px' };
-  const valueBoxStyle = { background: '#f8fafc', borderRadius: '10px', border: '1.5px solid #e2e8f0', padding: '10px 15px', fontWeight: 600, color: '#1e293b' };
-  const inputStyle = { borderRadius: '10px', border: '1.5px solid #e2e8f0', padding: '10px 15px', fontWeight: 600, fontSize: '15px' };
 
   return (
     <Modal show={showPaymentModal} onHide={() => setShowPaymentModal(false)} centered size="lg" className="modal-custom-payment" scrollable>
@@ -152,24 +150,67 @@ const PaymentModal = ({
         .payment-submit-btn:active:not(:disabled) {
           transform: translateY(0);
         }
+        .payment-paid-input {
+          border-radius: 10px !important;
+          border: 1.5px solid #e2e8f0 !important;
+          padding-left: 30px !important;
+          font-weight: 700 !important;
+          font-size: 20px !important;
+          height: 52px !important;
+          color: #23b3f4 !important;
+        }
+        .payment-balance-box {
+          border-radius: 10px !important;
+          border: 1.5px solid #e2e8f0 !important;
+          height: 52px !important;
+          display: flex !important;
+          align-items: center !important;
+          padding-left: 15px !important;
+          font-weight: 700 !important;
+        }
+        .payment-balance-text {
+          font-size: 20px !important;
+          font-weight: 700 !important;
+        }
+        .payment-action-container {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 20px !important;
+        }
         @media (max-width: 576px) {
           .modal-custom-payment .modal-content {
             border-radius: 16px !important;
           }
           .modal-custom-payment .modal-header {
-            padding: 16px !important;
+            padding: 12px 16px !important;
           }
           .modal-custom-payment .modal-body {
-            padding: 16px !important;
+            padding: 12px 16px !important;
           }
           .summary-card {
-            padding: 12px 16px !important;
+            padding: 10px 14px !important;
             border-radius: 12px !important;
           }
           .payment-method-btn {
-            padding: 10px !important;
-            font-size: 13px !important;
+            padding: 6px 4px !important;
+            font-size: 12px !important;
             border-radius: 8px !important;
+            border-width: 1.5px !important;
+          }
+          .payment-paid-input {
+            font-size: 16px !important;
+            height: 40px !important;
+            padding-left: 24px !important;
+          }
+          .payment-balance-box {
+            height: 40px !important;
+            padding-left: 10px !important;
+          }
+          .payment-balance-text {
+            font-size: 16px !important;
+          }
+          .payment-action-container {
+            gap: 10px !important;
           }
           .payment-modal-footer {
             display: grid !important;
@@ -177,21 +218,30 @@ const PaymentModal = ({
             grid-template-areas: 
               "submit submit"
               "cancel print" !important;
-            gap: 10px !important;
-            padding: 16px !important;
+            gap: 6px !important;
+            padding: 10px 12px !important;
           }
           .payment-cancel-btn {
             grid-area: cancel !important;
             margin-right: 0 !important;
             width: 100% !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            border-radius: 8px !important;
           }
           .payment-print-btn {
             grid-area: print !important;
             width: 100% !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            border-radius: 8px !important;
           }
           .payment-submit-btn {
             grid-area: submit !important;
             width: 100% !important;
+            padding: 8px 12px !important;
+            font-size: 14px !important;
+            border-radius: 8px !important;
           }
         }
       `}</style>
@@ -217,7 +267,7 @@ const PaymentModal = ({
       </Modal.Header>
 
       <Modal.Body>
-        <Row className="g-4">
+        <Row className="g-3 g-lg-4">
           {/* Left Column: Summary */}
           <Col lg={5}>
             <div className="summary-card">
@@ -254,13 +304,13 @@ const PaymentModal = ({
               )}
 
               {/* Discount Section */}
-              <div className="pt-2 mt-2 border-top">
-                <div style={labelStyle}>Discount</div>
-                <InputGroup className="mb-2">
+              <div className="pt-2 mt-2 border-top d-flex justify-content-between align-items-center gap-2">
+                <div style={{ ...labelStyle, marginBottom: 0 }}>Discount</div>
+                <InputGroup style={{ maxWidth: '160px' }}>
                   <Form.Select
                     value={paymentData.discountType}
                     onChange={(e) => handleDiscountTypeChange(e.target.value)}
-                    style={{ maxWidth: '90px', borderRight: 'none', borderTopLeftRadius: '10px', borderBottomLeftRadius: '10px' }}
+                    style={{ maxWidth: '65px', borderRight: 'none', borderTopLeftRadius: '10px', borderBottomLeftRadius: '10px', padding: '6px 8px', fontSize: '13px' }}
                   >
                     <option value="amount">₹</option>
                     <option value="percentage">%</option>
@@ -270,16 +320,16 @@ const PaymentModal = ({
                     value={paymentData.discountValue || ''}
                     onChange={(e) => handleDiscountValueChange(e.target.value)}
                     placeholder="0"
-                    style={{ borderTopRightRadius: '10px', borderBottomRightRadius: '10px' }}
+                    style={{ borderTopRightRadius: '10px', borderBottomRightRadius: '10px', padding: '6px 10px', fontSize: '13px' }}
                   />
                 </InputGroup>
-                {parseFloat(paymentData.discountAmount) > 0 && (
-                  <div className="d-flex justify-content-between text-danger small fw-bold">
-                    <span>Discount Amount</span>
-                    <span>- ₹{paymentData.discountAmount}</span>
-                  </div>
-                )}
               </div>
+              {parseFloat(paymentData.discountAmount) > 0 && (
+                <div className="d-flex justify-content-between text-danger small fw-bold mt-1">
+                  <span>Discount Amount</span>
+                  <span>- ₹{paymentData.discountAmount}</span>
+                </div>
+              )}
 
               <div className="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
                 <span className="fw-bold h5 mb-0" style={{ color: '#1e293b' }}>
@@ -292,40 +342,38 @@ const PaymentModal = ({
 
           {/* Right Column: Action */}
           <Col lg={7}>
-            <div className="h-100 d-flex flex-column gap-4">
-              {/* Paid Amount */}
-              <div>
-                <label style={labelStyle}>Paid Amount</label>
-                <div className="position-relative">
-                  <span className="position-absolute translate-middle-y top-50 start-0 ps-3 fw-bold text-muted" style={{ zIndex: 10 }}>
-                    ₹
-                  </span>
-                  <Form.Control
-                    type="number"
-                    value={paymentData.paidAmount || ''}
-                    onChange={(e) => handlePaidAmountChange(e.target.value)}
-                    placeholder="Enter amount"
-                    style={{ ...inputStyle, paddingLeft: '30px', fontSize: '24px', height: '60px', color: '#23b3f4' }}
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              {/* Wave-off / Change */}
-              <Row>
-                <Col sm={12}>
+            <div className="h-100 payment-action-container">
+              {/* Paid Amount and Balance Row */}
+              <Row className="g-2">
+                <Col xs={6}>
+                  <label style={labelStyle}>Paid Amount</label>
+                  <div className="position-relative">
+                    <span className="position-absolute translate-middle-y top-50 start-0 ps-3 fw-bold text-muted" style={{ zIndex: 10 }}>
+                      ₹
+                    </span>
+                    <Form.Control
+                      type="number"
+                      value={paymentData.paidAmount || ''}
+                      onChange={(e) => handlePaidAmountChange(e.target.value)}
+                      placeholder="0"
+                      className="payment-paid-input"
+                      autoFocus
+                    />
+                  </div>
+                </Col>
+                <Col xs={6}>
+                  <label style={labelStyle}>
+                    {parseFloat(paymentData.waveoffAmount) > 0 ? 'Balance Due' : parseFloat(paymentData.waveoffAmount) < 0 ? 'Change' : 'Balance'}
+                  </label>
                   <div
+                    className="payment-balance-box"
                     style={{
-                      ...valueBoxStyle,
                       background: parseFloat(paymentData.waveoffAmount) > 0 ? '#fef2f2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#f0fdf4' : '#f8fafc',
                       borderColor: parseFloat(paymentData.waveoffAmount) > 0 ? '#fee2e2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#dcfce7' : '#e2e8f0',
                     }}
                   >
-                    <div style={{ ...labelStyle, marginBottom: '2px', color: parseFloat(paymentData.waveoffAmount) !== 0 ? 'inherit' : '#94a3b8' }}>
-                      {parseFloat(paymentData.waveoffAmount) > 0 ? 'Balance Due' : parseFloat(paymentData.waveoffAmount) < 0 ? 'Change to Return' : 'Balance'}
-                    </div>
                     <div
-                      className="h5 mb-0 fw-bold"
+                      className="payment-balance-text"
                       style={{
                         color: parseFloat(paymentData.waveoffAmount) > 0 ? '#ef4444' : parseFloat(paymentData.waveoffAmount) < 0 ? '#22c55e' : '#1e293b',
                       }}

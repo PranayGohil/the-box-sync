@@ -57,7 +57,7 @@ const PaymentSummaryBox = ({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="d-flex align-items-baseline gap-2">
-              <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>
                 Total:
               </span>
               <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b' }}>
@@ -65,7 +65,7 @@ const PaymentSummaryBox = ({
               </span>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '10.5px', color: '#94a3b8', fontWeight: 600 }}>{totalQty} items</div>
+              <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 700 }}>{totalQty} items</div>
               {dueAmount > 0.01 && totalPaid > 0 && (
                 <div style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444' }}>
                   Due: ₹{dueAmount.toFixed(0)}
@@ -121,10 +121,10 @@ const PaymentSummaryBox = ({
           {(orderStatus === 'KOT' || (orderStatus === 'Save' && orderItems.length > 0) || (isPaid && dueAmount > 0.01)) && (
             <button
               type="button"
-              style={{ 
-                ...btnBase, 
-                background: '#23b3f4', 
-                color: '#ffffff', 
+              style={{
+                ...btnBase,
+                background: '#23b3f4',
+                color: '#ffffff',
                 boxShadow: '0 4px 12px rgba(35,179,244,0.3)',
                 gridColumn: (isDirty || showKOTButtons) ? 'span 1' : 'span 2'
               }}

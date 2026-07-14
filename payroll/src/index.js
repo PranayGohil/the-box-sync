@@ -85,3 +85,13 @@ ReactDOM.render(<Main />, document.getElementById('root'));
  * or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
  */
 reportWebVitals();
+
+// Register service worker for PWA install support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then((reg) => console.log('SW registered:', reg.scope))
+      .catch((err) => console.error('SW registration failed:', err));
+  });
+}

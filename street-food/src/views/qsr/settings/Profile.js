@@ -214,6 +214,43 @@ const Profile = () => {
     setLogoPreview(URL.createObjectURL(croppedFile));
   };
 
+  const handleLogoSave = async () => {
+    if (!logoFile) return;
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('logo', logoFile);
+
+      const res = await axios.put(`${process.env.REACT_APP_API}/user/update`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      toast.success('Logo updated successfully!');
+      const updatedUser = res.data.user || res.data;
+      if (updatedUser && updatedUser.logo) {
+        setProfile((prev) => ({ ...prev, logo: updatedUser.logo }));
+      } else {
+        window.location.reload();
+      }
+      setLogoFile(null);
+      setLogoPreview('');
+    } catch (err) {
+      console.error('Failed to upload logo', err);
+      const msg = err.response?.data?.message || 'Failed to upload logo. Please try again.';
+      toast.error(msg);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleLogoCancel = () => {
+    setLogoFile(null);
+    setLogoPreview('');
+  };
+
   const openComplianceModal = (type) => {
     setComplianceValue(type === 'gst' ? profile.gst_no : profile.fssai_no);
     setComplianceError('');
@@ -343,6 +380,18 @@ const Profile = () => {
 
   return (
     <div className="container-fluid qsr-page-container">
+      <style>{`
+        @media (max-width: 768px) {
+          .profile-edit-btn-desktop {
+            display: none !important;
+          }
+        }
+        @media (min-width: 769px) {
+          .profile-edit-btn-mobile {
+            display: none !important;
+          }
+        }
+      `}</style>
       <HtmlHead title={title} description={description} />
 
       <div className="qsr-page-title-container">
@@ -374,9 +423,9 @@ const Profile = () => {
       >
         {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting, resetForm, setFieldValue }) => (
           <Form onSubmit={handleSubmit}>
-            <Row className="g-4">
+            <Row className="g-3 g-lg-4">
               <Col lg={4}>
-                <Card className="profile-glass-card border-0 mb-4 text-center">
+                <Card className="profile-glass-card border-0 mb-0 mb-lg-4 text-center">
                   <Card.Body className="p-4 d-flex flex-column align-items-center">
                     <div className="profile-section-header text-start w-100 mb-4">
                       <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
@@ -408,23 +457,45 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {editMode && (
-                      <div className="w-100 mt-auto">
-                        <input
-                          type="file"
-                          id="logo-upload"
-                          className="d-none"
-                          accept="image/*"
-                          onChange={handleLogoChange}
+                    <div className="w-100 mt-auto">
+                      <input type="file" id="logo-upload" className="d-none" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo || saving} />
+                      {!logoFile ? (
+                        <Button
+                          as="label"
+                          htmlFor="logo-upload"
+                          className="profile-custom-btn-outline w-100 mb-2"
                           disabled={uploadingLogo || saving}
-                        />
-                        <Button as="label" htmlFor="logo-upload" className="profile-custom-btn-outline w-100 mb-2" disabled={uploadingLogo || saving}>
-                          {uploadingLogo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="upload" size="18" />}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {uploadingLogo ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="upload" size="18" className="me-2" />}
                           {getLogoSrc() ? 'Change Logo' : 'Upload Logo'}
                         </Button>
-                        <small className="text-muted d-block">JPG/PNG (Max 5MB)</small>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="d-flex gap-2 w-100">
+                          <Button
+                            variant="success"
+                            className="w-50 px-2 py-2 d-flex align-items-center justify-content-center gap-1 text-white border-0 fw-bold"
+                            style={{ borderRadius: '10px', fontSize: '0.85rem' }}
+                            onClick={handleLogoSave}
+                            disabled={uploadingLogo}
+                          >
+                            {uploadingLogo ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="check" size="16" />}
+                            Save
+                          </Button>
+                          <Button
+                            variant="danger"
+                            className="w-50 px-2 py-2 d-flex align-items-center justify-content-center gap-1 text-white border-0 fw-bold"
+                            style={{ borderRadius: '10px', fontSize: '0.85rem' }}
+                            onClick={handleLogoCancel}
+                            disabled={uploadingLogo}
+                          >
+                            <CsLineIcons icon="close" size="16" />
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
+                      {!logoFile && <small className="text-muted d-block mt-1">JPG/PNG (Max 5MB)</small>}
+                    </div>
                   </Card.Body>
                 </Card>
               </Col>
@@ -440,7 +511,11 @@ const Profile = () => {
                         </h5>
                       </div>
                       {!editMode && (
-                        <Button variant="none" className="profile-custom-btn-outline w-md-auto w-100 mt-md-0 mt-2" onClick={() => setEditMode(true)}>
+                        <Button
+                          variant="none"
+                          className="profile-custom-btn-outline w-md-auto w-100 mt-md-0 mt-2 profile-edit-btn-desktop"
+                          onClick={() => setEditMode(true)}
+                        >
                           <CsLineIcons icon="edit" size="18" />
                           Edit Profile
                         </Button>
@@ -522,7 +597,9 @@ const Profile = () => {
                                 <CsLineIcons icon={showPassword ? 'eye-off' : 'eye'} size="15" />
                               </span>
                             </div>
-                            <Form.Control.Feedback type="invalid" className={touched.password && errors.password ? "d-block" : ""}>{errors.password}</Form.Control.Feedback>
+                            <Form.Control.Feedback type="invalid" className={touched.password && errors.password ? 'd-block' : ''}>
+                              {errors.password}
+                            </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
                       )}
@@ -773,6 +850,19 @@ const Profile = () => {
                               Save Changes
                             </>
                           )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {!editMode && (
+                      <div className="d-flex profile-button-group-responsive mt-5 d-md-none">
+                        <Button
+                          variant="none"
+                          className="profile-custom-btn-outline w-100 py-2 d-flex align-items-center justify-content-center gap-2 profile-edit-btn-mobile"
+                          onClick={() => setEditMode(true)}
+                        >
+                          <CsLineIcons icon="edit" size="18" />
+                          Edit Profile
                         </Button>
                       </div>
                     )}

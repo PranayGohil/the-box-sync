@@ -18,18 +18,21 @@ const PaymentModal = ({
   orderType,
   orderId,
   orderNo,
+  handlePrint,
 }) => {
   const [printing, setPrinting] = useState(false);
   const handlePrintBill = () => {
-    printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
+    if (handlePrint) {
+      handlePrint(orderId);
+    } else {
+      printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
+    }
   };
 
   const labelStyle = { fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: '#94a3b8', marginBottom: '5px' };
-  const valueBoxStyle = { background: '#f8fafc', borderRadius: '10px', border: '1.5px solid #e2e8f0', padding: '10px 15px', fontWeight: 600, color: '#1e293b' };
-  const inputStyle = { borderRadius: '10px', border: '1.5px solid #e2e8f0', padding: '10px 15px', fontWeight: 600, fontSize: '15px' };
 
   return (
-    <Modal show={showPaymentModal} onHide={() => setShowPaymentModal(false)} centered size="lg" className="modal-custom-payment">
+    <Modal show={showPaymentModal} onHide={() => setShowPaymentModal(false)} centered size="lg" className="modal-custom-payment" scrollable>
       <style>{`
         .modal-custom-payment .modal-content {
           border-radius: 20px;
@@ -80,11 +83,183 @@ const PaymentModal = ({
           background: rgba(35, 179, 244, 0.05);
           color: #23b3f4;
         }
+        .payment-cancel-btn {
+          border: 1.5px solid rgba(239, 68, 68, 0.2) !important;
+          background: transparent !important;
+          color: #ef4444 !important;
+          border-radius: 12px !important;
+          padding: 10px 20px !important;
+          font-weight: 700 !important;
+          transition: all 0.2s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 6px !important;
+          box-shadow: none !important;
+          text-decoration: none !important;
+        }
+        .payment-cancel-btn:hover {
+          background: rgba(239, 68, 68, 0.05) !important;
+          border-color: #ef4444 !important;
+          color: #ef4444 !important;
+          transform: translateY(-1px);
+        }
+        .payment-cancel-btn:active {
+          transform: translateY(0);
+        }
+        .payment-print-btn {
+          border-radius: 12px !important;
+          padding: 10px 20px !important;
+          font-weight: 700 !important;
+          border: 1.5px solid #e2e8f0 !important;
+          background: transparent !important;
+          color: #64748b !important;
+          transition: all 0.2s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 6px !important;
+          text-decoration: none !important;
+        }
+        .payment-print-btn:hover:not(:disabled) {
+          background: rgba(100, 116, 139, 0.05) !important;
+          border-color: #94a3b8 !important;
+          color: #475569 !important;
+        }
+        .payment-submit-btn {
+          border-radius: 12px !important;
+          padding: 10px 30px !important;
+          font-weight: 800 !important;
+          background: #23b3f4 !important;
+          border: none !important;
+          color: #ffffff !important;
+          box-shadow: 0 10px 20px -5px rgba(35, 179, 244, 0.4) !important;
+          transition: all 0.2s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 6px !important;
+          text-decoration: none !important;
+        }
+        .payment-submit-btn:hover:not(:disabled) {
+          background: #0ea5e9 !important;
+          box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.6) !important;
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .payment-submit-btn:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        .payment-paid-input {
+          border-radius: 10px !important;
+          border: 1.5px solid #e2e8f0 !important;
+          padding-left: 30px !important;
+          font-weight: 700 !important;
+          font-size: 20px !important;
+          height: 52px !important;
+          color: #23b3f4 !important;
+        }
+        .payment-balance-box {
+          border-radius: 10px !important;
+          border: 1.5px solid #e2e8f0 !important;
+          height: 52px !important;
+          display: flex !important;
+          align-items: center !important;
+          padding-left: 15px !important;
+          font-weight: 700 !important;
+        }
+        .payment-balance-text {
+          font-size: 20px !important;
+          font-weight: 700 !important;
+        }
+        .payment-action-container {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 20px !important;
+        }
+        @media (max-width: 576px) {
+          .modal-custom-payment .modal-content {
+            border-radius: 16px !important;
+          }
+          .modal-custom-payment .modal-header {
+            padding: 12px 16px !important;
+          }
+          .modal-custom-payment .modal-body {
+            padding: 12px 16px !important;
+          }
+          .summary-card {
+            padding: 10px 14px !important;
+            border-radius: 12px !important;
+          }
+          .payment-method-btn {
+            padding: 6px 4px !important;
+            font-size: 12px !important;
+            border-radius: 8px !important;
+            border-width: 1.5px !important;
+          }
+          .payment-paid-input {
+            font-size: 16px !important;
+            height: 40px !important;
+            padding-left: 24px !important;
+          }
+          .payment-balance-box {
+            height: 40px !important;
+            padding-left: 10px !important;
+          }
+          .payment-balance-text {
+            font-size: 16px !important;
+          }
+          .payment-action-container {
+            gap: 10px !important;
+          }
+          .payment-modal-footer {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            grid-template-areas: 
+              "submit submit"
+              "cancel print" !important;
+            gap: 6px !important;
+            padding: 10px 12px !important;
+          }
+          .payment-cancel-btn {
+            grid-area: cancel !important;
+            margin-right: 0 !important;
+            width: 100% !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            border-radius: 8px !important;
+          }
+          .payment-print-btn {
+            grid-area: print !important;
+            width: 100% !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            border-radius: 8px !important;
+          }
+          .payment-submit-btn {
+            grid-area: submit !important;
+            width: 100% !important;
+            padding: 8px 12px !important;
+            font-size: 14px !important;
+            border-radius: 8px !important;
+          }
+        }
       `}</style>
 
       <Modal.Header closeButton>
         <Modal.Title>
-          <div style={{ background: '#23b3f4', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+          <div
+            style={{
+              background: '#23b3f4',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+            }}
+          >
             <CsLineIcons icon="credit-card" size="20" />
           </div>
           Process Payment
@@ -92,14 +267,14 @@ const PaymentModal = ({
       </Modal.Header>
 
       <Modal.Body>
-        <Row className="g-4">
+        <Row className="g-3 g-lg-4">
           {/* Left Column: Summary */}
           <Col lg={5}>
             <div className="summary-card">
               <h6 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: '#1e293b' }}>
                 <CsLineIcons icon="content" size="16" /> Order Summary
               </h6>
-              
+
               <div className="d-flex justify-content-between mb-2">
                 <span className="text-muted small fw-semibold">Sub Total</span>
                 <span className="fw-bold">₹{paymentData.subTotal}</span>
@@ -129,13 +304,13 @@ const PaymentModal = ({
               )}
 
               {/* Discount Section */}
-              <div className="pt-2 mt-2 border-top">
-                <div style={labelStyle}>Discount</div>
-                <InputGroup className="mb-2">
-                  <Form.Select 
-                    value={paymentData.discountType} 
+              <div className="pt-2 mt-2 border-top d-flex justify-content-between align-items-center gap-2">
+                <div style={{ ...labelStyle, marginBottom: 0 }}>Discount</div>
+                <InputGroup style={{ maxWidth: '160px' }}>
+                  <Form.Select
+                    value={paymentData.discountType}
                     onChange={(e) => handleDiscountTypeChange(e.target.value)}
-                    style={{ maxWidth: '90px', borderRight: 'none', borderTopLeftRadius: '10px', borderBottomLeftRadius: '10px' }}
+                    style={{ maxWidth: '65px', borderRight: 'none', borderTopLeftRadius: '10px', borderBottomLeftRadius: '10px', padding: '6px 8px', fontSize: '13px' }}
                   >
                     <option value="amount">₹</option>
                     <option value="percentage">%</option>
@@ -145,19 +320,21 @@ const PaymentModal = ({
                     value={paymentData.discountValue || ''}
                     onChange={(e) => handleDiscountValueChange(e.target.value)}
                     placeholder="0"
-                    style={{ borderTopRightRadius: '10px', borderBottomRightRadius: '10px' }}
+                    style={{ borderTopRightRadius: '10px', borderBottomRightRadius: '10px', padding: '6px 10px', fontSize: '13px' }}
                   />
                 </InputGroup>
-                {parseFloat(paymentData.discountAmount) > 0 && (
-                  <div className="d-flex justify-content-between text-danger small fw-bold">
-                    <span>Discount Amount</span>
-                    <span>- ₹{paymentData.discountAmount}</span>
-                  </div>
-                )}
               </div>
+              {parseFloat(paymentData.discountAmount) > 0 && (
+                <div className="d-flex justify-content-between text-danger small fw-bold mt-1">
+                  <span>Discount Amount</span>
+                  <span>- ₹{paymentData.discountAmount}</span>
+                </div>
+              )}
 
               <div className="pt-3 mt-3 border-top d-flex justify-content-between align-items-center">
-                <span className="fw-bold h5 mb-0" style={{ color: '#1e293b' }}>Grand Total</span>
+                <span className="fw-bold h5 mb-0" style={{ color: '#1e293b' }}>
+                  Grand Total
+                </span>
                 <span className="fw-bold h4 mb-0 text-primary">₹{paymentData.total}</span>
               </div>
             </div>
@@ -165,31 +342,42 @@ const PaymentModal = ({
 
           {/* Right Column: Action */}
           <Col lg={7}>
-            <div className="h-100 d-flex flex-column gap-4">
-              {/* Paid Amount */}
-              <div>
-                <label style={labelStyle}>Paid Amount</label>
-                <div className="position-relative">
-                  <span className="position-absolute translate-middle-y top-50 start-0 ps-3 fw-bold text-muted" style={{ zIndex: 10 }}>₹</span>
-                  <Form.Control
-                    type="number"
-                    value={paymentData.paidAmount || ''}
-                    onChange={(e) => handlePaidAmountChange(e.target.value)}
-                    placeholder="Enter amount"
-                    style={{ ...inputStyle, paddingLeft: '30px', fontSize: '24px', height: '60px', color: '#23b3f4' }}
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              {/* Wave-off / Change */}
-              <Row>
-                <Col sm={12}>
-                  <div style={{ ...valueBoxStyle, background: parseFloat(paymentData.waveoffAmount) > 0 ? '#fef2f2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#f0fdf4' : '#f8fafc', borderColor: parseFloat(paymentData.waveoffAmount) > 0 ? '#fee2e2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#dcfce7' : '#e2e8f0' }}>
-                    <div style={{ ...labelStyle, marginBottom: '2px', color: parseFloat(paymentData.waveoffAmount) !== 0 ? 'inherit' : '#94a3b8' }}>
-                      {parseFloat(paymentData.waveoffAmount) > 0 ? 'Balance Due' : parseFloat(paymentData.waveoffAmount) < 0 ? 'Change to Return' : 'Balance'}
-                    </div>
-                    <div className="h5 mb-0 fw-bold" style={{ color: parseFloat(paymentData.waveoffAmount) > 0 ? '#ef4444' : parseFloat(paymentData.waveoffAmount) < 0 ? '#22c55e' : '#1e293b' }}>
+            <div className="h-100 payment-action-container">
+              {/* Paid Amount and Balance Row */}
+              <Row className="g-2">
+                <Col xs={6}>
+                  <label style={labelStyle}>Paid Amount</label>
+                  <div className="position-relative">
+                    <span className="position-absolute translate-middle-y top-50 start-0 ps-3 fw-bold text-muted" style={{ zIndex: 10 }}>
+                      ₹
+                    </span>
+                    <Form.Control
+                      type="number"
+                      value={paymentData.paidAmount || ''}
+                      onChange={(e) => handlePaidAmountChange(e.target.value)}
+                      placeholder="0"
+                      className="payment-paid-input"
+                      autoFocus
+                    />
+                  </div>
+                </Col>
+                <Col xs={6}>
+                  <label style={labelStyle}>
+                    {parseFloat(paymentData.waveoffAmount) > 0 ? 'Balance Due' : parseFloat(paymentData.waveoffAmount) < 0 ? 'Change' : 'Balance'}
+                  </label>
+                  <div
+                    className="payment-balance-box"
+                    style={{
+                      background: parseFloat(paymentData.waveoffAmount) > 0 ? '#fef2f2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#f0fdf4' : '#f8fafc',
+                      borderColor: parseFloat(paymentData.waveoffAmount) > 0 ? '#fee2e2' : parseFloat(paymentData.waveoffAmount) < 0 ? '#dcfce7' : '#e2e8f0',
+                    }}
+                  >
+                    <div
+                      className="payment-balance-text"
+                      style={{
+                        color: parseFloat(paymentData.waveoffAmount) > 0 ? '#ef4444' : parseFloat(paymentData.waveoffAmount) < 0 ? '#22c55e' : '#1e293b',
+                      }}
+                    >
                       ₹{Math.abs(parseFloat(paymentData.waveoffAmount)).toFixed(2)}
                     </div>
                   </div>
@@ -216,30 +404,17 @@ const PaymentModal = ({
         </Row>
       </Modal.Body>
 
-      <Modal.Footer className="justify-content-between">
-        <Button variant="link" className="text-muted fw-bold text-decoration-none" onClick={() => setShowPaymentModal(false)}>
+      <Modal.Footer className="payment-modal-footer d-flex gap-2">
+        <Button variant="none" className="payment-cancel-btn me-auto" onClick={() => setShowPaymentModal(false)}>
+          <CsLineIcons icon="close" size="14" />
           Cancel
         </Button>
-        <div className="d-flex gap-2">
-          {orderId && (
-            <Button 
-              variant="outline-secondary" 
-              style={{ borderRadius: '12px', padding: '10px 20px', fontWeight: 700 }}
-              onClick={handlePrintBill} 
-              disabled={printing || isLoading}
-            >
-              {printing ? 'Printing...' : 'Print Bill'}
-            </Button>
-          )}
-          <Button 
-            variant="primary" 
-            style={{ borderRadius: '12px', padding: '10px 30px', fontWeight: 800, background: '#23b3f4', border: 'none', boxShadow: '0 10px 20px -5px rgba(35, 179, 244, 0.4)' }}
-            onClick={handlePayment} 
-            disabled={isLoading}
-          >
-            {isLoading ? 'Processing...' : 'Complete Payment'}
-          </Button>
-        </div>
+        <Button variant="none" className="payment-print-btn" onClick={handlePrintBill} disabled={printing || isLoading}>
+          {printing ? 'Printing...' : 'Print Bill'}
+        </Button>
+        <Button variant="none" className="payment-submit-btn" onClick={handlePayment} disabled={isLoading}>
+          {isLoading ? 'Processing...' : 'Complete Payment'}
+        </Button>
       </Modal.Footer>
     </Modal>
   );
