@@ -32,8 +32,7 @@ import allRoutes from 'routes.js';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// mock server register for demo
-import '@mock-api';
+
 
 // Suppress ResizeObserver loop error overlay in development
 if (typeof window !== 'undefined') {
@@ -82,8 +81,8 @@ ReactDOM.render(<Main />, document.getElementById('root'));
  */
 reportWebVitals();
 
-// Register service worker for PWA install support
-if ('serviceWorker' in navigator) {
+// Register service worker for PWA install support in production only
+if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/service-worker.js')

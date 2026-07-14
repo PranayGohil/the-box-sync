@@ -6,6 +6,8 @@ const {
     updateCustomer,
     deleteCustomer,
     getCustomerBookings,
+    getQSRCustomerList,
+    getQSRCustomerOrders,
 } = require("../controllers/customerController");
 const authMiddleware = require("../middlewares/auth-middlewares");
 
@@ -17,5 +19,9 @@ customerRouter.get("/get/:id", authMiddleware, getCustomerById);
 customerRouter.put("/update/:id", authMiddleware, updateCustomer);
 customerRouter.delete("/delete/:id", authMiddleware, deleteCustomer);
 customerRouter.get("/get-bookings/:id", authMiddleware, getCustomerBookings);
+
+// QSR Panel — customer aggregation routes
+customerRouter.get("/list", authMiddleware, getQSRCustomerList);
+customerRouter.get("/orders/:phone", authMiddleware, getQSRCustomerOrders);
 
 module.exports = customerRouter;

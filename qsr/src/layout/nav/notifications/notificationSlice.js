@@ -25,8 +25,21 @@ export const { notificationsLoading, notificationsLoaded } = notificationSlice.a
 
 export const fetchNotifications = () => async (dispatch) => {
   dispatch(notificationsLoading());
-  const response = await axios.get(`${SERVICE_URL}/notifications`);
-  dispatch(notificationsLoaded(response.data));
+  try {
+    const response = await axios.get(`${process.env.REACT_APP_API}/notifications`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    if (response.data && response.data.success) {
+      dispatch(notificationsLoaded(response.data.data));
+    } else {
+      dispatch(notificationsLoaded([]));
+    }
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    dispatch(notificationsLoaded([]));
+  }
 };
 
 const notificationReducer = notificationSlice.reducer;

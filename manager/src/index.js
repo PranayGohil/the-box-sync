@@ -42,8 +42,6 @@ import './assets/css/utilities.css';
 import './assets/css/responsive.css';
 
 
-// mock server register for demo
-import '@mock-api';
 
 const convertToWebP = (file, maxDimension = 1920, quality = 0.8) => {
   return new Promise((resolve) => {

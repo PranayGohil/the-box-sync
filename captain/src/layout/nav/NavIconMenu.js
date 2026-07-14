@@ -3,7 +3,6 @@ import { useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Modal, Button } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import IconMenuNotifications from './notifications/Notifications';
 import SearchModal from './search/SearchModal';
 
 const NavIconMenu = () => {
@@ -37,7 +36,6 @@ const NavIconMenu = () => {
             <CsLineIcons icon="logout" size="18" />
           </a>
         </li>
-        <IconMenuNotifications />
       </ul>
 
       {/* THE BOX logo — pinned at very bottom of mobile sidebar drawer only */}

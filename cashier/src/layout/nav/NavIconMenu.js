@@ -52,14 +52,14 @@ const NavIconMenu = () => {
   const dispatch = useDispatch();
   const brandColor = '#23b3f4';
   const { attrMobile } = useSelector((state) => state.menu);
-  
+
   const [showSearchModal, setShowSearchModal] = useState(false);
-  
+
   const onSearchIconClick = (e) => {
     e.preventDefault();
     setShowSearchModal(true);
   };
-  
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
@@ -83,7 +83,7 @@ const NavIconMenu = () => {
             <CsLineIcons icon="logout" size="18" />
           </a>
         </li>
-        <IconMenuNotifications />
+        {/* <IconMenuNotifications /> */}
       </ul>
 
       {/* THE BOX logo — pinned at very bottom of mobile sidebar drawer only */}
@@ -95,10 +95,10 @@ const NavIconMenu = () => {
 
       <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
 
-      <Modal 
-        show={showLogoutModal} 
-        onHide={() => setShowLogoutModal(false)} 
-        centered 
+      <Modal
+        show={showLogoutModal}
+        onHide={() => setShowLogoutModal(false)}
+        centered
         contentClassName="interactive-card border-0 shadow-lg"
       >
         <Modal.Header className="border-0 p-4 pb-0" closeButton>
@@ -112,16 +112,16 @@ const NavIconMenu = () => {
           <p className="text-muted smaller fw-bold mb-0">Are you sure you want to end your session? You will need to login again to access the dashboard.</p>
         </Modal.Body>
         <Modal.Footer className="border-0 p-4 pt-0 d-flex justify-content-center gap-3">
-          <Button 
-            variant="light" 
-            className="custom-btn-outline border-0 text-muted" 
+          <Button
+            variant="light"
+            className="custom-btn-outline border-0 text-muted"
             onClick={() => setShowLogoutModal(false)}
           >
             Stay Signed In
           </Button>
-          <Button 
-            variant="danger" 
-            className="custom-btn-outline border-danger text-danger px-5" 
+          <Button
+            variant="danger"
+            className="custom-btn-outline border-danger text-danger px-5"
             onClick={handleLogout}
           >
             Yes, Logout

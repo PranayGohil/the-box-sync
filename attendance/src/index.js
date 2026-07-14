@@ -15,8 +15,6 @@ import Loading from 'components/loading/Loading';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// mock server register for demo
-import '@mock-api';
 
 import KioskScan from 'views/attendance/KioskScan';
 

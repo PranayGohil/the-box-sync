@@ -13,12 +13,6 @@ const order = {
   unified: lazy(() => import('views/qsr/order/UnifiedOrder')),
   deliveryPartner: lazy(() => import('views/qsr/order/DeliveryPartners')),
 }
-const dashboards = {
-  index: lazy(() => import('views/dashboards/Dashboards')),
-  default: lazy(() => import('views/dashboards/DashboardsDefault')),
-  visual: lazy(() => import('views/dashboards/DashboardsVisual')),
-  analytic: lazy(() => import('views/dashboards/DashboardsAnalytic')),
-};
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
 

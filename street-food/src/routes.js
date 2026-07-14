@@ -18,12 +18,6 @@ const inventory = {
   details: lazy(() => import('views/qsr/operation/inventory/InventoryDetails')),
   edit: lazy(() => import('views/qsr/operation/inventory/EditInventory')),
 }
-const dashboards = {
-  index: lazy(() => import('views/dashboards/Dashboards')),
-  default: lazy(() => import('views/dashboards/DashboardsDefault')),
-  visual: lazy(() => import('views/dashboards/DashboardsVisual')),
-  analytic: lazy(() => import('views/dashboards/DashboardsAnalytic')),
-};
 
 const settings = {
   main: lazy(() => import('views/qsr/settings/Settings')),
