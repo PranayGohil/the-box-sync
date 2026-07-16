@@ -1443,11 +1443,11 @@ const OrderHistory = () => {
                             className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 no-dropdown-caret export-input-height"
                             style={{ color: '#1ea8e7' }}
                           >
-                            <span>{exportFilters.paymentType || 'All Payment Types'}</span>
+                            <span>{exportFilters.paymentType || 'All'}</span>
                             <CsLineIcons icon="chevron-right" size="13" />
                           </Dropdown.Toggle>
                           <Dropdown.Menu className="w-100 shadow border-0" style={{ borderRadius: '1rem' }}>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: '' })}>All Payment Types</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: '' })}>All</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Cash' })}>Cash</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Card' })}>Card</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'UPI' })}>UPI</Dropdown.Item>

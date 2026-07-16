@@ -41,6 +41,12 @@ const subscriptionPlanSchema = new Schema(
       type: Number,
       default: 0,
     },
+    applicable_to: {
+      type: String,
+      enum: ["restaurant", "street-food", "both"],
+      default: "restaurant",
+      index: true,
+    },
   },
   { timestamps: true }
 );

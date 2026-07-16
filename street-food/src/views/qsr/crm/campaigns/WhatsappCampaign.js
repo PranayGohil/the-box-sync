@@ -386,9 +386,6 @@ const WhatsappCampaign = () => {
     spendMin: '',
     spendMax: '',
     recency: '',
-    birthdayMonth: '',
-    anniversaryMonth: '',
-    tag: '',
   });
 
   // Send state
@@ -540,9 +537,6 @@ const WhatsappCampaign = () => {
         spendMin: filters.spendMin,
         spendMax: filters.spendMax,
         recency: filters.recency,
-        birthdayMonth: filters.birthdayMonth,
-        anniversaryMonth: filters.anniversaryMonth,
-        tag: filters.tag,
       });
       if (res.data?.success) {
         setCustomers(res.data.data || []);
@@ -562,9 +556,6 @@ const WhatsappCampaign = () => {
     filters.spendMin,
     filters.spendMax,
     filters.recency,
-    filters.birthdayMonth,
-    filters.anniversaryMonth,
-    filters.tag,
   ]);
 
   useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
@@ -607,9 +598,6 @@ const WhatsappCampaign = () => {
       spendMin: '',
       spendMax: '',
       recency: '',
-      birthdayMonth: '',
-      anniversaryMonth: '',
-      tag: '',
     });
     setSelectedCustomers([]);
   };
@@ -619,9 +607,6 @@ const WhatsappCampaign = () => {
     if (filters.fromDate) count += 1;
     if (filters.toDate) count += 1;
     if (filters.recency) count += 1;
-    if (filters.birthdayMonth) count += 1;
-    if (filters.anniversaryMonth) count += 1;
-    if (filters.tag) count += 1;
     if (loyaltyPreset !== 'all' && loyaltyPreset !== 'custom') {
       count += 1;
     } else if (filters.ordersMin || filters.ordersMax || filters.spendMin || filters.spendMax) {
@@ -1179,39 +1164,6 @@ const WhatsappCampaign = () => {
                         <option value="dormant_60">Dormant (No visits {'>'} 60d)</option>
                         <option value="dormant_90">Lost (No visits {'>'} 90d)</option>
                       </Form.Select>
-                    </Col>
-                    <Col xs="6">
-                      <Form.Select
-                        value={filters.birthdayMonth}
-                        onChange={(e) => handleFilterChange('birthdayMonth', e.target.value)}
-                        style={{ fontSize: '0.78rem', height: '34px', borderRadius: '8px' }}
-                      >
-                        <option value="">Birth Month</option>
-                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
-                          <option key={m} value={i + 1}>{m}</option>
-                        ))}
-                      </Form.Select>
-                    </Col>
-                    <Col xs="6">
-                      <Form.Select
-                        value={filters.anniversaryMonth}
-                        onChange={(e) => handleFilterChange('anniversaryMonth', e.target.value)}
-                        style={{ fontSize: '0.78rem', height: '34px', borderRadius: '8px' }}
-                      >
-                        <option value="">Anniversary Month</option>
-                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
-                          <option key={m} value={i + 1}>{m}</option>
-                        ))}
-                      </Form.Select>
-                    </Col>
-                    <Col xs="12">
-                      <Form.Control
-                        type="text"
-                        placeholder="Tag (e.g. VIP, corporate)"
-                        value={filters.tag}
-                        onChange={(e) => handleFilterChange('tag', e.target.value)}
-                        style={{ fontSize: '0.78rem', height: '34px', borderRadius: '8px' }}
-                      />
                     </Col>
                   </Row>
                 </div>

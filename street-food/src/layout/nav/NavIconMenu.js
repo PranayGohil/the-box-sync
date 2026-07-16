@@ -71,7 +71,8 @@ const customStyles = `
 const NavIconMenu = () => {
   const history = useHistory();
   const brandColor = '#23b3f4';
-  const { attrMobile } = useSelector((state) => state.menu);
+  const { attrMobile, placementStatus } = useSelector((state) => state.menu);
+  const isSidebar = attrMobile === true || placementStatus?.placementHtmlData === 'Vertical';
 
   const [showSearchModal, setShowSearchModal] = useState(false);
 
@@ -92,12 +93,28 @@ const NavIconMenu = () => {
     <>
       <style>{customStyles}</style>
 
-      <div className="menu-icons text-center mb-0" style={{ alignSelf: 'center' }}>
-        <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }} className="logout-text-link">
-          <CsLineIcons icon="logout" size="18" />
-          <span style={{ fontSize: '15px', fontWeight: '700' }}>Logout</span>
-        </a>
-      </div>
+      {isSidebar ? (
+        <div className="menu-icons text-center mb-0" style={{ alignSelf: 'center' }}>
+          <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }} className="logout-text-link">
+            <CsLineIcons icon="logout" size="18" />
+            <span style={{ fontSize: '15px', fontWeight: '700' }}>Logout</span>
+          </a>
+        </div>
+      ) : (
+        <ul className="list-unstyled list-inline text-center menu-icons mb-0">
+          <li className="list-inline-item" title="Search">
+            <a href="#/" onClick={onSearchIconClick}>
+              <CsLineIcons icon="search" size="18" />
+            </a>
+          </li>
+          <li className="list-inline-item" title="Logout">
+            <a onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
+              <CsLineIcons icon="logout" size="18" />
+            </a>
+          </li>
+          <IconMenuNotifications />
+        </ul>
+      )}
 
       {/* THE BOX logo — pinned at very bottom of mobile sidebar drawer only */}
       {attrMobile === true && (

@@ -70,6 +70,7 @@ const allRoutes = {
       label: 'CRM',
       icon: 'user',
       component: qsr.crm,
+      planRequirement: ['Basic CRM - Monthly', 'Basic CRM - Yearly', 'Basic CRM'],
     },
     {
       path: `/settings`,

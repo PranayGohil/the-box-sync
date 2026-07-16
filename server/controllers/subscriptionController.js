@@ -57,7 +57,23 @@ const addSubscriptionPlan = async (req, res) => {
 
 const getSubscriptionPlans = async (req, res) => {
   try {
-    const subscriptionplans = await SubscriptionPlan.find().lean();
+    let isStreetFood = false;
+    if (req.query.userId) {
+      const targetUser = await User.findById(req.query.userId).lean();
+      if (targetUser) {
+        isStreetFood = targetUser.is_street_food || false;
+      }
+    } else if (req.query.is_street_food !== undefined) {
+      isStreetFood = req.query.is_street_food === 'true';
+    } else if (req.user) {
+      isStreetFood = req.user.is_street_food || false;
+    }
+
+    const filter = {
+      applicable_to: isStreetFood ? "street-food" : { $ne: "street-food" }
+    };
+
+    const subscriptionplans = await SubscriptionPlan.find(filter).lean();
     res.status(200).json({ success: true, data: subscriptionplans });
   } catch (error) {
     console.error(error);

@@ -52,8 +52,9 @@ const MainMenu = () => {
         data: filteredRoutes,
         isLogin,
         userRole: currentUser.role,
+        activePlans,
       }),
-    [isLogin, currentUser, filteredRoutes]
+    [isLogin, currentUser, filteredRoutes, activePlans]
   );
 
   useEffect(() => {

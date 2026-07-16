@@ -10,25 +10,78 @@ import { layoutShowingNavMenu } from 'layout/layoutSlice';
 import { fetchNotifications } from './notificationSlice';
 
 const NotificationsDropdownToggle = React.memo(
-  React.forwardRef(({ onClick, expanded = false }, ref) => (
-    <a
-      ref={ref}
-      href="#/"
-      className="notification-button"
-      data-toggle="dropdown"
-      aria-expanded={expanded}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick(e);
-      }}
-    >
-      <div className="position-relative d-inline-flex">
-        <CsLineIcons icon="bell" size="18" />
-        <span className="position-absolute notification-dot rounded-xl" />
-      </div>
-    </a>
-  ))
+  React.forwardRef(({ onClick, expanded = false, isMobileHeader = false }, ref) => {
+    if (isMobileHeader) {
+      return (
+        <a
+          ref={ref}
+          href="#/"
+          className="notification-button menu-button position-relative"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#ffffff',
+            height: '100%',
+            width: '50px',
+            padding: '0',
+            background: 'transparent',
+            border: 'none',
+          }}
+          data-toggle="dropdown"
+          aria-expanded={expanded}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClick(e);
+          }}
+        >
+          <CsLineIcons icon="bell" size="20" style={{ color: '#ffffff' }} />
+          <span
+            className="position-absolute rounded-circle"
+            style={{
+              top: '12px',
+              right: '12px',
+              background: '#e91e63',
+              width: '6px',
+              height: '6px',
+              display: 'block',
+            }}
+          />
+        </a>
+      );
+    }
+    return (
+      <a
+        ref={ref}
+        href="#/"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#ffffff',
+          height: '100%',
+          width: '50px',
+          padding: '0',
+          background: 'transparent',
+          border: 'none',
+        }}
+        className="notification-button"
+        data-toggle="dropdown"
+        aria-expanded={expanded}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick(e);
+        }}
+      >
+        <div className="position-relative d-inline-flex">
+          <CsLineIcons icon="bell" size="18" />
+          <span className="position-absolute notification-dot rounded-xl" />
+        </div>
+      </a>
+    );
+  })
 );
 const NotificationItem = ({ img = '', link = '', detail = '' }) => (
   <li className="mb-3 pb-3 border-bottom border-separator-light d-flex">
@@ -80,7 +133,7 @@ const Notifications = () => {
 
   useEffect(() => {
     dispatch(fetchNotifications());
-    return () => {};
+    return () => { };
     // eslint-disable-next-line
   }, []);
 
@@ -96,26 +149,30 @@ const Notifications = () => {
   }, [attrMenuAnimate, behaviourHtmlData, attrMobile, color]);
 
   if (items && items.length > 0) {
+    const isMobileHeader = attrMobile === true;
+
     return (
       <Dropdown
-        as="li"
-        bsPrefix="list-inline-item"
+        as={isMobileHeader ? 'div' : 'li'}
+        bsPrefix={isMobileHeader ? 'dropdown' : 'list-inline-item'}
+        className={isMobileHeader ? 'd-inline-block h-100 align-middle' : ''}
         onToggle={onToggle}
         show={showingNavMenu === MENU_NAME}
-        align={placement === MENU_PLACEMENT.Horizontal ? 'end' : 'start'}
+        align={isMobileHeader || placement === MENU_PLACEMENT.Horizontal ? 'end' : 'start'}
       >
-        <Dropdown.Toggle as={NotificationsDropdownToggle} />
+        <Dropdown.Toggle as={NotificationsDropdownToggle} isMobileHeader={isMobileHeader} />
         <Dropdown.Menu
           as={NotificationsDropdownMenu}
           items={items}
+          style={{ zIndex: 2000 }}
           popperConfig={{
             modifiers: [
               {
                 name: 'offset',
                 options: {
                   offset: () => {
-                    if (placement === MENU_PLACEMENT.Horizontal) {
-                      return [0, 7];
+                    if (isMobileHeader || placement === MENU_PLACEMENT.Horizontal) {
+                      return [0, 12];
                     }
                     if (window.innerWidth < 768) {
                       return [-168, 7];

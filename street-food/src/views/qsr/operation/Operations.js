@@ -129,7 +129,6 @@ const MobileBottomNav = () => {
   const navItems = [
     { label: 'Order', icon: 'cart', to: '/operations/order-history' },
     { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
-    { label: 'Customers', icon: 'user', to: '/operations/campaigns' },
     { label: 'Report', icon: 'file-text', to: '/operations/financial-report' },
   ];
 
@@ -205,8 +204,6 @@ const MobileBottomNav = () => {
             isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details');
           } else if (item.label === 'Menu') {
             isActive = pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
-          } else if (item.label === 'Customers') {
-            isActive = pathname.startsWith('/operations/campaigns') || pathname.startsWith('/operations/customers/');
           } else {
             isActive = pathname.startsWith(item.to);
           }
