@@ -94,8 +94,9 @@ const customStyles = `
     color: #fff !important;
   }
   .slot-config-day-pill:not(.active):hover {
-    opacity: 0 !important;
-    pointer-events: none !important;
+    background-color: rgba(35, 179, 244, 0.08) !important;
+    border-color: #23b3f4 !important;
+    color: #23b3f4 !important;
   }
   .hover-elevate {
     transition: transform 0.2s ease, box-shadow 0.2s ease !important;

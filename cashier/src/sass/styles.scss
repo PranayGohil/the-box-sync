@@ -1140,3 +1140,58 @@ html[data-placement="vertical"] .nav-container .nav-content .sidebar-brand-foote
   margin-top: 6px !important;
   margin-bottom: 0 !important;
 }
+
+/* ==========================================================================
+   Manager Dashboard Table Sizing Improvements
+   ========================================================================== */
+.dashboard-table-circle {
+  width: 56px !important;
+  height: 56px !important;
+  transition: all 0.2s ease;
+
+  @media (max-width: 575px) {
+    width: 42px !important;
+    height: 42px !important;
+  }
+}
+
+.dashboard-table-no {
+  font-size: 1.5rem !important;
+
+  @media (max-width: 575px) {
+    font-size: 1.15rem !important;
+  }
+}
+
+.dashboard-table-max-person {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem !important;
+
+  @media (max-width: 575px) {
+    font-size: 10px;
+    margin-bottom: 0.15rem !important;
+  }
+}
+
+.dashboard-table-capacity {
+  font-size: 1.2rem !important;
+  margin-bottom: 0.5rem !important;
+
+  @media (max-width: 575px) {
+    font-size: 0.95rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+}
+
+.dashboard-table-badge {
+  font-size: 0.75rem !important;
+  padding: 6px 8px !important;
+
+  @media (max-width: 575px) {
+    font-size: 0.65rem !important;
+    padding: 4px 6px !important;
+  }
+}

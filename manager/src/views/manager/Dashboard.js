@@ -82,6 +82,56 @@ const Dashboard = () => {
     };
   }, [socket]);
 
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getOccupiedDuration = (orderDate) => {
+    if (!orderDate) return '';
+    const diffMs = new Date() - new Date(orderDate);
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 60) {
+      return `${diffMins}m`;
+    }
+    const diffHours = Math.floor(diffMins / 60);
+    const remMins = diffMins % 60;
+    return `${diffHours}h ${remMins}m`;
+  };
+
+  const getOccupiedMinutes = (orderDate) => {
+    if (!orderDate) return 0;
+    const diffMs = new Date() - new Date(orderDate);
+    return Math.floor(diffMs / 60000);
+  };
+
+  const getBadgeStyle = (orderDate) => {
+    const mins = getOccupiedMinutes(orderDate);
+    if (mins < 10) {
+      return {
+        border: '1px solid rgba(25, 135, 84, 0.25)',
+        backgroundColor: 'rgba(25, 135, 84, 0.05)',
+        color: '#198754',
+      };
+    } else if (mins <= 20) {
+      return {
+        border: '1px solid rgba(255, 193, 7, 0.35)',
+        backgroundColor: 'rgba(255, 193, 7, 0.08)',
+        color: '#d39e00', // slightly darker yellow for better legibility on white bg
+      };
+    } else {
+      return {
+        border: '1px solid rgba(220, 53, 69, 0.25)',
+        backgroundColor: 'rgba(220, 53, 69, 0.05)',
+        color: '#dc3545',
+      };
+    }
+  };
+
   const activeTakeawaysAndDeliveriesFiltered = activeTakeawaysAndDeliveries.filter((order) => order.order_status !== 'Requested');
 
   const websiteIncomingOrders = activeTakeawaysAndDeliveries.filter(
@@ -268,7 +318,7 @@ const Dashboard = () => {
                 <Col className="p-0">
                   <Row className="g-4">
                     {tableArea.tables
-                      .sort((a, b) => a.table_no - b.table_no)
+                      .sort((a, b) => String(a.table_no).localeCompare(String(b.table_no), undefined, { numeric: true, sensitivity: 'base' }))
                       .map((table) => {
                         const activeOrder = activeDineInOrders.find((order) => order.table_no === table.table_no && order.table_area === tableArea.area);
 
@@ -321,7 +371,7 @@ const Dashboard = () => {
                               }}
                               onClick={() => handleTableClick(table._id, activeOrder?._id)}
                             >
-                              <div className="p-2 p-sm-3 text-center d-flex flex-column h-100 justify-content-between align-items-center">
+                              <div className={`p-2 p-sm-3 text-center d-flex flex-column h-100 align-items-center ${activeOrder ? 'justify-content-between' : 'justify-content-start'}`}>
                                 <div
                                   className="d-flex align-items-center justify-content-center mb-2 mb-sm-3 dashboard-table-circle"
                                   style={{
@@ -330,7 +380,20 @@ const Dashboard = () => {
                                     border: '2px solid rgba(35,179,244,0.3)',
                                   }}
                                 >
-                                  <h3 className="mb-0 fw-bold dashboard-table-no" style={{ color: '#23b3f4' }}>
+                                  <h3
+                                    className="mb-0 fw-bold dashboard-table-no"
+                                    style={{
+                                      color: '#23b3f4',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      fontSize:
+                                        String(table.table_no).length <= 2
+                                          ? '1.5rem'
+                                          : String(table.table_no).length <= 4
+                                          ? '1.1rem'
+                                          : '0.75rem',
+                                    }}
+                                  >
                                     {table.table_no}
                                   </h3>
                                 </div>
@@ -339,6 +402,25 @@ const Dashboard = () => {
                                   <p className="dashboard-table-capacity mb-2 fw-bold" style={{ color: '#23b3f4' }}>
                                     {table.max_person}
                                   </p>
+                                  {activeOrder && (
+                                    <div className="mb-2">
+                                      <Badge
+                                        bg="none"
+                                        className="rounded-pill px-2 py-1"
+                                        style={{
+                                          fontSize: '10px',
+                                          fontWeight: 'bold',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '4px',
+                                          ...getBadgeStyle(activeOrder.order_date),
+                                        }}
+                                      >
+                                        <i className="far fa-clock" style={{ fontSize: '9px' }} />
+                                        <span>{getOccupiedDuration(activeOrder.order_date)}</span>
+                                      </Badge>
+                                    </div>
+                                  )}
                                   {activeOrder &&
                                     (activeOrder.order_status === 'KOT' ? (
                                       <div className="w-100 mt-1 mt-sm-2">

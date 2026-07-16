@@ -16,6 +16,8 @@ import { useSocket } from 'contexts/SocketContext';
 import { AuthContext } from 'contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { openPrintWindow, printKOTSlip, printModalBill } from 'utils/printUtils';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import MenuGrid from './components/MenuGrid';
 import OrderCartTable from './components/OrderCartTable';
 import CustomerInfoForm from './components/CustomerInfoForm';
@@ -76,6 +78,34 @@ const getLocalDateTimeString = (date = new Date()) => {
   const tzoffset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - tzoffset).toISOString().slice(0, 16);
 };
+
+// ── Custom Date Input ──────────────────────────────────────────────────────────
+const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
+  <div className="position-relative w-100" style={{ cursor: 'pointer' }} onClick={onClick}>
+    <Form.Control
+      size="sm"
+      value={value}
+      ref={ref}
+      readOnly
+      style={{
+        width: '100%',
+        height: '30px',
+        padding: '0 30px 0 8px',
+        fontSize: '12px',
+        fontWeight: 600,
+        color: '#1e293b',
+        border: '1.5px solid rgba(226,232,240,0.9)',
+        borderRadius: '6px',
+        background: '#f8fafc',
+        cursor: 'pointer',
+        boxSizing: 'border-box',
+      }}
+    />
+    <span className="position-absolute end-0 top-50 translate-middle-y pe-2" style={{ pointerEvents: 'none', color: '#94a3b8' }}>
+      <CsLineIcons icon="calendar" size="13" />
+    </span>
+  </div>
+));
 
 // ── Component ──────────────────────────────────────────────────────────────────
 const UnifiedOrder = () => {
@@ -866,20 +896,15 @@ const UnifiedOrder = () => {
           </Form.Select>
           <div className="d-none d-md-flex align-items-center gap-1 order-md-4" style={{ flexShrink: 0 }}>
             <span className="text-muted small fw-semibold">Date:</span>
-            <Form.Control
-              type="datetime-local"
-              size="sm"
-              value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              style={{
-                borderRadius: '50px',
-                borderColor: 'rgba(35,179,244,0.35)',
-                color: '#23b3f4',
-                fontWeight: 700,
-                fontSize: '12px',
-                padding: '0.15rem 0.5rem',
-                maxWidth: '185px',
-              }}
+            <DatePicker
+              showTimeSelect
+              timeFormat="hh:mm a"
+              timeIntervals={15}
+              timeCaption="Time"
+              dateFormat="dd/MM/yyyy hh:mm a"
+              selected={orderDate ? new Date(orderDate) : new Date()}
+              onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
+              customInput={<CustomDateInput />}
             />
           </div>
         </div>
@@ -1115,25 +1140,15 @@ const UnifiedOrder = () => {
             >
               Order Date
             </label>
-            <Form.Control
-              type="datetime-local"
-              size="sm"
-              value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              style={{
-                width: '100%',
-                height: '30px',
-                padding: '0 8px',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#1e293b',
-                border: '1.5px solid rgba(226,232,240,0.9)',
-                borderRadius: '6px',
-                outline: 'none',
-                background: '#f8fafc',
-                transition: 'all 0.18s',
-                boxSizing: 'border-box',
-              }}
+            <DatePicker
+              showTimeSelect
+              timeFormat="hh:mm a"
+              timeIntervals={15}
+              timeCaption="Time"
+              dateFormat="dd/MM/yyyy hh:mm a"
+              selected={orderDate ? new Date(orderDate) : new Date()}
+              onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
+              customInput={<CustomDateInput />}
             />
           </div>
         </div>
