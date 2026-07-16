@@ -1,0 +1,110 @@
+import React, { useState } from 'react';
+import { Modal, Button, Spinner } from 'react-bootstrap';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
+
+const customStyles = `
+  .delete-item-modal-custom-btn-outline {
+    border: 1px solid #23b3f4 !important;
+    color: #23b3f4 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+  .delete-item-modal-custom-btn-outline:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
+  .delete-item-modal-custom-btn-delete {
+    border: 1px solid #cf2637 !important;
+    color: #cf2637 !important;
+    background-color: #fff !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+  .delete-item-modal-custom-btn-delete:hover {
+    background-color: #cf2637 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(207, 38, 55, 0.25) !important;
+  }
+  .delete-item-modal-custom-btn-delete:hover svg {
+    stroke: #fff !important;
+  }
+`;
+
+const DeleteItemModal = ({ show, handleClose, data, fetchCatalogData }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await axios.delete(`${process.env.REACT_APP_API}/catalog/delete/${data._id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      toast.success('Item deleted successfully!');
+      await fetchCatalogData();
+      handleClose();
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      toast.error(err.response?.data?.message || 'Failed to delete item.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <Modal show={show} onHide={handleClose} centered backdrop="static">
+      <style>{customStyles}</style>
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold" style={{ color: '#cf2637' }}>
+          Confirm Delete
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="py-4">
+        <div className="d-flex align-items-center mb-3">
+          <div className="p-3 rounded-circle me-3" style={{ backgroundColor: 'rgba(207, 38, 55, 0.1)' }}>
+            <CsLineIcons icon="bin" size="24" style={{ color: '#cf2637' }} />
+          </div>
+          <div>
+            <p className="mb-0 fw-bold text-dark">Are you sure you want to delete this item?</p>
+            <p className="mb-0 text-muted small">This action cannot be undone and will permanently remove "{data?.item_name}" from your catalog.</p>
+          </div>
+        </div>
+      </Modal.Body>
+      <Modal.Footer className="border-0 pt-0">
+        <Button 
+          variant="outline-primary" 
+          onClick={handleClose} 
+          disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold delete-item-modal-custom-btn-outline"
+        >
+          Cancel
+        </Button>
+        <Button 
+          variant="outline-danger" 
+          onClick={handleDelete} 
+          disabled={isDeleting}
+          className="rounded-pill px-4 fw-bold shadow-sm delete-item-modal-custom-btn-delete"
+        >
+          {isDeleting ? (
+            <>
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
+              Deleting...
+            </>
+          ) : (
+            <div className="d-flex align-items-center">
+              <CsLineIcons icon="bin" size="16" className="me-2" stroke="currentColor" />
+              Delete
+            </div>
+          )}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
+export default DeleteItemModal;

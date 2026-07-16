@@ -33,13 +33,16 @@ const UserDetails = () => {
     price: "",
     discount: "",
     paymentMode: "",
-    paymentDetails: ""
+    paymentDetails: "",
+    planTerm: "Custom",
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: ""
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
   const [revokeReason, setRevokeReason] = useState("");
-  
+
   const [showSubscribeModal, setShowSubscribeModal] = useState(false);
   const [subscribeForm, setSubscribeForm] = useState({
     planId: "",
@@ -54,12 +57,18 @@ const UserDetails = () => {
 
 
 
-  const title = user ? `${user.name} Profile` : "Restaurant Profile";
-  const description = "View and manage restaurant details, subscriptions, and support queries.";
+  const isStreetFood = user?.is_street_food;
+  const isShop = user?.is_shop;
+
+  const profileText = isStreetFood ? "Street Food Profile" : (isShop ? "Shop Profile" : "Restaurant Profile");
+
+  const title = user ? `${user.name} Profile` : profileText;
+  const description = `View and manage ${profileText.toLowerCase()}, subscriptions, and support queries.`;
+
   const breadcrumbs = [
     { to: "", text: "Home" },
-    { to: "dashboard", text: "Dashboard" },
-    { to: `userdetails/${id}`, text: "Restaurant Profile" },
+    ...(isStreetFood || isShop ? [] : [{ to: "dashboard", text: "Dashboard" }]),
+    { to: `userdetails/${id}`, text: profileText },
   ];
 
   const fetchUserData = async () => {
@@ -99,13 +108,13 @@ const UserDetails = () => {
     try {
       setIsSubmitting(true);
       let payload = { isApproved: isApproving };
-      
+
       if (isApproving) {
         payload = { ...payload, ...approveForm };
       } else {
         payload.revokeReason = revokeReason;
       }
-      
+
       await axios.put(
         `${process.env.REACT_APP_API_URL}/api/superadmin/toggle-approval/${id}`,
         payload,
@@ -116,15 +125,15 @@ const UserDetails = () => {
         }
       );
       toast.success(`Restaurant ${isApproving ? "approved" : "revoked"} successfully`);
-      
+
       if (isApproving) {
         setShowApproveModal(false);
-        setApproveForm({ price: "", discount: "", paymentMode: "", paymentDetails: "" });
+        setApproveForm({ price: "", discount: "", paymentMode: "", paymentDetails: "", planTerm: "Custom", startDate: new Date().toISOString().split('T')[0], endDate: "" });
       } else {
         setShowRevokeModal(false);
         setRevokeReason("");
       }
-      
+
       fetchUserData();
     } catch (err) {
       console.error("Failed to toggle approval", err);
@@ -271,15 +280,15 @@ const UserDetails = () => {
 
   const CORE_PLAN_NAMES = ["street food", "qsr", "dine in", "cloud kitchen", "chain"];
   const corePlans = subscriptions.filter(sub => sub.plan_name && CORE_PLAN_NAMES.some(cp => sub.plan_name.toLowerCase().includes(cp)));
-  
+
   const activeCorePlan = corePlans.find(sub => sub.status === "active") || corePlans[0];
   const fullActiveCorePlan = activeCorePlan ? allPlans.find(p => p.plan_name === activeCorePlan.plan_name) : null;
   const activeCorePlanId = fullActiveCorePlan ? fullActiveCorePlan._id : null;
 
   const subscribedAddOns = subscriptions.filter(sub => sub.plan_name && !CORE_PLAN_NAMES.some(cp => sub.plan_name.toLowerCase().includes(cp)));
-  const availableAddOns = allPlans.filter(plan => 
+  const availableAddOns = allPlans.filter(plan =>
     plan.is_addon &&
-    !CORE_PLAN_NAMES.some(cp => plan.plan_name.toLowerCase().includes(cp)) && 
+    !CORE_PLAN_NAMES.some(cp => plan.plan_name.toLowerCase().includes(cp)) &&
     (plan.compatible_with === activeCorePlanId || !plan.compatible_with) &&
     !subscribedAddOns.some(sub => sub.plan_name === plan.plan_name)
   );
@@ -295,7 +304,7 @@ const UserDetails = () => {
       is_unsubscribed: true
     }))
   ];
-  
+
 
   const uniformStyle = { width: "110px", height: "32px", display: "flex", justifyContent: "center", alignItems: "center", margin: 0, borderRadius: "50rem", boxSizing: "border-box", padding: 0, fontSize: "0.85rem" };
 
@@ -312,9 +321,9 @@ const UserDetails = () => {
           {sub.status === "active" && <span className="border border-success text-success rounded-pill fw-bold text-uppercase" style={uniformStyle}>Active</span>}
           {sub.status === "blocked" && <span className="border border-danger text-danger rounded-pill fw-bold text-uppercase" style={uniformStyle}>Blocked</span>}
           {sub.status === "not subscribed" && (
-            <button 
-              type="button" 
-              className="btn btn-outline-primary rounded-pill fw-bold text-uppercase" 
+            <button
+              type="button"
+              className="btn btn-outline-primary rounded-pill fw-bold text-uppercase"
               style={{ ...uniformStyle, padding: 0 }}
               onClick={() => handleOpenSubscribe(sub)}
             >
@@ -322,7 +331,7 @@ const UserDetails = () => {
             </button>
           )}
           {sub.status !== "active" && sub.status !== "blocked" && sub.status !== "not subscribed" && <span className="border border-warning text-warning rounded-pill fw-bold text-uppercase" style={uniformStyle}>{sub.status}</span>}
-          
+
           {sub.status === "blocked" && (
             <button type="button" className="btn btn-outline-primary rounded-pill fw-bold" style={{ width: "32px", height: "32px", display: "flex", justifyContent: "center", alignItems: "center", padding: 0 }} onClick={() => { setselectedSub4unblock(sub._id); setselectedSubName4unblock(sub.plan_name); setShowUnblockModal(true); }}>
               <CsLineIcons icon="unlock" size="14" />
@@ -350,19 +359,19 @@ const UserDetails = () => {
         </div>
         <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
           <div>
-            {sub.status === "active" && <span className="border border-success text-success rounded-pill fw-bold text-uppercase" style={{...uniformStyle, width: "90px", height: "26px", fontSize: "0.75rem"}}>Active</span>}
-            {sub.status === "blocked" && <span className="border border-danger text-danger rounded-pill fw-bold text-uppercase" style={{...uniformStyle, width: "90px", height: "26px", fontSize: "0.75rem"}}>Blocked</span>}
+            {sub.status === "active" && <span className="border border-success text-success rounded-pill fw-bold text-uppercase" style={{ ...uniformStyle, width: "90px", height: "26px", fontSize: "0.75rem" }}>Active</span>}
+            {sub.status === "blocked" && <span className="border border-danger text-danger rounded-pill fw-bold text-uppercase" style={{ ...uniformStyle, width: "90px", height: "26px", fontSize: "0.75rem" }}>Blocked</span>}
             {sub.status === "not subscribed" && (
-              <button 
-                type="button" 
-                className="btn btn-outline-primary rounded-pill fw-bold text-uppercase" 
+              <button
+                type="button"
+                className="btn btn-outline-primary rounded-pill fw-bold text-uppercase"
                 style={{ ...uniformStyle, width: "90px", height: "26px", fontSize: "0.75rem", padding: 0 }}
                 onClick={() => handleOpenSubscribe(sub)}
               >
                 Subscribe
               </button>
             )}
-            {sub.status !== "active" && sub.status !== "blocked" && sub.status !== "not subscribed" && <span className="border border-warning text-warning rounded-pill fw-bold text-uppercase" style={{...uniformStyle, width: "90px", height: "26px", fontSize: "0.75rem"}}>{sub.status}</span>}
+            {sub.status !== "active" && sub.status !== "blocked" && sub.status !== "not subscribed" && <span className="border border-warning text-warning rounded-pill fw-bold text-uppercase" style={{ ...uniformStyle, width: "90px", height: "26px", fontSize: "0.75rem" }}>{sub.status}</span>}
           </div>
           {sub.status === "blocked" && (
             <button type="button" className="btn btn-outline-primary rounded-pill fw-bold" style={{ width: "26px", height: "26px", display: "flex", justifyContent: "center", alignItems: "center", padding: 0 }} onClick={() => { setselectedSub4unblock(sub._id); setselectedSubName4unblock(sub.plan_name); setShowUnblockModal(true); }}>
@@ -381,6 +390,32 @@ const UserDetails = () => {
       </div>
     );
   }
+
+  const handlePlanTermChange = (term) => {
+    let { endDate } = approveForm;
+    if (term !== "Custom" && approveForm.startDate) {
+      const d = new Date(approveForm.startDate);
+      if (term === "1 Month") d.setMonth(d.getMonth() + 1);
+      else if (term === "3 Months") d.setMonth(d.getMonth() + 3);
+      else if (term === "6 Months") d.setMonth(d.getMonth() + 6);
+      else if (term === "Yearly") d.setFullYear(d.getFullYear() + 1);
+      [endDate] = d.toISOString().split('T');
+    }
+    setApproveForm({ ...approveForm, planTerm: term, endDate });
+  };
+
+  const handleStartDateChange = (dateStr) => {
+    let { endDate } = approveForm;
+    if (approveForm.planTerm !== "Custom") {
+      const d = new Date(dateStr);
+      if (approveForm.planTerm === "1 Month") d.setMonth(d.getMonth() + 1);
+      else if (approveForm.planTerm === "3 Months") d.setMonth(d.getMonth() + 3);
+      else if (approveForm.planTerm === "6 Months") d.setMonth(d.getMonth() + 6);
+      else if (approveForm.planTerm === "Yearly") d.setFullYear(d.getFullYear() + 1);
+      [endDate] = d.toISOString().split('T');
+    }
+    setApproveForm({ ...approveForm, startDate: dateStr, endDate });
+  };
 
   return (
     <>
@@ -418,11 +453,11 @@ const UserDetails = () => {
               <Card.Body className="p-4 p-xl-5">
                 <div className="text-center mb-4">
                   {user?.logo ? (
-                    <img 
-                      src={user.logo.startsWith("http") ? user.logo : `${process.env.REACT_APP_API_URL}${user.logo}`} 
-                      alt={user.name} 
-                      className="rounded-circle mx-auto mb-3 shadow-sm bg-white p-1" 
-                      style={{ width: "90px", height: "90px", objectFit: "contain" }} 
+                    <img
+                      src={user.logo.startsWith("http") ? user.logo : `${process.env.REACT_APP_API_URL}${user.logo}`}
+                      alt={user.name}
+                      className="rounded-circle mx-auto mb-3 shadow-sm bg-white p-1"
+                      style={{ width: "90px", height: "90px", objectFit: "contain" }}
                     />
                   ) : (
                     <div className="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3 shadow-sm" style={{ width: "90px", height: "90px", fontSize: "36px", fontWeight: 700, background: "linear-gradient(135deg, #3b82f6 0%, #7444FD 100%)" }}>
@@ -471,18 +506,20 @@ const UserDetails = () => {
 
           {/* Subscriptions Card */}
           <Col lg="8">
-            <Card className="h-100 shadow-sm border-0">
+            <Card className="shadow-sm border-0 mb-4">
               <Card.Body className="p-4">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3 gap-md-0">
                   <h5 className="fw-bold mb-0">Active Subscriptions</h5>
-                  <div className="d-flex gap-2">
-                    <button type="button" className="btn btn-outline-warning rounded-pill fw-bold" style={{ height: "32px", display: "flex", alignItems: "center", fontSize: "0.85rem" }} disabled={!selectedSubs.length} onClick={() => setShowBlockModal(true)}>
-                      <CsLineIcons icon="lock-off" size="14" className="me-1" /> Block Selected
-                    </button>
-                    <button type="button" className="btn btn-outline-info rounded-pill fw-bold" style={{ height: "32px", display: "flex", alignItems: "center", fontSize: "0.85rem" }} disabled={!selectedSubs.length} onClick={() => setShowExpandModal(true)}>
-                      <CsLineIcons icon="expand" size="14" className="me-1" /> Extend
-                    </button>
-                  </div>
+                  {!isStreetFood && !isShop && (
+                    <div className="d-flex gap-2">
+                      <button type="button" className="btn btn-outline-warning rounded-pill fw-bold" style={{ height: "32px", display: "flex", alignItems: "center", fontSize: "0.85rem" }} disabled={!selectedSubs.length} onClick={() => setShowBlockModal(true)}>
+                        <CsLineIcons icon="lock-off" size="14" className="me-1" /> Block Selected
+                      </button>
+                      <button type="button" className="btn btn-outline-info rounded-pill fw-bold" style={{ height: "32px", display: "flex", alignItems: "center", fontSize: "0.85rem" }} disabled={!selectedSubs.length} onClick={() => setShowExpandModal(true)}>
+                        <CsLineIcons icon="expand" size="14" className="me-1" /> Extend
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Main Core Plan Highlight */}
@@ -501,7 +538,7 @@ const UserDetails = () => {
                       {activeCorePlan.status}
                     </span>
                   </div>
-                ) : user?.is_street_food ? (
+                ) : user?.is_street_food || user?.is_shop ? (
                   <div className="d-flex justify-content-between align-items-center rounded p-3 mb-4" style={{ backgroundColor: "rgba(59, 130, 246, 0.05)", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
                     <div className="d-flex align-items-center gap-3">
                       <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: "40px", height: "40px" }}>
@@ -509,7 +546,7 @@ const UserDetails = () => {
                       </div>
                       <div>
                         <div className="small text-primary fw-bold text-uppercase" style={{ letterSpacing: "1px" }}>Current Core Plan</div>
-                        <h5 className="fw-bold mb-0 text-primary">Street Food</h5>
+                        <h5 className="fw-bold mb-0 text-primary">{user?.is_shop ? "Shop" : "Street Food"}</h5>
                       </div>
                     </div>
                     <span className="border border-success text-success rounded-pill fw-bold text-uppercase" style={uniformStyle}>
@@ -518,51 +555,52 @@ const UserDetails = () => {
                   </div>
                 ) : null}
 
-                <div className="d-none d-lg-block">
-                  {addOns.length > 0 && (
-                    <h6 className="text-muted fw-bold mb-3 text-uppercase" style={{ letterSpacing: "1px", fontSize: "0.8rem" }}>Add-on Features</h6>
-                  )}
-                  <Table responsive className="react-table align-middle">
-                    <thead>
-                      <tr>
-                        <th style={{ width: "40px" }}>
-                          <Form.Check type="checkbox" onChange={(e) => setSelectedSubs(e.target.checked ? subscriptions.map((s) => s._id) : [])} checked={selectedSubs.length === subscriptions.length && subscriptions.length > 0} />
-                        </th>
-                        <th>Plan Name</th>
-                        <th>Price</th>
-                        <th>Valid Until</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                {!isStreetFood && !isShop && (
+                  <>
+                    <div className="d-none d-lg-block">
+                      {addOns.length > 0 && (
+                        <h6 className="text-muted fw-bold mb-3 text-uppercase" style={{ letterSpacing: "1px", fontSize: "0.8rem" }}>Add-on Features</h6>
+                      )}
+                      <Table responsive className="react-table align-middle">
+                        <thead>
+                          <tr>
+                            <th style={{ width: "40px" }}>
+                              <Form.Check type="checkbox" onChange={(e) => setSelectedSubs(e.target.checked ? subscriptions.map((s) => s._id) : [])} checked={selectedSubs.length === subscriptions.length && subscriptions.length > 0} />
+                            </th>
+                            <th>Plan Name</th>
+                            <th>Price</th>
+                            <th>Valid Until</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
 
-                      
-                      {/* ADD ONS SECTION */}
-                      {addOns.map(renderSubscriptionRow)}
+
+                          {/* ADD ONS SECTION */}
+                          {addOns.map(renderSubscriptionRow)}
+
+                          {subscriptions.length === 0 && (
+                            <tr><td colSpan="5" className="text-center text-muted py-4">No subscriptions found</td></tr>
+                          )}
+                        </tbody>
+                      </Table>
+                    </div>
+
+                    <div className="d-block d-lg-none">
+
+
+                      {addOns.length > 0 && <h6 className="text-muted fw-bold mt-4 mb-3 text-uppercase" style={{ letterSpacing: "1px", fontSize: "0.8rem" }}>Add-on Features</h6>}
+                      {addOns.map(renderMobileSubscriptionCard)}
 
                       {subscriptions.length === 0 && (
-                        <tr><td colSpan="5" className="text-center text-muted py-4">No subscriptions found</td></tr>
+                        <div className="text-center text-muted py-4 border rounded bg-light">No subscriptions found</div>
                       )}
-                    </tbody>
-                  </Table>
-                </div>
-                
-                <div className="d-block d-lg-none">
-
-
-                  {addOns.length > 0 && <h6 className="text-muted fw-bold mt-4 mb-3 text-uppercase" style={{ letterSpacing: "1px", fontSize: "0.8rem" }}>Add-on Features</h6>}
-                  {addOns.map(renderMobileSubscriptionCard)}
-
-                  {subscriptions.length === 0 && (
-                    <div className="text-center text-muted py-4 border rounded bg-light">No subscriptions found</div>
-                  )}
-                </div>
+                    </div>
+                  </>
+                )}
               </Card.Body>
             </Card>
-          </Col>
-
-          {/* Customer Queries Card */}
-          <Col lg="12">
+            {/* Customer Queries Card */}
             <Card className="shadow-sm border-0">
               <Card.Body className="p-4">
                 <h5 className="fw-bold mb-4">Support Inquiries</h5>
@@ -657,36 +695,77 @@ const UserDetails = () => {
             <h6 className="fw-bold mb-1">Offline Payment Details</h6>
             <div className="text-muted small">Record payment details to activate this account.</div>
           </div>
-          
+
           <Row className="g-3">
             <Col xs={6}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Amount Paid (₹)</Form.Label>
-                <Form.Control 
-                  type="number" 
-                  placeholder="e.g. 5000" 
-                  value={approveForm.price} 
-                  onChange={(e) => setApproveForm({...approveForm, price: e.target.value})}
+                <Form.Control
+                  type="number"
+                  placeholder="e.g. 5000"
+                  value={approveForm.price}
+                  onChange={(e) => setApproveForm({ ...approveForm, price: e.target.value })}
                 />
               </Form.Group>
             </Col>
             <Col xs={6}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Discount Given (₹)</Form.Label>
-                <Form.Control 
-                  type="number" 
-                  placeholder="e.g. 500" 
-                  value={approveForm.discount} 
-                  onChange={(e) => setApproveForm({...approveForm, discount: e.target.value})}
+                <Form.Control
+                  type="number"
+                  placeholder="e.g. 500"
+                  value={approveForm.discount}
+                  onChange={(e) => setApproveForm({ ...approveForm, discount: e.target.value })}
                 />
               </Form.Group>
             </Col>
+            {(isStreetFood || isShop) && (
+              <>
+                <Col xs={12}>
+                  <Form.Group>
+                    <Form.Label className="fw-bold small">Plan Term</Form.Label>
+                    <Form.Select 
+                      value={approveForm.planTerm} 
+                      onChange={(e) => handlePlanTermChange(e.target.value)}
+                    >
+                      <option value="Custom">Custom</option>
+                      <option value="1 Month">1 Month</option>
+                      <option value="3 Months">3 Months</option>
+                      <option value="6 Months">6 Months</option>
+                      <option value="Yearly">Yearly</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col xs={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-bold small">Active On Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={approveForm.startDate}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-bold small">Expiry Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={approveForm.endDate}
+                      onChange={(e) => setApproveForm({ ...approveForm, endDate: e.target.value, planTerm: "Custom" })}
+                      disabled={approveForm.planTerm !== "Custom"}
+                    />
+                  </Form.Group>
+                </Col>
+              </>
+            )}
+
             <Col xs={12}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Payment Mode</Form.Label>
-                <Form.Select 
-                  value={approveForm.paymentMode} 
-                  onChange={(e) => setApproveForm({...approveForm, paymentMode: e.target.value})}
+                <Form.Select
+                  value={approveForm.paymentMode}
+                  onChange={(e) => setApproveForm({ ...approveForm, paymentMode: e.target.value })}
                 >
                   <option value="">Select Payment Mode</option>
                   <option value="UPI">UPI</option>
@@ -700,12 +779,12 @@ const UserDetails = () => {
             <Col xs={12}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Payment Details / Reference</Form.Label>
-                <Form.Control 
-                  as="textarea" 
-                  rows={2} 
-                  placeholder="Enter transaction ID, notes, or reference number" 
-                  value={approveForm.paymentDetails} 
-                  onChange={(e) => setApproveForm({...approveForm, paymentDetails: e.target.value})}
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  placeholder="Enter transaction ID, notes, or reference number"
+                  value={approveForm.paymentDetails}
+                  onChange={(e) => setApproveForm({ ...approveForm, paymentDetails: e.target.value })}
                 />
               </Form.Group>
             </Col>
@@ -715,9 +794,9 @@ const UserDetails = () => {
           <Button variant="outline-secondary" className="rounded-pill fw-bold" onClick={() => setShowApproveModal(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button 
-            variant="success" 
-            className="rounded-pill fw-bold px-4" 
+          <Button
+            variant="success"
+            className="rounded-pill fw-bold px-4"
             onClick={() => handleToggleApproval(true)}
             disabled={!approveForm.price || !approveForm.paymentMode || isSubmitting}
           >
@@ -741,13 +820,13 @@ const UserDetails = () => {
             <h6 className="fw-bold mb-1">Reason for Revocation</h6>
             <div className="text-muted small">Please provide a reason. This will be sent to the restaurant via email.</div>
           </div>
-          
+
           <Form.Group>
-            <Form.Control 
-              as="textarea" 
-              rows={3} 
-              placeholder="e.g., Payment failed, violation of terms, etc." 
-              value={revokeReason} 
+            <Form.Control
+              as="textarea"
+              rows={3}
+              placeholder="e.g., Payment failed, violation of terms, etc."
+              value={revokeReason}
               onChange={(e) => setRevokeReason(e.target.value)}
             />
           </Form.Group>
@@ -756,9 +835,9 @@ const UserDetails = () => {
           <Button variant="outline-secondary" className="rounded-pill fw-bold" onClick={() => setShowRevokeModal(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button 
-            variant="danger" 
-            className="rounded-pill fw-bold px-4" 
+          <Button
+            variant="danger"
+            className="rounded-pill fw-bold px-4"
             onClick={() => handleToggleApproval(false)}
             disabled={!revokeReason.trim() || isSubmitting}
           >
@@ -782,20 +861,20 @@ const UserDetails = () => {
             <Col md={6}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Active On Date *</Form.Label>
-                <Form.Control 
+                <Form.Control
                   type="date"
-                  value={subscribeForm.startDate} 
-                  onChange={(e) => setSubscribeForm({...subscribeForm, startDate: e.target.value})}
+                  value={subscribeForm.startDate}
+                  onChange={(e) => setSubscribeForm({ ...subscribeForm, startDate: e.target.value })}
                 />
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Expire Date *</Form.Label>
-                <Form.Control 
+                <Form.Control
                   type="date"
-                  value={subscribeForm.endDate} 
-                  onChange={(e) => setSubscribeForm({...subscribeForm, endDate: e.target.value})}
+                  value={subscribeForm.endDate}
+                  onChange={(e) => setSubscribeForm({ ...subscribeForm, endDate: e.target.value })}
                 />
               </Form.Group>
             </Col>
@@ -805,22 +884,22 @@ const UserDetails = () => {
             <Col md={6}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Price (₹) *</Form.Label>
-                <Form.Control 
-                  type="number" 
-                  placeholder="0" 
-                  value={subscribeForm.price} 
-                  onChange={(e) => setSubscribeForm({...subscribeForm, price: e.target.value})}
+                <Form.Control
+                  type="number"
+                  placeholder="0"
+                  value={subscribeForm.price}
+                  onChange={(e) => setSubscribeForm({ ...subscribeForm, price: e.target.value })}
                 />
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Discount / Offer Details</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  placeholder="e.g., 20% off, Free for 3 months" 
-                  value={subscribeForm.discount} 
-                  onChange={(e) => setSubscribeForm({...subscribeForm, discount: e.target.value})}
+                <Form.Control
+                  type="text"
+                  placeholder="e.g., 20% off, Free for 3 months"
+                  value={subscribeForm.discount}
+                  onChange={(e) => setSubscribeForm({ ...subscribeForm, discount: e.target.value })}
                 />
               </Form.Group>
             </Col>
@@ -830,9 +909,9 @@ const UserDetails = () => {
             <Col md={12}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Payment Mode *</Form.Label>
-                <Form.Select 
-                  value={subscribeForm.paymentMode} 
-                  onChange={(e) => setSubscribeForm({...subscribeForm, paymentMode: e.target.value})}
+                <Form.Select
+                  value={subscribeForm.paymentMode}
+                  onChange={(e) => setSubscribeForm({ ...subscribeForm, paymentMode: e.target.value })}
                 >
                   <option value="">Select Payment Mode</option>
                   <option value="UPI">UPI</option>
@@ -846,12 +925,12 @@ const UserDetails = () => {
             <Col xs={12}>
               <Form.Group>
                 <Form.Label className="fw-bold small">Payment Details / Reference</Form.Label>
-                <Form.Control 
-                  as="textarea" 
-                  rows={2} 
-                  placeholder="Enter transaction ID, notes, or reference number" 
-                  value={subscribeForm.paymentDetails} 
-                  onChange={(e) => setSubscribeForm({...subscribeForm, paymentDetails: e.target.value})}
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  placeholder="Enter transaction ID, notes, or reference number"
+                  value={subscribeForm.paymentDetails}
+                  onChange={(e) => setSubscribeForm({ ...subscribeForm, paymentDetails: e.target.value })}
                 />
               </Form.Group>
             </Col>
@@ -861,9 +940,9 @@ const UserDetails = () => {
           <Button variant="outline-secondary" className="rounded-pill fw-bold" onClick={() => setShowSubscribeModal(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button 
-            variant="primary" 
-            className="rounded-pill fw-bold px-4" 
+          <Button
+            variant="primary"
+            className="rounded-pill fw-bold px-4"
             onClick={handleSubscribeSubmit}
             disabled={!subscribeForm.price || !subscribeForm.paymentMode || !subscribeForm.startDate || !subscribeForm.endDate || isSubmitting}
           >

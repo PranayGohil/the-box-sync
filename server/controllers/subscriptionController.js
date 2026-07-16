@@ -1,5 +1,6 @@
 const SubscriptionPlan = require("../models/subscriptionPlanModel");
 const Subscription = require("../models/subscriptionModel");
+const ShopUser = require("../models/shopUserModel");
 const User = require("../models/userModel");
 const cron = require("node-cron");
 const { logActivity } = require("../utils/auditLogger");
@@ -116,9 +117,16 @@ const getUserSubscriptionInfo = async (req, res) => {
 const getUserSubscriptionInfoById = async (req, res) => {
   try {
     const userId = req.params.id;
-    const user = await User.findById(userId)
+    let user = await User.findById(userId)
       .select("name email mobile restaurant_code isApproved is_street_food address city state createdAt")
       .lean();
+      
+    if (!user) {
+      user = await ShopUser.findById(userId)
+        .select("name email mobile restaurant_code isApproved is_shop address city state createdAt")
+        .lean();
+    }
+    
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const subscriptions = await Subscription.find({ user_id: userId })
@@ -446,6 +454,19 @@ const getAllSubscriptions = async (req, res) => {
     const users = await User.find({})
       .select("_id name email mobile restaurant_code isApproved is_street_food purchasedPlan")
       .lean();
+    
+    let shopUsers = [];
+    try {
+      shopUsers = await ShopUser.find({})
+        .select("_id name email mobile restaurant_code isApproved is_shop purchasedPlan")
+        .lean();
+    } catch (e) {
+      console.error("Error fetching shop users:", e);
+    }
+    
+    // Merge shop users and standard users
+    const allUsers = [...users, ...shopUsers];
+
     const subscriptions = await Subscription.find({}).lean();
 
     const subsByUser = subscriptions.reduce((acc, sub) => {
@@ -455,7 +476,7 @@ const getAllSubscriptions = async (req, res) => {
       return acc;
     }, {});
 
-    const data = users.map((user) => ({
+    const data = allUsers.map((user) => ({
       _id: user._id,
       name: user.name,
       email: user.email,
@@ -463,6 +484,7 @@ const getAllSubscriptions = async (req, res) => {
       restaurant_code: user.restaurant_code,
       isApproved: user.isApproved,
       is_street_food: user.is_street_food,
+      is_shop: user.is_shop,
       purchasedPlan: user.purchasedPlan,
       subscriptions: subsByUser[user._id.toString()] || [],
     }));

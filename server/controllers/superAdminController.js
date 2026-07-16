@@ -193,18 +193,25 @@ const superAdminLogin = async (req, res) => {
 };
 
 const User = require("../models/userModel");
+const ShopUser = require("../models/shopUserModel");
 
 const impersonateUser = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await User.findById(userId);
+    let user = await User.findById(userId);
+    let isShopUser = false;
+
+    if (!user) {
+      user = await ShopUser.findById(userId);
+      isShopUser = true;
+    }
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Generate standard Admin token for this restaurant user
+    // Generate standard Admin token for this restaurant/shop user
     const token = await user.generateAuthToken("Admin");
 
     // Log Impersonation Activity
@@ -335,11 +342,18 @@ const deleteSubAdmin = async (req, res) => {
 const toggleApproval = async (req, res) => {
   try {
     const { id } = req.params;
-    const { price, discount, paymentMode, paymentDetails, isApproved, revokeReason } = req.body;
+    const { price, discount, paymentMode, paymentDetails, isApproved, revokeReason, startDate, endDate } = req.body;
 
-    const user = await User.findById(id);
+    let user = await User.findById(id);
+    let isShopUser = false;
+
     if (!user) {
-      return res.status(404).json({ message: "Restaurant not found" });
+      user = await ShopUser.findById(id);
+      isShopUser = true;
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "Restaurant/Shop not found" });
     }
 
     const newApprovalStatus = typeof isApproved === 'boolean' ? isApproved : !user.isApproved;
@@ -351,13 +365,19 @@ const toggleApproval = async (req, res) => {
         discount: Number(discount) || 0,
         paymentMode: paymentMode || "Not Provided",
         paymentDetails: paymentDetails || "",
-        approvedAt: new Date()
+        approvedAt: new Date(),
+        ...(startDate && { startDate: new Date(startDate) }),
+        ...(endDate && { endDate: new Date(endDate) })
       };
     } else {
       updateData.$unset = { approvalDetails: 1 };
     }
 
-    await User.findByIdAndUpdate(id, updateData, { new: true });
+    if (isShopUser) {
+      await ShopUser.findByIdAndUpdate(id, updateData, { new: true });
+    } else {
+      await User.findByIdAndUpdate(id, updateData, { new: true });
+    }
     user.isApproved = newApprovalStatus; // for subsequent logic
 
     await logActivity(
@@ -373,16 +393,26 @@ const toggleApproval = async (req, res) => {
         let startDateStr = "N/A";
         let expiryDateStr = "N/A";
         
-        try {
-          const Subscription = require("../models/subscriptionModel");
-          const activeSub = await Subscription.findOne({ user_id: id, status: "active" }).sort({ end_date: -1 });
-          if (activeSub) {
-            planName = activeSub.plan_name || planName;
-            if (activeSub.start_date) startDateStr = new Date(activeSub.start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            if (activeSub.end_date) expiryDateStr = new Date(activeSub.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        if (isShopUser) {
+           planName = "Manage Shop";
+           if (startDate) startDateStr = new Date(startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+           if (endDate) expiryDateStr = new Date(endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        } else if (user.is_street_food) {
+           planName = "Manage Street Food";
+           if (startDate) startDateStr = new Date(startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+           if (endDate) expiryDateStr = new Date(endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        } else {
+          try {
+            const Subscription = require("../models/subscriptionModel");
+            const activeSub = await Subscription.findOne({ user_id: id, status: "active" }).sort({ end_date: -1 });
+            if (activeSub) {
+              planName = activeSub.plan_name || planName;
+              if (activeSub.start_date) startDateStr = new Date(activeSub.start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+              if (activeSub.end_date) expiryDateStr = new Date(activeSub.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            }
+          } catch (subErr) {
+            console.error("Error fetching subscription for email template", subErr);
           }
-        } catch (subErr) {
-          console.error("Error fetching subscription for email template", subErr);
         }
 
         const approvalEmailHtml = `

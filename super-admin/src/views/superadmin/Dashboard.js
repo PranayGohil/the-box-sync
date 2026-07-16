@@ -175,8 +175,8 @@ const Dashboard = () => {
                 <tbody>
                   {filteredUsers.length > 0 ? (
                     filteredUsers.map((user) => {
-                      const hasActive = user.subscriptions.some(sub => sub.status === "active") || user.is_street_food;
-                      const hasInactive = user.subscriptions.some(sub => sub.status === "inactive" || sub.status === "expired");
+                      const hasActive = user.subscriptions.some(sub => sub.status === "active") || user.is_street_food || user.is_shop;
+                      const hasInactive = user.subscriptions.some(sub => sub.status === "expired" || sub.status === "inactive");
                       const hasBlocked = user.subscriptions.some(sub => sub.status === "blocked");
 
                       let expiryDate = "No Expiry";
@@ -211,12 +211,13 @@ const Dashboard = () => {
                             <span className="border text-dark rounded-pill d-flex align-items-center justify-content-center fw-bold text-uppercase" style={uniformStyle}>
                               {(() => {
                                 if (user.is_street_food) return "Street Food";
+                                if (user.is_shop) return "Shop";
                                 let planDisplay = user.purchasedPlan;
                                 if (!planDisplay && hasActive) {
                                   const activeSubs = user.subscriptions.filter((sub) => sub.status === "active");
                                   const corePlans = ["street food", "qsr", "dine in", "cloud kitchen", "chain"];
                                   const coreSub = activeSubs.find(sub => corePlans.some(cp => sub.plan_name && sub.plan_name.toLowerCase().includes(cp)));
-                                  planDisplay = coreSub ? coreSub.plan_name : activeSubs[0].plan_name;
+                                  planDisplay = coreSub ? coreSub.plan_name : (activeSubs[0] ? activeSubs[0].plan_name : "");
                                 }
                                 return planDisplay || "No Plan";
                               })()}

@@ -80,6 +80,7 @@ const KioskScan = () => {
 
   // States
   const [loading, setLoading] = useState(false);
+  const [scanningStaff, setScanningStaff] = useState(null);
   const [message, setMessage] = useState(null);
 
   // Face scan states
@@ -155,6 +156,7 @@ const KioskScan = () => {
   }, [company_id]);
 
   const submitScan = useCallback(async (staff) => {
+    setScanningStaff(staff);
     setLoading(true);
     setError('');
     setMessage(null);
@@ -172,10 +174,30 @@ const KioskScan = () => {
       if (res.data && res.data.success) {
         const todayAtt = staff.todayAttendance;
         let isCheckOut = false;
+        let isAlreadyDone = false;
+
         if (device_mode === 'in') {
           isCheckOut = false;
+          if (todayAtt) {
+            const sessions = todayAtt.sessions || [];
+            if (sessions.length > 0) {
+              isAlreadyDone = sessions[sessions.length - 1].out_time === null;
+            } else if (todayAtt.in_time && !todayAtt.out_time) {
+              isAlreadyDone = true;
+            }
+          }
         } else if (device_mode === 'out') {
           isCheckOut = true;
+          if (todayAtt) {
+            const sessions = todayAtt.sessions || [];
+            if (sessions.length > 0) {
+              isAlreadyDone = sessions[sessions.length - 1].out_time !== null;
+            } else if (todayAtt.in_time && todayAtt.out_time) {
+              isAlreadyDone = true;
+            }
+          } else {
+            isAlreadyDone = true;
+          }
         } else if (todayAtt) {
           const sessions = todayAtt.sessions || [];
           if (sessions.length > 0) {
@@ -184,7 +206,11 @@ const KioskScan = () => {
             isCheckOut = true;
           }
         }
-        const actionLabel = isCheckOut ? 'Checked-Out' : 'Checked-In';
+        
+        let actionLabel = isCheckOut ? 'Checked-Out' : 'Checked-In';
+        if (isAlreadyDone) {
+          actionLabel = isCheckOut ? 'Already Checked-Out' : 'Already Checked-In';
+        }
         
         const orgRules = companyConfig?.org_rules;
         let statusBadgeText = '';
@@ -235,10 +261,10 @@ const KioskScan = () => {
           ...prev.filter((item) => item.staff_id !== staff.staff_id)
         ].slice(0, 3));
 
-        // Auto-remove after 7 seconds
+        // Auto-remove after 10 seconds
         setTimeout(() => {
           setRecentMatchedList((prev) => prev.filter((item) => item.id !== newMatch.id));
-        }, 7000);
+        }, 10000);
 
         setMessage({ type: 'success', text: `${staff.f_name}: ${res.data.message || `${actionLabel} successful!`}` });
         fetchFaces(); // Refresh face scan records immediately!
@@ -249,8 +275,37 @@ const KioskScan = () => {
       const errMsg = err.response?.data?.message || 'Error processing scan.';
       setError(errMsg);
       setMessage({ type: 'error', text: errMsg });
+      
+      const currentTime = getCurrentTime();
+      let actionLabel = 'Scan Failed';
+      let statusText = 'Error';
+      if (errMsg.toLowerCase().includes('already')) {
+        actionLabel = device_mode === 'out' ? 'Already Checked-Out' : 'Already Checked-In';
+        statusText = '';
+      }
+      
+      const newMatch = {
+        ...staff,
+        action: actionLabel,
+        time: currentTime,
+        statusBadgeText: statusText,
+        statusBadgeType: 'danger',
+        id: Date.now(),
+      };
+      
+      setRecentMatchedList((prev) => [
+        newMatch,
+        ...prev.filter((item) => item.staff_id !== staff.staff_id)
+      ].slice(0, 3));
+
+      // Auto-remove after 10 seconds
+      setTimeout(() => {
+        setRecentMatchedList((prev) => prev.filter((item) => item.id !== newMatch.id));
+      }, 10000);
+      
     } finally {
       setLoading(false);
+      setScanningStaff(null);
       // Clear status message after 3 seconds
       setTimeout(() => {
         setMessage(null);
@@ -294,13 +349,13 @@ const KioskScan = () => {
           if (screenshot && active) {
             const image = await faceapi.fetchImage(screenshot);
             const detections = await faceapi
-              .detectAllFaces(image, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.60 }))
+              .detectAllFaces(image, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.75 }))
               .withFaceLandmarks()
               .withFaceDescriptors();
 
             const { video } = webcam;
             if (video && canvas && active) {
-              const displaySize = { width: video.clientWidth, height: video.clientHeight };
+              const displaySize = { width: video.videoWidth, height: video.videoHeight };
               faceapi.matchDimensions(canvas, displaySize);
               const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
@@ -338,7 +393,7 @@ const KioskScan = () => {
 
                   // Draw bounding box
                   ctx.lineWidth = 3;
-                  ctx.strokeStyle = isMatched ? '#10b981' : '#ef4444';
+                  ctx.strokeStyle = isMatched ? '#23b3f4' : '#ef4444';
                   ctx.strokeRect(x, y, width, height);
 
                   // Draw tag background and label text (canceling mirroring for text readability)
@@ -350,7 +405,7 @@ const KioskScan = () => {
                   ctx.translate(x + (textWidth + 16) / 2, y - 15);
                   ctx.scale(-1, 1);
                   
-                  ctx.fillStyle = isMatched ? 'rgba(16, 185, 129, 0.85)' : 'rgba(239, 68, 68, 0.85)';
+                  ctx.fillStyle = isMatched ? 'rgba(35, 179, 244, 0.85)' : 'rgba(239, 68, 68, 0.85)';
                   ctx.fillRect(-(textWidth + 16) / 2, -10, textWidth + 16, 20);
                   
                   ctx.fillStyle = '#ffffff';
@@ -425,21 +480,21 @@ const KioskScan = () => {
       <div className={`kiosk-page-wrapper ${isCheckInOnly ? 'kiosk-in-mode' : isCheckOutOnly ? 'kiosk-out-mode' : ''}`}>
         <Card className="shadow-lg border-0 kiosk-card animate__animated animate__fadeIn">
           <Card.Body className="kiosk-card-body p-4 w-100">
-            {/* Mobile-only Header */}
-            <div className="login-login-form-header mb-3 text-center d-md-none">
-              <span
-                className={`badge ${badgeClass} px-3 py-1.5 rounded-pill fw-bold text-uppercase mb-2`}
-                style={{ letterSpacing: '0.05em', fontSize: '0.7rem' }}
-              >
-                {badgeText}
-              </span>
-              <h2 className="login-login-form-title mt-1" style={{ fontSize: '1.4rem' }}>{headerTitle}</h2>
-              <p className="login-login-form-subtitle mt-1 px-1" style={{ fontSize: '0.8rem' }}>Position yourself in front of the camera to verify your face</p>
-            </div>
 
-            <div className="row g-4 align-items-center w-100 m-0">
-              {/* Left side: AI Face Scanner */}
-              <div className="col-12 col-md-7 p-0 d-flex flex-column align-items-center justify-content-center">
+
+            <div className="row justify-content-center w-100 m-0">
+              {/* Center layout for desktop & full-screen for mobile */}
+              <div className="col-12 p-0 d-flex flex-column align-items-center justify-content-center">
+                {/* Desktop-only Header (Top side) */}
+                <div className="d-none d-md-block w-100 text-center mb-3">
+                  <span
+                    className={`badge ${badgeClass} px-3 py-1.5 rounded-pill fw-bold text-uppercase animate__animated animate__fadeInDown`}
+                    style={{ letterSpacing: '0.05em', fontSize: '0.8rem' }}
+                  >
+                    {badgeText}
+                  </span>
+                </div>
+
                 {!modelsLoaded || !faceDataLoaded ? (
                   <div className="d-flex flex-column align-items-center justify-content-center py-5">
                     <Spinner animation="border" variant="primary" className="mb-3" />
@@ -450,16 +505,16 @@ const KioskScan = () => {
                     className="webcam-container position-relative overflow-hidden rounded-3 shadow w-100"
                     style={{ border: '3px solid #e2e8f0', background: '#0f172a' }}
                   >
-                    {/* Absolutely Positioned Brand Overlay inside the scanner */}
-                    <div className="position-absolute" style={{ top: '15px', left: '15px', zIndex: 10 }}>
+                    {/* Top Bar with Logo */}
+                    <div className="position-absolute w-100 d-flex justify-content-center align-items-center" style={{ top: 0, left: 0, zIndex: 10, background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(6px)', padding: '15px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                       {companyInfo?.logo ? (
                         <img
                           src={process.env.REACT_APP_UPLOAD_DIR + companyInfo.logo}
                           alt={companyInfo?.name || 'Company Logo'}
-                          style={{ maxHeight: '35px', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
+                          style={{ maxHeight: '40px', objectFit: 'contain' }}
                         />
                       ) : (
-                        <div className="kiosk-brand-logo-overlay" style={{ fontSize: '1rem', fontWeight: 900, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.8)', letterSpacing: '0.05em' }}>
+                        <div className="kiosk-brand-logo-overlay" style={{ fontSize: '1.2rem', fontWeight: 900, color: '#fff', letterSpacing: '0.05em' }}>
                           THE <span style={{ color: '#23b3f4' }}>BOX</span>
                         </div>
                       )}
@@ -475,13 +530,15 @@ const KioskScan = () => {
                           ref={webcamRef}
                           audio={false}
                           screenshotFormat="image/jpeg"
-                          videoConstraints={{ facingMode: 'user', aspectRatio: 16 / 9 }}
+                          videoConstraints={{ 
+                            facingMode: 'user', 
+                            aspectRatio: window.innerWidth < 768 ? window.innerWidth / window.innerHeight : 4 / 3 
+                          }}
                           onUserMediaError={() => setCameraError(true)}
                           style={{
                             width: '100%',
                             height: 'auto',
                             objectFit: 'cover',
-                            aspectRatio: '16/9',
                             display: 'block',
                             transform: 'scaleX(-1)',
                           }}
@@ -501,59 +558,88 @@ const KioskScan = () => {
                         />
                         <div className="scanner-overlay" />
                         <div
-                          className="camera-status-text position-absolute w-100 text-center fw-bold"
+                          className="camera-status-text position-absolute w-100 text-center fw-bold d-none d-md-block"
                           style={{ bottom: '15px', color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.8)', zIndex: 10 }}
                         >
                           STAND IN FRONT OF CAMERA
                         </div>
+                        
+                        {/* Mobile Overlay for Loading & Latest Scan */}
+                        {(loading && scanningStaff) || recentMatchedList.length > 0 ? (
+                          <div className="d-md-none position-absolute w-100 p-3" style={{ bottom: '15px', zIndex: 20 }}>
+                            {loading && scanningStaff ? (
+                              <div className="p-3 shadow-lg d-flex justify-content-between align-items-center animate__animated animate__fadeInUp" style={{ background: '#23b3f4', color: '#fff', borderRadius: '12px' }}>
+                                <div className="text-start">
+                                  <div className="fw-bold" style={{ fontSize: '0.95rem', letterSpacing: '0.5px' }}>EMPLOYEE : {scanningStaff.f_name.toUpperCase()}</div>
+                                  <div className="fw-bold mt-1 mb-2" style={{ fontSize: '0.95rem', letterSpacing: '0.5px' }}>TIME : {getCurrentTime()}</div>
+                                  <div className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
+                                    <Spinner animation="border" size="sm" className="me-2" />
+                                    <span>Marking attendance...</span>
+                                  </div>
+                                </div>
+                                {scanningStaff.photo ? (
+                                  <img
+                                    src={`${process.env.REACT_APP_UPLOAD_DIR}${scanningStaff.photo}`}
+                                    alt={scanningStaff.f_name}
+                                    style={{ width: '65px', height: '65px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #fff' }}
+                                  />
+                                ) : (
+                                  <div
+                                    style={{ width: '65px', height: '65px', borderRadius: '8px', background: 'rgba(255,255,255,0.2)', border: '2px solid #fff' }}
+                                    className="d-flex align-items-center justify-content-center"
+                                  >
+                                    <CsLineIcons icon="user" size={24} />
+                                  </div>
+                                )}
+                              </div>
+                            ) : recentMatchedList.length > 0 ? (
+                              <div className="p-3 shadow-lg d-flex justify-content-between align-items-center animate__animated animate__fadeInUp" style={{ background: (recentMatchedList[0].action.includes('Already') || recentMatchedList[0].statusBadgeType === 'danger') ? '#ef4444' : '#23b3f4', color: '#fff', borderRadius: '12px' }}>
+                                <div className="text-start">
+                                  <div className="fw-bold" style={{ fontSize: '0.95rem', letterSpacing: '0.5px' }}>EMPLOYEE : {recentMatchedList[0].f_name.toUpperCase()}</div>
+                                  <div className="fw-bold mt-1 mb-2" style={{ fontSize: '0.95rem', letterSpacing: '0.5px' }}>TIME : {recentMatchedList[0].time}</div>
+                                  <div className="d-flex align-items-center" style={{ fontSize: '0.9rem' }}>
+                                    <CsLineIcons icon={(recentMatchedList[0].action.includes('Already') || recentMatchedList[0].statusBadgeType === 'danger') ? 'close-circle' : 'check-circle'} size="18" className="me-2" />
+                                    <span>{recentMatchedList[0].action}</span>
+                                  </div>
+                                </div>
+                                {recentMatchedList[0].photo ? (
+                                  <img
+                                    src={`${process.env.REACT_APP_UPLOAD_DIR}${recentMatchedList[0].photo}`}
+                                    alt={recentMatchedList[0].f_name}
+                                    style={{ width: '65px', height: '65px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #fff' }}
+                                  />
+                                ) : (
+                                  <div
+                                    style={{ width: '65px', height: '65px', borderRadius: '8px', background: 'rgba(255,255,255,0.2)', border: '2px solid #fff' }}
+                                    className="d-flex align-items-center justify-content-center"
+                                  >
+                                    <CsLineIcons icon="user" size={24} />
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </>
                     )}
                   </div>
                 )}
-              </div>
-
-              {/* Right side: Instructions, status, and details */}
-              <div className="col-12 col-md-5 d-flex flex-column align-items-center text-center ps-md-4 kiosk-details-panel">
-                {/* Desktop-only Header */}
-                <div className="login-login-form-header mb-2 text-center d-none d-md-block">
-                  <span
-                    className={`badge ${badgeClass} px-3 py-1.5 rounded-pill fw-bold text-uppercase mb-2 animate__animated animate__fadeIn`}
-                    style={{ letterSpacing: '0.05em', fontSize: '0.7rem' }}
-                  >
-                    {badgeText}
-                  </span>
-                  <h2 className="login-login-form-title mt-1" style={{ fontSize: '1.4rem' }}>{headerTitle}</h2>
-                  <p className="login-login-form-subtitle mt-1 px-1" style={{ fontSize: '0.8rem' }}>Position yourself in front of the camera to verify your face</p>
-                </div>
-
-
+                
                 {/* STATUS MESSAGE AREA */}
-                <div style={{ minHeight: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '8px 0' }} className="w-100">
-                  {loading ? (
+                {loading && (
+                  <div className="d-none d-md-flex w-100 align-items-center justify-content-center mt-3 mb-2">
                     <div className="d-flex align-items-center text-primary">
                       <Spinner animation="border" size="sm" className="me-2" />
                       <span className="fw-semibold">Processing attendance...</span>
                     </div>
-                  ) : message ? (
-                    <div
-                      className={`p-2 rounded-3 fw-bold w-100 text-center small ${
-                        message.type === 'success' ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger'
-                      }`}
-                    >
-                      {message.type === 'success' ? (
-                        <CsLineIcons icon="check-circle" size="16" className="me-2" />
-                      ) : (
-                        <CsLineIcons icon="close-circle" size="16" className="me-2" />
-                      )}
-                      {message.text}
-                    </div>
-                  ) : null}
-                </div>
+                  </div>
+                )}
 
                 {/* DIRECT SCAN RESULT DISPLAY */}
-                {recentMatchedList.length > 0 ? (
-                  <div className="w-100 d-flex flex-column gap-2 animate__animated animate__fadeIn">
-                    <h6 className="text-start fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>Recent Scans</h6>
+                <div className="w-100 d-none d-md-block mt-4">
+                  {recentMatchedList.length > 0 ? (
+                    <div className="w-100 d-flex flex-column gap-2 animate__animated animate__fadeIn">
+                      <h6 className="text-start fw-bold text-muted text-uppercase mb-1 ps-2" style={{ fontSize: '0.75rem', letterSpacing: '0.08em' }}>Recent Scans</h6>
                     {recentMatchedList.map((matchedStaff, index) => {
                       const isPrimary = index === 0;
                       return (
@@ -596,7 +682,7 @@ const KioskScan = () => {
                                 </div>
                               </div>
                               <div className="text-end">
-                                <span className={`badge ${matchedStaff.action === 'Checked-In' ? 'bg-soft-primary text-primary' : 'bg-soft-warning text-warning'} px-2 py-0.5 rounded fw-bold mb-1 d-inline-block`} style={{ fontSize: '0.65rem' }}>
+                                <span className={`badge ${matchedStaff.action === 'Checked-In' ? 'bg-soft-primary text-primary' : (matchedStaff.action.includes('Already') || matchedStaff.action === 'Scan Failed') ? 'bg-soft-danger text-danger' : 'bg-soft-warning text-warning'} px-2 py-0.5 rounded fw-bold mb-1 d-inline-block`} style={{ fontSize: '0.65rem' }}>
                                   {matchedStaff.action}
                                 </span>
                                 {matchedStaff.statusBadgeText && (
@@ -622,16 +708,17 @@ const KioskScan = () => {
                       );
                     })}
                   </div>
-                ) : (
-                  <div className="w-100 d-flex flex-column align-items-center justify-content-center py-4 border rounded-3 border-dashed" style={{ borderColor: '#e2e8f0', borderStyle: 'dashed' }}>
-                    <CsLineIcons icon="scan" className="text-muted mb-2 animate-pulse" size="24" />
-                    <span className="text-muted small fw-semibold">Scan results will display here</span>
-                  </div>
-                )}
+                  ) : (
+                    <div className="w-100 d-flex flex-column align-items-center justify-content-center py-4 border rounded-3 border-dashed" style={{ borderColor: '#e2e8f0', borderStyle: 'dashed' }}>
+                      <CsLineIcons icon="scan" className="text-muted mb-2 animate-pulse" size="24" />
+                      <span className="text-muted small fw-semibold">Scan results will display here</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="w-100 border-top mt-3 pt-2.5 text-center" style={{ borderColor: 'rgba(226, 232, 240, 0.6)' }}>
+            <div className="w-100 border-top mt-4 pt-3 text-center d-none d-md-block" style={{ borderColor: 'rgba(226, 232, 240, 0.6)' }}>
               <span className="text-muted" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', textTransform: 'uppercase', opacity: 0.7 }}>
                 Powered by <strong style={{ color: '#0f172a' }}><a href="https://theboxsync.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>TheBoxSync</a></strong>
               </span>
@@ -652,7 +739,7 @@ const KioskScan = () => {
 
         .kiosk-card {
           width: 100%;
-          max-width: 960px;
+          max-width: 600px;
           border-radius: 2.25rem;
           background: #ffffff;
           box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08) !important;
@@ -766,9 +853,6 @@ const KioskScan = () => {
         }
 
         @media (max-width: 992px) {
-          .kiosk-card {
-            max-width: 900px;
-          }
           .kiosk-card-body {
             padding: 1.5rem 1.5rem !important;
           }
@@ -778,6 +862,12 @@ const KioskScan = () => {
           .kiosk-page-wrapper {
             padding: 0px !important;
             align-items: flex-start !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 99999 !important;
           }
           .kiosk-card {
             border-radius: 0 !important;
@@ -785,17 +875,39 @@ const KioskScan = () => {
             min-height: 100vh;
             border: none !important;
             box-shadow: none !important;
+            background: #000;
           }
           .kiosk-card-body {
-            padding: 1.25rem 1rem !important;
+            padding: 0 !important;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+          }
+          .row {
+            margin: 0 !important;
+            height: 100vh;
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: 0 !important;
+          }
+          .col-md-7, .col-12 {
+            padding: 0 !important;
+            margin: 0 !important;
+            height: 100vh;
           }
           .webcam-container {
-            border-radius: 1rem !important;
-            box-shadow: 0 0 0 3px rgba(35, 179, 244, 0.15) !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
           }
           .webcam-container video,
           .webcam-container canvas {
-            aspect-ratio: 4/3 !important; /* Increase vertical height/length of camera scan on mobile only */
+            height: 100vh !important;
+            object-fit: cover !important;
+            aspect-ratio: auto !important;
           }
           .login-login-form-title {
             font-size: 1.4rem !important;
