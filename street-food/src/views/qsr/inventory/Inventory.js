@@ -57,10 +57,10 @@ const Inventory = () => {
   const [inventoryList, setInventoryList] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [loadingStock, setLoadingStock] = useState(true);
-  
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUseModal, setShowUseModal] = useState(false);
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
@@ -165,7 +165,7 @@ const Inventory = () => {
     return [...inventoryList].sort((a, b) => {
       let valA = a[sortBy];
       let valB = b[sortBy];
-      
+
       if (sortBy === 'bill_date') {
         valA = new Date(a.bill_date || a.request_date).getTime();
         valB = new Date(b.bill_date || b.request_date).getTime();
@@ -181,7 +181,7 @@ const Inventory = () => {
         valA = dueA;
         valB = dueB;
       }
-      
+
       if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
       if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
       return 0;
@@ -190,7 +190,7 @@ const Inventory = () => {
 
   const filteredItems = useMemo(() => {
     let result = sortedItems;
-    
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter((item) => {
@@ -427,7 +427,7 @@ const Inventory = () => {
           stroke: #ffffff !important;
         }
       `}</style>
-      
+
       <div className="qsr-page-title-container">
         <Row className="align-items-center g-3">
           <Col xs="12" md="auto" className="me-auto">
@@ -474,10 +474,9 @@ const Inventory = () => {
                 const isLow = item.totalStock <= (item.low_stock_threshold || 0);
                 return (
                   <Col key={item._id} xs={6} sm={6} md={4} lg={3}>
-                    <div 
-                      className={`p-3 rounded-3 h-100 d-flex flex-column justify-content-between ${
-                        isLow ? 'inventory-card-low-stock' : 'inventory-card-normal-stock'
-                      }`}
+                    <div
+                      className={`p-3 rounded-3 h-100 d-flex flex-column justify-content-between ${isLow ? 'inventory-card-low-stock' : 'inventory-card-normal-stock'
+                        }`}
                     >
                       <div>
                         <div className="fw-bold text-dark mb-1" style={{ fontSize: '13.5px', wordBreak: 'break-word' }}>
@@ -530,7 +529,7 @@ const Inventory = () => {
           justify-content: center !important;
         }
       `}</style>
-      
+
       <div className="mb-4">
         {loadingList ? (
           <div className="text-center py-5"><Spinner animation="border" variant="primary" /></div>
@@ -552,7 +551,7 @@ const Inventory = () => {
                   <Form.Control
                     type="text"
                     className="border-0 bg-transparent shadow-none"
-                    placeholder="Search purchases..."
+                    placeholder="Search purchase..."
                     value={localSearchTerm}
                     onChange={(e) => setLocalSearchTerm(e.target.value)}
                     style={{ height: '40px', fontSize: '14px' }}
@@ -587,8 +586,8 @@ const Inventory = () => {
                   Showing {filteredItems.length > 0 ? indexOfFirstItem + 1 : 0}-{Math.min(indexOfLastItem, filteredItems.length)} of {filteredItems.length}
                 </div>
                 <Dropdown className="d-inline-block" align="end">
-                  <Dropdown.Toggle 
-                    variant="outline-primary" 
+                  <Dropdown.Toggle
+                    variant="outline-primary"
                     className="rounded-pill shadow-sm px-3 fw-bold border-2 d-flex align-items-center justify-content-center dropdown-caret"
                     style={{ height: '40px', color: '#23b3f4', borderColor: '#23b3f4' }}
                   >
@@ -642,12 +641,12 @@ const Inventory = () => {
                         value={filters.status}
                         onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                       >
-                        <option value="">All Statuses</option>
+                        <option value="">All Status</option>
                         <option value="Paid">Paid</option>
                         <option value="Due">Due</option>
                       </Form.Select>
                     </Col>
-                    
+
                     <Col xs="12" sm="4">
                       <Form.Label className="small fw-bold text-muted mb-1">From Date</Form.Label>
                       <Form.Control
@@ -742,28 +741,28 @@ const Inventory = () => {
                         </td>
                         <td className="text-end">
                           <div className="d-flex justify-content-end gap-1">
-                            <Button 
-                              variant="outline-primary" 
-                              size="sm" 
-                              className="btn-icon btn-icon-only rounded-circle animate-scale" 
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              className="btn-icon btn-icon-only rounded-circle animate-scale"
                               onClick={() => history.push(`/inventory/details/${item._id}`)}
                               title="View Details"
                             >
                               <CsLineIcons icon="eye" size="14" />
                             </Button>
-                            <Button 
-                              variant="outline-warning" 
-                              size="sm" 
-                              className="btn-icon btn-icon-only rounded-circle animate-scale" 
+                            <Button
+                              variant="outline-warning"
+                              size="sm"
+                              className="btn-icon btn-icon-only rounded-circle animate-scale"
                               onClick={() => history.push(`/inventory/edit/${item._id}`)}
                               title="Edit"
                             >
                               <CsLineIcons icon="edit" size="14" />
                             </Button>
-                            <Button 
-                              variant="outline-danger" 
-                              size="sm" 
-                              className="btn-icon btn-icon-only rounded-circle animate-scale" 
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              className="btn-icon btn-icon-only rounded-circle animate-scale"
                               onClick={() => confirmDelete(item._id)}
                               title="Delete"
                             >
@@ -804,28 +803,28 @@ const Inventory = () => {
                         </Badge>
                       </div>
                       <div className="mobile-card-actions d-flex gap-1">
-                        <Button 
-                          variant="outline-primary" 
-                          size="sm" 
-                          className="btn-icon btn-icon-only rounded-circle animate-scale" 
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="btn-icon btn-icon-only rounded-circle animate-scale"
                           onClick={() => history.push(`/inventory/details/${item._id}`)}
                           title="View Details"
                         >
                           <CsLineIcons icon="eye" size="14" />
                         </Button>
-                        <Button 
-                          variant="outline-warning" 
-                          size="sm" 
-                          className="btn-icon btn-icon-only rounded-circle animate-scale" 
+                        <Button
+                          variant="outline-warning"
+                          size="sm"
+                          className="btn-icon btn-icon-only rounded-circle animate-scale"
                           onClick={() => history.push(`/inventory/edit/${item._id}`)}
                           title="Edit"
                         >
                           <CsLineIcons icon="edit" size="14" />
                         </Button>
-                        <Button 
-                          variant="outline-danger" 
-                          size="sm" 
-                          className="btn-icon btn-icon-only rounded-circle animate-scale" 
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          className="btn-icon btn-icon-only rounded-circle animate-scale"
                           onClick={() => confirmDelete(item._id)}
                           title="Delete"
                         >
@@ -879,14 +878,14 @@ const Inventory = () => {
                     >
                       <CsLineIcons icon="arrow-double-left" size="12" />
                     </Pagination.First>
-                    <Pagination.Prev 
+                    <Pagination.Prev
                       className="shadow"
-                      disabled={currentPage === 1} 
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} 
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     >
                       <CsLineIcons icon="chevron-left" size="12" />
                     </Pagination.Prev>
-                    
+
                     {Array.from({ length: totalPages }).map((_, i) => (
                       <Pagination.Item
                         key={i + 1}
@@ -898,10 +897,10 @@ const Inventory = () => {
                       </Pagination.Item>
                     ))}
 
-                    <Pagination.Next 
+                    <Pagination.Next
                       className="shadow"
-                      disabled={currentPage === totalPages} 
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} 
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     >
                       <CsLineIcons icon="chevron-right" size="12" />
                     </Pagination.Next>
@@ -967,7 +966,7 @@ const Inventory = () => {
               }
 
               await axios.post(`${process.env.REACT_APP_API}/inventory/add`, formData, {
-                headers: { 
+                headers: {
                   Authorization: `Bearer ${localStorage.getItem('token')}`,
                   'Content-Type': 'multipart/form-data',
                 },
@@ -989,7 +988,7 @@ const Inventory = () => {
             const subTotal = values.items.reduce((acc, curr) => acc + (Number(curr.item_quantity) || 0) * (Number(curr.item_price) || 0), 0);
             const totalAmount = subTotal + (Number(values.tax) || 0) - (Number(values.discount) || 0);
             const unpaidAmount = totalAmount - (Number(values.paid_amount) || 0);
-            
+
             const availableUnits = Array.from(new Set([
               ...DEFAULT_UNITS,
               ...stock.map(s => s.unit?.trim()).filter(Boolean),
@@ -1004,10 +1003,10 @@ const Inventory = () => {
                     <Col md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold">Date *</Form.Label>
-                        <Form.Control 
-                          type="date" 
-                          name="bill_date" 
-                          value={values.bill_date} 
+                        <Form.Control
+                          type="date"
+                          name="bill_date"
+                          value={values.bill_date}
                           onChange={handleChange}
                           isInvalid={touched.bill_date && errors.bill_date}
                         />
@@ -1016,11 +1015,11 @@ const Inventory = () => {
                     <Col md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold">Bill Number *</Form.Label>
-                        <Form.Control 
-                          type="text" 
-                          name="bill_number" 
-                          placeholder="e.g. BILL-101" 
-                          value={values.bill_number} 
+                        <Form.Control
+                          type="text"
+                          name="bill_number"
+                          placeholder="e.g. BILL-101"
+                          value={values.bill_number}
                           onChange={handleChange}
                           isInvalid={touched.bill_number && errors.bill_number}
                         />
@@ -1029,11 +1028,11 @@ const Inventory = () => {
                     <Col md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold">Vendor Name *</Form.Label>
-                        <Form.Control 
-                          type="text" 
-                          name="vendor_name" 
-                          placeholder="Vendor Name" 
-                          value={values.vendor_name} 
+                        <Form.Control
+                          type="text"
+                          name="vendor_name"
+                          placeholder="Vendor Name"
+                          value={values.vendor_name}
                           onChange={handleChange}
                           isInvalid={touched.vendor_name && errors.vendor_name}
                         />
@@ -1042,11 +1041,11 @@ const Inventory = () => {
                     <Col md={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold">Category *</Form.Label>
-                        <Form.Control 
-                          type="text" 
-                          name="category" 
-                          placeholder="e.g. Vegetables, Dairy" 
-                          value={values.category} 
+                        <Form.Control
+                          type="text"
+                          name="category"
+                          placeholder="e.g. Vegetables, Dairy"
+                          value={values.category}
                           onChange={handleChange}
                           isInvalid={touched.category && errors.category}
                         />
@@ -1079,8 +1078,8 @@ const Inventory = () => {
                             </div>
                           ))}
                           {filePreviews.length > 0 && (
-                            <Button 
-                              variant="link" 
+                            <Button
+                              variant="link"
                               className="text-danger p-0 text-decoration-none small fw-bold d-inline-flex align-items-center gap-1 ms-2"
                               onClick={() => {
                                 setFieldValue('bill_files', []);
@@ -1096,7 +1095,7 @@ const Inventory = () => {
                   </Row>
 
                   <h6 className="fw-bold text-secondary border-bottom pb-2 mb-3">Purchase Items</h6>
-                  
+
                   <FieldArray name="items">
                     {({ push, remove }) => (
                       <div>
@@ -1176,10 +1175,10 @@ const Inventory = () => {
                             </Col>
                             <Col xs={12} sm={1} className="text-end text-sm-center">
                               {values.items.length > 1 && (
-                                <Button 
-                                  variant="outline-danger" 
-                                  size="sm" 
-                                  className="border-0 w-100 w-sm-auto mt-2 mt-sm-0" 
+                                <Button
+                                  variant="outline-danger"
+                                  size="sm"
+                                  className="border-0 w-100 w-sm-auto mt-2 mt-sm-0"
                                   onClick={() => remove(index)}
                                 >
                                   <CsLineIcons icon="bin" size="16" />
@@ -1240,19 +1239,19 @@ const Inventory = () => {
                           <span className="fw-bold text-muted">Pending Balance: ₹ {unpaidAmount.toFixed(2)}</span>
                         </div>
                         <div className="d-flex flex-column flex-sm-row align-items-center gap-2 w-100 justify-content-center justify-content-md-end">
-                          <Button 
-                            type="submit" 
-                            variant="primary" 
-                            className="manage-menu-custom-btn-outline border-primary text-primary shadow-sm px-5 py-3 fw-bold d-flex align-items-center justify-content-center w-100 w-sm-auto order-1 order-sm-2" 
+                          <Button
+                            type="submit"
+                            variant="primary"
+                            className="manage-menu-custom-btn-outline border-primary text-primary shadow-sm px-5 py-3 fw-bold d-flex align-items-center justify-content-center w-100 w-sm-auto order-1 order-sm-2"
                             style={{ borderRadius: '50px', border: '2px solid #23b3f4', color: '#23b3f4' }}
                             disabled={isSubmitting}
                           >
                             {isSubmitting ? <Spinner animation="border" size="sm" className="me-2" /> : <CsLineIcons icon="save" className="me-2" />} Update & Finalize Changes
                           </Button>
-                          <Button 
-                            variant="light" 
-                            className="px-4 py-3 fw-bold rounded-pill shadow-sm w-100 w-sm-auto order-2 order-sm-1" 
-                            onClick={() => setShowAddModal(false)} 
+                          <Button
+                            variant="light"
+                            className="px-4 py-3 fw-bold rounded-pill shadow-sm w-100 w-sm-auto order-2 order-sm-1"
+                            onClick={() => setShowAddModal(false)}
                             disabled={isSubmitting}
                           >
                             Cancel
@@ -1304,9 +1303,9 @@ const Inventory = () => {
               <Modal.Body className="px-4 py-3">
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-bold">Select Item *</Form.Label>
-                  <Form.Select 
-                    name="item_name" 
-                    value={values.item_name} 
+                  <Form.Select
+                    name="item_name"
+                    value={values.item_name}
                     onChange={handleChange}
                     isInvalid={touched.item_name && errors.item_name}
                   >
@@ -1322,11 +1321,11 @@ const Inventory = () => {
 
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-bold">Quantity to Use *</Form.Label>
-                  <Form.Control 
-                    type="number" 
-                    name="quantity_used" 
-                    placeholder="e.g. 5" 
-                    value={values.quantity_used} 
+                  <Form.Control
+                    type="number"
+                    name="quantity_used"
+                    placeholder="e.g. 5"
+                    value={values.quantity_used}
                     onChange={handleChange}
                     isInvalid={touched.quantity_used && errors.quantity_used}
                   />
@@ -1335,12 +1334,12 @@ const Inventory = () => {
 
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-bold">Notes / Comment</Form.Label>
-                  <Form.Control 
+                  <Form.Control
                     as="textarea"
                     rows={3}
-                    name="comment" 
-                    placeholder="e.g. Used for evening shift curry preparation" 
-                    value={values.comment} 
+                    name="comment"
+                    placeholder="e.g. Used for evening shift curry preparation"
+                    value={values.comment}
                     onChange={handleChange}
                     isInvalid={touched.comment && errors.comment}
                   />
@@ -1378,17 +1377,17 @@ const Inventory = () => {
           </div>
         </Modal.Body>
         <Modal.Footer className="border-0 pt-0">
-          <Button 
-            variant="outline-secondary" 
-            onClick={() => setShowDeleteModal(false)} 
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowDeleteModal(false)}
             disabled={deleting}
             className="rounded-pill px-4 fw-bold border-2"
           >
             Cancel
           </Button>
-          <Button 
-            variant="outline-danger" 
-            onClick={handleDelete} 
+          <Button
+            variant="outline-danger"
+            onClick={handleDelete}
             disabled={deleting}
             className="rounded-pill px-4 fw-bold border-2"
           >

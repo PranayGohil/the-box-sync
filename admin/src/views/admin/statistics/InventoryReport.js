@@ -45,9 +45,8 @@ const FilterSelect = ({ value, onChange, options, disabled }) => {
           {options.map((opt) => (
             <div
               key={opt.value}
-              className={`inventory-report-inventory-report-filter-select-option${opt.value === value ? ' inventory-report-is-selected' : ''}${
-                opt.disabled ? ' inventory-report-is-disabled' : ''
-              }`}
+              className={`inventory-report-inventory-report-filter-select-option${opt.value === value ? ' inventory-report-is-selected' : ''}${opt.disabled ? ' inventory-report-is-disabled' : ''
+                }`}
               onMouseDown={(e) => {
                 if (opt.disabled) return;
                 e.preventDefault();
@@ -548,7 +547,7 @@ const InventoryReport = () => {
                   <FilterSelect
                     value={selectedStatus}
                     onChange={setSelectedStatus}
-                    options={['all', 'Completed', 'Pending', 'Partially Paid'].map((s) => ({ value: s, label: s === 'all' ? 'All Statuses' : s }))}
+                    options={['all', 'Completed', 'Pending', 'Partially Paid'].map((s) => ({ value: s, label: s === 'all' ? 'All Status' : s }))}
                   />
                 </Col>
                 <Col xs={12} md={4} lg={3}>
@@ -783,18 +782,16 @@ const InventoryReport = () => {
                     {[
                       {
                         title: 'Vendor Health',
-                        text: `Working with ${statsData.vendorPerformance.length} vendors. Top vendor contributes ${
-                          statsData.vendorPerformance.length > 0
+                        text: `Working with ${statsData.vendorPerformance.length} vendors. Top vendor contributes ${statsData.vendorPerformance.length > 0
                             ? ((statsData.vendorPerformance[0].totalAmount / statsData.summary.totalAmount) * 100).toFixed(1)
                             : 0
-                        }% of load.`,
+                          }% of load.`,
                         icon: 'shield',
                       },
                       {
                         title: 'Fiscal Discipline',
-                        text: `Payment rate at ${statsData.summary.paymentRate}%. ${
-                          statsData.summary.unpaidCount > 0 ? `${statsData.summary.unpaidCount} POs pending.` : 'Excellent compliance.'
-                        }`,
+                        text: `Payment rate at ${statsData.summary.paymentRate}%. ${statsData.summary.unpaidCount > 0 ? `${statsData.summary.unpaidCount} POs pending.` : 'Excellent compliance.'
+                          }`,
                         icon: 'credit-card',
                       },
                     ].map((insight, i) => (

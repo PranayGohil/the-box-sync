@@ -188,14 +188,14 @@ const ManageMenu = () => {
           <Col xs="12" md="5" className="d-flex flex-column flex-sm-row justify-content-md-end gap-2 mt-3 mt-md-0">
             <Button
               onClick={() => history.push('/operations/qr-for-menu')}
-              className="manage-menu-custom-btn-outline shadow-sm border-0"
+              className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2"
             >
               <CsLineIcons icon="bookmark" className="me-2" size="18" />
               QR for Menu
             </Button>
             <Button
               onClick={() => history.push('/operations/add-dish')}
-              className="manage-menu-custom-btn-outline shadow-sm border-0"
+              className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2"
             >
               <CsLineIcons icon="plus" className="me-2" size="18" />
               Add New Dish

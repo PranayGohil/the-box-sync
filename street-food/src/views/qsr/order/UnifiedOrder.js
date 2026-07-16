@@ -1047,7 +1047,7 @@ const UnifiedOrder = () => {
 
         {/* Row 1: Order Type + Order Date */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-          <div style={{ flex: 1 }}>
+          {/* <div style={{ flex: 1 }}>
             <label
               style={{
                 fontSize: '10px',
@@ -1085,7 +1085,7 @@ const UnifiedOrder = () => {
               <option value="Dine In">Dine In</option>
               <option value="Delivery">Delivery</option>
             </Form.Select>
-          </div>
+          </div> */}
           <div style={{ flex: 1.5 }}>
             <label
               style={{

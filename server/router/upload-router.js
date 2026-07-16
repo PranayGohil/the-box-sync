@@ -6,6 +6,7 @@ const {
   uploadLogo,
   uploadStaff,
   uploadBillFiles,
+  uploadCampaignImage,
 } = require("../controllers/upload-controller");
 
 const uploadRouter = express.Router();
@@ -71,6 +72,17 @@ uploadRouter.post(
     const filenames = req.files.map((f) => f.filename);
     res.json({ filenames }); // send array of filenames
   }
+);
+
+const uploadMemory = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
+uploadRouter.post(
+  "/uploadcampaignimage",
+  uploadMemory.single("image"),
+  uploadCampaignImage
 );
 
 module.exports = uploadRouter;

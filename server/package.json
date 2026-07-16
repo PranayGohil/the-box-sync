@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@imagekit/nodejs": "^7.10.0",
     "axios": "^1.18.1",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",

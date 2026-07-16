@@ -21,9 +21,10 @@ const BottomNav = () => {
     { to: '/settings/profile', icon: 'user', label: 'Account' },
     { to: '/settings/tax-charges', icon: 'dollar', label: 'Taxes' },
     { to: '/settings/subscription', icon: 'star', label: 'Sub' },
-    { to: '/settings/manage-website', icon: 'web-page', label: 'Web' },
+    { to: '/settings/manage-website', icon: 'web-page', label: 'Web', hide: !activePlans.includes('Restaurant Website') },
+    { to: '/settings/print-config', icon: 'print', label: 'Print' },
     { to: '/settings/forgot-password', icon: 'key', label: 'Pass' },
-  ];
+  ].filter((item) => !item.hide);
 
   const operationsItems = [
     { to: '/operations/order-history', icon: 'cart', label: 'Orders' },

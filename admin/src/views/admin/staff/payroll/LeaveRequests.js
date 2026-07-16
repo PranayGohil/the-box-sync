@@ -55,7 +55,7 @@ const LeaveRequests = () => {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line
-    }, [statusFilter]);
+  }, [statusFilter]);
 
   const handleApprove = async (id) => {
     if (!window.confirm('Approve this leave request? Leave balance will be deducted automatically.')) return;
@@ -129,7 +129,7 @@ const LeaveRequests = () => {
               <div className="d-flex justify-content-between mb-3">
                 <h5>All Leave Requests</h5>
                 <Form.Select style={{ width: '200px' }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                  <option value="all">All Statuses</option>
+                  <option value="all">All Status</option>
                   <option value="pending">Pending Only</option>
                   <option value="approved">Approved Only</option>
                   <option value="rejected">Rejected Only</option>

@@ -38,6 +38,7 @@ const reservationRouter = require("./router/reservationRoutes.js");
 const dailyStockRouter = require("./router/dailyStockRoutes.js");
 const loyaltyRouter = require("./router/loyaltyRoutes.js");
 const notificationRouter = require("./router/notificationRoutes");
+const campaignTemplateRouter = require("./router/campaignTemplateRoutes");
 
 const PORT = process.env.PORT;
 // const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
@@ -204,6 +205,7 @@ app.use("/api/reservation", reservationRouter);
 app.use("/api/daily-stock", dailyStockRouter);
 app.use("/api/loyalty", loyaltyRouter);
 app.use("/api/notifications", notificationRouter);
+app.use("/api/campaign-template", campaignTemplateRouter);
 
 
 const errorHandler = require("./middlewares/errorHandler");

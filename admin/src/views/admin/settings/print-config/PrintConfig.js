@@ -9,8 +9,10 @@ import * as Yup from 'yup';
 import { AuthContext } from 'contexts/AuthContext';
 
 const PrintConfig = () => {
-  const { activePlans } = useContext(AuthContext);
+  const { activePlans, currentUser } = useContext(AuthContext);
   const hasWebsitePlan = activePlans?.includes('Restaurant Website') || false;
+  const [restaurantToken, setRestaurantToken] = useState('');
+  const hasFeedbackQR = !!(currentUser?.restaurant_token || restaurantToken);
 
   const title = 'Print Configuration';
   const description = 'Manage thermal receipt dimensions, logo visibility, tax lines, and footer notes.';
@@ -26,6 +28,8 @@ const PrintConfig = () => {
 
   const validationSchema = Yup.object().shape({
     showLogo: Yup.boolean(),
+    showGst: Yup.boolean(),
+    showFssai: Yup.boolean(),
     showCustomerDetails: Yup.boolean(),
     headerNote: Yup.string().max(100, 'Header note must be under 100 characters'),
     footerNote: Yup.string().max(100, 'Footer note must be under 100 characters'),
@@ -43,6 +47,8 @@ const PrintConfig = () => {
   const formik = useFormik({
     initialValues: {
       showLogo: true,
+      showGst: true,
+      showFssai: true,
       showCustomerDetails: true,
       headerNote: '',
       footerNote: 'Thanks, Visit Again',
@@ -58,7 +64,7 @@ const PrintConfig = () => {
       try {
         const response = await axios.put(
           `${process.env.REACT_APP_API}/user/update-print-settings`,
-          { printSettings: { ...values, showGst: true } },
+          { printSettings: { ...values } },
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
         );
 
@@ -83,18 +89,39 @@ const PrintConfig = () => {
         });
 
         const userData = userRes.data.user || userRes.data;
+        if (userData?.restaurant_token) {
+          setRestaurantToken(userData.restaurant_token);
+        }
+
+        const hasFeedbackQRVal = !!(userData?.restaurant_token || currentUser?.restaurant_token);
+        let defaultQrTargetType = 'feedback';
+        if (!hasFeedbackQRVal) {
+          defaultQrTargetType = hasWebsitePlan ? 'website' : 'custom';
+        }
+
         if (userData?.printSettings) {
+          let qrTargetType = userData.printSettings.qrTargetType || 'feedback';
+          if (qrTargetType === 'feedback' && !hasFeedbackQRVal) {
+            qrTargetType = hasWebsitePlan ? 'website' : 'custom';
+          } else if (qrTargetType === 'website' && !hasWebsitePlan) {
+            qrTargetType = hasFeedbackQRVal ? 'feedback' : 'custom';
+          }
+
           formik.setValues({
             showLogo: userData.printSettings.showLogo ?? true,
+            showGst: userData.printSettings.showGst ?? true,
+            showFssai: userData.printSettings.showFssai ?? true,
             showCustomerDetails: userData.printSettings.showCustomerDetails ?? true,
             headerNote: userData.printSettings.headerNote || '',
             footerNote: userData.printSettings.footerNote || 'Thanks, Visit Again',
             paperWidth: userData.printSettings.paperWidth || '58mm',
             addQrCode: userData.printSettings.addQrCode ?? false,
-            qrTargetType: userData.printSettings.qrTargetType || 'feedback',
+            qrTargetType,
             qrUrl: userData.printSettings.qrUrl || '',
             qrTitle: userData.printSettings.qrTitle || '',
           });
+        } else {
+          formik.setFieldValue('qrTargetType', defaultQrTargetType);
         }
       } catch (err) {
         console.error(err);
@@ -167,6 +194,32 @@ const PrintConfig = () => {
                       <Form.Group className="mb-2">
                         <Form.Check
                           type="switch"
+                          id="showGst"
+                          label="Show GST Number on Receipt"
+                          checked={formik.values.showGst}
+                          onChange={(e) => formik.setFieldValue('showGst', e.target.checked)}
+                        />
+                        <Form.Text className="text-muted">Display the restaurant's GST number in the receipt header (only shown if GST number is set in your profile).</Form.Text>
+                      </Form.Group>
+                    </Col>
+
+                    <Col xs="12" md="6" className="mb-3">
+                      <Form.Group className="mb-2">
+                        <Form.Check
+                          type="switch"
+                          id="showFssai"
+                          label="Show FSSAI Number on Receipt"
+                          checked={formik.values.showFssai}
+                          onChange={(e) => formik.setFieldValue('showFssai', e.target.checked)}
+                        />
+                        <Form.Text className="text-muted">Display the restaurant's FSSAI license number in the receipt header (only shown if FSSAI number is set in your profile).</Form.Text>
+                      </Form.Group>
+                    </Col>
+
+                    <Col xs="12" md="6" className="mb-3">
+                      <Form.Group className="mb-2">
+                        <Form.Check
+                          type="switch"
                           id="addQrCode"
                           label="Add QR Code to Receipt Footer"
                           checked={formik.values.addQrCode}
@@ -180,7 +233,7 @@ const PrintConfig = () => {
                           <Form.Group className="mb-3">
                             <Form.Label>QR Code Redirection</Form.Label>
                             <Form.Control as="select" name="qrTargetType" value={formik.values.qrTargetType} onChange={formik.handleChange}>
-                              <option value="feedback">Feedback Collection Form</option>
+                              {hasFeedbackQR && <option value="feedback">Feedback Collection Form</option>}
                               {hasWebsitePlan && <option value="website">Restaurant Website</option>}
                               <option value="custom">Custom Redirection Link</option>
                             </Form.Control>

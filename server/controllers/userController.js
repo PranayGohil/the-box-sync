@@ -772,6 +772,7 @@ const updatePrintSettings = async (req, res) => {
         printSettings: {
           showLogo: printSettings?.showLogo ?? true,
           showGst: printSettings?.showGst ?? true,
+          showFssai: printSettings?.showFssai ?? true,
           showCustomerDetails: printSettings?.showCustomerDetails ?? true,
           footerNote: printSettings?.footerNote ?? "Thanks, Visit Again",
           headerNote: printSettings?.headerNote ?? "",

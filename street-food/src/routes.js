@@ -7,6 +7,7 @@ const qsr = {
   dashboard: lazy(() => import('views/qsr/Dashboard')),
   operation: lazy(() => import('views/qsr/operation/Operations')),
   kot: lazy(() => import('views/qsr/kot/ViewKots')),
+  crm: lazy(() => import('views/qsr/crm/Crm')),
 };
 
 const order = {
@@ -65,9 +66,16 @@ const allRoutes = {
       exact: true,
     },
     {
+      path: `${appRoot}/crm`,
+      label: 'CRM',
+      icon: 'user',
+      component: qsr.crm,
+    },
+    {
       path: `/settings`,
       component: settings.main,
-      hideInMenu: true,
+      icon: 'gear',
+      label: 'Settings',
     },
   ],
   sidebarItems: [

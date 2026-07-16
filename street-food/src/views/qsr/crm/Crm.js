@@ -1,30 +1,20 @@
-import React, { useContext } from 'react';
-import { Row, Col, Nav, Dropdown } from 'react-bootstrap';
+import React from 'react';
+import { Row, Col, Nav } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { LAYOUT } from 'constants.js';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import useCustomLayout from 'hooks/useCustomLayout';
-import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Switch, Route, Redirect, NavLink, useLocation } from 'react-router-dom';
 
-import { AuthContext } from 'contexts/AuthContext';
-import OrderHistory from './order/OrderHistory';
-import OrderDetails from './order/OrderDetails';
-
-import ManageMenu from './menu/ManageMenu';
-import AddDishes from './menu/AddDishes';
-import QRforMenu from './menu/QRforMenu';
-
-import FinancialReport from './FinancialReport';
-
+import WhatsappCampaign from './campaigns/WhatsappCampaign';
+import CustomerOrderHistory from './CustomerOrderHistory';
 
 const NavContent = () => {
-  const { activePlans } = useContext(AuthContext);
   return (
     <>
       <style>{`
-        .operations-sidebar .nav-link {
+        .crm-sidebar .nav-link {
           border-radius: 50px !important;
           padding: 0.6rem 1.25rem !important;
           margin-bottom: 0.15rem !important;
@@ -37,18 +27,18 @@ const NavContent = () => {
           background: transparent !important;
           font-size: 0.85rem !important;
         }
-        .operations-sidebar .nav-link:hover,
-        .operations-sidebar .nav-link.active {
+        .crm-sidebar .nav-link:hover,
+        .crm-sidebar .nav-link.active {
           color: #23b3f4 !important;
           background-color: rgba(35, 179, 244, 0.08) !important;
           border-color: rgba(35, 179, 244, 0.2) !important;
         }
-        .operations-sidebar .nav-link.active span,
-        .operations-sidebar .nav-link.active svg {
+        .crm-sidebar .nav-link.active span,
+        .crm-sidebar .nav-link.active svg {
           color: #23b3f4 !important;
           font-weight: 700 !important;
         }
-        .operations-sidebar .section-header {
+        .crm-sidebar .section-header {
           display: flex !important;
           align-items: center !important;
           padding: 1.25rem 1.25rem 0.5rem 1.25rem !important;
@@ -57,62 +47,26 @@ const NavContent = () => {
           font-size: 0.95rem !important;
           letter-spacing: -0.01em !important;
         }
-        .operations-sidebar .section-header svg {
+        .crm-sidebar .section-header svg {
           color: #94a3b8 !important;
           margin-right: 12px !important;
         }
-        .operations-sidebar .sub-menu-container {
+        .crm-sidebar .sub-menu-container {
           padding-left: 0.5rem !important;
         }
       `}</style>
-      <Nav className="flex-column operations-sidebar">
+      <Nav className="flex-column crm-sidebar">
         <div className="mb-1">
           <div className="section-header">
-            <CsLineIcons icon="cart" size="17" />
-            <span className="align-middle">Order</span>
+            <CsLineIcons icon="send" size="17" />
+            <span className="align-middle">Campaigns</span>
           </div>
           <div className="sub-menu-container">
-            <Nav.Link as={NavLink} to="/operations/order-history" className="px-0" isActive={(match, location) => {
-              return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
+            <Nav.Link as={NavLink} to="/crm/whatsapp" className="px-0" isActive={(match, location) => {
+              return location.pathname === '/crm/whatsapp' || location.pathname.startsWith('/crm/customers/');
             }}>
               <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Order History</span>
-            </Nav.Link>
-          </div>
-        </div>
-
-        <div className="mb-1">
-          <div className="section-header">
-            <CsLineIcons icon="book-open" size="17" />
-            <span className="align-middle">Menu</span>
-          </div>
-          <div className="sub-menu-container">
-            <Nav.Link as={NavLink} to="/operations/manage-menu" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Manage Menu</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/add-dish" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Add Dish</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/operations/qr-for-menu" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">QR for Menu</span>
-            </Nav.Link>
-          </div>
-        </div>
-
-
-
-        <div className="mb-1">
-          <div className="section-header">
-            <CsLineIcons icon="file-text" size="17" />
-            <span className="align-middle">Report</span>
-          </div>
-          <div className="sub-menu-container">
-            <Nav.Link as={NavLink} to="/operations/financial-report" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Expense-Income</span>
+              <span className="align-middle">WhatsApp</span>
             </Nav.Link>
           </div>
         </div>
@@ -129,7 +83,7 @@ const MobileBottomNav = () => {
   const navItems = [
     { label: 'Order', icon: 'cart', to: '/operations/order-history' },
     { label: 'Menu', icon: 'book-open', to: '/operations/manage-menu' },
-    { label: 'Customers', icon: 'user', to: '/operations/campaigns' },
+    { label: 'Customers', icon: 'user', to: '/crm/whatsapp' },
     { label: 'Report', icon: 'file-text', to: '/operations/financial-report' },
   ];
 
@@ -206,7 +160,7 @@ const MobileBottomNav = () => {
           } else if (item.label === 'Menu') {
             isActive = pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
           } else if (item.label === 'Customers') {
-            isActive = pathname.startsWith('/operations/campaigns') || pathname.startsWith('/operations/customers/');
+            isActive = pathname.startsWith('/crm/whatsapp') || pathname.startsWith('/crm/customers/');
           } else {
             isActive = pathname.startsWith(item.to);
           }
@@ -225,14 +179,12 @@ const MobileBottomNav = () => {
   );
 };
 
-const Operations = () => {
+const Crm = () => {
   useCustomLayout({ layout: LAYOUT.Boxed });
   const { width } = useWindowSize();
 
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10) || 1200;
-
-  const { activePlans } = useContext(AuthContext);
 
   return (
     <div className="position-relative pb-7 pb-lg-0">
@@ -247,16 +199,9 @@ const Operations = () => {
         ) : null}
         <Col>
           <Switch>
-            <Route exact path="/operations" render={() => <Redirect to="/operations/order-history" />} />
-            <Route exact path="/operations/order-history" render={() => <OrderHistory />} />
-            <Route exact path="/operations/order-details/:id" render={() => <OrderDetails />} />
-
-            <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
-            <Route exact path="/operations/add-dish" render={() => <AddDishes />} />
-            <Route exact path="/operations/qr-for-menu" render={() => <QRforMenu />} />
-
-
-            <Route exact path="/operations/financial-report" render={() => <FinancialReport />} />
+            <Route exact path="/crm" render={() => <Redirect to="/crm/whatsapp" />} />
+            <Route exact path="/crm/whatsapp" render={() => <WhatsappCampaign />} />
+            <Route exact path="/crm/customers/:phone" render={() => <CustomerOrderHistory />} />
           </Switch>
         </Col>
       </Row>
@@ -264,4 +209,4 @@ const Operations = () => {
   );
 };
 
-export default Operations;
+export default Crm;

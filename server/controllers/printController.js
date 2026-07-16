@@ -17,6 +17,8 @@ exports.getBluetoothPrintJson = async (req, res) => {
 
     const printSettings = user.printSettings || {};
     const showLogo = printSettings.showLogo ?? true;
+    const showGst = printSettings.showGst ?? true;
+    const showFssai = printSettings.showFssai ?? true;
     const showCustomerDetails = printSettings.showCustomerDetails ?? true;
     const headerNote = printSettings.headerNote || "";
     const footerNote = printSettings.footerNote || "Thanks, Visit Again";
@@ -125,7 +127,8 @@ exports.getBluetoothPrintJson = async (req, res) => {
           <p style="margin: 1px 0; font-size: 4px; color: #000;">${user.address || ""}</p>
           <p style="margin: 1px 0; font-size: 4px; color: #000;">${user.city || ""}, ${user.state || ""} - ${user.pincode || ""}</p>
           <p style="margin: 1px 0; font-size: 4px; color: #000;"><strong>Ph:</strong> ${user.mobile || ""}</p>
-          ${user.gst_no ? `<p style="margin: 1px 0; font-size: 4px; color: #000;"><strong>GST:</strong> ${user.gst_no}</p>` : ""}
+          ${(showGst && user.gst_no) ? `<p style="margin: 1px 0; font-size: 4px; color: #000;"><strong>GST:</strong> ${user.gst_no}</p>` : ""}
+          ${(showFssai && user.fssai_no) ? `<p style="margin: 1px 0; font-size: 4px; color: #000;"><strong>FSSAI:</strong> ${user.fssai_no}</p>` : ""}
           ${headerNote ? `<p style="font-style: italic; margin: 3px 0 0 0; font-size: 5px; color: #000; text-align: center;">${headerNote}</p>` : ""}
         </div>
 
