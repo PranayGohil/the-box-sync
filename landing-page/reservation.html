@@ -19,31 +19,35 @@
     <link rel="stylesheet" href="assets/css/nice-select.css">
     <link rel="stylesheet" href="assets/css/main.css">
 
-    <!-- Google Fonts matching the elegant restaurant theme -->
+    <!-- Google Fonts matching the active theme -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
         rel="stylesheet">
 
     <style>
-        /* ── CSS Variables matching TheBox palette ── */
+        /* ── CSS Variables matching the Niotech theme palette ── */
         :root {
-            --thebox-primary: #1b3a6b;
-            /* deep navy from breadcrumb bg */
-            --thebox-accent: #e8a020;
-            /* warm gold — theme-btn colour */
-            --thebox-accent2: #c8121c;
-            /* TheBox red */
-            --thebox-light: #f5f7fa;
+            --thebox-primary: #35bdf2;
+            /* theme blue */
+            --thebox-accent: #54daff;
+            /* theme accent light blue */
+            --thebox-accent2: #e78c45;
+            /* theme orange */
+            --thebox-light: #e8f6fd;
+            /* theme light bg */
             --thebox-card-bg: #ffffff;
-            --thebox-border: #e2e8f0;
-            --thebox-text: #1e293b;
-            --thebox-muted: #64748b;
-            --font-display: 'Cormorant Garamond', Georgia, serif;
-            --font-body: 'DM Sans', sans-serif;
+            --thebox-border: #E6E6E6;
+            /* theme border */
+            --thebox-text: #282C32;
+            /* theme title */
+            --thebox-muted: #858585;
+            /* theme text color */
+            --font-display: 'Urbanist', sans-serif;
+            --font-body: 'Urbanist', sans-serif;
             --radius: 12px;
-            --shadow: 0 4px 24px rgba(27, 58, 107, 0.10);
-            --shadow-lg: 0 12px 48px rgba(27, 58, 107, 0.16);
+            --shadow: 0px 4px 25px 0px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0px 8px 30px 0px rgba(0, 0, 0, 0.1);
             --transition: all 0.28s cubic-bezier(.4, 0, .2, 1);
         }
 
@@ -57,7 +61,7 @@
             display: flex;
             align-items: center;
             gap: 0;
-            margin-bottom: 36px;
+            margin-bottom: 18px;
         }
 
         .res-step {
@@ -103,7 +107,8 @@
             content: '✓';
         }
 
-        .step-num.done span {
+        .step-num.done span,
+        .step-num.done i {
             display: none;
         }
 
@@ -162,7 +167,7 @@
         }
 
         .res-card-body {
-            padding: 32px 28px;
+            padding: 20px 24px;
         }
 
         /* ── Period tabs (Lunch / Dinner) ── */
@@ -207,10 +212,16 @@
 
         .period-tab .count {
             background: rgba(255, 255, 255, 0.25);
-            border-radius: 10px;
+            border-radius: 50%;
             font-size: 10px;
-            padding: 1px 7px;
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 600;
+            line-height: 1;
+            flex-shrink: 0;
         }
 
         .period-tab:not(.active) .count {
@@ -319,6 +330,7 @@
             background: #fff;
             transition: var(--transition);
             outline: none;
+            box-sizing: border-box !important;
         }
 
         .res-input:focus,
@@ -326,6 +338,24 @@
         .res-select:focus {
             border-color: var(--thebox-primary);
             box-shadow: 0 0 0 3px rgba(27, 58, 107, .10);
+        }
+
+        /* Prevent native date calendar indicator overlapping border */
+        input[type="date"] {
+            position: relative;
+            padding-right: 40px !important;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0;
+            padding: 0;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
         }
 
         .res-input.error,
@@ -431,14 +461,13 @@
             font-size: 13px;
             color: #1e40af;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             gap: 10px;
             margin-bottom: 20px;
         }
 
         .info-banner i {
             flex-shrink: 0;
-            margin-top: 2px;
         }
 
         /* ── Status lookup card ── */
@@ -687,7 +716,7 @@
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .summary-bar {
@@ -765,6 +794,16 @@
 
             .lookup-card {
                 padding: 18px 16px;
+            }
+        }
+
+        #breadcrumbRestaurantName {
+            font-size: 28px !important;
+        }
+
+        @media (max-width: 991px) {
+            #breadcrumbRestaurantName {
+                font-size: 22px !important;
             }
         }
     </style>
@@ -876,16 +915,16 @@
     <!-- Breadcrumb -->
     <div class="breadcumb-section fix">
         <div class="breadcumb-container-wrapper" data-bg-src="assets/images/bg/breadcumgBg.png"
-            style="padding: 50px 0 50px;">
+            style="padding: 24px 0 20px;">
             <div class="container">
                 <div class="shape1"><img src="assets/images/shape/breadCumbShape1_1.png" alt="shape"></div>
                 <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape"></div>
                 <div class="breadcumb-wrapper">
-                    <div class="page-heading">
+                    <div class="page-heading text-center">
+                        <img id="restaurantLogo" src="" alt="logo"
+                            style="display:none; width: 70px; height: 70px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; margin-left: auto; margin-right: auto; object-fit: cover; background-color: #fff;"
+                            onerror="this.style.display='none';">
                         <h1 id="breadcrumbRestaurantName">Table Reservation</h1>
-                        <div class="links">
-                            <a href="index.html">Home<span class="slash">/</span></a> Table Reservation
-                        </div>
                     </div>
                 </div>
             </div>
@@ -894,10 +933,10 @@
 
     <!-- ═══════════════════════════════════════════════
          MAIN RESERVATION SECTION
-    ═══════════════════════════════════════════════ -->
+     ═══════════════════════════════════════════════ -->
     <section class="privacy_policy_content terms_contents">
         <div class="container">
-            <div class="wrapper my-5">
+            <div class="wrapper mt-4 mb-5">
 
                 <!-- Token Loading State -->
                 <div id="tokenLoading" style="justify-content:center; align-items:center; min-height:200px;">
@@ -922,13 +961,6 @@
 
                 <!-- Main Form Area -->
                 <div id="mainContent" style="display:none;">
-
-                    <!-- Restaurant Branding -->
-                    <div class="restaurant-brand fade-in">
-                        <img id="restaurantLogo" src="" alt="" style="display:none;">
-                        <h3 id="restaurantName"></h3>
-                        <p id="restaurantCity"></p>
-                    </div>
 
                     <div class="row justify-content-center">
                         <div class="col-lg-8 col-xl-7">
@@ -961,22 +993,6 @@
 
                                     <div style="border-top:1px solid var(--thebox-border); margin:28px 0 22px;"></div>
 
-                                    <!-- Inline status check after booking -->
-                                    <h6 style="font-size:14px; font-weight:600; text-align:left; margin-bottom:10px;">
-                                        <i class="fas fa-search"
-                                            style="margin-right:6px; color:var(--thebox-primary);"></i>
-                                        Check Status
-                                    </h6>
-                                    <div class="lookup-row">
-                                        <input type="text" class="res-input" id="lookupIdSuccess"
-                                            placeholder="Paste your Reservation ID">
-                                        <button class="btn-lookup" onclick="checkStatus('success')">
-                                            <span id="lookupBtnSuccessText">Check</span>
-                                        </button>
-                                    </div>
-                                    <div class="alert-msg alert-danger" id="lookupErrorSuccess"></div>
-                                    <div class="status-result" id="statusResultSuccess"></div>
-
                                     <button onclick="resetForm()"
                                         style="margin-top:24px; background:none; border:none; color:var(--thebox-primary); font-size:13px; cursor:pointer; text-decoration:underline;">
                                         Make another reservation →
@@ -990,17 +1006,17 @@
                                 <!-- Step progress -->
                                 <div class="res-steps" id="stepProgress">
                                     <div class="res-step">
-                                        <div class="step-num active" id="stepNum1"><span>1</span></div>
+                                        <div class="step-num active" id="stepNum1"><i class="far fa-calendar-alt"></i></div>
                                         <div class="step-label active" id="stepLabel1">Date &amp; Guests</div>
                                     </div>
                                     <div class="step-line" id="stepLine1"></div>
                                     <div class="res-step">
-                                        <div class="step-num" id="stepNum2"><span>2</span></div>
+                                        <div class="step-num" id="stepNum2"><i class="far fa-clock"></i></div>
                                         <div class="step-label" id="stepLabel2">Select Time</div>
                                     </div>
                                     <div class="step-line" id="stepLine2"></div>
                                     <div class="res-step" style="flex:0;">
-                                        <div class="step-num" id="stepNum3"><span>3</span></div>
+                                        <div class="step-num" id="stepNum3"><i class="far fa-user"></i></div>
                                         <div class="step-label" id="stepLabel3">Your Details</div>
                                     </div>
                                 </div>
@@ -1211,7 +1227,8 @@
     <!-- ══════════════════════════════════════════════ -->
     <script>
         // ── CONFIG ─────────────────────────────────────────────────────────────
-        const API_BASE = 'https://api.theboxsync.com/api'; // ← replace with your REACT_APP_API value
+        const API_BASE = 'https://api.theboxsync.com/api';
+        const UPLOAD_BASE = 'https://api.theboxsync.com/uploads';
 
         // ── STATE ──────────────────────────────────────────────────────────────
         let restaurantToken = null; // from URL param
@@ -1279,13 +1296,16 @@
 
                 restaurantInfo = data.data;
 
-                // Populate branding
-                qs('restaurantName').textContent = restaurantInfo.name || '';
-                qs('restaurantCity').textContent = restaurantInfo.city || '';
-                qs('breadcrumbRestaurantName').textContent = (restaurantInfo.name ? restaurantInfo.name + ' — ' : '') + 'Table Reservation';
+                // Populate branding logo & name
+                if (qs('breadcrumbRestaurantName')) {
+                    qs('breadcrumbRestaurantName').textContent = (restaurantInfo.name ? restaurantInfo.name + ' — ' : '') + 'Table Reservation';
+                }
 
                 if (restaurantInfo.logo) {
-                    qs('restaurantLogo').src = restaurantInfo.logo;
+                    qs('restaurantLogo').src = UPLOAD_BASE + restaurantInfo.logo;
+                    qs('restaurantLogo').style.display = 'block';
+                } else {
+                    qs('restaurantLogo').src = 'assets/images/logo/logo-blue.svg';
                     qs('restaurantLogo').style.display = 'block';
                 }
 
