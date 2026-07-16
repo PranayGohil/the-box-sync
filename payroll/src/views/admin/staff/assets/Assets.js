@@ -243,7 +243,7 @@ const Assets = () => {
     const matchesSearch =
       asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (asset.serial_number && asset.serial_number.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesStatus = statusFilter === 'all' || asset.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -345,9 +345,9 @@ const Assets = () => {
         });
       }
 
-      const res = await updateAssetRequestStatus(selectedRequest._id, { 
-        status: 'approved', 
-        notes: approveData.notes 
+      const res = await updateAssetRequestStatus(selectedRequest._id, {
+        status: 'approved',
+        notes: approveData.notes
       });
 
       if (res.success) {
@@ -364,14 +364,14 @@ const Assets = () => {
   return (
     <div className="container-fluid p-0">
       {/* Premium Gradient Title Background */}
-      <div 
+      <div
         className="mb-4 p-4 text-white rounded-3 shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center position-relative overflow-hidden"
         style={{
           background: 'linear-gradient(135deg, #1ea8e7 0%, #23b3f4 100%)',
         }}
       >
         {/* Subtle Decorative Circle */}
-        <div 
+        <div
           className="position-absolute rounded-circle"
           style={{
             width: '200px',
@@ -387,9 +387,9 @@ const Assets = () => {
           <h2 className="fw-bold mb-1 text-white">Assets Management</h2>
           <p className="mb-0 text-white-50">Manage company inventories, track and allocate devices and resources to employees.</p>
         </div>
-        <Button 
-          variant="light" 
-          onClick={handleOpenAdd} 
+        <Button
+          variant="light"
+          onClick={handleOpenAdd}
           className="mt-3 mt-md-0 fw-semibold text-primary d-flex align-items-center shadow-sm position-relative z-index-1"
           style={{ borderRadius: '50px', padding: '0.6rem 1.5rem', zIndex: 2 }}
         >
@@ -399,7 +399,7 @@ const Assets = () => {
 
       {/* Tabs */}
       <div className="d-flex border-bottom mb-4">
-        <button 
+        <button
           type="button"
           className={`btn btn-link text-decoration-none fw-bold px-4 py-2 border-bottom ${activeTab === 'assets' ? 'text-primary' : 'text-muted'}`}
           style={{ borderBottomWidth: activeTab === 'assets' ? '3px !important' : '0', borderBottomColor: activeTab === 'assets' ? '#23b3f4' : 'transparent', borderBottomStyle: 'solid', borderRadius: 0 }}
@@ -407,7 +407,7 @@ const Assets = () => {
         >
           Company Assets
         </button>
-        <button 
+        <button
           type="button"
           className={`btn btn-link text-decoration-none fw-bold px-4 py-2 border-bottom ${activeTab === 'requests' ? 'text-primary' : 'text-muted'}`}
           style={{ borderBottomWidth: activeTab === 'requests' ? '3px !important' : '0', borderBottomColor: activeTab === 'requests' ? '#23b3f4' : 'transparent', borderBottomStyle: 'solid', borderRadius: 0 }}
@@ -420,203 +420,203 @@ const Assets = () => {
       {activeTab === 'assets' && (
         <>
           {/* Metrics Row */}
-      <Row className="mb-4">
-        <Col xs={12} sm={6} md={3} className="mb-3 mb-md-0">
-          <Card className="border-0 shadow-sm h-100 py-2" style={{ borderRadius: '15px' }}>
-            <Card.Body className="d-flex align-items-center">
-              <div 
-                className="rounded-3 p-3 me-3 d-flex align-items-center justify-content-center"
-                style={{ background: 'rgba(35, 179, 244, 0.1)', color: '#23b3f4', width: '54px', height: '54px' }}
-              >
-                <CsLineIcons icon="boxes" size="24" />
-              </div>
-              <div>
-                <h6 className="text-muted mb-0 small uppercase fw-bold">Total Assets</h6>
-                <h4 className="fw-bold mb-0 text-dark">{totalCount}</h4>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={6} md={3} className="mb-3 mb-md-0">
-          <Card className="border-0 shadow-sm h-100 py-2" style={{ borderRadius: '15px' }}>
-            <Card.Body className="d-flex align-items-center">
-              <div 
-                className="rounded-3 p-3 me-3 d-flex align-items-center justify-content-center"
-                style={{ background: 'rgba(25, 135, 84, 0.1)', color: '#198754', width: '54px', height: '54px' }}
-              >
-                <CsLineIcons icon="check" size="24" />
-              </div>
-              <div>
-                <h6 className="text-muted mb-0 small uppercase fw-bold">Available</h6>
-                <h4 className="fw-bold mb-0 text-success">{availableCount}</h4>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={6} md={3} className="mb-3 mb-md-0">
-          <Card className="border-0 shadow-sm h-100 py-2" style={{ borderRadius: '15px' }}>
-            <Card.Body className="d-flex align-items-center">
-              <div 
-                className="rounded-3 p-3 me-3 d-flex align-items-center justify-content-center"
-                style={{ background: 'rgba(13, 110, 253, 0.1)', color: '#0d6efd', width: '54px', height: '54px' }}
-              >
-                <CsLineIcons icon="user" size="24" />
-              </div>
-              <div>
-                <h6 className="text-muted mb-0 small uppercase fw-bold">Assigned</h6>
-                <h4 className="fw-bold mb-0 text-primary">{assignedCount}</h4>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col xs={12} sm={6} md={3}>
-          <Card className="border-0 shadow-sm h-100 py-2" style={{ borderRadius: '15px' }}>
-            <Card.Body className="d-flex align-items-center">
-              <div 
-                className="rounded-3 p-3 me-3 d-flex align-items-center justify-content-center"
-                style={{ background: 'rgba(220, 53, 69, 0.1)', color: '#dc3545', width: '54px', height: '54px' }}
-              >
-                <CsLineIcons icon="close" size="24" />
-              </div>
-              <div>
-                <h6 className="text-muted mb-0 small uppercase fw-bold">Damaged/Lost</h6>
-                <h4 className="fw-bold mb-0 text-danger">{damagedLostCount}</h4>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Filter & Listing Card */}
-      <Card className="border-0 shadow-sm mb-4" style={{ borderRadius: '15px' }}>
-        <Card.Body className="p-4">
-          <Row className="mb-3 g-3 align-items-center">
-            <Col xs={12} md={6}>
-              <Form.Control
-                type="text"
-                placeholder="Search by asset name or serial number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ borderRadius: '50px', padding: '0.65rem 1.25rem', border: '1px solid #e2e8f0' }}
-              />
+          <Row className="mb-4">
+            <Col xs={12} sm={6} md={3} className="mb-3 mb-md-0">
+              <Card className="border-0 shadow-sm h-100 py-2" style={{ borderRadius: '15px' }}>
+                <Card.Body className="d-flex align-items-center">
+                  <div
+                    className="rounded-3 p-3 me-3 d-flex align-items-center justify-content-center"
+                    style={{ background: 'rgba(35, 179, 244, 0.1)', color: '#23b3f4', width: '54px', height: '54px' }}
+                  >
+                    <CsLineIcons icon="boxes" size="24" />
+                  </div>
+                  <div>
+                    <h6 className="text-muted mb-0 small uppercase fw-bold">Total Assets</h6>
+                    <h4 className="fw-bold mb-0 text-dark">{totalCount}</h4>
+                  </div>
+                </Card.Body>
+              </Card>
             </Col>
-            <Col xs={12} md={3}>
-              <Select
-                classNamePrefix="react-select"
-                options={[
-                  { value: 'all', label: 'All Statuses' },
-                  { value: 'available', label: 'Available' },
-                  { value: 'assigned', label: 'Assigned' },
-                  { value: 'damaged', label: 'Damaged' },
-                  { value: 'lost', label: 'Lost' }
-                ]}
-                value={{
-                  all: { value: 'all', label: 'All Statuses' },
-                  available: { value: 'available', label: 'Available' },
-                  assigned: { value: 'assigned', label: 'Assigned' },
-                  damaged: { value: 'damaged', label: 'Damaged' },
-                  lost: { value: 'lost', label: 'Lost' }
-                }[statusFilter]}
-                onChange={(selected) => setStatusFilter(selected ? selected.value : 'all')}
-                placeholder="Filter by Status"
-              />
+
+            <Col xs={12} sm={6} md={3} className="mb-3 mb-md-0">
+              <Card className="border-0 shadow-sm h-100 py-2" style={{ borderRadius: '15px' }}>
+                <Card.Body className="d-flex align-items-center">
+                  <div
+                    className="rounded-3 p-3 me-3 d-flex align-items-center justify-content-center"
+                    style={{ background: 'rgba(25, 135, 84, 0.1)', color: '#198754', width: '54px', height: '54px' }}
+                  >
+                    <CsLineIcons icon="check" size="24" />
+                  </div>
+                  <div>
+                    <h6 className="text-muted mb-0 small uppercase fw-bold">Available</h6>
+                    <h4 className="fw-bold mb-0 text-success">{availableCount}</h4>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col xs={12} sm={6} md={3} className="mb-3 mb-md-0">
+              <Card className="border-0 shadow-sm h-100 py-2" style={{ borderRadius: '15px' }}>
+                <Card.Body className="d-flex align-items-center">
+                  <div
+                    className="rounded-3 p-3 me-3 d-flex align-items-center justify-content-center"
+                    style={{ background: 'rgba(13, 110, 253, 0.1)', color: '#0d6efd', width: '54px', height: '54px' }}
+                  >
+                    <CsLineIcons icon="user" size="24" />
+                  </div>
+                  <div>
+                    <h6 className="text-muted mb-0 small uppercase fw-bold">Assigned</h6>
+                    <h4 className="fw-bold mb-0 text-primary">{assignedCount}</h4>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col xs={12} sm={6} md={3}>
+              <Card className="border-0 shadow-sm h-100 py-2" style={{ borderRadius: '15px' }}>
+                <Card.Body className="d-flex align-items-center">
+                  <div
+                    className="rounded-3 p-3 me-3 d-flex align-items-center justify-content-center"
+                    style={{ background: 'rgba(220, 53, 69, 0.1)', color: '#dc3545', width: '54px', height: '54px' }}
+                  >
+                    <CsLineIcons icon="close" size="24" />
+                  </div>
+                  <div>
+                    <h6 className="text-muted mb-0 small uppercase fw-bold">Damaged/Lost</h6>
+                    <h4 className="fw-bold mb-0 text-danger">{damagedLostCount}</h4>
+                  </div>
+                </Card.Body>
+              </Card>
             </Col>
           </Row>
 
-          {loading ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" variant="primary" />
-              <p className="mt-2 text-muted">Loading assets...</p>
-            </div>
-          ) : filteredAssets.length === 0 ? (
-            <Alert variant="info" className="text-center py-4 border-0" style={{ borderRadius: '12px', background: 'rgba(35, 179, 244, 0.08)', color: '#23b3f4' }}>
-              No assets found matching the criteria.
-            </Alert>
-          ) : (
-            <div className="table-responsive">
-              <Table hover className="align-middle">
-                <thead>
-                  <tr className="text-muted border-bottom" style={{ fontSize: '0.85rem' }}>
-                    <th>Asset Name</th>
-                    <th>Type</th>
-                    <th>Serial Number</th>
-                    <th>Status</th>
-                    <th>Assignment Details</th>
-                    <th className="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAssets.map((asset) => (
-                    <tr key={asset._id} className="border-bottom" style={{ fontSize: '0.9rem' }}>
-                      <td className="fw-semibold text-dark">{asset.name}</td>
-                      <td>{getAssetTypeLabel(asset.asset_type)}</td>
-                      <td><code>{asset.serial_number || 'N/A'}</code></td>
-                      <td>{getStatusBadge(asset.status)}</td>
-                      <td>
-                        {asset.status === 'assigned' && asset.assigned_to ? (
-                          <div>
-                            <span className="fw-semibold">{asset.assigned_to.f_name} {asset.assigned_to.l_name}</span>
-                            <span className="text-muted d-block small">
-                              Assigned on: {new Date(asset.assigned_date).toLocaleDateString('en-GB')}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-muted">—</span>
-                        )}
-                      </td>
-                      <td className="text-end">
-                        {asset.status === 'assigned' ? (
-                          <Button 
-                            variant="outline-success" 
-                            size="sm" 
-                            onClick={() => handleOpenReturn(asset)}
-                            className="me-2"
-                            style={{ borderRadius: '30px' }}
-                          >
-                            Mark Returned
-                          </Button>
-                        ) : (
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm" 
-                            onClick={() => handleOpenAssign(asset)}
-                            className="me-2"
-                            disabled={asset.status === 'lost'}
-                            style={{ borderRadius: '30px' }}
-                          >
-                            Assign to Staff
-                          </Button>
-                        )}
-                        <Button 
-                          variant="light" 
-                          size="sm" 
-                          onClick={() => handleOpenEdit(asset)}
-                          className="me-2 p-1 rounded-circle"
-                          style={{ width: '32px', height: '32px' }}
-                        >
-                          <CsLineIcons icon="edit" size="16" className="text-primary" />
-                        </Button>
-                        <Button 
-                          variant="light" 
-                          size="sm" 
-                          onClick={() => handleOpenDelete(asset)}
-                          className="p-1 rounded-circle"
-                          style={{ width: '32px', height: '32px' }}
-                        >
-                          <CsLineIcons icon="bin" size="16" className="text-danger" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          )}
-        </Card.Body>
-      </Card>
+          {/* Filter & Listing Card */}
+          <Card className="border-0 shadow-sm mb-4" style={{ borderRadius: '15px' }}>
+            <Card.Body className="p-4">
+              <Row className="mb-3 g-3 align-items-center">
+                <Col xs={12} md={6}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by asset name or serial number..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ borderRadius: '50px', padding: '0.65rem 1.25rem', border: '1px solid #e2e8f0' }}
+                  />
+                </Col>
+                <Col xs={12} md={3}>
+                  <Select
+                    classNamePrefix="react-select"
+                    options={[
+                      { value: 'all', label: 'All Status' },
+                      { value: 'available', label: 'Available' },
+                      { value: 'assigned', label: 'Assigned' },
+                      { value: 'damaged', label: 'Damaged' },
+                      { value: 'lost', label: 'Lost' }
+                    ]}
+                    value={{
+                      all: { value: 'all', label: 'All Status' },
+                      available: { value: 'available', label: 'Available' },
+                      assigned: { value: 'assigned', label: 'Assigned' },
+                      damaged: { value: 'damaged', label: 'Damaged' },
+                      lost: { value: 'lost', label: 'Lost' }
+                    }[statusFilter]}
+                    onChange={(selected) => setStatusFilter(selected ? selected.value : 'all')}
+                    placeholder="Filter by Status"
+                  />
+                </Col>
+              </Row>
+
+              {loading ? (
+                <div className="text-center py-5">
+                  <Spinner animation="border" variant="primary" />
+                  <p className="mt-2 text-muted">Loading assets...</p>
+                </div>
+              ) : filteredAssets.length === 0 ? (
+                <Alert variant="info" className="text-center py-4 border-0" style={{ borderRadius: '12px', background: 'rgba(35, 179, 244, 0.08)', color: '#23b3f4' }}>
+                  No assets found matching the criteria.
+                </Alert>
+              ) : (
+                <div className="table-responsive">
+                  <Table hover className="align-middle">
+                    <thead>
+                      <tr className="text-muted border-bottom" style={{ fontSize: '0.85rem' }}>
+                        <th>Asset Name</th>
+                        <th>Type</th>
+                        <th>Serial Number</th>
+                        <th>Status</th>
+                        <th>Assignment Details</th>
+                        <th className="text-end">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredAssets.map((asset) => (
+                        <tr key={asset._id} className="border-bottom" style={{ fontSize: '0.9rem' }}>
+                          <td className="fw-semibold text-dark">{asset.name}</td>
+                          <td>{getAssetTypeLabel(asset.asset_type)}</td>
+                          <td><code>{asset.serial_number || 'N/A'}</code></td>
+                          <td>{getStatusBadge(asset.status)}</td>
+                          <td>
+                            {asset.status === 'assigned' && asset.assigned_to ? (
+                              <div>
+                                <span className="fw-semibold">{asset.assigned_to.f_name} {asset.assigned_to.l_name}</span>
+                                <span className="text-muted d-block small">
+                                  Assigned on: {new Date(asset.assigned_date).toLocaleDateString('en-GB')}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted">—</span>
+                            )}
+                          </td>
+                          <td className="text-end">
+                            {asset.status === 'assigned' ? (
+                              <Button
+                                variant="outline-success"
+                                size="sm"
+                                onClick={() => handleOpenReturn(asset)}
+                                className="me-2"
+                                style={{ borderRadius: '30px' }}
+                              >
+                                Mark Returned
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={() => handleOpenAssign(asset)}
+                                className="me-2"
+                                disabled={asset.status === 'lost'}
+                                style={{ borderRadius: '30px' }}
+                              >
+                                Assign to Staff
+                              </Button>
+                            )}
+                            <Button
+                              variant="light"
+                              size="sm"
+                              onClick={() => handleOpenEdit(asset)}
+                              className="me-2 p-1 rounded-circle"
+                              style={{ width: '32px', height: '32px' }}
+                            >
+                              <CsLineIcons icon="edit" size="16" className="text-primary" />
+                            </Button>
+                            <Button
+                              variant="light"
+                              size="sm"
+                              onClick={() => handleOpenDelete(asset)}
+                              className="p-1 rounded-circle"
+                              style={{ width: '32px', height: '32px' }}
+                            >
+                              <CsLineIcons icon="bin" size="16" className="text-danger" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
         </>
       )}
 
@@ -650,7 +650,7 @@ const Assets = () => {
                     {assetRequests.map((req) => (
                       <tr key={req._id} className="border-bottom" style={{ fontSize: '0.9rem' }}>
                         <td className="fw-semibold text-dark">
-                          {req.staff_id?.f_name} {req.staff_id?.l_name} 
+                          {req.staff_id?.f_name} {req.staff_id?.l_name}
                           <span className="d-block text-muted small">{req.staff_id?.staff_id}</span>
                         </td>
                         <td className="fw-bold">{req.asset_name}</td>
@@ -661,18 +661,18 @@ const Assets = () => {
                         <td className="text-end">
                           {req.status === 'pending' && (
                             <>
-                              <Button 
-                                variant="outline-success" 
-                                size="sm" 
+                              <Button
+                                variant="outline-success"
+                                size="sm"
                                 className="me-2"
                                 style={{ borderRadius: '30px' }}
                                 onClick={() => handleOpenApprove(req)}
                               >
                                 Approve
                               </Button>
-                              <Button 
-                                variant="outline-danger" 
-                                size="sm" 
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
                                 style={{ borderRadius: '30px' }}
                                 onClick={() => handleRequestStatusChange(req._id, 'rejected')}
                               >
@@ -714,8 +714,8 @@ const Assets = () => {
                 isClearable
                 options={ASSET_TYPES.map((type) => ({ label: type, value: type }))}
                 value={
-                  formData.asset_type 
-                    ? { label: getAssetTypeLabel(formData.asset_type), value: getAssetTypeLabel(formData.asset_type) } 
+                  formData.asset_type
+                    ? { label: getAssetTypeLabel(formData.asset_type), value: getAssetTypeLabel(formData.asset_type) }
                     : null
                 }
                 onChange={(selected) => setFormData({ ...formData, asset_type: selected ? selected.value : '' })}
@@ -770,14 +770,14 @@ const Assets = () => {
                   label: `${staff.f_name} ${staff.l_name} (${staff.staff_id || 'No ID'})`
                 }))}
                 value={
-                  assignData.assigned_to 
+                  assignData.assigned_to
                     ? {
-                        value: assignData.assigned_to,
-                        label: (() => {
-                          const staff = staffList.find(s => s._id === assignData.assigned_to);
-                          return staff ? `${staff.f_name} ${staff.l_name} (${staff.staff_id || 'No ID'})` : '';
-                        })()
-                      }
+                      value: assignData.assigned_to,
+                      label: (() => {
+                        const staff = staffList.find(s => s._id === assignData.assigned_to);
+                        return staff ? `${staff.f_name} ${staff.l_name} (${staff.staff_id || 'No ID'})` : '';
+                      })()
+                    }
                     : null
                 }
                 onChange={(selected) => setAssignData({ ...assignData, assigned_to: selected ? selected.value : '' })}
@@ -882,7 +882,7 @@ const Assets = () => {
             <p className="text-muted">
               You are approving the request for <strong>{selectedRequest?.asset_name}</strong> ({selectedRequest?.asset_type}) from <strong>{selectedRequest?.staff_id?.f_name} {selectedRequest?.staff_id?.l_name}</strong>.
             </p>
-            
+
             <Form.Group className="mb-4">
               <Form.Label className="fw-semibold">Allocation Method *</Form.Label>
               <div className="d-flex gap-3">
@@ -961,12 +961,12 @@ const Assets = () => {
                   value={
                     approveData.selectedAssetId
                       ? {
-                          value: approveData.selectedAssetId,
-                          label: (() => {
-                            const a = assets.find(item => item._id === approveData.selectedAssetId);
-                            return a ? `${a.name} ${a.serial_number ? `(SN: ${a.serial_number})` : ''} - [${getAssetTypeLabel(a.asset_type)}]` : '';
-                          })()
-                        }
+                        value: approveData.selectedAssetId,
+                        label: (() => {
+                          const a = assets.find(item => item._id === approveData.selectedAssetId);
+                          return a ? `${a.name} ${a.serial_number ? `(SN: ${a.serial_number})` : ''} - [${getAssetTypeLabel(a.asset_type)}]` : '';
+                        })()
+                      }
                       : null
                   }
                   onChange={(selected) => setApproveData({ ...approveData, selectedAssetId: selected ? selected.value : '' })}

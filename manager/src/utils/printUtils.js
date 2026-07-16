@@ -89,6 +89,8 @@ export const printFullBill = (ord, userData, items, subTotal) => {
   const showLogo = printSettings.showLogo ?? true;
   const logoUrl = (showLogo && userData.logo) ? `${uploadDir}${userData.logo.startsWith('/') ? '' : '/'}${userData.logo}` : '';
 
+  const showGst = printSettings.showGst ?? true;
+  const showFssai = printSettings.showFssai ?? true;
   const showCustomerDetails = printSettings.showCustomerDetails ?? true;
   const headerNote = printSettings.headerNote || '';
   const footerNote = printSettings.footerNote || 'Thanks, Visit Again';
@@ -135,7 +137,8 @@ export const printFullBill = (ord, userData, items, subTotal) => {
         <p>${userData.address}</p>
         <p>${userData.city}, ${userData.state} - ${userData.pincode}</p>
         <p><strong>Ph:</strong> ${userData.mobile}</p>
-        ${userData.gst_no ? `<p><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
+        ${(showGst && userData.gst_no) ? `<p><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
+        ${(showFssai && userData.fssai_no) ? `<p><strong>FSSAI:</strong> ${userData.fssai_no}</p>` : ''}
         ${headerNote ? `<p style="font-style: italic; margin: 4px 0 0 0; font-size: 10px;">${headerNote}</p>` : ''}
       </div>
 
@@ -181,13 +184,13 @@ export const printFullBill = (ord, userData, items, subTotal) => {
                   <div style="font-size: 9px; color: #000; margin-top: 1px;">
                     ${item.selected_variant && item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}${item.selected_variant && item.selected_variant.extra ? ` (${item.selected_variant.extra})` : ''}
                     ${item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' • ' : ''}
-                    ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+₹${addon.price})`).join(' • ') : ''}
+                    ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => `${addon.addon_name} (+\u20B9${addon.price})`).join(' • ') : ''}
                   </div>
                 ` : ''}
               </td>
               <td class="text-center">${item.quantity}</td>
-              <td class="text-center">₹${item.dish_price}</td>
-              <td class="text-right">₹${(item.dish_price * item.quantity).toFixed(2)}</td>
+              <td class="text-center">\u20B9${item.dish_price}</td>
+              <td class="text-right">\u20B9${(item.dish_price * item.quantity).toFixed(2)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -200,40 +203,40 @@ export const printFullBill = (ord, userData, items, subTotal) => {
         <tbody>
           <tr>
             <td class="text-right" style="padding-top: 4px;"><strong>Sub Total:</strong></td>
-            <td class="text-right" style="width: 80px; padding-top: 4px;"><strong>₹${parseFloat(subTotal).toFixed(2)}</strong></td>
+            <td class="text-right" style="width: 80px; padding-top: 4px;"><strong>\u20B9${parseFloat(subTotal).toFixed(2)}</strong></td>
           </tr>
 
           ${ord.cgst_amount > 0 ? `
             <tr>
               <td class="text-right"><strong>CGST (${ord.cgst_percent || 0}%):</strong></td>
-              <td class="text-right">₹${parseFloat(ord.cgst_amount).toFixed(2)}</td>
+              <td class="text-right">\u20B9${parseFloat(ord.cgst_amount).toFixed(2)}</td>
             </tr>
           ` : ''}
 
           ${ord.sgst_amount > 0 ? `
             <tr>
               <td class="text-right"><strong>SGST (${ord.sgst_percent || 0}%):</strong></td>
-              <td class="text-right">₹${parseFloat(ord.sgst_amount).toFixed(2)}</td>
+              <td class="text-right">\u20B9${parseFloat(ord.sgst_amount).toFixed(2)}</td>
             </tr>
           ` : ''}
 
           ${ord.vat_amount > 0 ? `
             <tr>
               <td class="text-right"><strong>VAT (${ord.vat_percent || 0}%):</strong></td>
-              <td class="text-right">₹${parseFloat(ord.vat_amount).toFixed(2)}</td>
+              <td class="text-right">\u20B9${parseFloat(ord.vat_amount).toFixed(2)}</td>
             </tr>
           ` : ''}
 
           ${ord.discount_amount > 0 ? `
             <tr>
               <td class="text-right"><strong>Discount:</strong></td>
-              <td class="text-right">-₹${parseFloat(ord.discount_amount).toFixed(2)}</td>
+              <td class="text-right">-\u20B9${parseFloat(ord.discount_amount).toFixed(2)}</td>
             </tr>
           ` : ''}
 
           <tr>
             <td class="text-right" style="border-top: 1px dashed #000; padding-top: 6px;"><strong>Total Amount:</strong></td>
-            <td class="text-right" style="border-top: 1px dashed #000; padding-top: 6px;"><strong>₹${parseFloat(ord.total_amount).toFixed(2)}</strong></td>
+            <td class="text-right" style="border-top: 1px dashed #000; padding-top: 6px;"><strong>\u20B9${parseFloat(ord.total_amount).toFixed(2)}</strong></td>
           </tr>
         </tbody>
       </table>
@@ -349,106 +352,31 @@ export const openPrintWindow = async (order_id, setPrinting) => {
       <head>
         <title>Print Bills</title>
         <style>
-          @page {
-            margin: 0;
-          }
-          body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            color: #000;
-            background: #fff;
-          }
-          .receipt-container {
-            width: 100%;
-            max-width: ${maxContainerWidth};
-            margin: 0;
-            padding: 6px;
-            box-sizing: border-box;
-          }
-          .receipt-header {
-            text-align: center;
-            margin-bottom: 6px;
-          }
-          .receipt-header h2 {
-            margin: 0 0 2px 0;
-            font-size: 13px;
-            font-weight: bold;
-          }
-          .receipt-header h3 {
-            margin: 0 0 2px 0;
-            font-size: 12px;
-            font-weight: bold;
-          }
-          .receipt-header p {
-            margin: 1px 0;
-            font-size: 10px;
-          }
-          .dashed-line {
-            border: none;
-            border-top: 1px dashed #000;
-            margin: 6px 0;
-          }
-          .info-table {
-            width: 100%;
-            font-size: 10px;
-            margin-bottom: 6px;
-          }
-          .info-table td {
-            padding: 1px 0;
-          }
-          .items-table {
-            width: 100%;
-            font-size: 10px;
-            margin-bottom: 6px;
-            border-collapse: collapse;
-          }
-          .items-table th {
-            border-bottom: 1px dashed #000;
-            padding: 3px 1px;
-            font-weight: bold;
-          }
-          .items-table td {
-            padding: 3px 1px;
-            vertical-align: top;
-          }
-          .total-table {
-            width: 100%;
-            font-size: 10px;
-            margin-top: 2px;
-            border-collapse: collapse;
-          }
-          .total-table td {
-            padding: 2px 1px;
-          }
-          .text-center {
-            text-align: center;
-          }
-          .text-right {
-            text-align: right;
-          }
-          .text-left {
-            text-align: left;
-          }
+          @page { margin: 0; }
+          body { margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 11px; color: #000; background: #fff; }
+          .receipt-container { width: 100%; max-width: ${maxContainerWidth}; margin: 0; padding: 6px; box-sizing: border-box; }
+          .receipt-header { text-align: center; margin-bottom: 6px; }
+          .receipt-header h2 { margin: 0 0 2px 0; font-size: 13px; font-weight: bold; }
+          .receipt-header h3 { margin: 0 0 2px 0; font-size: 12px; font-weight: bold; }
+          .receipt-header p { margin: 1px 0; font-size: 10px; }
+          .dashed-line { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+          .info-table { width: 100%; font-size: 10px; margin-bottom: 6px; }
+          .info-table td { padding: 1px 0; }
+          .items-table { width: 100%; font-size: 10px; margin-bottom: 6px; border-collapse: collapse; }
+          .items-table th { border-bottom: 1px dashed #000; padding: 3px 1px; font-weight: bold; }
+          .items-table td { padding: 3px 1px; vertical-align: top; }
+          .total-table { width: 100%; font-size: 10px; margin-top: 2px; border-collapse: collapse; }
+          .total-table td { padding: 2px 1px; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          .text-left { text-align: left; }
           @media print {
-            body {
-              width: 100%;
-            }
-            .receipt-container {
-              max-width: 100% !important;
-              padding: 0 6px 0 6px !important;
-              margin: 0 0 70px 0 !important;
-              border: none !important;
-            }
+            body { width: 100%; }
+            .receipt-container { max-width: 100% !important; padding: 0 6px 0 6px !important; margin: 0 0 70px 0 !important; border: none !important; }
           }
         </style>
         <script>
-          window.onload = function() {
-            window.focus();
-            window.print();
-            setTimeout(function() { window.close(); }, 100);
-          };
+          window.onload = function() { window.focus(); window.print(); setTimeout(function() { window.close(); }, 100); };
         </script>
       </head>
       <body>${allBillsHTML}</body>
@@ -536,106 +464,31 @@ export const printModalBill = async (liveData, setPrinting) => {
       <head>
         <title>Print Bill</title>
         <style>
-          @page {
-            margin: 0;
-          }
-          body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            color: #000;
-            background: #fff;
-          }
-          .receipt-container {
-            width: 100%;
-            max-width: ${maxContainerWidth};
-            margin: 0;
-            padding: 6px;
-            box-sizing: border-box;
-          }
-          .receipt-header {
-            text-align: center;
-            margin-bottom: 6px;
-          }
-          .receipt-header h2 {
-            margin: 0 0 2px 0;
-            font-size: 13px;
-            font-weight: bold;
-          }
-          .receipt-header h3 {
-            margin: 0 0 2px 0;
-            font-size: 12px;
-            font-weight: bold;
-          }
-          .receipt-header p {
-            margin: 1px 0;
-            font-size: 10px;
-          }
-          .dashed-line {
-            border: none;
-            border-top: 1px dashed #000;
-            margin: 6px 0;
-          }
-          .info-table {
-            width: 100%;
-            font-size: 10px;
-            margin-bottom: 6px;
-          }
-          .info-table td {
-            padding: 1px 0;
-          }
-          .items-table {
-            width: 100%;
-            font-size: 10px;
-            margin-bottom: 6px;
-            border-collapse: collapse;
-          }
-          .items-table th {
-            border-bottom: 1px dashed #000;
-            padding: 3px 1px;
-            font-weight: bold;
-          }
-          .items-table td {
-            padding: 3px 1px;
-            vertical-align: top;
-          }
-          .total-table {
-            width: 100%;
-            font-size: 10px;
-            margin-top: 2px;
-            border-collapse: collapse;
-          }
-          .total-table td {
-            padding: 2px 1px;
-          }
-          .text-center {
-            text-align: center;
-          }
-          .text-right {
-            text-align: right;
-          }
-          .text-left {
-            text-align: left;
-          }
+          @page { margin: 0; }
+          body { margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 11px; color: #000; background: #fff; }
+          .receipt-container { width: 100%; max-width: ${maxContainerWidth}; margin: 0; padding: 6px; box-sizing: border-box; }
+          .receipt-header { text-align: center; margin-bottom: 6px; }
+          .receipt-header h2 { margin: 0 0 2px 0; font-size: 13px; font-weight: bold; }
+          .receipt-header h3 { margin: 0 0 2px 0; font-size: 12px; font-weight: bold; }
+          .receipt-header p { margin: 1px 0; font-size: 10px; }
+          .dashed-line { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+          .info-table { width: 100%; font-size: 10px; margin-bottom: 6px; }
+          .info-table td { padding: 1px 0; }
+          .items-table { width: 100%; font-size: 10px; margin-bottom: 6px; border-collapse: collapse; }
+          .items-table th { border-bottom: 1px dashed #000; padding: 3px 1px; font-weight: bold; }
+          .items-table td { padding: 3px 1px; vertical-align: top; }
+          .total-table { width: 100%; font-size: 10px; margin-top: 2px; border-collapse: collapse; }
+          .total-table td { padding: 2px 1px; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          .text-left { text-align: left; }
           @media print {
-            body {
-              width: 100%;
-            }
-            .receipt-container {
-              max-width: 100% !important;
-              padding: 0 6px 0 6px !important;
-              margin: 0 0 70px 0 !important;
-              border: none !important;
-            }
+            body { width: 100%; }
+            .receipt-container { max-width: 100% !important; padding: 0 6px 0 6px !important; margin: 0 0 70px 0 !important; border: none !important; }
           }
         </style>
         <script>
-          window.onload = function() {
-            window.focus();
-            window.print();
-            setTimeout(function() { window.close(); }, 100);
-          };
+          window.onload = function() { window.focus(); window.print(); setTimeout(function() { window.close(); }, 100); };
         </script>
       </head>
       <body>${billHTML}</body>
@@ -725,8 +578,8 @@ export const printKOTSlip = (slipData, userData, setPrinting) => {
                   ${((item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra)) || (Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0)) ? `
                     <div style="font-size: 9px; color: #000; margin-top: 1px;">
                       ${item.selected_variant && item.selected_variant.size_name ? `Size: ${item.selected_variant.size_name}` : ''}${item.selected_variant && item.selected_variant.extra ? ` (${item.selected_variant.extra})` : ''}
-                      ${item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' • ' : ''}
-                      ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' • ') : ''}
+                      ${item.selected_variant && (item.selected_variant.size_name || item.selected_variant.extra) && Array.isArray(item.selected_addons) && item.selected_addons.filter(a => a && a.addon_name).length > 0 ? ' \u2022 ' : ''}
+                      ${Array.isArray(item.selected_addons) ? item.selected_addons.filter(a => a && a.addon_name).map(addon => addon.addon_name).join(' \u2022 ') : ''}
                     </div>
                   ` : ''}
                   ${item.special_notes ? `<div style="font-size:10px;color:#000;font-style:italic;margin-top:1px;">Note: ${item.special_notes}</div>` : ''}
@@ -738,7 +591,7 @@ export const printKOTSlip = (slipData, userData, setPrinting) => {
         </table>
 
         <hr class="dashed-line" />
-        <div class="text-center" style="font-size: 10px; color: #000; margin-top: 4px;">KOT Print — ${printTime}</div>
+        <div class="text-center" style="font-size: 10px; color: #000; margin-top: 4px;">KOT Print \u2014 ${printTime}</div>
         <hr class="dashed-line" />
         <div style="height: 70px; clear: both; display: block; font-size: 1px; line-height: 1px;">&nbsp;</div>
       </div>`;
@@ -762,97 +615,29 @@ export const printKOTSlip = (slipData, userData, setPrinting) => {
     <head>
       <title>KOT #${kotNo}</title>
       <style>
-        @page {
-          margin: 0;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-          font-family: Arial, sans-serif;
-          font-size: 11px;
-          color: #000;
-          background: #fff;
-        }
-        .receipt-container {
-          width: 100%;
-          max-width: ${maxContainerWidth};
-          margin: 0;
-          padding: 6px;
-          box-sizing: border-box;
-        }
-        .receipt-header {
-          text-align: center;
-          margin-bottom: 6px;
-        }
-        .receipt-header h2 {
-          margin: 0 0 2px 0;
-          font-size: 13px;
-          font-weight: bold;
-        }
-        .receipt-header h3 {
-          margin: 0 0 2px 0;
-          font-size: 12px;
-          font-weight: bold;
-        }
-        .receipt-header p {
-          margin: 1px 0;
-          font-size: 10px;
-        }
-        .dashed-line {
-          border: none;
-          border-top: 1px dashed #000;
-          margin: 6px 0;
-        }
-        .info-table {
-          width: 100%;
-          font-size: 10px;
-          margin-bottom: 6px;
-        }
-        .info-table td {
-          padding: 1px 0;
-        }
-        .items-table {
-          width: 100%;
-          font-size: 10px;
-          margin-bottom: 6px;
-          border-collapse: collapse;
-        }
-        .items-table th {
-          border-bottom: 1px dashed #000;
-          padding: 3px 1px;
-          font-weight: bold;
-        }
-        .items-table td {
-          padding: 3px 1px;
-          vertical-align: top;
-        }
-        .text-center {
-          text-align: center;
-        }
-        .text-right {
-          text-align: right;
-        }
-        .text-left {
-          text-align: left;
-        }
+        @page { margin: 0; }
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 11px; color: #000; background: #fff; }
+        .receipt-container { width: 100%; max-width: ${maxContainerWidth}; margin: 0; padding: 6px; box-sizing: border-box; }
+        .receipt-header { text-align: center; margin-bottom: 6px; }
+        .receipt-header h2 { margin: 0 0 2px 0; font-size: 13px; font-weight: bold; }
+        .receipt-header h3 { margin: 0 0 2px 0; font-size: 12px; font-weight: bold; }
+        .receipt-header p { margin: 1px 0; font-size: 10px; }
+        .dashed-line { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+        .info-table { width: 100%; font-size: 10px; margin-bottom: 6px; }
+        .info-table td { padding: 1px 0; }
+        .items-table { width: 100%; font-size: 10px; margin-bottom: 6px; border-collapse: collapse; }
+        .items-table th { border-bottom: 1px dashed #000; padding: 3px 1px; font-weight: bold; }
+        .items-table td { padding: 3px 1px; vertical-align: top; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
         @media print {
-          body {
-            width: 100%;
-          }
-          .receipt-container {
-            max-width: 100% !important;
-            padding: 0 6px 0 6px !important;
-            margin: 0 0 70px 0 !important;
-            border: none !important;
-          }
+          body { width: 100%; }
+          .receipt-container { max-width: 100% !important; padding: 0 6px 0 6px !important; margin: 0 0 70px 0 !important; border: none !important; }
         }
       </style>
       <script>
-        window.onload=function(){
-          window.focus();
-          window.print();
-          setTimeout(function(){window.close();},100);
-        };
+        window.onload=function(){ window.focus(); window.print(); setTimeout(function(){ window.close(); }, 100); };
       </script>
     </head>
     <body>${html}</body>

@@ -276,6 +276,16 @@ exports.getQSRCustomerList = async (req, res) => {
       search = "",
       sortBy = "total_orders",
       sortOrder = "desc",
+      fromDate,
+      toDate,
+      ordersMin,
+      ordersMax,
+      spendMin,
+      spendMax,
+      recency,
+      birthdayMonth,
+      anniversaryMonth,
+      tag: filterTag,
     } = req.query;
 
     const pageNum = Math.max(1, parseInt(page, 10));
@@ -297,6 +307,17 @@ exports.getQSRCustomerList = async (req, res) => {
       customer_phone: { $exists: true, $nin: [null, ""] },
     };
 
+    // Date range filter
+    if (fromDate || toDate) {
+      baseMatch.order_date = {};
+      if (fromDate) baseMatch.order_date.$gte = new Date(fromDate);
+      if (toDate) {
+        const endOfDay = new Date(toDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        baseMatch.order_date.$lte = endOfDay;
+      }
+    }
+
     // If search is provided, filter by phone or name
     if (search && search.trim() !== "") {
       baseMatch.$or = [
@@ -305,78 +326,153 @@ exports.getQSRCustomerList = async (req, res) => {
       ];
     }
 
-    // Aggregation pipeline
-    const aggregationPipeline = [
-      { $match: baseMatch },
-      {
-        $group: {
-          _id: "$customer_phone",
-          name: { $last: "$customer_name" },
-          phone: { $first: "$customer_phone" },
-          total_orders: { $sum: 1 },
-          total_amount: { $sum: { $ifNull: ["$total_amount", 0] } },
-          last_order_date: { $max: "$order_date" },
-          first_order_date: { $min: "$order_date" },
-          // Track order type frequency to find the most used
-          order_types: { $push: "$order_type" },
+    // Dynamic post-group filters
+    const postGroupMatch = {};
+
+    if (ordersMin || ordersMax) {
+      postGroupMatch.total_orders = {};
+      if (ordersMin) postGroupMatch.total_orders.$gte = parseInt(ordersMin, 10);
+      if (ordersMax) postGroupMatch.total_orders.$lte = parseInt(ordersMax, 10);
+    }
+
+    if (spendMin || spendMax) {
+      postGroupMatch.total_amount = {};
+      if (spendMin) postGroupMatch.total_amount.$gte = parseFloat(spendMin);
+      if (spendMax) postGroupMatch.total_amount.$lte = parseFloat(spendMax);
+    }
+
+    if (recency) {
+      postGroupMatch.last_order_date = {};
+      if (recency === "active_14") {
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+        postGroupMatch.last_order_date.$gte = fourteenDaysAgo;
+      } else if (recency === "dormant_30") {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        postGroupMatch.last_order_date.$lte = thirtyDaysAgo;
+      } else if (recency === "dormant_60") {
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+        postGroupMatch.last_order_date.$lte = sixtyDaysAgo;
+      } else if (recency === "dormant_90") {
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+        postGroupMatch.last_order_date.$lte = ninetyDaysAgo;
+      }
+    }
+
+    // Expression-based matches (months logic)
+    const exprConditions = [];
+
+    if (birthdayMonth) {
+      const bMonth = parseInt(birthdayMonth, 10);
+      exprConditions.push({
+        $and: [
+          { $ne: ["$profile.date_of_birth", null] },
+          { $eq: [{ $month: "$profile.date_of_birth" }, bMonth] },
+        ],
+      });
+    }
+
+    if (anniversaryMonth) {
+      const aMonth = parseInt(anniversaryMonth, 10);
+      exprConditions.push({
+        $and: [
+          { $ne: ["$profile.anniversary", null] },
+          { $eq: [{ $month: "$profile.anniversary" }, aMonth] },
+        ],
+      });
+    }
+
+    if (exprConditions.length > 0) {
+      postGroupMatch.$expr = exprConditions.length === 1 ? exprConditions[0] : { $and: exprConditions };
+    }
+
+    if (filterTag && filterTag.trim() !== "") {
+      postGroupMatch["profile.tag"] = { $regex: filterTag.trim(), $options: "i" };
+    }
+
+    // Shared aggregation builder
+    const getPipeline = (isPaginated = false) => {
+      const pipeline = [
+        { $match: baseMatch },
+        {
+          $group: {
+            _id: "$customer_phone",
+            name: { $last: "$customer_name" },
+            phone: { $first: "$customer_phone" },
+            total_orders: { $sum: 1 },
+            total_amount: { $sum: { $ifNull: ["$total_amount", 0] } },
+            last_order_date: { $max: "$order_date" },
+            first_order_date: { $min: "$order_date" },
+            order_types: { $push: "$order_type" },
+          },
         },
-      },
-      {
-        $addFields: {
-          // Pick the first element when sorted (most frequent type will be first after $sort)
-          most_used_type: {
-            $let: {
-              vars: {
-                types: "$order_types",
-              },
-              in: {
-                $ifNull: [
-                  { $arrayElemAt: ["$order_types", 0] },
-                  "Takeaway",
-                ],
+        {
+          $addFields: {
+            most_used_type: {
+              $let: {
+                vars: { types: "$order_types" },
+                in: { $ifNull: [{ $arrayElemAt: ["$order_types", 0] }, "Takeaway"] },
               },
             },
           },
         },
-      },
-      { $sort: { [sortField]: sortDir } },
-    ];
+        {
+          $lookup: {
+            from: "customers",
+            localField: "phone",
+            foreignField: "phone",
+            as: "profile",
+          },
+        },
+        {
+          $addFields: {
+            profile: { $arrayElemAt: ["$profile", 0] },
+          },
+        },
+        { $match: postGroupMatch },
+      ];
 
-    // Count total distinct customers (for pagination)
+      if (isPaginated) {
+        pipeline.push({ $sort: { [sortField]: sortDir } });
+        pipeline.push({ $skip: skip });
+        pipeline.push({ $limit: limitNum });
+      }
+
+      return pipeline;
+    };
+
+    // Pagination total count pipeline
     const countPipeline = [
-      { $match: baseMatch },
-      { $group: { _id: "$customer_phone" } },
+      ...getPipeline(false),
       { $count: "total" },
     ];
 
-    // Summary pipeline
+    // Filtered Summary calculations
     const summaryPipeline = [
-      { $match: { user_id: user_id } },
+      ...getPipeline(false),
       {
         $group: {
           _id: null,
-          total_orders: { $sum: 1 },
-          total_revenue: { $sum: { $ifNull: ["$total_amount", 0] } },
+          total_customers: { $sum: 1 },
+          total_orders: { $sum: "$total_orders" },
+          total_revenue: { $sum: "$total_amount" },
         },
       },
     ];
-    const distinctCustomerCountPipeline = [
-      { $match: { user_id: user_id, customer_phone: { $exists: true, $nin: [null, ""] } } },
-      { $group: { _id: "$customer_phone" } },
-      { $count: "total" },
-    ];
 
-    const [rawData, countResult, summaryResult, customerCountResult] = await Promise.all([
-      Order.aggregate([...aggregationPipeline, { $skip: skip }, { $limit: limitNum }]),
+    const [rawData, countResult, summaryResult] = await Promise.all([
+      Order.aggregate(getPipeline(true)),
       Order.aggregate(countPipeline),
       Order.aggregate(summaryPipeline),
-      Order.aggregate(distinctCustomerCountPipeline),
     ]);
 
     const total = countResult[0]?.total || 0;
     const pages = Math.ceil(total / limitNum);
-    const summaryRaw = summaryResult[0] || {};
-    const totalCustomers = customerCountResult[0]?.total || 0;
+    const summaryRaw = summaryResult[0] || { total_customers: 0, total_orders: 0, total_revenue: 0 };
+    const totalCustomers = summaryRaw.total_customers || 0;
 
     // Derive most_used_type from order_types array (simple mode calculation)
     const data = rawData.map((c) => {
@@ -392,6 +488,9 @@ exports.getQSRCustomerList = async (req, res) => {
         last_order_date: c.last_order_date,
         first_order_date: c.first_order_date,
         most_used_type,
+        tags: c.profile?.tag || [],
+        date_of_birth: c.profile?.date_of_birth || null,
+        anniversary: c.profile?.anniversary || null,
       };
     });
 

@@ -22,6 +22,8 @@ const PrintConfig = () => {
 
   const validationSchema = Yup.object().shape({
     showLogo: Yup.boolean(),
+    showGst: Yup.boolean(),
+    showFssai: Yup.boolean(),
     showCustomerDetails: Yup.boolean(),
     headerNote: Yup.string().max(100, 'Header note must be under 100 characters'),
     footerNote: Yup.string().max(100, 'Footer note must be under 100 characters'),
@@ -31,6 +33,8 @@ const PrintConfig = () => {
   const formik = useFormik({
     initialValues: {
       showLogo: true,
+      showGst: true,
+      showFssai: true,
       showCustomerDetails: true,
       headerNote: '',
       footerNote: 'Thanks, Visit Again',
@@ -42,7 +46,7 @@ const PrintConfig = () => {
       try {
         const response = await axios.put(
           `${process.env.REACT_APP_API}/user/update-print-settings`,
-          { printSettings: { ...values, showGst: true } },
+          { printSettings: { ...values } },
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
         );
 
@@ -70,6 +74,8 @@ const PrintConfig = () => {
         if (userData?.printSettings) {
           formik.setValues({
             showLogo: userData.printSettings.showLogo ?? true,
+            showGst: userData.printSettings.showGst ?? true,
+            showFssai: userData.printSettings.showFssai ?? true,
             showCustomerDetails: userData.printSettings.showCustomerDetails ?? true,
             headerNote: userData.printSettings.headerNote || '',
             footerNote: userData.printSettings.footerNote || 'Thanks, Visit Again',
@@ -139,6 +145,32 @@ const PrintConfig = () => {
                           onChange={(e) => formik.setFieldValue('showCustomerDetails', e.target.checked)}
                         />
                         <Form.Text className="text-muted">Include the customer's name and details on KOT and customer receipts.</Form.Text>
+                      </Form.Group>
+                    </Col>
+
+                    <Col xs="12" md="6" className="mb-3">
+                      <Form.Group className="mb-2">
+                        <Form.Check
+                          type="switch"
+                          id="showGst"
+                          label="Show GST Number on Receipt"
+                          checked={formik.values.showGst}
+                          onChange={(e) => formik.setFieldValue('showGst', e.target.checked)}
+                        />
+                        <Form.Text className="text-muted">Display the restaurant's GST number in the receipt header (only shown if GST number is set in your profile).</Form.Text>
+                      </Form.Group>
+                    </Col>
+
+                    <Col xs="12" md="6" className="mb-3">
+                      <Form.Group className="mb-2">
+                        <Form.Check
+                          type="switch"
+                          id="showFssai"
+                          label="Show FSSAI Number on Receipt"
+                          checked={formik.values.showFssai}
+                          onChange={(e) => formik.setFieldValue('showFssai', e.target.checked)}
+                        />
+                        <Form.Text className="text-muted">Display the restaurant's FSSAI license number in the receipt header (only shown if FSSAI number is set in your profile).</Form.Text>
                       </Form.Group>
                     </Col>
                   </Row>

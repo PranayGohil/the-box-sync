@@ -381,50 +381,110 @@ const AdminWastageLog = () => {
                       </Col>
                       <Col xs={12} md="auto">
                         <div className="d-flex flex-row flex-md-nowrap gap-2 justify-content-md-end align-items-end">
-                          <div className="flex-grow-1" style={{ minWidth: '140px' }}>
+                          <div className="position-relative w-100">
                             <div className="admin-wastage-log-input-group-label small mb-1 text-truncate">From</div>
-                            <Form.Control
-                              type={fromDate ? 'date' : 'text'}
-                              placeholder="dd-mm-yyyy"
-                              onFocus={(e) => {
-                                e.target.type = 'date';
-                              }}
-                              onBlur={(e) => {
-                                if (!e.target.value) e.target.type = 'text';
-                              }}
-                              className="admin-wastage-log-modern-input w-100 text-dark"
+                            <div
+                              className="form-control admin-wastage-log-modern-input w-100 text-dark d-flex align-items-center justify-content-between"
                               style={{
-                                backgroundImage:
-                                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E\")",
-                                backgroundRepeat: 'no-repeat',
-                                backgroundPosition: '10px center',
-                                backgroundSize: '14px 14px',
+                                height: '44px',
+                                fontSize: '0.85rem',
+                                backgroundColor: '#fff',
+                                pointerEvents: 'none',
+                                paddingRight: '15px',
+                                paddingLeft: '2.2rem'
                               }}
+                            >
+                              <span className={fromDate ? '' : 'text-muted'}>
+                                {fromDate ? format(new Date(fromDate), 'dd-MM-yyyy') : 'dd-mm-yyyy'}
+                              </span>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                              </svg>
+                            </div>
+                            <Form.Control
+                              type="date"
                               value={fromDate}
                               onChange={(e) => setFromDate(e.target.value)}
+                              onClick={(e) => {
+                                try {
+                                  e.target.showPicker();
+                                } catch (err) {
+                                  // showPicker fallback
+                                }
+                              }}
+                              onFocus={(e) => {
+                                try {
+                                  e.target.showPicker();
+                                } catch (err) {
+                                  // showPicker fallback
+                                }
+                              }}
+                              style={{
+                                position: 'absolute',
+                                top: 25,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                opacity: 0,
+                                cursor: 'pointer',
+                                zIndex: 2,
+                              }}
                             />
                           </div>
-                          <div className="flex-grow-1" style={{ minWidth: '140px' }}>
+                          <div className="position-relative w-100">
                             <div className="admin-wastage-log-input-group-label small mb-1 text-truncate">To</div>
-                            <Form.Control
-                              type={toDate ? 'date' : 'text'}
-                              placeholder="dd-mm-yyyy"
-                              onFocus={(e) => {
-                                e.target.type = 'date';
-                              }}
-                              onBlur={(e) => {
-                                if (!e.target.value) e.target.type = 'text';
-                              }}
-                              className="admin-wastage-log-modern-input w-100 text-dark"
+                            <div
+                              className="form-control admin-wastage-log-modern-input w-100 text-dark d-flex align-items-center justify-content-between"
                               style={{
-                                backgroundImage:
-                                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E\")",
-                                backgroundRepeat: 'no-repeat',
-                                backgroundPosition: '10px center',
-                                backgroundSize: '14px 14px',
+                                height: '44px',
+                                fontSize: '0.85rem',
+                                backgroundColor: '#fff',
+                                pointerEvents: 'none',
+                                paddingRight: '15px',
+                                paddingLeft: '2.2rem'
                               }}
+                            >
+                              <span className={toDate ? '' : 'text-muted'}>
+                                {toDate ? format(new Date(toDate), 'dd-MM-yyyy') : 'dd-mm-yyyy'}
+                              </span>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                              </svg>
+                            </div>
+                            <Form.Control
+                              type="date"
                               value={toDate}
                               onChange={(e) => setToDate(e.target.value)}
+                              onClick={(e) => {
+                                try {
+                                  e.target.showPicker();
+                                } catch (err) {
+                                  // showPicker fallback
+                                }
+                              }}
+                              onFocus={(e) => {
+                                try {
+                                  e.target.showPicker();
+                                } catch (err) {
+                                  // showPicker fallback
+                                }
+                              }}
+                              style={{
+                                position: 'absolute',
+                                top: 25,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                opacity: 0,
+                                cursor: 'pointer',
+                                zIndex: 2,
+                              }}
                             />
                           </div>
                         </div>

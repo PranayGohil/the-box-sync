@@ -219,6 +219,15 @@ const OrderHistory = () => {
     setPageIndex(0);
   };
 
+  const formatDateDisplay = (dateVal) => {
+    if (!dateVal) return 'DD/MM/YYYY';
+    try {
+      return format(new Date(dateVal), 'dd/MM/yyyy');
+    } catch (e) {
+      return 'DD/MM/YYYY';
+    }
+  };
+
   const handleClearFilters = () => {
     setFilters({
       orderSource: '',
@@ -1075,26 +1084,147 @@ const OrderHistory = () => {
   return (
     <div className="container-fluid qsr-page-container">
       <style>{`
-        input[type="date"], input[placeholder="DD/MM/YYYY"] {
-          position: relative;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231ea8e7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 15px center !important;
-          background-size: 18px 18px !important;
-          padding-right: 40px !important;
+        .export-section-header {
+          font-weight: 800 !important;
+          color: #1e293b !important;
         }
-        input[type="date"]::-webkit-calendar-picker-indicator, input[placeholder="DD/MM/YYYY"]::-webkit-calendar-picker-indicator {
-          cursor: pointer !important;
-          display: block !important;
-          opacity: 0 !important;
-          position: absolute !important;
-          right: 0 !important;
-          top: 0 !important;
-          width: 40px !important;
-          height: 100% !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          z-index: 2 !important;
+        .export-input-label {
+          font-weight: 700 !important;
+          color: #495057 !important;
+          letter-spacing: 0.5px !important;
+          text-transform: uppercase !important;
+        }
+        .export-input-height {
+          height: 46px !important;
+          padding-top: 10px !important;
+          padding-bottom: 10px !important;
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+          font-size: 13px !important;
+          background-color: #fff !important;
+          border: 1px solid #e4e7eb !important;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+        }
+        @media (max-width: 576px) {
+          .modal-export-responsive .modal-content {
+            border-radius: 1.25rem !important;
+          }
+          .modal-export-responsive .modal-header {
+            padding: 12px 16px !important;
+          }
+          .modal-export-responsive .modal-body {
+            padding: 12px 16px !important;
+          }
+          .modal-export-responsive .modal-footer {
+            padding: 12px 16px !important;
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 8px !important;
+          }
+          .modal-export-responsive .modal-footer button {
+            flex: 1 !important;
+            margin: 0 !important;
+            height: 38px !important;
+            font-size: 12px !important;
+            padding: 6px 8px !important;
+            border-radius: 50px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          .modal-export-responsive .modal-footer button svg {
+            width: 14px !important;
+            height: 14px !important;
+            margin-right: 4px !important;
+          }
+          .modal-export-responsive .export-title-icon {
+            width: 36px !important;
+            height: 36px !important;
+            margin-right: 8px !important;
+          }
+          .modal-export-responsive .export-title-icon svg {
+            width: 16px !important;
+            height: 16px !important;
+          }
+          .modal-export-responsive .export-title-text {
+            font-size: 16px !important;
+          }
+          .modal-export-responsive .export-subtitle {
+            font-size: 12px !important;
+            margin-bottom: 12px !important;
+          }
+          .modal-export-responsive .export-format-section {
+            margin-bottom: 12px !important;
+          }
+          .modal-export-responsive .export-format-card-body {
+            padding: 8px !important;
+          }
+          .modal-export-responsive .export-format-card-body .sw-5 {
+            width: 28px !important;
+            height: 28px !important;
+            margin-right: 6px !important;
+          }
+          .modal-export-responsive .export-format-card-body .sw-5 svg {
+            width: 14px !important;
+            height: 14px !important;
+          }
+          .modal-export-responsive .export-format-card-body .fw-bold {
+            font-size: 12px !important;
+          }
+          .modal-export-responsive .export-format-card-body .xsmall {
+            font-size: 10px !important;
+          }
+          .modal-export-responsive .export-format-card-body .form-check,
+          .modal-export-responsive .export-format-card-body .sw-3 {
+            display: none !important;
+          }
+          .modal-export-responsive .filter-data-container {
+            padding: 12px !important;
+            border-radius: 1rem !important;
+          }
+          .modal-export-responsive .filter-data-container .d-flex.flex-row {
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
+          .modal-export-responsive .export-input-height {
+            height: 44px !important;
+            font-size: 12px !important;
+            padding-left: 16px !important;
+            padding-right: 32px !important;
+            position: relative !important;
+          }
+          .modal-export-responsive .export-input-height svg {
+            position: absolute !important;
+            right: 8px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 14px !important;
+            height: 14px !important;
+          }
+          .modal-export-responsive .export-label-margin {
+            margin-bottom: 6px !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .modal-export-responsive .export-format-card-body {
+            padding: 6px !important;
+          }
+          .modal-export-responsive .export-format-card-body .fw-bold {
+            font-size: 11px !important;
+          }
+          .modal-export-responsive .export-format-card-body .xsmall {
+            font-size: 9px !important;
+          }
+          .modal-export-responsive .export-input-height {
+            font-size: 11px !important;
+            padding-left: 10px !important;
+            padding-right: 28px !important;
+          }
+          .modal-export-responsive .export-input-height svg {
+            right: 8px !important;
+            width: 14px !important;
+            height: 14px !important;
+          }
         }
       `}</style>
       <HtmlHead title={title} description={description} />
@@ -1227,38 +1357,96 @@ const OrderHistory = () => {
                   <Col xs="12" sm="6" md="2">
                     <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
                     <div className="flex-grow-1 position-relative">
+                      <div
+                        className="form-control border-0 shadow-sm rounded-pill px-3 text-dark w-100 d-flex align-items-center justify-content-between"
+                        style={{ height: '44px', fontSize: '13px', backgroundColor: '#fff', pointerEvents: 'none' }}
+                      >
+                        <span className={filters.fromDate ? '' : 'text-muted'}>
+                          {formatDateDisplay(filters.fromDate)}
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1ea8e7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                      </div>
                       <Form.Control
-                        type={filters.fromDate ? 'date' : 'text'}
-                        placeholder="DD/MM/YYYY"
-                        onFocus={(e) => {
-                          e.target.type = 'date';
-                        }}
-                        onBlur={(e) => {
-                          if (!e.target.value) e.target.type = 'text';
-                        }}
+                        type="date"
                         value={filters.fromDate}
                         onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                        className="border-0 shadow-sm rounded-pill px-3 text-dark w-100"
-                        style={{ height: '44px', fontSize: '13px', paddingRight: '40px' }}
+                        onClick={(e) => {
+                          try {
+                            e.target.showPicker();
+                          } catch (err) {
+                            // showPicker fallback
+                          }
+                        }}
+                        onFocus={(e) => {
+                          try {
+                            e.target.showPicker();
+                          } catch (err) {
+                            // showPicker fallback
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          opacity: 0,
+                          cursor: 'pointer',
+                          zIndex: 2,
+                        }}
                       />
                     </div>
                   </Col>
                   <Col xs="12" sm="6" md="2">
                     <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
                     <div className="flex-grow-1 position-relative">
+                      <div
+                        className="form-control border-0 shadow-sm rounded-pill px-3 text-dark w-100 d-flex align-items-center justify-content-between"
+                        style={{ height: '44px', fontSize: '13px', backgroundColor: '#fff', pointerEvents: 'none' }}
+                      >
+                        <span className={filters.toDate ? '' : 'text-muted'}>
+                          {formatDateDisplay(filters.toDate)}
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1ea8e7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                      </div>
                       <Form.Control
-                        type={filters.toDate ? 'date' : 'text'}
-                        placeholder="DD/MM/YYYY"
-                        onFocus={(e) => {
-                          e.target.type = 'date';
-                        }}
-                        onBlur={(e) => {
-                          if (!e.target.value) e.target.type = 'text';
-                        }}
+                        type="date"
                         value={filters.toDate}
                         onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                        className="border-0 shadow-sm rounded-pill px-3 text-dark w-100"
-                        style={{ height: '44px', fontSize: '13px', paddingRight: '40px' }}
+                        onClick={(e) => {
+                          try {
+                            e.target.showPicker();
+                          } catch (err) {
+                            // showPicker fallback
+                          }
+                        }}
+                        onFocus={(e) => {
+                          try {
+                            e.target.showPicker();
+                          } catch (err) {
+                            // showPicker fallback
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          opacity: 0,
+                          cursor: 'pointer',
+                          zIndex: 2,
+                        }}
                       />
                     </div>
                   </Col>
@@ -1486,37 +1674,37 @@ const OrderHistory = () => {
       </div>
 
       {/* Export Modal */}
-      <Modal show={showExportModal} onHide={() => !exporting && setShowExportModal(false)} size="lg" centered className="modal-glass">
+      <Modal show={showExportModal} onHide={() => !exporting && setShowExportModal(false)} size="lg" centered className="modal-glass modal-export-responsive">
         <Modal.Header closeButton={!exporting} className="border-0 pb-0">
           <Modal.Title className="fw-bold d-flex align-items-center">
             <div
-              className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3"
+              className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 export-title-icon"
               style={{ backgroundColor: 'rgba(35, 179, 244, 0.1)' }}
             >
               <CsLineIcons icon="download" size="20" style={{ color: '#23b3f4' }} />
             </div>
-            <span>Export Order History</span>
+            <span className="export-title-text">Export Order History</span>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="px-4 pt-4">
           {!exporting ? (
             <>
-              <p className="text-muted mb-4">Select your preferred format and filters to generate the report.</p>
+              <p className="text-muted mb-4 export-subtitle">Select your preferred format and filters to generate the report.</p>
 
               <Form onSubmit={(e) => e.preventDefault()}>
                 {/* Export Format Selection */}
-                <div className="mb-4">
-                  <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>
+                <div className="mb-4 export-format-section">
+                  <Form.Label className="fw-extrabold mb-3 text-uppercase export-section-header export-label-margin" style={{ fontSize: '11px', letterSpacing: '1px' }}>
                     Export Format
                   </Form.Label>
                   <Row className="g-3">
-                    <Col xs="12" sm="6">
+                    <Col xs="6" sm="6">
                       <Card
                         className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'excel' ? 'border-primary' : 'border-separator-light'}`}
                         style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
                         onClick={() => setExportFormat('excel')}
                       >
-                        <Card.Body className="d-flex align-items-center p-3">
+                        <Card.Body className="d-flex align-items-center p-3 export-format-card-body">
                           <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-success text-success">
                             <CsLineIcons icon="file-text" size="20" />
                           </div>
@@ -1528,13 +1716,13 @@ const OrderHistory = () => {
                         </Card.Body>
                       </Card>
                     </Col>
-                    <Col xs="12" sm="6">
+                    <Col xs="6" sm="6">
                       <Card
                         className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'pdf' ? 'border-primary' : 'border-separator-light'}`}
                         style={{ borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.3s ease' }}
                         onClick={() => setExportFormat('pdf')}
                       >
-                        <Card.Body className="d-flex align-items-center p-3">
+                        <Card.Body className="d-flex align-items-center p-3 export-format-card-body">
                           <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-danger text-danger">
                             <CsLineIcons icon="file-text" size="20" />
                           </div>
@@ -1550,57 +1738,114 @@ const OrderHistory = () => {
                 </div>
 
                 {/* Export Filters */}
-                <Form.Label className="fw-bolder mb-3 text-uppercase text-muted" style={{ fontSize: '11px', letterSpacing: '1px' }}>
+                <Form.Label className="fw-extrabold mb-3 text-uppercase export-section-header export-label-margin" style={{ fontSize: '11px', letterSpacing: '1px' }}>
                   Filter Data
                 </Form.Label>
 
-                <Card className="border-0 bg-light p-3" style={{ borderRadius: '1rem' }}>
+                <Card className="border-0 bg-light p-3 filter-data-container" style={{ borderRadius: '1rem' }}>
                   <Row className="g-3">
                     <Col xs={12}>
-                      <Form.Label className="small fw-bold text-muted mb-1">Date Range</Form.Label>
-                      <div className="d-flex flex-column flex-sm-row gap-3">
+                      <Form.Label className="small fw-bold export-input-label mb-1 export-label-margin">DATE RANGE</Form.Label>
+                      <div className="d-flex flex-row gap-2">
                         <div className="flex-grow-1 position-relative">
+                          <div
+                            className="form-control border-0 shadow-sm rounded-pill px-4 text-dark w-100 d-flex align-items-center justify-content-between export-input-height"
+                            style={{ backgroundColor: '#fff', pointerEvents: 'none' }}
+                          >
+                            <span className={exportFilters.fromDate ? '' : 'text-muted'}>
+                              {formatDateDisplay(exportFilters.fromDate)}
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1ea8e7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                              <line x1="16" y1="2" x2="16" y2="6" />
+                              <line x1="8" y1="2" x2="8" y2="6" />
+                              <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                          </div>
                           <Form.Control
-                            type={exportFilters.fromDate ? 'date' : 'text'}
-                            placeholder="DD/MM/YYYY"
-                            onFocus={(e) => {
-                              e.target.type = 'date';
-                            }}
-                            onBlur={(e) => {
-                              if (!e.target.value) e.target.type = 'text';
-                            }}
+                            type="date"
                             value={exportFilters.fromDate}
                             onChange={(e) => setExportFilters({ ...exportFilters, fromDate: e.target.value })}
-                            className="border-0 shadow-sm rounded-pill px-4 text-dark w-100"
-                            style={{ height: '44px', fontSize: '14px', paddingRight: '40px' }}
+                            onClick={(e) => {
+                              try {
+                                  e.target.showPicker();
+                              } catch (err) {
+                                  // showPicker fallback
+                              }
+                            }}
+                            onFocus={(e) => {
+                              try {
+                                  e.target.showPicker();
+                              } catch (err) {
+                                  // showPicker fallback
+                              }
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              opacity: 0,
+                              cursor: 'pointer',
+                              zIndex: 2,
+                            }}
                           />
                         </div>
                         <div className="flex-grow-1 position-relative">
+                          <div
+                            className="form-control border-0 shadow-sm rounded-pill px-4 text-dark w-100 d-flex align-items-center justify-content-between export-input-height"
+                            style={{ backgroundColor: '#fff', pointerEvents: 'none' }}
+                          >
+                            <span className={exportFilters.toDate ? '' : 'text-muted'}>
+                              {formatDateDisplay(exportFilters.toDate)}
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1ea8e7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                              <line x1="16" y1="2" x2="16" y2="6" />
+                              <line x1="8" y1="2" x2="8" y2="6" />
+                              <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                          </div>
                           <Form.Control
-                            type={exportFilters.toDate ? 'date' : 'text'}
-                            placeholder="DD/MM/YYYY"
-                            onFocus={(e) => {
-                              e.target.type = 'date';
-                            }}
-                            onBlur={(e) => {
-                              if (!e.target.value) e.target.type = 'text';
-                            }}
+                            type="date"
                             value={exportFilters.toDate}
                             onChange={(e) => setExportFilters({ ...exportFilters, toDate: e.target.value })}
-                            className="border-0 shadow-sm rounded-pill px-4 text-dark w-100"
-                            style={{ height: '44px', fontSize: '14px', paddingRight: '40px' }}
+                            onClick={(e) => {
+                              try {
+                                  e.target.showPicker();
+                              } catch (err) {
+                                  // showPicker fallback
+                              }
+                            }}
+                            onFocus={(e) => {
+                              try {
+                                  e.target.showPicker();
+                              } catch (err) {
+                                  // showPicker fallback
+                              }
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              opacity: 0,
+                              cursor: 'pointer',
+                              zIndex: 2,
+                            }}
                           />
                         </div>
                       </div>
                     </Col>
 
-                    <Col xs={12} sm={6}>
-                      <Form.Label className="small fw-bold text-muted mb-1">Order Source</Form.Label>
+                    <Col xs={6} sm={6}>
+                      <Form.Label className="small fw-bold export-input-label mb-1 export-label-margin">ORDER SOURCE</Form.Label>
                       <Dropdown className="w-100">
                         <Dropdown.Toggle
                           variant="white"
-                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                          style={{ height: '44px', fontSize: '14px' }}
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 export-input-height"
                         >
                           {exportFilters.orderSource || 'All Sources'}
                         </Dropdown.Toggle>
@@ -1616,13 +1861,12 @@ const OrderHistory = () => {
                       </Dropdown>
                     </Col>
 
-                    <Col xs={12} sm={6}>
-                      <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
+                    <Col xs={6} sm={6}>
+                      <Form.Label className="small fw-bold export-input-label mb-1 export-label-margin">STATUS</Form.Label>
                       <Dropdown className="w-100">
                         <Dropdown.Toggle
                           variant="white"
-                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                          style={{ height: '44px', fontSize: '14px' }}
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 export-input-height"
                         >
                           {exportFilters.orderStatus || 'All Status'}
                         </Dropdown.Toggle>
@@ -1639,13 +1883,12 @@ const OrderHistory = () => {
                       </Dropdown>
                     </Col>
 
-                    <Col xs={12} sm={6}>
-                      <Form.Label className="small fw-bold text-muted mb-1">Order Type</Form.Label>
+                    <Col xs={6} sm={6}>
+                      <Form.Label className="small fw-bold export-input-label mb-1 export-label-margin">ORDER TYPE</Form.Label>
                       <Dropdown className="w-100">
                         <Dropdown.Toggle
                           variant="white"
-                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                          style={{ height: '44px', fontSize: '14px' }}
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 export-input-height"
                         >
                           {exportFilters.orderType || 'All Types'}
                         </Dropdown.Toggle>
@@ -1661,13 +1904,12 @@ const OrderHistory = () => {
                       </Dropdown>
                     </Col>
 
-                    <Col xs={12} sm={6}>
-                      <Form.Label className="small fw-bold text-muted mb-1">Payment Mode</Form.Label>
+                    <Col xs={6} sm={6}>
+                      <Form.Label className="small fw-bold export-input-label mb-1 export-label-margin">PAYMENT MODE</Form.Label>
                       <Dropdown className="w-100">
                         <Dropdown.Toggle
                           variant="white"
-                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                          style={{ height: '44px', fontSize: '14px' }}
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 export-input-height"
                         >
                           {exportFilters.paymentType || 'All Payment Types'}
                         </Dropdown.Toggle>
@@ -1686,12 +1928,11 @@ const OrderHistory = () => {
                     </Col>
 
                     <Col xs={12}>
-                      <Form.Label className="small fw-bold text-muted mb-1">Table Area</Form.Label>
+                      <Form.Label className="small fw-bold export-input-label mb-1 export-label-margin">TABLE AREA</Form.Label>
                       <Dropdown className="w-100">
                         <Dropdown.Toggle
                           variant="white"
-                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4"
-                          style={{ height: '44px', fontSize: '14px' }}
+                          className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 export-input-height"
                         >
                           {exportFilters.tableArea || 'All Areas'}
                         </Dropdown.Toggle>

@@ -153,6 +153,10 @@ const userSchema = new Schema({
       type: String,
       default: "",
     },
+    showFssai: {
+      type: Boolean,
+      default: true,
+    },
   },
 });
 

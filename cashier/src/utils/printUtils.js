@@ -90,6 +90,8 @@ export const printFullBill = (ord, userData, items, subTotal) => {
   const logoUrl = (showLogo && userData.logo) ? `${uploadDir}${userData.logo.startsWith('/') ? '' : '/'}${userData.logo}` : '';
 
   const showCustomerDetails = printSettings.showCustomerDetails ?? true;
+  const showGst = printSettings.showGst ?? true;
+  const showFssai = printSettings.showFssai ?? true;
   const headerNote = printSettings.headerNote || '';
   const footerNote = printSettings.footerNote || 'Thanks, Visit Again';
 
@@ -135,7 +137,8 @@ export const printFullBill = (ord, userData, items, subTotal) => {
         <p>${userData.address}</p>
         <p>${userData.city}, ${userData.state} - ${userData.pincode}</p>
         <p><strong>Ph:</strong> ${userData.mobile}</p>
-        ${userData.gst_no ? `<p><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
+        ${(showGst && userData.gst_no) ? `<p><strong>GST:</strong> ${userData.gst_no}</p>` : ''}
+        ${(showFssai && userData.fssai_no) ? `<p><strong>FSSAI:</strong> ${userData.fssai_no}</p>` : ''}
         ${headerNote ? `<p style="font-style: italic; margin: 4px 0 0 0; font-size: 10px;">${headerNote}</p>` : ''}
       </div>
 

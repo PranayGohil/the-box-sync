@@ -20,7 +20,7 @@ const LeaveRequests = () => {
 
     const currentYear = new Date().getFullYear();
     const statusOptions = [
-        { value: 'all', label: 'All Statuses' },
+        { value: 'all', label: 'All Status' },
         { value: 'pending', label: 'Pending' },
         { value: 'approved', label: 'Approved' },
         { value: 'rejected', label: 'Rejected' }
@@ -49,7 +49,7 @@ const LeaveRequests = () => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [monthFilter, setMonthFilter] = useState(new Date().getMonth().toString());
     const [searchQuery, setSearchQuery] = useState('');
-    
+
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
@@ -293,7 +293,7 @@ const LeaveRequests = () => {
                                                     {currentRequests.map((req, idx) => {
                                                         const statusTheme = getStatusTheme(req.status);
                                                         const policyItem = leavePolicy[req.leave_type_id];
- 
+
                                                         return (
                                                             <tr key={req._id || idx}>
                                                                 <td className="ps-4 py-3.5">

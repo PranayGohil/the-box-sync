@@ -37,7 +37,7 @@ const SalaryAdvances = () => {
   });
 
   const statusOptions = [
-    { value: 'all', label: 'All Statuses' },
+    { value: 'all', label: 'All Status' },
     { value: 'active', label: 'Active (Recovering)' },
     { value: 'fully_recovered', label: 'Fully Recovered' },
   ];
@@ -64,7 +64,7 @@ const SalaryAdvances = () => {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line
-    }, [statusFilter]);
+  }, [statusFilter]);
 
   const handleShowModal = () => {
     setForm({
@@ -499,7 +499,7 @@ const SalaryAdvances = () => {
               options={statusOptions}
               value={statusOptions.find((opt) => opt.value === statusFilter)}
               onChange={(selected) => setStatusFilter(selected ? selected.value : 'all')}
-              placeholder="All Statuses"
+              placeholder="All Status"
               isSearchable={false}
             />
             <Button

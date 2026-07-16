@@ -712,32 +712,96 @@ const WastageLogsTab = () => {
             <p className="text-muted small mb-0">Revert or review wasted quantities</p>
           </div>
           <div className="d-flex align-items-center gap-2">
-            <Form.Control
-              type={fromDate ? 'date' : 'text'}
-              placeholder="dd-mm-yyyy"
-              onFocus={(e) => {
-                e.target.type = 'date';
-              }}
-              onBlur={(e) => {
-                if (!e.target.value) e.target.type = 'text';
-              }}
-              className="modern-input text-dark"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-            />
-            <Form.Control
-              type={toDate ? 'date' : 'text'}
-              placeholder="dd-mm-yyyy"
-              onFocus={(e) => {
-                e.target.type = 'date';
-              }}
-              onBlur={(e) => {
-                if (!e.target.value) e.target.type = 'text';
-              }}
-              className="modern-input text-dark"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-            />
+            <div className="position-relative" style={{ width: '150px' }}>
+              <div
+                className="form-control modern-input text-dark d-flex align-items-center justify-content-between"
+                style={{ height: '38px', fontSize: '0.85rem', padding: '0.375rem 0.75rem', backgroundColor: '#fff', pointerEvents: 'none' }}
+              >
+                <span className={fromDate ? '' : 'text-muted'}>
+                  {fromDate ? format(new Date(fromDate), 'dd-MM-yyyy') : 'dd-mm-yyyy'}
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
+              <Form.Control
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {
+                    // showPicker fallback
+                  }
+                }}
+                onFocus={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {
+                    // showPicker fallback
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  opacity: 0,
+                  cursor: 'pointer',
+                  zIndex: 2,
+                }}
+              />
+            </div>
+            <div className="position-relative" style={{ width: '150px' }}>
+              <div
+                className="form-control modern-input text-dark d-flex align-items-center justify-content-between"
+                style={{ height: '38px', fontSize: '0.85rem', padding: '0.375rem 0.75rem', backgroundColor: '#fff', pointerEvents: 'none' }}
+              >
+                <span className={toDate ? '' : 'text-muted'}>
+                  {toDate ? format(new Date(toDate), 'dd-MM-yyyy') : 'dd-mm-yyyy'}
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
+              <Form.Control
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                onClick={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {
+                    // showPicker fallback
+                  }
+                }}
+                onFocus={(e) => {
+                  try {
+                    e.target.showPicker();
+                  } catch (err) {
+                    // showPicker fallback
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  opacity: 0,
+                  cursor: 'pointer',
+                  zIndex: 2,
+                }}
+              />
+            </div>
           </div>
         </div>
 
