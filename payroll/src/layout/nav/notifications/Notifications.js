@@ -10,25 +10,80 @@ import { layoutShowingNavMenu } from 'layout/layoutSlice';
 import { fetchNotifications, dismissNotification } from './notificationSlice';
 
 const NotificationsDropdownToggle = React.memo(
-  React.forwardRef(({ onClick, expanded = false, hasUnread = false }, ref) => (
-    <a
-      ref={ref}
-      href="#/"
-      className="notification-button"
-      data-toggle="dropdown"
-      aria-expanded={expanded}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick(e);
-      }}
-    >
-      <div className="position-relative d-inline-flex">
-        <CsLineIcons icon="bell" size="18" />
-        {hasUnread && <span className="position-absolute notification-dot rounded-xl" />}
-      </div>
-    </a>
-  ))
+  React.forwardRef(({ onClick, expanded = false, hasUnread = false, isMobileHeader = false }, ref) => {
+    if (isMobileHeader) {
+      return (
+        <a
+          ref={ref}
+          href="#/"
+          className="notification-button menu-button position-relative"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#ffffff',
+            height: '100%',
+            width: '50px',
+            padding: '0',
+            background: 'transparent',
+            border: 'none',
+          }}
+          data-toggle="dropdown"
+          aria-expanded={expanded}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClick(e);
+          }}
+        >
+          <CsLineIcons icon="bell" size="20" style={{ color: '#ffffff' }} />
+          {hasUnread && (
+            <span
+              className="position-absolute rounded-circle"
+              style={{
+                top: '12px',
+                right: '12px',
+                background: '#e91e63',
+                width: '6px',
+                height: '6px',
+                display: 'block',
+              }}
+            />
+          )}
+        </a>
+      );
+    }
+    return (
+      <a
+        ref={ref}
+        href="#/"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#ffffff',
+          height: '100%',
+          width: '50px',
+          padding: '0',
+          background: 'transparent',
+          border: 'none',
+        }}
+        className="notification-button"
+        data-toggle="dropdown"
+        aria-expanded={expanded}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick(e);
+        }}
+      >
+        <div className="position-relative d-inline-flex">
+          <CsLineIcons icon="bell" size="18" />
+          {hasUnread && <span className="position-absolute notification-dot rounded-xl" />}
+        </div>
+      </a>
+    );
+  })
 );
 NotificationsDropdownToggle.displayName = 'NotificationsDropdownToggle';
 
@@ -37,11 +92,11 @@ const NotificationItem = ({ img = '', link = '', detail = '', date = '', onDismi
   return (
     <li className="mb-3 pb-3 border-bottom border-separator-light d-flex justify-content-between align-items-start position-relative">
       <div className="d-flex align-items-start me-3" style={{ flex: 1 }}>
-        <div 
+        <div
           className="me-3 rounded-xl d-flex align-items-center justify-content-center bg-light"
-          style={{ 
-            width: '36px', 
-            height: '36px', 
+          style={{
+            width: '36px',
+            height: '36px',
             minWidth: '36px',
             minHeight: '36px',
             overflow: 'hidden',
@@ -50,14 +105,14 @@ const NotificationItem = ({ img = '', link = '', detail = '', date = '', onDismi
             padding: isProfile ? '0' : '2px'
           }}
         >
-          <img 
-            src={img} 
-            alt="notification" 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: isProfile ? 'cover' : 'contain' 
-            }} 
+          <img
+            src={img}
+            alt="notification"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: isProfile ? 'cover' : 'contain'
+            }}
           />
         </div>
         <div style={{ flex: 1 }} className="align-self-center">
@@ -101,11 +156,11 @@ const NotificationsDropdownMenu = React.memo(
               </li>
             ) : (
               items.map((item, itemIndex) => (
-                <NotificationItem 
-                  key={`notificationItem.${itemIndex}`} 
-                  detail={item.detail} 
-                  link={item.link} 
-                  img={item.img} 
+                <NotificationItem
+                  key={`notificationItem.${itemIndex}`}
+                  detail={item.detail}
+                  link={item.link}
+                  img={item.img}
                   date={item.date}
                   onDismiss={() => onDismissItem(item.id)}
                 />
@@ -136,7 +191,7 @@ const Notifications = () => {
 
   useEffect(() => {
     dispatch(fetchNotifications());
-    return () => {};
+    return () => { };
     // eslint-disable-next-line
   }, []);
 
@@ -185,28 +240,31 @@ const Notifications = () => {
   };
 
   const hasUnread = items && items.length > 0;
+  const isMobileHeader = attrMobile === true;
 
   return (
     <Dropdown
-      as="li"
-      bsPrefix="list-inline-item"
+      as={isMobileHeader ? 'div' : 'li'}
+      bsPrefix={isMobileHeader ? 'dropdown' : 'list-inline-item'}
+      className={isMobileHeader ? 'd-inline-block h-100 align-middle' : ''}
       onToggle={onToggle}
       show={showingNavMenu === MENU_NAME}
-      align={placement === MENU_PLACEMENT.Horizontal ? 'end' : 'start'}
+      align={isMobileHeader || placement === MENU_PLACEMENT.Horizontal ? 'end' : 'start'}
     >
-      <Dropdown.Toggle as={NotificationsDropdownToggle} hasUnread={hasUnread} />
+      <Dropdown.Toggle as={NotificationsDropdownToggle} hasUnread={hasUnread} isMobileHeader={isMobileHeader} />
       <Dropdown.Menu
         as={NotificationsDropdownMenu}
         items={items || []}
         onDismissItem={onDismissItem}
+        style={{ zIndex: 2000 }}
         popperConfig={{
           modifiers: [
             {
               name: 'offset',
               options: {
                 offset: () => {
-                  if (placement === MENU_PLACEMENT.Horizontal) {
-                    return [0, 7];
+                  if (isMobileHeader || placement === MENU_PLACEMENT.Horizontal) {
+                    return [0, 12];
                   }
                   if (window.innerWidth < 768) {
                     return [-168, 7];

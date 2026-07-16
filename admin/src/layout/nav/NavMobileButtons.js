@@ -1,13 +1,21 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import ScrollspyMobile from 'components/scrollspy/ScrollspyMobile';
 import { menuChangeAttrMobile, menuChangeNavClasses } from './main-menu/menuSlice';
+import SearchModal from './search/SearchModal';
+import IconMenuNotifications from './notifications/Notifications';
 
 const NavMobileButtons = () => {
   const dispatch = useDispatch();
   const { navClasses } = useSelector((state) => state.menu);
   const { items: scrollspyItems } = useSelector((state) => state.scrollspy);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+
+  const onSearchIconClick = (e) => {
+    e.preventDefault();
+    setShowSearchModal(true);
+  };
 
   // Starts mobile menu opening sequence
   const showMobileMenu = (e) => {
@@ -79,9 +87,18 @@ const NavMobileButtons = () => {
   return (
     <div className="mobile-buttons-container">
       {scrollspyItems && scrollspyItems.length > 0 && <ScrollspyMobile items={scrollspyItems} />}
+      
+      <a href="#/" className="menu-button" onClick={onSearchIconClick}>
+        <CsLineIcons icon="search" />
+      </a>
+      
+      <IconMenuNotifications />
+
       <a href="#/" id="mobileMenuButton" className="menu-button" onClick={showMobileMenu}>
         <CsLineIcons icon="menu" />
       </a>
+
+      <SearchModal show={showSearchModal} setShow={setShowSearchModal} />
     </div>
   );
 };

@@ -725,6 +725,9 @@ const OrderHistory = () => {
           padding-right: 2rem !important;
           margin-top: 1.5rem !important;
         }
+        .no-dropdown-caret::after {
+          display: none !important;
+        }
         .export-section-header {
           font-weight: 800 !important;
           color: #1e293b !important;
@@ -739,12 +742,23 @@ const OrderHistory = () => {
           height: 46px !important;
           padding-top: 10px !important;
           padding-bottom: 10px !important;
-          padding-left: 20px !important;
-          padding-right: 20px !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
           font-size: 13px !important;
           background-color: #fff !important;
           border: 1px solid #e4e7eb !important;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+          box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05) !important;
+        }
+        .export-title-text {
+          font-size: 16px !important;
+        }
+        .export-title-icon {
+          width: 32px !important;
+          height: 32px !important;
+        }
+        .export-title-icon svg {
+          width: 16px !important;
+          height: 16px !important;
         }
         @media (max-width: 576px) {
           .modal-export-responsive .modal-content {
@@ -765,7 +779,7 @@ const OrderHistory = () => {
           .modal-export-responsive .modal-footer button {
             flex: 1 !important;
             margin: 0 !important;
-            height: 38px !important;
+            height: 34px !important;
             font-size: 12px !important;
             padding: 6px 8px !important;
             border-radius: 50px !important;
@@ -779,16 +793,16 @@ const OrderHistory = () => {
             margin-right: 4px !important;
           }
           .modal-export-responsive .export-title-icon {
-            width: 36px !important;
-            height: 36px !important;
-            margin-right: 8px !important;
+            width: 28px !important;
+            height: 28px !important;
+            margin-right: 6px !important;
           }
           .modal-export-responsive .export-title-icon svg {
-            width: 16px !important;
-            height: 16px !important;
+            width: 14px !important;
+            height: 14px !important;
           }
           .modal-export-responsive .export-title-text {
-            font-size: 16px !important;
+            font-size: 14px !important;
           }
           .modal-export-responsive .export-subtitle {
             font-size: 12px !important;
@@ -824,14 +838,14 @@ const OrderHistory = () => {
             border-radius: 1rem !important;
           }
           .modal-export-responsive .filter-data-container .d-flex.flex-row {
-            flex-direction: column !important;
-            gap: 8px !important;
+            flex-direction: row !important;
+            gap: 6px !important;
           }
           .modal-export-responsive .export-input-height {
-            height: 44px !important;
-            font-size: 12px !important;
-            padding-left: 16px !important;
-            padding-right: 32px !important;
+            height: 32px !important;
+            font-size: 11px !important;
+            padding-left: 10px !important;
+            padding-right: 28px !important;
             position: relative !important;
           }
           .modal-export-responsive .export-input-height svg {
@@ -1103,13 +1117,13 @@ const OrderHistory = () => {
                         className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
                         style={{ height: '44px', fontSize: '14px' }}
                       >
-                        {filters.orderStatus || 'All Status'}
+                        {filters.orderStatus || 'All'}
                       </Dropdown.Toggle>
                       <Dropdown.Menu
                         className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
                         style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
                       >
-                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', '')}>All Status</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderStatus', '')}>All</Dropdown.Item>
                         <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Paid')}>Paid</Dropdown.Item>
                         <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'Save')}>Save</Dropdown.Item>
                         <Dropdown.Item onClick={() => handleFilterChange('orderStatus', 'KOT')}>KOT</Dropdown.Item>
@@ -1127,13 +1141,13 @@ const OrderHistory = () => {
                         className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
                         style={{ height: '44px', fontSize: '14px' }}
                       >
-                        {filters.orderType || 'All Types'}
+                        {filters.orderType || 'All'}
                       </Dropdown.Toggle>
                       <Dropdown.Menu
                         className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
                         style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
                       >
-                        <Dropdown.Item onClick={() => handleFilterChange('orderType', '')}>All Types</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderType', '')}>All</Dropdown.Item>
                         <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Dine In')}>Dine In</Dropdown.Item>
                         <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Takeaway')}>Takeaway</Dropdown.Item>
                         <Dropdown.Item onClick={() => handleFilterChange('orderType', 'Delivery')}>Delivery</Dropdown.Item>
@@ -1299,25 +1313,25 @@ const OrderHistory = () => {
             <span className="export-title-text">Export Order History</span>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="px-4 pt-4">
+        <Modal.Body className="px-3 pt-2 pb-1">
           {!exporting ? (
             <>
-              <p className="text-muted mb-4 export-subtitle">Select your preferred format and filters to generate the report.</p>
+              <p className="text-muted mt-5 mb-2 text-center export-subtitle" style={{ fontSize: '13px' }}>Select your preferred format and filters</p>
 
-              <Form>
+              <Form onSubmit={(e) => e.preventDefault()}>
                 {/* Export Format Selection */}
-                <div className="mb-4 export-format-section">
-                  <Form.Label className="fw-extrabold mb-3 text-uppercase export-section-header export-label-margin" style={{ fontSize: '11px', letterSpacing: '1px' }}>
+                <div className="mb-2 export-format-section">
+                  <Form.Label className="fw-extrabold mb-2 text-uppercase export-section-header export-label-margin" style={{ fontSize: '11px', letterSpacing: '1px' }}>
                     Export Format
                   </Form.Label>
-                  <Row className="g-3">
+                  <Row className="g-2">
                     <Col xs="6" sm="6">
                       <Card
                         className={`border-2 transition-all cursor-pointer h-100 ${exportFormat === 'excel' ? 'border-primary' : 'border-separator-light'}`}
-                        style={{ borderRadius: '1.25rem', backgroundColor: '#fff', transition: 'all 0.3s ease' }}
+                        style={{ borderRadius: '1.25rem', backgroundColor: '#fff', cursor: 'pointer', transition: 'all 0.3s ease' }}
                         onClick={() => setExportFormat('excel')}
                       >
-                        <Card.Body className="d-flex align-items-center p-3 export-format-card-body">
+                        <Card.Body className="d-flex align-items-center p-2 export-format-card-body">
                           <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-success text-success">
                             <CsLineIcons icon="file-text" size="20" />
                           </div>
@@ -1341,7 +1355,7 @@ const OrderHistory = () => {
                         style={{ borderRadius: '1.25rem', backgroundColor: '#fff', transition: 'all 0.3s ease' }}
                         onClick={() => setExportFormat('pdf')}
                       >
-                        <Card.Body className="d-flex align-items-center p-3 export-format-card-body">
+                        <Card.Body className="d-flex align-items-center p-2 export-format-card-body">
                           <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 bg-light-danger text-danger">
                             <CsLineIcons icon="file-text" size="20" />
                           </div>
@@ -1363,19 +1377,19 @@ const OrderHistory = () => {
                 </div>
 
                 {/* Export Filters */}
-                <div className="mb-2">
-                  <Form.Label className="fw-extrabold mb-3 text-uppercase export-section-header export-label-margin" style={{ fontSize: '11px', letterSpacing: '1px' }}>
+                <div className="mb-1">
+                  <Form.Label className="fw-extrabold mb-2 text-uppercase export-section-header export-label-margin" style={{ fontSize: '11px', letterSpacing: '1px' }}>
                     Filter Data
                   </Form.Label>
-                  <div className="p-4 filter-data-container" style={{ borderRadius: '1.5rem', backgroundColor: '#f8f9fa' }}>
-                    <Row className="g-3">
+                  <div className="p-3 filter-data-container" style={{ borderRadius: '1.25rem', backgroundColor: '#f8f9fa' }}>
+                    <Row className="g-2">
                       {/* Date Range */}
                       <Col xs={12}>
-                        <Form.Label className="small fw-bold export-input-label mb-2 ms-3 export-label-margin">DATE RANGE</Form.Label>
+                        <Form.Label className="small fw-bold export-input-label mb-1 ms-2 export-label-margin">DATE RANGE</Form.Label>
                         <div className="d-flex flex-row gap-2">
                           <div className="flex-grow-1 position-relative">
                             <div
-                              className="form-control border-0 shadow-sm rounded-pill px-4 text-dark d-flex align-items-center justify-content-between export-input-height"
+                              className="form-control border-0 shadow-sm rounded-pill px-4 text-dark w-100 d-flex align-items-center justify-content-between export-input-height"
                               style={{ backgroundColor: '#fff', pointerEvents: 'none' }}
                             >
                               <span className={exportFilters.fromDate ? '' : 'text-muted'}>
@@ -1420,7 +1434,7 @@ const OrderHistory = () => {
                           </div>
                           <div className="flex-grow-1 position-relative">
                             <div
-                              className="form-control border-0 shadow-sm rounded-pill px-4 text-dark d-flex align-items-center justify-content-between export-input-height"
+                              className="form-control border-0 shadow-sm rounded-pill px-4 text-dark w-100 d-flex align-items-center justify-content-between export-input-height"
                               style={{ backgroundColor: '#fff', pointerEvents: 'none' }}
                             >
                               <span className={exportFilters.toDate ? '' : 'text-muted'}>
@@ -1468,18 +1482,18 @@ const OrderHistory = () => {
 
                       {/* Status and Type */}
                       <Col xs={6} sm={6}>
-                        <Form.Label className="small fw-bold export-input-label mb-2 ms-3 export-label-margin">STATUS</Form.Label>
+                        <Form.Label className="small fw-bold export-input-label mb-1 ms-2 export-label-margin">STATUS</Form.Label>
                         <Dropdown className="w-100">
                           <Dropdown.Toggle
                             variant="white"
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 no-dropdown-caret export-input-height"
+                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between no-dropdown-caret export-input-height"
                             style={{ color: '#1ea8e7' }}
                           >
-                            <span>{exportFilters.orderStatus || 'All Status'}</span>
+                            <span>{exportFilters.orderStatus || 'All'}</span>
                             <CsLineIcons icon="chevron-right" size="13" />
                           </Dropdown.Toggle>
                           <Dropdown.Menu className="w-100 shadow border-0" style={{ borderRadius: '1rem' }}>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: '' })}>All Status</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: '' })}>All</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Paid' })}>Paid</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'Save' })}>Save</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderStatus: 'KOT' })}>KOT</Dropdown.Item>
@@ -1488,18 +1502,18 @@ const OrderHistory = () => {
                         </Dropdown>
                       </Col>
                       <Col xs={6} sm={6}>
-                        <Form.Label className="small fw-bold export-input-label mb-2 ms-3 export-label-margin">ORDER TYPE</Form.Label>
+                        <Form.Label className="small fw-bold export-input-label mb-1 ms-2 export-label-margin">ORDER TYPE</Form.Label>
                         <Dropdown className="w-100">
                           <Dropdown.Toggle
                             variant="white"
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 no-dropdown-caret export-input-height"
+                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between no-dropdown-caret export-input-height"
                             style={{ color: '#1ea8e7' }}
                           >
-                            <span>{exportFilters.orderType || 'All Types'}</span>
+                            <span>{exportFilters.orderType || 'All'}</span>
                             <CsLineIcons icon="chevron-right" size="13" />
                           </Dropdown.Toggle>
                           <Dropdown.Menu className="w-100 shadow border-0" style={{ borderRadius: '1rem' }}>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: '' })}>All Types</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: '' })}>All</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Dine In' })}>Dine In</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Takeaway' })}>Takeaway</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, orderType: 'Delivery' })}>Delivery</Dropdown.Item>
@@ -1509,18 +1523,18 @@ const OrderHistory = () => {
 
                       {/* Payment Mode */}
                       <Col xs={12}>
-                        <Form.Label className="small fw-bold export-input-label mb-2 ms-3 export-label-margin">PAYMENT MODE</Form.Label>
+                        <Form.Label className="small fw-bold export-input-label mb-1 ms-2 export-label-margin">PAYMENT MODE</Form.Label>
                         <Dropdown className="w-100">
                           <Dropdown.Toggle
                             variant="white"
-                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-4 no-dropdown-caret export-input-height"
+                            className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between no-dropdown-caret export-input-height"
                             style={{ color: '#1ea8e7' }}
                           >
-                            <span>{exportFilters.paymentType || 'All Payment Types'}</span>
+                            <span>{exportFilters.paymentType || 'All'}</span>
                             <CsLineIcons icon="chevron-right" size="13" />
                           </Dropdown.Toggle>
                           <Dropdown.Menu className="w-100 shadow border-0" style={{ borderRadius: '1rem' }}>
-                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: '' })}>All Payment Types</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: '' })}>All</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Cash' })}>Cash</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'Card' })}>Card</Dropdown.Item>
                             <Dropdown.Item onClick={() => setExportFilters({ ...exportFilters, paymentType: 'UPI' })}>UPI</Dropdown.Item>
@@ -1531,8 +1545,8 @@ const OrderHistory = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 px-2">
-                  <span className="text-primary small" style={{ cursor: 'default' }}>
+                <div className="mt-2 px-1">
+                  <span className="text-primary" style={{ cursor: 'default', fontSize: '11px' }}>
                     Leave filters empty to export all records.
                   </span>
                 </div>
@@ -1551,28 +1565,22 @@ const OrderHistory = () => {
             </div>
           )}
         </Modal.Body>
-        <Modal.Footer className="border-0 pt-0 pb-4 px-4">
-          <Button variant="light" onClick={() => setShowExportModal(false)} disabled={exporting} className="rounded-pill px-4">
+        <Modal.Footer className="border-0 pt-0 pb-3 px-3">
+          <Button type="button" variant="light" onClick={() => setShowExportModal(false)} disabled={exporting} className="rounded-pill px-4">
             Close
           </Button>
-          <Button
-            onClick={handleExportConfirm}
-            disabled={exporting}
-            className="rounded-pill px-4 hover-scale-up"
-            style={{ backgroundColor: '#1ea8e7', borderColor: '#1ea8e7', color: '#fff' }}
-          >
-            {exporting ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <CsLineIcons icon="download" className="me-2" />
-                Download {exportFormat === 'excel' ? 'Excel' : 'PDF'}
-              </>
-            )}
-          </Button>
+          {!exporting && (
+            <Button
+              type="button"
+              onClick={handleExportConfirm}
+              disabled={exporting}
+              className="rounded-pill px-4 hover-scale-up"
+              style={{ backgroundColor: '#1ea8e7', borderColor: '#1ea8e7', color: '#fff' }}
+            >
+              <CsLineIcons icon="download" className="me-2" />
+              Download {exportFormat === 'excel' ? 'Excel' : 'PDF'}
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
     </>

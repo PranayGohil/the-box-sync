@@ -89,20 +89,25 @@ const OrderDetails = () => {
     setSharing(true);
     try {
       const restaurantName = restaurantInfo?.name || 'Restaurant';
+      const printSettings = restaurantInfo?.printSettings || restaurantInfo?.user?.printSettings;
+      const showGst = printSettings?.showGst ?? true;
+      const showFssai = printSettings?.showFssai ?? true;
+      const showCustomerDetails = printSettings?.showCustomerDetails ?? true;
 
       let message = `*${restaurantName}*\n`;
       message += `*Order Summary*\n\n`;
-      if (restaurantInfo?.gst_no) {
+      if (showGst && restaurantInfo?.gst_no) {
         message += `*GSTIN:* ${restaurantInfo.gst_no}\n`;
       }
-      if (restaurantInfo?.fssai_no) {
+      if (showFssai && restaurantInfo?.fssai_no) {
         message += `*FSSAI No:* ${restaurantInfo.fssai_no}\n`;
       }
 
-
-      message += `*Customer Name :* ${order.customer_name || 'Guest'}\n`;
-      const contactNum = order.customer_phone || order.customer_details?.phone || '';
-      message += `*Customer Contact :* ${contactNum}\n`;
+      if (showCustomerDetails) {
+        message += `*Customer Name :* ${order.customer_name || 'Guest'}\n`;
+        const contactNum = order.customer_phone || order.customer_details?.phone || '';
+        message += `*Customer Contact :* ${contactNum}\n`;
+      }
       message += `*Bill No:* ${order.order_no || order.id}\n`;
       message += `*Date:* ${new Date(order.order_date).toLocaleString('en-IN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}\n\n`;
 

@@ -939,12 +939,12 @@ const OrderHistory = () => {
           text-transform: uppercase !important;
         }
         .export-input-height {
-          height: 34px !important;
-          padding-top: 4px !important;
-          padding-bottom: 4px !important;
-          padding-left: 12px !important;
-          padding-right: 12px !important;
-          font-size: 12px !important;
+          height: 46px !important;
+          padding-top: 10px !important;
+          padding-bottom: 10px !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+          font-size: 13px !important;
           background-color: #fff !important;
           border: 1px solid #e4e7eb !important;
           box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05) !important;
@@ -1544,7 +1544,7 @@ const OrderHistory = () => {
         <Modal.Body className="px-3 pt-2 pb-1">
           {!exporting ? (
             <>
-              <p className="text-muted mb-2 export-subtitle" style={{ fontSize: '13px' }}>Select your preferred format and filters</p>
+              <p className="text-muted my-2 text-center export-subtitle" style={{ fontSize: '13px' }}>Select your preferred format and filters</p>
 
               <Form onSubmit={(e) => e.preventDefault()}>
                 {/* Export Format Selection */}

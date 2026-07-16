@@ -11,25 +11,80 @@ import { useSocket } from 'contexts/SocketContext';
 import { fetchNotifications, markNotificationsRead } from './notificationSlice';
 
 const NotificationsDropdownToggle = React.memo(
-  React.forwardRef(({ onClick, expanded = false, hasUnread = false }, ref) => (
-    <a
-      ref={ref}
-      href="#/"
-      className="notification-button"
-      data-toggle="dropdown"
-      aria-expanded={expanded}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick(e);
-      }}
-    >
-      <div className="position-relative d-inline-flex">
-        <CsLineIcons icon="bell" size="18" />
-        {hasUnread && <span className="position-absolute notification-dot rounded-xl" />}
-      </div>
-    </a>
-  ))
+  React.forwardRef(({ onClick, expanded = false, hasUnread = false, isMobileHeader = false }, ref) => {
+    if (isMobileHeader) {
+      return (
+        <a
+          ref={ref}
+          href="#/"
+          className="notification-button menu-button position-relative"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#ffffff',
+            height: '100%',
+            width: '50px',
+            padding: '0',
+            background: 'transparent',
+            border: 'none',
+          }}
+          data-toggle="dropdown"
+          aria-expanded={expanded}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClick(e);
+          }}
+        >
+          <CsLineIcons icon="bell" size="20" style={{ color: '#ffffff' }} />
+          {hasUnread && (
+            <span
+              className="position-absolute rounded-circle"
+              style={{
+                top: '12px',
+                right: '12px',
+                background: '#e91e63',
+                width: '6px',
+                height: '6px',
+                display: 'block',
+              }}
+            />
+          )}
+        </a>
+      );
+    }
+    return (
+      <a
+        ref={ref}
+        href="#/"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#ffffff',
+          height: '100%',
+          width: '50px',
+          padding: '0',
+          background: 'transparent',
+          border: 'none',
+        }}
+        className="notification-button"
+        data-toggle="dropdown"
+        aria-expanded={expanded}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick(e);
+        }}
+      >
+        <div className="position-relative d-inline-flex">
+          <CsLineIcons icon="bell" size="18" />
+          {hasUnread && <span className="position-absolute notification-dot rounded-xl" />}
+        </div>
+      </a>
+    );
+  })
 );
 NotificationsDropdownToggle.displayName = 'NotificationsDropdownToggle';
 
@@ -170,27 +225,30 @@ const Notifications = () => {
   const displayItems = formattedItems.length > 0
     ? formattedItems
     : [{ id: 'empty', detail: 'All caught up!', link: '#/', icon: 'like' }];
+  const isMobileHeader = attrMobile === true;
 
   return (
     <Dropdown
-      as="li"
-      bsPrefix="list-inline-item"
+      as={isMobileHeader ? 'div' : 'li'}
+      bsPrefix={isMobileHeader ? 'dropdown' : 'list-inline-item'}
+      className={isMobileHeader ? 'd-inline-block h-100 align-middle' : ''}
       onToggle={onToggle}
       show={showingNavMenu === MENU_NAME}
-      align={placement === MENU_PLACEMENT.Horizontal ? 'end' : 'start'}
+      align={isMobileHeader || placement === MENU_PLACEMENT.Horizontal ? 'end' : 'start'}
     >
-      <Dropdown.Toggle as={NotificationsDropdownToggle} hasUnread={hasUnread} />
+      <Dropdown.Toggle as={NotificationsDropdownToggle} hasUnread={hasUnread} isMobileHeader={isMobileHeader} />
       <Dropdown.Menu
         as={NotificationsDropdownMenu}
         items={displayItems}
+        style={{ zIndex: 2000 }}
         popperConfig={{
           modifiers: [
             {
               name: 'offset',
               options: {
                 offset: () => {
-                  if (placement === MENU_PLACEMENT.Horizontal) {
-                    return [0, 7];
+                  if (isMobileHeader || placement === MENU_PLACEMENT.Horizontal) {
+                    return [0, 12];
                   }
                   if (window.innerWidth < 768) {
                     return [-168, 7];
