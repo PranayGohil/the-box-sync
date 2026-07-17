@@ -9,14 +9,13 @@ import CreatableSelect from 'react-select/creatable';
 const customStyles = `
   .edit-dish-category-modal-pill-input {
     border-radius: 12px !important;
-    padding: 0.7rem 1.2rem !important;
+    padding: 0.375rem 0.75rem !important;
     border: 1px solid #e5e7eb !important;
     background: #ffffff !important;
     transition: all 0.2s ease !important;
     font-size: 1rem !important;
     font-weight: 600 !important;
     color: #334155 !important;
-    height: 48px !important;
   }
   .edit-dish-category-modal-pill-input:focus {
     border-color: #23b3f4 !important;
@@ -225,7 +224,6 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
         control: (base, state) => ({
             ...base,
             borderRadius: '12px',
-            padding: '4px',
             border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
             boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
             backgroundColor: '#fff',
@@ -245,7 +243,7 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
     }
 
     return (
-        <Modal show={show} onHide={handleClose} backdrop="static" centered size="lg">
+        <Modal show={show} onHide={handleClose} backdrop="static" centered>
             <style>{customStyles}</style>
             <Modal.Header closeButton className="border-0 pb-0">
                 <Modal.Title className="fw-bold" style={{ color: '#23b3f4' }}>
@@ -262,82 +260,80 @@ const EditDishCategoryModal = ({ show, handleClose, data, fetchMenuData }) => {
                     </Alert>
                 )}
                 <Form id="edit_category_form" onSubmit={formik.handleSubmit}>
-                    <Row className="g-4">
-                        <Col md={6}>
-                            <Form.Group>
-                                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Category Name</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="category"
-                                    value={formik.values.category}
-                                    onChange={formik.handleChange}
-                                    placeholder="e.g. Main Course"
-                                    disabled={isSubmitting}
-                                    className="edit-dish-category-modal-pill-input shadow-sm"
-                                />
-                            </Form.Group>
-                        </Col>
+                    <Form.Group className="mb-4">
+                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Category Name</Form.Label>
+                        <Form.Control
+                            type="text"
+                            name="category"
+                            value={formik.values.category}
+                            onChange={formik.handleChange}
+                            placeholder="e.g. Main Course"
+                            disabled={isSubmitting}
+                            className="edit-dish-category-modal-pill-input shadow-sm"
+                        />
+                    </Form.Group>
 
-                        <Col md={6}>
-                            <Form.Group>
-                                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Counter</Form.Label>
-                                <CreatableSelect
-                                    isClearable
-                                    onChange={(selected) => {
-                                        const counter = selected ? selected.value : '';
-                                        formik.setFieldValue('counter', counter);
-                                    }}
-                                    options={counterOptions}
-                                    value={counterOptions.find((option) => option.value === formik.values.counter) || (formik.values.counter ? { value: formik.values.counter, label: formik.values.counter } : null)}
-                                    placeholder="Select counter"
-                                    isDisabled={isSubmitting}
-                                    styles={selectStyles}
-                                />
-                            </Form.Group>
-                        </Col>
+                    <Form.Group className="mb-4">
+                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Counter</Form.Label>
+                        <CreatableSelect
+                            isClearable
+                            onChange={(selected) => {
+                                const counter = selected ? selected.value : '';
+                                formik.setFieldValue('counter', counter);
+                            }}
+                            options={counterOptions}
+                            value={counterOptions.find((option) => option.value === formik.values.counter) || (formik.values.counter ? { value: formik.values.counter, label: formik.values.counter } : null)}
+                            placeholder="Select counter"
+                            isDisabled={isSubmitting}
+                            styles={selectStyles}
+                        />
+                    </Form.Group>
 
-                        {/* <Col md={12}>
-                            <div 
-                                className="d-flex align-items-center gap-2 cursor-pointer"
-                                onClick={() => formik.setFieldValue('hide_on_kot', !formik.values.hide_on_kot)}
-                            >
-                                <div className={`edit-dish-category-modal-custom-check ${formik.values.hide_on_kot ? 'active' : ''}`}>
-                                    {formik.values.hide_on_kot && <CsLineIcons icon="check" size="12" className="text-white" />}
-                                </div>
-                                <span className="fw-bold text-alternate small text-uppercase">Hide on KOT</span>
-                            </div>
-                        </Col> */}
-                    </Row>
+                    {/* <div 
+                        className="d-flex align-items-center gap-2 cursor-pointer"
+                        onClick={() => formik.setFieldValue('hide_on_kot', !formik.values.hide_on_kot)}
+                    >
+                        <div className={`edit-dish-category-modal-custom-check ${formik.values.hide_on_kot ? 'active' : ''}`}>
+                            {formik.values.hide_on_kot && <CsLineIcons icon="check" size="12" className="text-white" />}
+                        </div>
+                        <span className="fw-bold text-alternate small text-uppercase">Hide on KOT</span>
+                    </div> */}
                 </Form>
             </Modal.Body>
 
-            <Modal.Footer className="border-0">
-                <Button
-                    variant="outline-light"
-                    onClick={handleClose}
-                    disabled={isSubmitting}
-                    className="rounded-pill px-4 fw-bold edit-dish-category-modal-custom-btn-outline btn btn-outline-primary"
-                >
-                    Cancel
-                </Button>
-                <Button
-                    type="submit"
-                    form="edit_category_form"
-                    disabled={isSubmitting}
-                    className="px-5 py-2 edit-dish-category-modal-custom-btn-outline d-flex align-items-center gap-2"
-                >
-                    {isSubmitting ? (
-                        <>
-                            <Spinner as="span" animation="border" size="sm" />
-                            Updating...
-                        </>
-                    ) : (
-                        <>
-                            <CsLineIcons icon="save" size="18" />
-                            Update Category
-                        </>
-                    )}
-                </Button>
+            <Modal.Footer className="border-0 pt-0">
+                <Row className="w-100 g-2 m-0 justify-content-end">
+                    <Col xs={6} sm="auto" className="px-1">
+                        <Button
+                            variant="outline-light"
+                            onClick={handleClose}
+                            disabled={isSubmitting}
+                            className="rounded-pill w-100 fw-bold edit-dish-category-modal-custom-btn-outline btn btn-outline-primary"
+                        >
+                            Cancel
+                        </Button>
+                    </Col>
+                    <Col xs={6} sm="auto" className="px-1">
+                        <Button
+                            type="submit"
+                            form="edit_category_form"
+                            disabled={isSubmitting}
+                            className="rounded-pill fw-bold w-100 py-2 edit-dish-category-modal-custom-btn-outline d-flex align-items-center justify-content-center gap-1 gap-sm-2"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <Spinner as="span" animation="border" size="sm" />
+                                    <span className="text-nowrap">Updating...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <CsLineIcons icon="save" size="18" />
+                                    <span className="text-nowrap">Update Category</span>
+                                </>
+                            )}
+                        </Button>
+                    </Col>
+                </Row>
             </Modal.Footer>
         </Modal>
     );

@@ -1,4 +1,4 @@
-/* eslint-disable react/no-this-in-sfc, func-names, no-unused-vars */
+﻿/* eslint-disable react/no-this-in-sfc, func-names, no-unused-vars */
 import React, { useEffect, useState, useMemo } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Card, Col, Row, Button, Form as BForm, Spinner, Alert, Table } from 'react-bootstrap';
@@ -480,7 +480,11 @@ const AddItems = () => {
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast.error(error.response?.data?.message || 'Failed to save catalog.');
+      let errorMsg = error.response?.data?.message || 'Failed to save catalog.';
+      if (typeof errorMsg === 'object') {
+        errorMsg = Object.values(errorMsg).join(', ') || JSON.stringify(errorMsg);
+      }
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
       setSubmitting(false);
@@ -505,6 +509,8 @@ const AddItems = () => {
       backgroundColor: '#fff',
       fontSize: '0.88rem',
       fontWeight: '600',
+      minHeight: '38px',
+      height: '38px',
       '&:hover': { border: '1px solid #23b3f4' },
     }),
   };
@@ -693,7 +699,7 @@ const AddItems = () => {
                                           <thead>
                                             <tr className="border-bottom" style={{ color: '#64748b', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
                                               <th className="pb-2 text-uppercase">{variantLabel}</th>
-                                              <th className="pb-2 text-uppercase" width="140">Price (₹)</th>
+                                              <th className="pb-2 text-uppercase" width="140">Price (â‚¹)</th>
                                               <th className="pb-2 text-uppercase" width="200">Extra Details</th>
                                               <th className="pb-2 text-uppercase" width="280">Barcode</th>
                                               <th className="pb-2 text-uppercase text-center" width="60" />
@@ -796,7 +802,7 @@ const AddItems = () => {
                                         {(values.items[0].variants || []).map((variant, vIdx) => (
                                           <React.Fragment key={vIdx}>
                                             {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
-                                            <Row className="g-2 align-items-end mb-3 pb-3 border-bottom border-light">
+                                            <Row className="g-2 align-items-start mb-3 pb-3 border-bottom border-light">
                                               <Col xs={10} className="order-1">
                                                 <BForm.Group>
                                                   <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
@@ -818,7 +824,7 @@ const AddItems = () => {
                                               <Col xs={6} className="order-3">
                                                 <BForm.Group>
                                                   <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    Price (₹)
+                                                    Price (â‚¹)
                                                   </BForm.Label>
                                                   <BForm.Control
                                                     type="text"
@@ -959,3 +965,4 @@ const AddItems = () => {
 };
 
 export default AddItems;
+

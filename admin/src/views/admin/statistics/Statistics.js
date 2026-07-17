@@ -19,7 +19,7 @@ const CustomToggle = React.forwardRef(({ children, onClick, style }, ref) => (
       onClick(e);
     }}
     className="d-flex align-items-center justify-content-center px-3 rounded-pill shadow-sm bg-white cursor-pointer transition-all hover-scale-up"
-    style={{ ...style, height: '34px', minWidth: '130px', fontSize: '0.8rem', fontWeight: '700', color: '#23b3f4', border: '1.5px solid #23b3f4' }}
+    style={{ ...style, height: '34px', minWidth: '130px', fontSize: '0.9rem', fontWeight: '700', color: '#23b3f4', border: '1.5px solid #23b3f4' }}
   >
     {children}
   </div>
@@ -185,7 +185,7 @@ const Statistics = () => {
                           backgroundColor: isActive ? brandColor : 'transparent',
                           color: isActive ? '#fff' : '#495057',
                           borderRadius: '0.75rem',
-                          fontSize: '0.8rem',
+                          fontSize: '0.9rem',
                           transition: 'all 0.2s ease',
                         }}
                       >
@@ -210,7 +210,7 @@ const Statistics = () => {
                   <div className="statistics-stat-label mb-2">Total Revenue</div>
                   <div className="statistics-stat-value text-primary">{formatCurrency(overview?.summary?.totalRevenue)}</div>
                   {comparison && (
-                    <div className={`mt-2 fw-bold ${comparison.trend === 'up' ? 'text-success' : 'text-danger'}`} style={{ fontSize: '0.7rem' }}>
+                    <div className={`mt-2 fw-bold ${comparison.trend === 'up' ? 'text-success' : 'text-danger'}`} >
                       {comparison.trend === 'up' ? '↑' : '↓'} {Math.abs(comparison.change)}% vs last period
                     </div>
                   )}
@@ -230,7 +230,7 @@ const Statistics = () => {
                 <div>
                   <div className="statistics-stat-label mb-2">Total Orders</div>
                   <div className="statistics-stat-value">{overview?.summary?.totalOrders || 0}</div>
-                  <div className="text-muted fw-bold mt-2" style={{ fontSize: '0.7rem' }}>
+                  <div className="text-muted fw-bold mt-2" >
                     Avg: {formatCurrency(overview?.summary?.avgOrderValue)}
                   </div>
                 </div>
@@ -252,7 +252,7 @@ const Statistics = () => {
                 <div>
                   <div className="statistics-stat-label mb-2">Total Discounts</div>
                   <div className="statistics-stat-value text-warning">{formatCurrency(overview?.summary?.totalDiscount)}</div>
-                  <div className="text-muted fw-bold mt-2" style={{ fontSize: '0.7rem' }}>
+                  <div className="text-muted fw-bold mt-2" >
                     Wave Off: {formatCurrency(overview?.summary?.totalWaveOff)}
                   </div>
                 </div>
@@ -274,7 +274,7 @@ const Statistics = () => {
                 <div>
                   <div className="statistics-stat-label mb-2">Avg Order Value</div>
                   <div className="statistics-stat-value">{formatCurrency(overview?.summary?.avgOrderValue)}</div>
-                  <div className="text-muted fw-bold mt-2" style={{ fontSize: '0.7rem' }}>
+                  <div className="text-muted fw-bold mt-2" >
                     Daily performance
                   </div>
                 </div>
@@ -377,13 +377,13 @@ const Statistics = () => {
                               <CsLineIcons icon={pay._id === 'Cash' ? 'money' : 'credit-card'} size="18" style={{ color: brandColor }} />
                             </div>
                             <div className="overflow-hidden">
-                              <div className="fw-bold text-dark mb-0 smaller text-truncate">{pay._id || 'Unknown'}</div>
-                              <div className="text-muted smaller fw-bold">{pay.count} transactions</div>
+                              <div className="fw-bold text-dark mb-0 text-truncate" style={{ fontSize: '0.85rem' }}>{pay._id || 'Unknown'}</div>
+                              <div className="text-muted fw-bold" style={{ fontSize: '0.85rem' }}>{pay.count} transactions</div>
                             </div>
                           </div>
                           <div className="text-end ms-2">
-                            <div className="fw-bold text-primary smaller mb-0">{formatCurrency(pay.amount)}</div>
-                            <div className="text-muted smaller fw-bold">{percentage}% share</div>
+                            <div className="fw-bold text-primary mb-0" style={{ fontSize: '0.85rem' }}>{formatCurrency(pay.amount)}</div>
+                            <div className="text-muted fw-bold" style={{ fontSize: '0.85rem' }}>{percentage}% share</div>
                           </div>
                         </div>
                         {idx !== overview.paymentMethods.length - 1 && <hr className="my-2 opacity-10" />}
@@ -419,21 +419,21 @@ const Statistics = () => {
                       >
                         <div className="d-flex align-items-center overflow-hidden">
                           <div
-                            className="sw-4 sh-4 rounded-circle d-flex justify-content-center align-items-center fw-bold me-3 text-muted smaller"
+                            className="sw-4 sh-4 rounded-circle d-flex justify-content-center align-items-center fw-bold me-3 text-muted"
                             style={{ backgroundColor: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.02)' }}
                           >
                             {idx + 1}
                           </div>
                           <div className="overflow-hidden">
-                            <div className="text-truncate fw-bold small mb-0">{dish.dishName}</div>
-                            <div className="text-muted smaller fw-bold text-truncate" style={{ fontSize: '0.65rem' }}>
+                            <div className="text-truncate fw-bold mb-0" style={{ fontSize: '0.85rem' }}>{dish.dishName}</div>
+                            <div className="text-muted fw-bold text-truncate" style={{ fontSize: '0.85rem' }}>
                               {dish.category || 'Main Course'}
                             </div>
                           </div>
                         </div>
                         <div className="text-end ms-2">
-                          <div className="fw-bold small text-primary">{dish.totalQuantity} sold</div>
-                          <div className="text-muted smaller fw-bold" style={{ fontSize: '0.65rem' }}>
+                          <div className="fw-bold text-primary" style={{ fontSize: '0.85rem' }}>{dish.totalQuantity} sold</div>
+                          <div className="text-muted fw-bold" style={{ fontSize: '0.85rem' }}>
                             {formatCurrency(dish.totalRevenue)}
                           </div>
                         </div>
@@ -471,13 +471,13 @@ const Statistics = () => {
                             />
                           </div>
                           <div className="overflow-hidden">
-                            <div className="fw-bold text-dark mb-0 smaller text-truncate">{type._id || 'Unknown'}</div>
-                            <div className="text-muted smaller fw-bold">{type.count} orders</div>
+                            <div className="fw-bold text-dark mb-0 text-truncate" style={{ fontSize: '0.85rem' }}>{type._id || 'Unknown'}</div>
+                            <div className="text-muted fw-bold" style={{ fontSize: '0.85rem' }}>{type.count} orders</div>
                           </div>
                         </div>
                         <div className="text-end ms-2">
-                          <div className="fw-bold text-primary smaller mb-0">{formatCurrency(type.revenue)}</div>
-                          <div className="text-muted smaller fw-bold">Revenue</div>
+                          <div className="fw-bold text-primary mb-0" style={{ fontSize: '0.85rem' }}>{formatCurrency(type.revenue)}</div>
+                          <div className="text-muted fw-bold" style={{ fontSize: '0.85rem' }}>Revenue</div>
                         </div>
                       </div>
                       {index !== overview.orderTypes.length - 1 && <hr className="my-2 opacity-10" />}

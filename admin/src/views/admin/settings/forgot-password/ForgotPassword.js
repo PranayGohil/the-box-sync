@@ -190,8 +190,8 @@ function ForgotPassword() {
                     />
                     <Form.Text className="text-muted small mt-2 d-block">OTP is valid for 10 minutes</Form.Text>
                   </Form.Group>
-                  <div className="d-flex forgot-password-button-group-responsive justify-content-between align-items-center">
-                    <Button className="forgot-password-custom-btn-outline px-4 py-2" type="submit" disabled={isLoading}>
+                  <div className="d-flex flex-row justify-content-between align-items-center gap-3 w-100">
+                    <Button className="forgot-password-custom-btn-outline py-2 w-50 d-flex justify-content-center" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -204,7 +204,7 @@ function ForgotPassword() {
                         </>
                       )}
                     </Button>
-                    <Button variant="none" className="forgot-password-custom-btn-outline px-4 py-2" onClick={() => setStep(1)} disabled={isLoading}>
+                    <Button variant="none" className="forgot-password-custom-btn-outline py-2 w-50 d-flex justify-content-center" onClick={() => setStep(1)} disabled={isLoading}>
                       <CsLineIcons icon="arrow-left" className="me-2" size="15" />
                       Back
                     </Button>
@@ -270,8 +270,8 @@ function ForgotPassword() {
                       </span>
                     </div>
                   </Form.Group>
-                  <div className="d-flex forgot-password-button-group-responsive justify-content-between align-items-center">
-                    <Button className="forgot-password-custom-btn-outline px-4 py-2" type="submit" disabled={isLoading}>
+                  <div className="d-flex flex-row justify-content-between align-items-center gap-3 w-100">
+                    <Button className="forgot-password-custom-btn-outline py-2 w-50 d-flex justify-content-center" type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <Spinner animation="border" size="sm" className="me-2" />
@@ -284,7 +284,7 @@ function ForgotPassword() {
                         </>
                       )}
                     </Button>
-                    <Button variant="none" className="forgot-password-custom-btn-outline px-4 py-2" onClick={() => setStep(2)} disabled={isLoading}>
+                    <Button variant="none" className="forgot-password-custom-btn-outline py-2 w-50 d-flex justify-content-center" onClick={() => setStep(2)} disabled={isLoading}>
                       <CsLineIcons icon="arrow-left" className="me-2" size="15" />
                       Back
                     </Button>

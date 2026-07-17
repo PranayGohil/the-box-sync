@@ -438,7 +438,11 @@ const AddDishes = () => {
       history.push('/operations/manage-menu');
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast.error(error.response?.data?.message || 'Failed to save menu.');
+      let errorMsg = error.response?.data?.message || 'Failed to save menu.';
+      if (typeof errorMsg === 'object') {
+        errorMsg = Object.values(errorMsg).join(', ') || JSON.stringify(errorMsg);
+      }
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
       setSubmitting(false);
@@ -463,7 +467,22 @@ const AddDishes = () => {
       backgroundColor: '#fff',
       fontSize: '0.88rem',
       fontWeight: '600',
+      minHeight: '38px',
+      height: '38px',
       '&:hover': { border: '1px solid #23b3f4' },
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: '0 8px',
+      height: '36px',
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: '36px',
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
     }),
   };
 
@@ -515,7 +534,9 @@ const AddDishes = () => {
                             }}
                             placeholder="Select or create category"
                           />
-                          <ErrorMessage name="category" component="div" className="text-danger small mt-1" />
+                          <ErrorMessage name="category">
+        {msg => typeof msg === 'string' ? <div className="text-danger small mt-1">{msg}</div> : null}
+    </ErrorMessage>
                         </div>
                       </BForm.Group>
                     </Col>
@@ -578,7 +599,7 @@ const AddDishes = () => {
                                   </Button>
                                 )}
                               </div>
-                              <Row className="g-2 g-md-3 align-items-end">
+                              <Row className="g-2 g-md-3 align-items-start">
                                 <Col xs={12} md={6}>
                                   <BForm.Group>
                                     <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
@@ -638,7 +659,9 @@ const AddDishes = () => {
                                       <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>
                                         Sizes, Pricing & Details
                                       </h6>
-                                      <ErrorMessage name={`dishes[${index}].variants`} component="div" className="text-danger small fw-bold" />
+                                      <ErrorMessage name={`dishes[${index}].variants`}>
+                                        {msg => typeof msg === 'string' ? <div className="text-danger small fw-bold">{msg}</div> : null}
+                                      </ErrorMessage>
                                     </div>
                                     <FieldArray name={`dishes[${index}].variants`}>
                                       {({ push: pushVariant, remove: removeVariant }) => (
@@ -646,7 +669,7 @@ const AddDishes = () => {
                                           {(dish.variants || []).map((variant, vIdx) => (
                                             <React.Fragment key={vIdx}>
                                               {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
-                                              <Row className="g-2 align-items-end mb-2">
+                                              <Row className="g-2 align-items-start mb-2">
                                                 <Col xs={12} sm={4}>
                                                   <BForm.Group>
                                                     <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
@@ -721,7 +744,8 @@ const AddDishes = () => {
                                                     />
                                                   </BForm.Group>
                                                 </Col>
-                                                <Col xs="auto" sm="auto" className="d-flex align-items-end pb-0 px-1">
+                                                <Col xs="auto" sm="auto" className="pb-0 px-1">
+                                                  <BForm.Label className="small mb-1 d-block" style={{ fontSize: '0.75rem', visibility: 'hidden' }}>&nbsp;</BForm.Label>
                                                   <Button
                                                     variant="outline-danger"
                                                     onClick={() => removeVariant(vIdx)}
@@ -764,7 +788,7 @@ const AddDishes = () => {
                                           {(dish.addons || []).map((addon, aIdx) => (
                                             <React.Fragment key={aIdx}>
                                               {aIdx > 0 && <hr className="my-2" style={{ borderTop: '1px dashed #e2e8f0' }} />}
-                                              <Row className="g-2 align-items-end mb-2">
+                                              <Row className="g-2 align-items-start mb-2">
                                                 <Col xs={12} sm={6}>
                                                   <BForm.Group>
                                                     <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
@@ -815,7 +839,8 @@ const AddDishes = () => {
                                                     />
                                                   </BForm.Group>
                                                 </Col>
-                                                <Col xs="auto" sm="auto" className="d-flex align-items-end pb-0 px-1">
+                                                <Col xs="auto" sm="auto" className="pb-0 px-1">
+                                                  <BForm.Label className="small mb-1 d-block" style={{ fontSize: '0.75rem', visibility: 'hidden' }}>&nbsp;</BForm.Label>
                                                   <Button
                                                     variant="outline-danger"
                                                     onClick={() => removeAddon(aIdx)}

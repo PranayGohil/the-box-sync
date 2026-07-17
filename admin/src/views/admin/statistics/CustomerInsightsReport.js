@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar, Modal, Toast, ToastContainer } from 'react-bootstrap';
+import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar, Modal, Toast, ToastContainer, Pagination } from 'react-bootstrap';
 import axios from 'axios';
 import { format, isToday, isYesterday } from 'date-fns';
 import { enIN } from 'date-fns/locale';
@@ -25,6 +25,10 @@ const CustomerInsightsReport = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
+  const [acqPage, setAcqPage] = useState(1);
+  const acqPerPage = 10;
+  const [rankPage, setRankPage] = useState(1);
+  const rankPerPage = 10;
 
   const { currentUser, activePlans } = useContext(AuthContext);
 
@@ -86,7 +90,7 @@ const CustomerInsightsReport = () => {
 
   useEffect(() => {
     fetchCustomerReport();
-  }, []);
+  }, [startDate, endDate]);
 
   const showSuccessToast = (message) => {
     setToastMessage(message);
@@ -111,8 +115,8 @@ const CustomerInsightsReport = () => {
 
       allData.push(['CUSTOMER INSIGHTS REPORT']);
       allData.push(['Company:', COMPANY_NAME]);
-      allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
-      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')]);
+      allData.push(['Period:', `${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`]);
+      allData.push(['Generated:', format(new Date(), 'dd/MM/yyyy hh:mm a')]);
       allData.push([]);
 
       allData.push(['EXECUTIVE SUMMARY']);
@@ -163,7 +167,7 @@ const CustomerInsightsReport = () => {
         allData.push(['ACQUISITION & GROWTH TREND']);
         allData.push(['Date', 'New Customers', 'Retention']);
         [...reportData.acquisitionTrend].reverse().forEach((item) => {
-          const dateStr = `${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`;
+          const dateStr = `${String(item._id.day).padStart(2, '0')}/${String(item._id.month).padStart(2, '0')}/${item._id.year}`;
           const retention = item.newCustomers > 0 ? 'High' : 'Stable';
           allData.push([dateStr, item.newCustomers, retention]);
         });
@@ -197,7 +201,7 @@ const CustomerInsightsReport = () => {
       doc.text('Customer Insights Report', 105, 15, { align: 'center' });
       doc.setFontSize(10);
       doc.text(COMPANY_NAME, 105, 22, { align: 'center' });
-      doc.text(`Period: ${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`, 105, 28, { align: 'center' });
+      doc.text(`Period: ${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`, 105, 28, { align: 'center' });
 
       let currentY = 35;
 
@@ -306,7 +310,7 @@ const CustomerInsightsReport = () => {
         doc.text('Acquisition & Growth Trend', 14, currentY);
 
         const acqBody = [...reportData.acquisitionTrend].reverse().map((item) => {
-          const dateStr = `${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`;
+          const dateStr = `${String(item._id.day).padStart(2, '0')}/${String(item._id.month).padStart(2, '0')}/${item._id.year}`;
           const retention = item.newCustomers > 0 ? 'High' : 'Stable';
           return [dateStr, item.newCustomers.toString(), retention];
         });
@@ -372,23 +376,17 @@ const CustomerInsightsReport = () => {
                 <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
               </div>
               <Row className="g-3">
-                <Col xs={12} md={5}>
+                <Col xs={12} md={6}>
                   <Form.Group>
                     <Form.Label className="customer-insights-report-stat-label mb-2">Start Date</Form.Label>
                     <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                   </Form.Group>
                 </Col>
-                <Col xs={12} md={5}>
+                <Col xs={12} md={6}>
                   <Form.Group>
                     <Form.Label className="customer-insights-report-stat-label mb-2">End Date</Form.Label>
                     <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                   </Form.Group>
-                </Col>
-                <Col xs={12} md={2} className="d-flex align-items-end">
-                  <Button className="customer-insights-report-custom-btn-outline w-100" onClick={fetchCustomerReport} disabled={loading}>
-                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                    {loading ? 'Analyzing...' : 'Generate'}
-                  </Button>
                 </Col>
               </Row>
             </Card.Body>
@@ -410,10 +408,7 @@ const CustomerInsightsReport = () => {
                   <Button
                     variant="outline-success"
                     className="customer-insights-report-custom-btn-outline border-success text-success px-4"
-                    onClick={() => {
-                      setExportType('Excel');
-                      setShowExportModal(true);
-                    }}
+                    onClick={() => { setExportType('Excel'); setShowExportModal(true); }}
                     disabled={exporting || !reportData}
                   >
                     <CsLineIcons icon="file-text" className="me-2" size="15" /> Excel
@@ -421,10 +416,7 @@ const CustomerInsightsReport = () => {
                   <Button
                     variant="outline-danger"
                     className="customer-insights-report-custom-btn-outline border-danger text-danger px-4"
-                    onClick={() => {
-                      setExportType('PDF');
-                      setShowExportModal(true);
-                    }}
+                    onClick={() => { setExportType('PDF'); setShowExportModal(true); }}
                     disabled={exporting || !reportData}
                   >
                     <CsLineIcons icon="file-text" className="me-2" size="15" /> PDF
@@ -468,10 +460,7 @@ const CustomerInsightsReport = () => {
                         <div className="customer-insights-report-stat-value text-success">{repeatCustomers}</div>
                         <div className="smaller fw-bold text-success mt-1">{repeatRate}% Loyalty</div>
                       </div>
-                      <div
-                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
-                        style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}
-                      >
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
                         <CsLineIcons icon="check-circle" size="24" style={{ color: '#10b981' }} />
                       </div>
                     </div>
@@ -486,10 +475,7 @@ const CustomerInsightsReport = () => {
                         <div className="customer-insights-report-stat-label mb-2">One-Time Visitors</div>
                         <div className="customer-insights-report-stat-value text-warning">{oneTimeCustomers}</div>
                       </div>
-                      <div
-                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
-                        style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}
-                      >
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
                         <CsLineIcons icon="user" size="24" style={{ color: '#f59e0b' }} />
                       </div>
                     </div>
@@ -506,10 +492,7 @@ const CustomerInsightsReport = () => {
                           {formatCurrency(reportData.topCustomers?.[0]?.avgOrderValue || 0)}
                         </div>
                       </div>
-                      <div
-                        className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center"
-                        style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}
-                      >
+                      <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}>
                         <CsLineIcons icon="trend-up" size="24" style={{ color: '#6366f1' }} />
                       </div>
                     </div>
@@ -532,7 +515,7 @@ const CustomerInsightsReport = () => {
                     </div>
                     <div className="d-flex flex-column">
                       {reportData.topCustomers.length > 0 ? (
-                        reportData.topCustomers.slice(0, 8).map((customer, idx) => {
+                        reportData.topCustomers.slice((rankPage - 1) * rankPerPage, rankPage * rankPerPage).map((customer, idx) => {
                           const highlightClass = idx < 3 ? `customer-insights-report-dish-row-highlight-${idx}` : '';
                           return (
                             <div key={idx} className={`px-4 py-3 d-flex align-items-center justify-content-between ${highlightClass}`}>
@@ -561,6 +544,15 @@ const CustomerInsightsReport = () => {
                         })
                       ) : (
                         <div className="text-muted text-center py-5">No rankings available</div>
+                      )}
+                      {reportData.topCustomers.length > rankPerPage && (
+                        <div className="d-flex justify-content-center mt-3 pb-2">
+                          <Pagination size="sm">
+                            <Pagination.Prev onClick={() => setRankPage(p => Math.max(1, p - 1))} disabled={rankPage === 1} />
+                            <Pagination.Item active>{rankPage}</Pagination.Item>
+                            <Pagination.Next onClick={() => setRankPage(p => Math.min(Math.ceil(reportData.topCustomers.length / rankPerPage), p + 1))} disabled={rankPage === Math.ceil(reportData.topCustomers.length / rankPerPage)} />
+                          </Pagination>
+                        </div>
                       )}
                     </div>
                   </Card.Body>
@@ -662,21 +654,17 @@ const CustomerInsightsReport = () => {
                           {reportData.acquisitionTrend && reportData.acquisitionTrend.length > 0 ? (
                             [...reportData.acquisitionTrend]
                               .reverse()
-                              .slice(0, 10)
+                              .slice((acqPage - 1) * acqPerPage, acqPage * acqPerPage)
                               .map((item, idx) => {
                                 const totalNew = reportData.acquisitionTrend.reduce((sum, i) => sum + i.newCustomers, 0);
                                 const percentage = totalNew > 0 ? ((item.newCustomers / totalNew) * 100).toFixed(1) : 0;
                                 return (
                                   <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                                     <td className="py-3 fw-bold text-dark">
-                                      {`${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`}
+                                      {`${String(item._id.day).padStart(2, '0')}/${String(item._id.month).padStart(2, '0')}/${item._id.year}`}
                                     </td>
                                     <td className="py-3 text-center">
-                                      <Badge
-                                        bg="rgba(35, 179, 244, 0.1)"
-                                        className="text-primary px-3 py-2 rounded-pill fw-bold"
-                                        style={{ fontSize: '0.8rem' }}
-                                      >
+                                      <Badge bg="rgba(35, 179, 244, 0.1)" className="text-primary px-3 py-2 rounded-pill fw-bold" style={{ fontSize: '0.8rem' }}>
                                         {item.newCustomers} New
                                       </Badge>
                                     </td>
@@ -694,9 +682,7 @@ const CustomerInsightsReport = () => {
                               })
                           ) : (
                             <tr>
-                              <td colSpan="4" className="text-center text-muted py-5">
-                                No acquisition data available
-                              </td>
+                              <td colSpan="4" className="text-center text-muted py-5">No acquisition data available</td>
                             </tr>
                           )}
                         </tbody>
@@ -708,18 +694,15 @@ const CustomerInsightsReport = () => {
                       {reportData.acquisitionTrend && reportData.acquisitionTrend.length > 0 ? (
                         [...reportData.acquisitionTrend]
                           .reverse()
-                          .slice(0, 10)
+                          .slice((acqPage - 1) * acqPerPage, acqPage * acqPerPage)
                           .map((item, idx) => {
                             const totalNew = reportData.acquisitionTrend.reduce((sum, i) => sum + i.newCustomers, 0);
                             const percentage = totalNew > 0 ? ((item.newCustomers / totalNew) * 100).toFixed(1) : 0;
                             return (
                               <div key={idx} className="p-3 mb-3 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
-                                <div
-                                  className="d-flex justify-content-between align-items-center mb-2 pb-2"
-                                  style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}
-                                >
+                                <div className="d-flex justify-content-between align-items-center mb-2 pb-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
                                   <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
-                                    {`${String(item._id.day).padStart(2, '0')}-${String(item._id.month).padStart(2, '0')}-${item._id.year}`}
+                                    {`${String(item._id.day).padStart(2, '0')}/${String(item._id.month).padStart(2, '0')}/${item._id.year}`}
                                   </div>
                                   <Badge bg="rgba(35, 179, 244, 0.1)" className="text-primary px-3 py-1 rounded-pill fw-bold">
                                     {item.newCustomers} New
@@ -727,20 +710,12 @@ const CustomerInsightsReport = () => {
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center">
                                   <div>
-                                    <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>
-                                      Growth
-                                    </span>
-                                    <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
-                                      {percentage}%
-                                    </span>
+                                    <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Growth</span>
+                                    <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{percentage}%</span>
                                   </div>
                                   <div className="text-end">
-                                    <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>
-                                      Retention
-                                    </span>
-                                    <span className="fw-bold text-success" style={{ fontSize: '0.85rem' }}>
-                                      {item.newCustomers > 0 ? 'High' : 'Stable'}
-                                    </span>
+                                    <span className="text-muted fw-bold d-block mb-1" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Retention</span>
+                                    <span className="fw-bold text-success" style={{ fontSize: '0.85rem' }}>{item.newCustomers > 0 ? 'High' : 'Stable'}</span>
                                   </div>
                                 </div>
                               </div>
@@ -752,6 +727,15 @@ const CustomerInsightsReport = () => {
                         </div>
                       )}
                     </div>
+                    {reportData.acquisitionTrend && reportData.acquisitionTrend.length > acqPerPage && (
+                      <div className="d-flex justify-content-center mt-3">
+                        <Pagination size="sm">
+                          <Pagination.Prev onClick={() => setAcqPage(p => Math.max(1, p - 1))} disabled={acqPage === 1} />
+                          <Pagination.Item active>{acqPage}</Pagination.Item>
+                          <Pagination.Next onClick={() => setAcqPage(p => Math.min(Math.ceil(reportData.acquisitionTrend.length / acqPerPage), p + 1))} disabled={acqPage === Math.ceil(reportData.acquisitionTrend.length / acqPerPage)} />
+                        </Pagination>
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
@@ -799,14 +783,7 @@ const CustomerInsightsReport = () => {
       </Modal>
 
       <ToastContainer position="top-end" className="p-3">
-        <Toast
-          show={showToast}
-          onClose={() => setShowToast(false)}
-          delay={3000}
-          autohide
-          bg="white"
-          className="customer-insights-report-interactive-card border-0"
-        >
+        <Toast show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide bg="white" className="customer-insights-report-interactive-card border-0">
           <Toast.Body className="p-3 d-flex align-items-center">
             <CsLineIcons icon="check-circle" className="text-success me-2" size="20" />
             <span className="fw-bold smaller text-dark">{toastMessage}</span>

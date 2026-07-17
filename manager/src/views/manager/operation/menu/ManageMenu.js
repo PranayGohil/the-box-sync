@@ -66,6 +66,9 @@ const ManageMenu = () => {
       setMenuData(transformedMenu);
       setFilteredMenuData(transformedMenu);
 
+      const allCategories = Array.from(new Set(transformedMenu.map((item) => item.category)));
+      setCategoryOptions(allCategories);
+
       // Expand first category by default
       if (transformedMenu.length > 0) {
         setExpandedCategories({ [transformedMenu[0].id || transformedMenu[0]._id]: true });

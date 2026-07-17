@@ -1185,32 +1185,8 @@ const OrderHistory = () => {
 
               <div>
                 <Row className="g-3">
-                  {/* Order Source Filter */}
-                  <Col xs="12" sm="6" md="2">
-                    <Form.Label className="small fw-bold text-muted mb-1">Source</Form.Label>
-                    <Dropdown className="w-100">
-                      <Dropdown.Toggle
-                        variant="white"
-                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
-                        style={{ height: '44px', fontSize: '14px' }}
-                      >
-                        {filters.orderSource || 'All'}
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu
-                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
-                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
-                      >
-                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', '')}>All</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Manager')}>Manager</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Captain')}>Captain</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'QSR')}>QSR</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Restaurant Website')}>Restaurant Website</Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </Col>
-
-                  {/* Date Range Filter */}
-                  <Col xs="12" sm="6" md="2">
+                  {/* Date Range Filter (From) */}
+                  <Col xs="12" sm="6" md="4">
                     <Form.Label className="small fw-bold text-muted mb-1">From</Form.Label>
                     <div className="flex-grow-1 position-relative">
                       <div
@@ -1258,7 +1234,9 @@ const OrderHistory = () => {
                       />
                     </div>
                   </Col>
-                  <Col xs="12" sm="6" md="2">
+
+                  {/* Date Range Filter (To) */}
+                  <Col xs="12" sm="6" md="4">
                     <Form.Label className="small fw-bold text-muted mb-1">To</Form.Label>
                     <div className="flex-grow-1 position-relative">
                       <div
@@ -1307,8 +1285,32 @@ const OrderHistory = () => {
                     </div>
                   </Col>
 
+                  {/* Order Source Filter */}
+                  <Col xs="12" sm="6" md="4">
+                    <Form.Label className="small fw-bold text-muted mb-1">Source</Form.Label>
+                    <Dropdown className="w-100">
+                      <Dropdown.Toggle
+                        variant="white"
+                        className="w-100 rounded-pill shadow-sm border-0 d-flex align-items-center justify-content-between px-3"
+                        style={{ height: '44px', fontSize: '14px' }}
+                      >
+                        {filters.orderSource || 'All'}
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu
+                        className="w-100 shadow-lg border-0 animate__animated animate__fadeIn"
+                        style={{ borderRadius: '1.25rem', padding: '0.75rem', marginTop: '8px', maxHeight: '350px', overflowY: 'auto' }}
+                      >
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', '')}>All</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Manager')}>Manager</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Captain')}>Captain</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'QSR')}>QSR</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleFilterChange('orderSource', 'Restaurant Website')}>Restaurant Website</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </Col>
+
                   {/* Order Status Filter */}
-                  <Col xs="12" sm="6" md="3">
+                  <Col xs="12" sm="6" md="4">
                     <Form.Label className="small fw-bold text-muted mb-1">Status</Form.Label>
                     <Dropdown className="w-100">
                       <Dropdown.Toggle
@@ -1332,7 +1334,7 @@ const OrderHistory = () => {
                   </Col>
 
                   {/* Order Type Filter */}
-                  <Col xs="12" sm="6" md="3">
+                  <Col xs="12" sm="6" md="4">
                     <Form.Label className="small fw-bold text-muted mb-1">Type</Form.Label>
                     <Dropdown className="w-100">
                       <Dropdown.Toggle
@@ -1356,7 +1358,7 @@ const OrderHistory = () => {
 
                   {/* Table Area Filter */}
                   {tableAreas.length > 0 && (
-                    <Col xs="12" sm="6" md="3">
+                    <Col xs="12" sm="6" md="4">
                       <Form.Label className="small fw-bold text-muted mb-1">Table Area</Form.Label>
                       <Dropdown className="w-100">
                         <Dropdown.Toggle
@@ -1789,7 +1791,7 @@ const OrderHistory = () => {
                         </Dropdown>
                       </Col>
 
-                      <Col xs={12}>
+                      <Col xs={6} sm={6}>
                         <Form.Label className="small fw-bold export-input-label mb-1 ms-2 export-label-margin">TABLE AREA</Form.Label>
                         <Dropdown className="w-100">
                           <Dropdown.Toggle

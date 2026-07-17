@@ -170,6 +170,8 @@ const AddTable = () => {
     control: (base, state) => ({
       ...base,
       borderRadius: '12px',
+        minHeight: '38px',
+        height: '38px',
       padding: '2px',
       border:
         (formik.touched.area && formik.errors.area) || (isSubmitting && !formik.values.area)
@@ -234,7 +236,7 @@ const AddTable = () => {
                   <div className="d-flex flex-column gap-3">
                     {formik.values.tables.map((table, index) => (
                       <div key={index} className="p-3 p-md-4 rounded-xl border-0 shadow-sm" style={{ background: '#f8fafc', borderRadius: '1.25rem' }}>
-                        <Row className="g-2 g-md-3 align-items-end">
+                        <Row className="g-2 g-md-3 align-items-start">
                           <Col xs={12} md={5}>
                             <Form.Label className="fw-bold small text-muted mb-1">Table No.</Form.Label>
                             <div className="position-relative">
@@ -280,15 +282,18 @@ const AddTable = () => {
                             </div>
                           </Col>
 
-                          <Col xs={3} md={2} className="d-flex justify-content-end pb-1">
-                            <Button
-                              variant="outline-danger"
-                              className="add-table-delete-btn-table"
-                              onClick={() => removeTable(index)}
-                              disabled={isSubmitting || formik.values.tables.length === 1}
-                            >
-                              <CsLineIcons icon="bin" size="18" />
-                            </Button>
+                          <Col xs={3} md={2} className="d-flex flex-column justify-content-end pb-1">
+                            <Form.Label className="d-none d-md-block mb-1">&nbsp;</Form.Label>
+                            <div className="d-flex justify-content-end w-100">
+                              <Button
+                                variant="outline-danger"
+                                className="add-table-delete-btn-table"
+                                onClick={() => removeTable(index)}
+                                disabled={isSubmitting || formik.values.tables.length === 1}
+                              >
+                                <CsLineIcons icon="bin" size="18" />
+                              </Button>
+                            </div>
                           </Col>
                         </Row>
                       </div>

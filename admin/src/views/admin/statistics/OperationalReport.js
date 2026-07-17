@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, Modal, ProgressBar, Toast, ToastContainer } from 'react-bootstrap';
+import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, Modal, ProgressBar, Toast, ToastContainer, Pagination } from 'react-bootstrap';
 import axios from 'axios';
 import { format } from 'date-fns';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -24,6 +24,12 @@ const OperationalReport = () => {
   ];
 
   const [loading, setLoading] = useState(false);
+  const [waiterPage, setWaiterPage] = useState(1);
+  const waiterPerPage = 10;
+  const [tablePage, setTablePage] = useState(1);
+  const tablePerPage = 10;
+  const [hourPage, setHourPage] = useState(1);
+  const hourPerPage = 10;
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
 
@@ -99,7 +105,7 @@ const OperationalReport = () => {
 
   useEffect(() => {
     fetchOperationalReport();
-  }, []);
+  }, [startDate, endDate]);
 
   const getBusiestHour = () => {
     if (!reportData?.peakHours || reportData.peakHours.length === 0) return null;
@@ -487,12 +493,7 @@ const OperationalReport = () => {
                   <Form.Label className="operational-report-stat-label mb-2">End Date</Form.Label>
                   <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                 </Col>
-                <Col xs={12} md={2}>
-                  <Button className="operational-report-custom-btn-outline w-100" onClick={fetchOperationalReport} disabled={loading}>
-                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                    {loading ? 'Processing...' : 'Generate'}
-                  </Button>
-                </Col>
+                
               </Row>
             </Card.Body>
           </Card>
@@ -641,7 +642,7 @@ const OperationalReport = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {reportData.waiterPerformance.map((waiter, idx) => {
+                      {reportData.waiterPerformance.slice((waiterPage - 1) * waiterPerPage, waiterPage * waiterPerPage).map((waiter, idx) => {
                         const avgRevenue = reportData.waiterPerformance.reduce((sum, w) => sum + w.totalRevenue, 0) / reportData.waiterPerformance.length;
                         const performance =
                           waiter.totalRevenue >= avgRevenue * 1.2 ? 'excellent' : waiter.totalRevenue >= avgRevenue * 0.8 ? 'good' : 'needs-improvement';
@@ -671,6 +672,15 @@ const OperationalReport = () => {
                       })}
                     </tbody>
                   </Table>
+                  {reportData.waiterPerformance.length > waiterPerPage && (
+                    <div className="d-flex justify-content-end mt-3">
+                      <Pagination size="sm">
+                        <Pagination.Prev onClick={() => setWaiterPage(p => Math.max(1, p - 1))} disabled={waiterPage === 1} />
+                        <Pagination.Item active>{waiterPage}</Pagination.Item>
+                        <Pagination.Next onClick={() => setWaiterPage(p => Math.min(Math.ceil(reportData.waiterPerformance.length / waiterPerPage), p + 1))} disabled={waiterPage === Math.ceil(reportData.waiterPerformance.length / waiterPerPage)} />
+                      </Pagination>
+                    </div>
+                  )}
                 </div>
               </Card.Body>
             </Card>
@@ -698,7 +708,7 @@ const OperationalReport = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {reportData.tablePerformance.map((table, idx) => (
+                      {reportData.tablePerformance.slice((tablePage - 1) * tablePerPage, tablePage * tablePerPage).map((table, idx) => (
                         <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                           <td className="py-3 fw-bold text-dark">{table.tableNo}</td>
                           <td className="py-3 d-none d-sm-table-cell">
@@ -715,6 +725,15 @@ const OperationalReport = () => {
                       ))}
                     </tbody>
                   </Table>
+                  {reportData.tablePerformance.length > tablePerPage && (
+                    <div className="d-flex justify-content-end mt-3">
+                      <Pagination size="sm">
+                        <Pagination.Prev onClick={() => setTablePage(p => Math.max(1, p - 1))} disabled={tablePage === 1} />
+                        <Pagination.Item active>{tablePage}</Pagination.Item>
+                        <Pagination.Next onClick={() => setTablePage(p => Math.min(Math.ceil(reportData.tablePerformance.length / tablePerPage), p + 1))} disabled={tablePage === Math.ceil(reportData.tablePerformance.length / tablePerPage)} />
+                      </Pagination>
+                    </div>
+                  )}
                 </div>
               </Card.Body>
             </Card>
@@ -731,7 +750,7 @@ const OperationalReport = () => {
                       <CsLineIcons icon="activity" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column gap-3 mt-3">
-                      {reportData.peakHours.map((hour, idx) => {
+                      {reportData.peakHours.slice((hourPage - 1) * hourPerPage, hourPage * hourPerPage).map((hour, idx) => {
                         const maxOrders = Math.max(...reportData.peakHours.map((h) => h.orderCount));
                         const activityPercent = (hour.orderCount / maxOrders) * 100;
                         const level = activityPercent >= 80 ? 'danger' : activityPercent >= 50 ? 'warning' : 'info';
@@ -748,10 +767,18 @@ const OperationalReport = () => {
                         );
                       })}
                     </div>
+                    {reportData.peakHours.length > hourPerPage && (
+                      <div className="d-flex justify-content-center mt-3">
+                        <Pagination size="sm">
+                          <Pagination.Prev onClick={() => setHourPage(p => Math.max(1, p - 1))} disabled={hourPage === 1} />
+                          <Pagination.Item active>{hourPage}</Pagination.Item>
+                          <Pagination.Next onClick={() => setHourPage(p => Math.min(Math.ceil(reportData.peakHours.length / hourPerPage), p + 1))} disabled={hourPage === Math.ceil(reportData.peakHours.length / hourPerPage)} />
+                        </Pagination>
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
-
               <Col lg="6">
                 <Card className="operational-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-4">
@@ -765,21 +792,16 @@ const OperationalReport = () => {
                       {(() => {
                         if (!reportData.dayOfWeekAnalysis || reportData.dayOfWeekAnalysis.length === 0) return null;
                         const avgRevenue = reportData.dayOfWeekAnalysis.reduce((sum, d) => sum + d.totalRevenue, 0) / reportData.dayOfWeekAnalysis.length;
-
                         return reportData.dayOfWeekAnalysis.map((day, idx) => {
                           const isBest = day.totalRevenue >= avgRevenue * 1.2;
                           const isSlow = day.totalRevenue < avgRevenue * 0.8;
                           const badgeBg = isBest ? 'success' : isSlow ? 'warning' : 'light';
                           const badgeText = isBest ? 'BEST DAY' : isSlow ? 'SLOW DAY' : 'NORMAL';
                           const textClass = isBest ? 'text-white' : isSlow ? 'text-dark' : 'text-dark';
-
                           return (
                             <div key={idx} className="d-flex align-items-center justify-content-between">
                               <div className="d-flex align-items-center overflow-hidden">
-                                <div
-                                  className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0"
-                                  style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
-                                >
+                                <div className="sw-5 sh-5 rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0" style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
                                   <span className="fw-bold smaller text-muted">{day.dayName.substring(0, 1)}</span>
                                 </div>
                                 <div className="overflow-hidden">
@@ -789,9 +811,7 @@ const OperationalReport = () => {
                               </div>
                               <div className="text-end ms-2 flex-shrink-0">
                                 <div className="fw-bold text-primary smaller">{formatCurrency(day.totalRevenue)}</div>
-                                <Badge bg={badgeBg} className={`rounded-pill px-2 py-1 ${textClass}`} style={{ fontSize: '0.6rem' }}>
-                                  {badgeText}
-                                </Badge>
+                                <Badge bg={badgeBg} className={`rounded-pill px-2 py-1 ${textClass}`} style={{ fontSize: '0.6rem' }}>{badgeText}</Badge>
                               </div>
                             </div>
                           );
@@ -816,18 +836,13 @@ const OperationalReport = () => {
                   <Row className="g-3 mt-1">
                     {reportData.areaPerformance.map((area, idx) => (
                       <Col lg="4" key={idx}>
-                        <Card
-                          className="operational-report-interactive-card border-0 p-3 h-100"
-                          style={{ background: 'rgba(0,0,0,0.01) !important', border: '1px solid rgba(0,0,0,0.05) !important' }}
-                        >
+                        <Card className="operational-report-interactive-card border-0 p-3 h-100" style={{ background: 'rgba(0,0,0,0.01) !important', border: '1px solid rgba(0,0,0,0.05) !important' }}>
                           <div className="d-flex justify-content-between align-items-start mb-3">
                             <div>
                               <div className="fw-bold text-dark mb-0">{area.area}</div>
                               <div className="smaller text-muted fw-bold">{area.tableCount} Tables</div>
                             </div>
-                            <Badge bg="primary" style={{ backgroundColor: brandColor }}>
-                              {area.orderCount} orders
-                            </Badge>
+                            <Badge bg="primary" style={{ backgroundColor: brandColor }}>{area.orderCount} orders</Badge>
                           </div>
                           <div className="d-flex justify-content-between mb-1">
                             <span className="smaller text-muted fw-bold">Revenue:</span>

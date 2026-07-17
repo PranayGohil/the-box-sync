@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar, Modal, Toast, ToastContainer } from 'react-bootstrap';
+import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar, Modal, Toast, ToastContainer, Pagination } from 'react-bootstrap';
 import axios from 'axios';
 import { format } from 'date-fns';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -24,8 +24,20 @@ const FinancialReport = () => {
   ];
 
   const [loading, setLoading] = useState(false);
+  const [dailyPage, setDailyPage] = useState(1);
+  const dailyPerPage = 10;
+  const [voidPage, setVoidPage] = useState(1);
+  const voidPagePerPage = 10;
+  const [taxPage, setTaxPage] = useState(1);
+  const taxPagePerPage = 10;
+  const [paymentPage, setPaymentPage] = useState(1);
+  const paymentPagePerPage = 10;
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
+  const [invPage, setInvPage] = useState(1);
+  const invPerPage = 10;
+  const [wastePage, setWastePage] = useState(1);
+  const wastePerPage = 10;
 
   const { currentUser, activePlans } = useContext(AuthContext);
 
@@ -94,7 +106,7 @@ const FinancialReport = () => {
 
   useEffect(() => {
     fetchFinancialReport();
-  }, []);
+  }, [startDate, endDate]);
 
   const sortedDailyFinancials = reportData
     ? [...reportData.dailyFinancials].sort((a, b) => {
@@ -115,8 +127,8 @@ const FinancialReport = () => {
 
       allData.push(['FINANCIAL AUDIT REPORT']);
       allData.push(['Company:', COMPANY_NAME]);
-      allData.push(['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`]);
-      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')]);
+      allData.push(['Period:', `${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`]);
+      allData.push(['Generated:', format(new Date(), 'dd/MM/yyyy hh:mm a')]);
       allData.push([]);
 
       if (exportOptions.includeSummary) {
@@ -169,7 +181,7 @@ const FinancialReport = () => {
         allData.push(['Date', 'Bill Number', 'Vendor', 'Category', 'Total Amount', 'Status']);
         reportData.inventoryPurchases.forEach((inv) => {
           allData.push([
-            inv.bill_date ? format(new Date(inv.bill_date), 'dd-MM-yyyy') : format(new Date(inv.request_date), 'dd-MM-yyyy'),
+            inv.bill_date ? format(new Date(inv.bill_date), 'dd/MM/yyyy') : format(new Date(inv.request_date), 'dd/MM/yyyy'),
             inv.bill_number || '—',
             inv.vendor_name || '—',
             inv.category || '—',
@@ -187,7 +199,7 @@ const FinancialReport = () => {
         allData.push(['Date', 'Item Name', 'Wastage Type', 'Quantity', 'Reason']);
         reportData.wastageLogs.forEach((w) => {
           allData.push([
-            format(new Date(w.date), 'dd-MM-yyyy'),
+            format(new Date(w.date), 'dd/MM/yyyy'),
             w.item_name || '—',
             w.wastage_type || '—',
             `${w.quantity || 0} ${w.unit || ''}`,
@@ -268,7 +280,7 @@ const FinancialReport = () => {
       doc.text('Financial Audit Report', 105, 15, { align: 'center' });
       doc.setFontSize(10);
       doc.text(COMPANY_NAME, 105, 22, { align: 'center' });
-      doc.text(`Period: ${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`, 105, 28, { align: 'center' });
+      doc.text(`Period: ${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`, 105, 28, { align: 'center' });
 
       let currentY = 35;
 
@@ -310,7 +322,7 @@ const FinancialReport = () => {
           startY: currentY + 5,
           head: [['Date', 'Bill Number', 'Vendor', 'Category', 'Total Amount', 'Status']],
           body: reportData.inventoryPurchases.map((inv) => [
-            inv.bill_date ? format(new Date(inv.bill_date), 'dd-MM-yyyy') : format(new Date(inv.request_date), 'dd-MM-yyyy'),
+            inv.bill_date ? format(new Date(inv.bill_date), 'dd/MM/yyyy') : format(new Date(inv.request_date), 'dd/MM/yyyy'),
             inv.bill_number || '—',
             inv.vendor_name || '—',
             inv.category || '—',
@@ -336,7 +348,7 @@ const FinancialReport = () => {
           startY: currentY + 5,
           head: [['Date', 'Item Name', 'Wastage Type', 'Quantity', 'Reason']],
           body: reportData.wastageLogs.map((w) => [
-            format(new Date(w.date), 'dd-MM-yyyy'),
+            format(new Date(w.date), 'dd/MM/yyyy'),
             w.item_name || '—',
             w.wastage_type || '—',
             `${w.quantity || 0} ${w.unit || ''}`,
@@ -528,20 +540,15 @@ const FinancialReport = () => {
                 <CsLineIcons icon="filter" size="18" style={{ color: brandColor }} />
               </div>
               <Row className="g-3 align-items-end mt-1">
-                <Col xs={12} md={5}>
+                <Col xs={12} md={6}>
                   <Form.Label className="financial-report-stat-label mb-2">Audit Start Date</Form.Label>
                   <Form.Control type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                 </Col>
-                <Col xs={12} md={5}>
+                <Col xs={12} md={6}>
                   <Form.Label className="financial-report-stat-label mb-2">Audit End Date</Form.Label>
                   <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                 </Col>
-                <Col xs={12} md={2}>
-                  <Button className="financial-report-custom-btn-outline w-100" onClick={fetchFinancialReport} disabled={loading}>
-                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                    {loading ? 'Processing...' : 'Generate'}
-                  </Button>
-                </Col>
+                
               </Row>
             </Card.Body>
           </Card>
@@ -644,8 +651,19 @@ const FinancialReport = () => {
                         <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: stat.bg }}>
                           <CsLineIcons icon={stat.icon} size="24" style={{ color: stat.color }} />
                         </div>
-                      </div>
-                    </Card.Body>
+  
+                    </div>
+                    {reportData.inventoryPurchases && Math.ceil(reportData.inventoryPurchases.length / invPerPage) > 1 && (
+                        <div className="d-flex justify-content-center mt-4">
+                          <Pagination>
+                            <Pagination.Prev onClick={() => setInvPage(p => Math.max(1, p - 1))} disabled={invPage === 1} />
+                            <Pagination.Item active>{invPage}</Pagination.Item>
+                            <Pagination.Next onClick={() => setInvPage(p => Math.min(Math.ceil(reportData.inventoryPurchases.length / invPerPage), p + 1))} disabled={invPage === Math.ceil(reportData.inventoryPurchases.length / invPerPage)} />
+                          </Pagination>
+                        </div>
+                    )}
+                  </Card.Body>
+
                   </Card>
                 </Col>
               ))}
@@ -697,8 +715,19 @@ const FinancialReport = () => {
                         <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: stat.bg }}>
                           <CsLineIcons icon={stat.icon} size="24" style={{ color: stat.color }} />
                         </div>
-                      </div>
-                    </Card.Body>
+  
+                    </div>
+                    {reportData.wastageLogs && Math.ceil(reportData.wastageLogs.length / wastePerPage) > 1 && (
+                        <div className="d-flex justify-content-center mt-4">
+                          <Pagination>
+                            <Pagination.Prev onClick={() => setWastePage(p => Math.max(1, p - 1))} disabled={wastePage === 1} />
+                            <Pagination.Item active>{wastePage}</Pagination.Item>
+                            <Pagination.Next onClick={() => setWastePage(p => Math.min(Math.ceil(reportData.wastageLogs.length / wastePerPage), p + 1))} disabled={wastePage === Math.ceil(reportData.wastageLogs.length / wastePerPage)} />
+                          </Pagination>
+                        </div>
+                    )}
+                  </Card.Body>
+
                   </Card>
                 </Col>
               ))}
@@ -883,7 +912,7 @@ const FinancialReport = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedDailyFinancials.map((day, idx) => (
+                      {sortedDailyFinancials.slice((dailyPage - 1) * dailyPerPage, dailyPage * dailyPerPage).map((day, idx) => (
                         <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                           <td className="py-3 fw-bold text-dark">{`${day.date.day}-${day.date.month}-${day.date.year}`}</td>
                           <td className="py-3 text-end fw-bold text-muted smaller">{formatCurrency(day.grossRevenue)}</td>
@@ -916,7 +945,7 @@ const FinancialReport = () => {
                 </div>
 
                 <div className="d-md-none d-flex flex-column gap-3 mt-3">
-                  {sortedDailyFinancials.map((day, idx) => (
+                  {sortedDailyFinancials.slice((dailyPage - 1) * dailyPerPage, dailyPage * dailyPerPage).map((day, idx) => (
                     <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <span className="fw-bold text-dark fs-6">{`${day.date.day}-${day.date.month}-${day.date.year}`}</span>
@@ -967,6 +996,15 @@ const FinancialReport = () => {
                     </div>
                   </div>
                 </div>
+                {sortedDailyFinancials.length > dailyPerPage && (
+                  <div className="d-flex justify-content-center mt-4">
+                    <Pagination size="sm">
+                      <Pagination.Prev onClick={() => setDailyPage(p => Math.max(1, p - 1))} disabled={dailyPage === 1} />
+                      <Pagination.Item active>{dailyPage}</Pagination.Item>
+                      <Pagination.Next onClick={() => setDailyPage(p => Math.min(Math.ceil(sortedDailyFinancials.length / dailyPerPage), p + 1))} disabled={dailyPage === Math.ceil(sortedDailyFinancials.length / dailyPerPage)} />
+                    </Pagination>
+                  </div>
+                )}
               </Card.Body>
             </Card>
 
@@ -993,10 +1031,10 @@ const FinancialReport = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {reportData.inventoryPurchases.map((inv, idx) => (
+                        {reportData.inventoryPurchases.slice((invPage - 1) * invPerPage, invPage * invPerPage).map((inv, idx) => (
                           <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                             <td className="py-3 fw-bold text-dark">
-                              {inv.bill_date ? format(new Date(inv.bill_date), 'dd-MM-yyyy') : format(new Date(inv.request_date), 'dd-MM-yyyy')}
+                              {inv.bill_date ? format(new Date(inv.bill_date), 'dd/MM/yyyy') : format(new Date(inv.request_date), 'dd/MM/yyyy')}
                             </td>
                             <td className="py-3 fw-bold text-muted smaller">{inv.bill_number || '—'}</td>
                             <td className="py-3 fw-bold text-dark">{inv.vendor_name || '—'}</td>
@@ -1017,6 +1055,15 @@ const FinancialReport = () => {
                       </tbody>
                     </Table>
                   </div>
+                  {reportData.inventoryPurchases.length > invPerPage && (
+                    <div className="d-flex justify-content-center mt-4">
+                      <Pagination size="sm">
+                        <Pagination.Prev onClick={() => setInvPage(p => Math.max(1, p - 1))} disabled={invPage === 1} />
+                        <Pagination.Item active>{invPage}</Pagination.Item>
+                        <Pagination.Next onClick={() => setInvPage(p => Math.min(Math.ceil(reportData.inventoryPurchases.length / invPerPage), p + 1))} disabled={invPage === Math.ceil(reportData.inventoryPurchases.length / invPerPage)} />
+                      </Pagination>
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             )}
@@ -1043,9 +1090,9 @@ const FinancialReport = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {reportData.wastageLogs.map((w, idx) => (
+                        {reportData.wastageLogs.slice((wastePage - 1) * wastePerPage, wastePage * wastePerPage).map((w, idx) => (
                           <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
-                            <td className="py-3 fw-bold text-dark">{format(new Date(w.date), 'dd-MM-yyyy')}</td>
+                            <td className="py-3 fw-bold text-dark">{format(new Date(w.date), 'dd/MM/yyyy')}</td>
                             <td className="py-3 fw-bold text-dark">{w.item_name || '—'}</td>
                             <td className="py-3 text-capitalize text-danger fw-bold smaller">{w.wastage_type || '—'}</td>
                             <td className="py-3 text-end fw-bold text-dark">{`${w.quantity || 0} ${w.unit || ''}`}</td>
@@ -1055,6 +1102,15 @@ const FinancialReport = () => {
                       </tbody>
                     </Table>
                   </div>
+                  {reportData.wastageLogs.length > wastePerPage && (
+                    <div className="d-flex justify-content-center mt-4">
+                      <Pagination size="sm">
+                        <Pagination.Prev onClick={() => setWastePage(p => Math.max(1, p - 1))} disabled={wastePage === 1} />
+                        <Pagination.Item active>{wastePage}</Pagination.Item>
+                        <Pagination.Next onClick={() => setWastePage(p => Math.min(Math.ceil(reportData.wastageLogs.length / wastePerPage), p + 1))} disabled={wastePage === Math.ceil(reportData.wastageLogs.length / wastePerPage)} />
+                      </Pagination>
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Card, Col, Row, Image, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Button, Form, Card, Col, Row, Image, Spinner, Alert, Badge, Modal } from 'react-bootstrap';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import HtmlHead from 'components/html-head/HtmlHead';
 import axios from 'axios';
@@ -36,6 +36,7 @@ const Profile = () => {
     email: '',
     mobile: '',
     fssai_no: '',
+    gst_no: '',
     address: '',
     country: '',
     state: '',
@@ -45,6 +46,10 @@ const Profile = () => {
 
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
+  const [complianceModal, setComplianceModal] = useState({ show: false, type: null }); // type: 'gst' | 'fssai'
+  const [complianceValue, setComplianceValue] = useState('');
+  const [complianceError, setComplianceError] = useState('');
+  const [complianceSaving, setComplianceSaving] = useState(false);
   const [cropperState, setCropperState] = useState({ show: false, imageSrc: '', aspect: undefined });
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
@@ -104,6 +109,7 @@ const Profile = () => {
           email: data.email || '',
           mobile: data.mobile ? String(data.mobile) : '',
           fssai_no: data.fssai_no || '',
+          gst_no: data.gst_no || '',
           address: data.address || '',
           country: data.country || '',
           state: data.state || '',
@@ -238,6 +244,63 @@ const Profile = () => {
     setLogoPreview('');
   };
 
+  
+  const openComplianceModal = (type) => {
+    setComplianceValue(type === 'gst' ? profile.gst_no : profile.fssai_no);
+    setComplianceError('');
+    setComplianceModal({ show: true, type });
+  };
+
+  const handleComplianceSave = async () => {
+    const { type } = complianceModal;
+    setComplianceSaving(true);
+    setComplianceError('');
+
+    if (type === 'gst') {
+      const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+      if (complianceValue && !gstRegex.test(complianceValue)) {
+        setComplianceError('GST number format is invalid (e.g. 22AAAAA0000A1Z5)');
+        setComplianceSaving(false);
+        return;
+      }
+    }
+    if (type === 'fssai') {
+      if (complianceValue && !/^[0-9]{14}$/.test(complianceValue)) {
+        setComplianceError('FSSAI number must be exactly 14 digits');
+        setComplianceSaving(false);
+        return;
+      }
+    }
+
+    try {
+      if (type === 'gst') {
+        await axios.put(
+          `${process.env.REACT_APP_API}/user/update-tax`,
+          { gst_no: complianceValue, taxInfo: {} },
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        setProfile((prev) => ({ ...prev, gst_no: complianceValue }));
+      } else {
+        const formData = new FormData();
+        formData.append('fssai_no', complianceValue);
+        await axios.put(`${process.env.REACT_APP_API}/user/update`, formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        setProfile((prev) => ({ ...prev, fssai_no: complianceValue }));
+      }
+      toast.success(`${type === 'gst' ? 'GST Number' : 'FSSAI Licence'} updated successfully!`);
+      setComplianceModal({ show: false, type: null });
+    } catch (err) {
+      console.error(`Failed to update ${type}`, err);
+      setComplianceError(err.response?.data?.message || `Failed to update ${type}.`);
+    } finally {
+      setComplianceSaving(false);
+    }
+  };
+
   const handleEditSubmit = async (values, { setSubmitting }) => {
     setSaving(true);
     try {
@@ -246,7 +309,7 @@ const Profile = () => {
       formData.append('name', values.name);
       formData.append('email', values.email);
       formData.append('mobile', values.mobile);
-      formData.append('fssai_no', values.fssai_no);
+      
       formData.append('address', values.address);
       formData.append('country', values.country);
       formData.append('state', values.state);
@@ -344,6 +407,7 @@ const Profile = () => {
           email: profile.email,
           mobile: profile.mobile,
           fssai_no: profile.fssai_no,
+            gst_no: profile.gst_no,
           address: profile.address,
           country: profile.country,
           state: profile.state,
@@ -480,15 +544,15 @@ const Profile = () => {
                         <Form.Group>
                           <Form.Label className="small fw-bold opacity-75">Email Address *</Form.Label>
                           <Form.Control
-                            type="email"
-                            name="email"
-                            value={values.email}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            disabled={!editMode || saving}
-                            isInvalid={touched.email && errors.email}
-                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
-                          />
+                              type="email"
+                              name="email"
+                              value={values.email}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                              disabled={true}
+                              isInvalid={touched.email && errors.email}
+                              className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : 'bg-light text-muted'}
+                            />
                           <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
@@ -508,22 +572,103 @@ const Profile = () => {
                           <Form.Control.Feedback type="invalid">{errors.mobile}</Form.Control.Feedback>
                         </Form.Group>
                       </Col>
+                      
                       <Col md={12}>
-                        <Form.Group>
-                          <Form.Label className="small fw-bold opacity-75">FSSAI Registration No. *</Form.Label>
-                          <Form.Control
-                            type="text"
-                            name="fssai_no"
-                            value={values.fssai_no}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            disabled={!editMode || saving}
-                            isInvalid={touched.fssai_no && errors.fssai_no}
-                            className={!editMode ? 'bg-light border-0 px-3 py-2 fw-bold' : ''}
-                          />
-                          <Form.Control.Feedback type="invalid">{errors.fssai_no}</Form.Control.Feedback>
-                        </Form.Group>
+                        <Row className="g-3 mt-1">
+                          {/* GST Card */}
+                          <Col md={6} xs={12}>
+                            <div
+                              className="p-3 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
+                              style={{
+                                background: profile.gst_no ? 'rgba(34, 197, 94, 0.06)' : 'rgba(249, 115, 22, 0.06)',
+                                border: `1.5px dashed ${profile.gst_no ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.35)'}`,
+                              }}
+                            >
+                              <div className="d-flex align-items-center gap-3">
+                                <div
+                                  className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                  style={{
+                                    width: 42,
+                                    height: 42,
+                                    background: profile.gst_no ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.12)',
+                                  }}
+                                >
+                                  <CsLineIcons icon="file-text" size="20" style={{ color: profile.gst_no ? '#22c55e' : '#f97316' }} />
+                                </div>
+                                <div className="text-truncate">
+                                  <div className="fw-bold text-dark small mb-0">GST Number</div>
+                                  {profile.gst_no ? (
+                                    <div className="text-muted" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                                      {profile.gst_no}
+                                    </div>
+                                  ) : (
+                                    <Badge bg="warning" text="dark" className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>
+                                      Not Added
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="none"
+                                className="profile-custom-btn-outline px-3 py-1 flex-shrink-0"
+                                style={{ fontSize: '0.78rem' }}
+                                onClick={() => openComplianceModal('gst')}
+                              >
+                                <CsLineIcons icon={profile.gst_no ? 'edit' : 'plus'} size="14" className="me-1" />
+                                {profile.gst_no ? 'Edit' : 'Add GST'}
+                              </Button>
+                            </div>
+                          </Col>
+
+                          {/* FSSAI Licence Card */}
+                          <Col md={6} xs={12}>
+                            <div
+                              className="p-3 rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
+                              style={{
+                                background: profile.fssai_no ? 'rgba(34, 197, 94, 0.06)' : 'rgba(249, 115, 22, 0.06)',
+                                border: `1.5px dashed ${profile.fssai_no ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.35)'}`,
+                              }}
+                            >
+                              <div className="d-flex align-items-center gap-3">
+                                <div
+                                  className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                  style={{
+                                    width: 42,
+                                    height: 42,
+                                    background: profile.fssai_no ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.12)',
+                                  }}
+                                >
+                                  <CsLineIcons icon="tag" size="20" style={{ color: profile.fssai_no ? '#22c55e' : '#f97316' }} />
+                                </div>
+                                <div className="text-truncate">
+                                  <div className="fw-bold text-dark small mb-0">FSSAI Licence</div>
+                                  {profile.fssai_no ? (
+                                    <div className="text-muted" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                                      {profile.fssai_no}
+                                    </div>
+                                  ) : (
+                                    <Badge bg="warning" text="dark" className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>
+                                      Not Added
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="none"
+                                className="profile-custom-btn-outline px-3 py-1 flex-shrink-0"
+                                style={{ fontSize: '0.78rem' }}
+                                onClick={() => openComplianceModal('fssai')}
+                              >
+                                <CsLineIcons icon={profile.fssai_no ? 'edit' : 'plus'} size="14" className="me-1" />
+                                {profile.fssai_no ? 'Edit' : 'Add FSSAI'}
+                              </Button>
+                            </div>
+                          </Col>
+                        </Row>
                       </Col>
+
                       {editMode && (values.email !== profile.email || values.mobile !== profile.mobile) && (
                         <Col md={12}>
                           <Form.Group className="mt-2 animate__animated animate__fadeIn">
@@ -743,6 +888,75 @@ const Profile = () => {
         onCropComplete={handleCropComplete}
         initialAspect={cropperState.aspect}
       />
+    
+      {/* Compliance Add/Edit Modal */}
+      <Modal
+        show={complianceModal.show}
+        onHide={() => !complianceSaving && setComplianceModal({ show: false, type: null })}
+        centered
+        contentClassName="border-0 shadow-lg"
+        style={{ borderRadius: '1.5rem' }}
+      >
+        <Modal.Header className="border-0 pb-0 px-4 pt-4" closeButton={!complianceSaving}>
+          <Modal.Title className="fw-bold d-flex align-items-center gap-2" style={{ color: '#1ea8e7' }}>
+            <CsLineIcons icon={complianceModal.type === 'gst' ? 'file-text' : 'tag'} size="22" style={{ color: '#1ea8e7' }} />
+            {complianceModal.type === 'gst'
+              ? profile.gst_no
+                ? 'Edit GST Number'
+                : 'Add GST Number'
+              : profile.fssai_no
+              ? 'Edit FSSAI Licence'
+              : 'Add FSSAI Licence'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="px-4 pt-3 pb-1">
+          <p className="text-muted small mb-3">
+            {complianceModal.type === 'gst'
+              ? 'Enter your 15-digit GST Identification Number (GSTIN).'
+              : 'Enter your 14-digit FSSAI Registration / Licence Number.'}
+          </p>
+          <Form.Group>
+            <Form.Label className="small fw-bold opacity-75">{complianceModal.type === 'gst' ? 'GST Number' : 'FSSAI Licence No.'}</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder={complianceModal.type === 'gst' ? 'e.g. 22AAAAA0000A1Z5' : 'e.g. 12345678901234'}
+              value={complianceValue}
+              onChange={(e) => {
+                setComplianceValue(e.target.value.toUpperCase());
+                setComplianceError('');
+              }}
+              disabled={complianceSaving}
+              maxLength={complianceModal.type === 'gst' ? 15 : 14}
+              isInvalid={!!complianceError}
+              autoFocus
+            />
+            {complianceError && <Form.Control.Feedback type="invalid">{complianceError}</Form.Control.Feedback>}
+          </Form.Group>
+          {complianceModal.type === 'fssai' && <small className="text-muted d-block mt-2">Leave blank to remove existing FSSAI number.</small>}
+          {complianceModal.type === 'gst' && <small className="text-muted d-block mt-2">Leave blank to remove existing GST number.</small>}
+        </Modal.Body>
+        <Modal.Footer className="border-0 px-4 pt-2 pb-4 d-flex gap-2">
+          <Button
+            variant="none"
+            className="profile-custom-btn-outline px-4"
+            onClick={() => setComplianceModal({ show: false, type: null })}
+            disabled={complianceSaving}
+          >
+            <CsLineIcons icon="close" size="16" className="me-1" />
+            Cancel
+          </Button>
+          <Button variant="none" className="profile-custom-btn-outline px-5" onClick={handleComplianceSave} disabled={complianceSaving}>
+            {complianceSaving ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" className="me-2" />
+                Saving...
+              </>
+            ) : (
+              'Save Details'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
