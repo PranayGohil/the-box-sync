@@ -235,7 +235,9 @@ const getOrderData = async (req, res) => {
 
       if (customerData) {
         const customerObj = customerData.toObject();
-        if (!customerObj.address && Array.isArray(customerObj.addresses) && customerObj.addresses.length > 0) {
+        if (orderData.customer_address) {
+          customerObj.address = orderData.customer_address;
+        } else if (!customerObj.address && Array.isArray(customerObj.addresses) && customerObj.addresses.length > 0) {
           const defaultAddr = customerObj.addresses.find(a => a.is_default) || customerObj.addresses[0];
           customerObj.address = `${defaultAddr.address}, ${defaultAddr.city}, ${defaultAddr.pincode}`;
         }
@@ -1144,6 +1146,7 @@ const deliveryController = async (req, res) => {
       orderInfo.customer_id = savedCustomer._id;
       if (customerInfo.phone) orderInfo.customer_phone = customerInfo.phone;
       if (customerInfo.name) orderInfo.customer_name = customerInfo.name;
+      if (customerInfo.address) orderInfo.customer_address = customerInfo.address;
     } catch (error) {
       console.error("Error handling customer:", error);
       return res
@@ -1533,6 +1536,7 @@ const deliveryFromSiteController = async (req, res) => {
       orderInfo.customer_id = savedCustomer._id;
       if (customerInfo.phone) orderInfo.customer_phone = customerInfo.phone;
       if (customerInfo.name) orderInfo.customer_name = customerInfo.name;
+      if (customerInfo.address) orderInfo.customer_address = customerInfo.address;
     } catch (error) {
       console.error("Error handling customer:", error);
       return res

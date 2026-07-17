@@ -321,7 +321,7 @@ export default function Profile() {
     try {
       const token = localStorage.getItem('ember-token');
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-      const res = await fetch(`${API_URL}/web-customer/get-orders/${user._id}`, {
+      const res = await fetch(`${API_URL}/web-customer/get-orders/${user._id}?restaurantCode=${restaurantCode}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();

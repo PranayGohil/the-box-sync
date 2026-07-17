@@ -70,6 +70,9 @@ const orderSchema = new Schema({
   customer_phone: {
     type: String,
   },
+  customer_address: {
+    type: String,
+  },
   total_persons: {
     type: String,
   },

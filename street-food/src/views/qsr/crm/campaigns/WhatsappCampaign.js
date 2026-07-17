@@ -374,6 +374,10 @@ const WhatsappCampaign = () => {
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomers, setSelectedCustomers] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCustomers, setTotalCustomers] = useState(0);
 
   // Filters state
   const [showFilters, setShowFilters] = useState(false);
@@ -525,8 +529,8 @@ const WhatsappCampaign = () => {
     setLoadingCustomers(true);
     try {
       const res = await getCustomerList({
-        page: 1,
-        limit: 200,
+        page,
+        limit,
         search: searchTerm,
         sortBy: 'total_orders',
         sortOrder: 'desc',
@@ -540,6 +544,8 @@ const WhatsappCampaign = () => {
       });
       if (res.data?.success) {
         setCustomers(res.data.data || []);
+        setTotalPages(res.data.pages || 1);
+        setTotalCustomers(res.data.total || 0);
       }
     } catch {
       toast.error('Could not load customers.');
@@ -548,6 +554,8 @@ const WhatsappCampaign = () => {
       fetchRef.current = false;
     }
   }, [
+    page,
+    limit,
     searchTerm,
     filters.fromDate,
     filters.toDate,
@@ -563,20 +571,27 @@ const WhatsappCampaign = () => {
   const handleSearch = () => {
     setSearchTerm(searchInput.trim());
     setSelectedCustomers([]);
+    setPage(1);
   };
   const handleSearchKeyDown = (e) => {
     if (e.key === 'Enter') handleSearch();
-    if (e.key === 'Escape') { setSearchInput(''); setSearchTerm(''); }
+    if (e.key === 'Escape') {
+      setSearchInput('');
+      setSearchTerm('');
+      setPage(1);
+    }
   };
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     setSelectedCustomers([]);
+    setPage(1);
   };
 
   const handlePresetChange = (preset) => {
     setLoyaltyPreset(preset);
     setSelectedCustomers([]);
+    setPage(1);
     if (preset === 'all') {
       setFilters((prev) => ({ ...prev, ordersMin: '', ordersMax: '', spendMin: '', spendMax: '' }));
     } else if (preset === 'vip') {
@@ -600,6 +615,7 @@ const WhatsappCampaign = () => {
       recency: '',
     });
     setSelectedCustomers([]);
+    setPage(1);
   };
 
   const getActiveFilterCount = () => {
@@ -1067,7 +1083,7 @@ const WhatsappCampaign = () => {
                         style={{ fontSize: '0.78rem', fontWeight: 600 }}
                         onClick={handleSelectAll}
                       >
-                        Select All
+                        Select Page
                       </Button>
                     )}
                     {selectedCustomers.length > 0 && (
@@ -1244,6 +1260,73 @@ const WhatsappCampaign = () => {
                   })
                 )}
               </div>
+
+              {/* Pagination Controls */}
+              {!loadingCustomers && customers.length > 0 && (
+                <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-3 pt-3 border-top gap-2">
+                  <div className="text-muted small" style={{ fontSize: '0.78rem' }}>
+                    Showing {totalCustomers > 0 ? (page - 1) * limit + 1 : 0} to {Math.min(page * limit, totalCustomers)} of {totalCustomers}
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <Form.Select
+                      size="sm"
+                      value={limit}
+                      onChange={(e) => {
+                        setLimit(Number(e.target.value));
+                        setPage(1);
+                      }}
+                      style={{ width: '85px', fontSize: '0.7rem', height: '30px', borderRadius: '6px', paddingLeft: '6px', paddingRight: '18px' }}
+                    >
+                      <option value={5}>5 Rows</option>
+                      <option value={10}>10 Rows</option>
+                      <option value={20}>20 Rows</option>
+                      <option value={50}>50 Rows</option>
+                      <option value={100}>100 Rows</option>
+                    </Form.Select>
+                    <div className="d-flex gap-1 align-items-center">
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        disabled={page === 1}
+                        onClick={() => setPage(1)}
+                        style={{ padding: '2px 8px', fontSize: '0.78rem', borderRadius: '6px' }}
+                      >
+                        First
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        disabled={page === 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        style={{ padding: '2px 8px', fontSize: '0.78rem', borderRadius: '6px' }}
+                      >
+                        Prev
+                      </Button>
+                      <span className="px-2 small fw-bold" style={{ fontSize: '0.78rem', minWidth: '45px', textAlign: 'center' }}>
+                        {page} / {totalPages}
+                      </span>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        disabled={page === totalPages}
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        style={{ padding: '2px 8px', fontSize: '0.78rem', borderRadius: '6px' }}
+                      >
+                        Next
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(totalPages)}
+                        style={{ padding: '2px 8px', fontSize: '0.78rem', borderRadius: '6px' }}
+                      >
+                        Last
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <hr className="section-divider" />
 
