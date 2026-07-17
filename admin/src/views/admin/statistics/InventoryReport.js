@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Col, Row, Card, Form, Spinner, Badge, ProgressBar, Table, Modal } from 'react-bootstrap';
+import { Button, Col, Row, Card, Form, Spinner, Badge, ProgressBar, Table, Modal, Pagination } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -92,6 +92,10 @@ const InventoryReport = () => {
   const [toDate, setToDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [reportData, setReportData] = useState(null);
   const [statsData, setStatsData] = useState(null);
+  const [itemPage, setItemPage] = useState(1);
+  const itemPerPage = 10;
+  const [topItemsPage, setTopItemsPage] = useState(1);
+  const topItemsPerPage = 10;
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [activePreset, setActivePreset] = useState('7 Days');
@@ -192,8 +196,8 @@ const InventoryReport = () => {
 
       allData.push(['UNIFIED INVENTORY HUB REPORT']);
       allData.push(['Company:', COMPANY_NAME]);
-      allData.push(['Period:', `${format(new Date(fromDate), 'dd MMM yyyy')} to ${format(new Date(toDate), 'dd MMM yyyy')}`]);
-      allData.push(['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')]);
+      allData.push(['Period:', `${format(new Date(fromDate), 'dd/MM/yyyy')} to ${format(new Date(toDate), 'dd/MM/yyyy')}`]);
+      allData.push(['Generated:', format(new Date(), 'dd/MM/yyyy hh:mm a')]);
       allData.push([]);
 
       if (exportOptions.includeOperations) {
@@ -299,7 +303,7 @@ const InventoryReport = () => {
       doc.text('Unified Inventory Hub Report', 105, 15, { align: 'center' });
       doc.setFontSize(10);
       doc.text(COMPANY_NAME, 105, 22, { align: 'center' });
-      doc.text(`Period: ${format(new Date(fromDate), 'dd MMM yyyy')} to ${format(new Date(toDate), 'dd MMM yyyy')}`, 105, 28, { align: 'center' });
+      doc.text(`Period: ${format(new Date(fromDate), 'dd/MM/yyyy')} to ${format(new Date(toDate), 'dd/MM/yyyy')}`, 105, 28, { align: 'center' });
 
       let currentY = 35;
 
@@ -561,12 +565,7 @@ const InventoryReport = () => {
                     }))}
                   />
                 </Col>
-                <Col xs={12} md={4} lg={2} className="d-flex align-items-end">
-                  <Button className="inventory-report-custom-btn-outline w-100" onClick={fetchUnifiedReport} disabled={loading}>
-                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                    {loading ? 'Processing...' : 'Generate Hub'}
-                  </Button>
-                </Col>
+                
               </Row>
             </Card.Body>
           </Card>
@@ -637,8 +636,19 @@ const InventoryReport = () => {
                         <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: c.bg }}>
                           <CsLineIcons icon={c.icon} size="24" style={{ color: c.color }} />
                         </div>
-                      </div>
-                    </Card.Body>
+
+                    </div>
+                    {reportData.itemSummary && Math.ceil(reportData.itemSummary.length / itemPerPage) > 1 && (
+                        <div className="d-flex justify-content-center mt-4">
+                          <Pagination>
+                            <Pagination.Prev onClick={() => setItemPage(p => Math.max(1, p - 1))} disabled={itemPage === 1} />
+                            <Pagination.Item active>{itemPage}</Pagination.Item>
+                            <Pagination.Next onClick={() => setItemPage(p => Math.min(Math.ceil(reportData.itemSummary.length / itemPerPage), p + 1))} disabled={itemPage === Math.ceil(reportData.itemSummary.length / itemPerPage)} />
+                          </Pagination>
+                        </div>
+                    )}
+                  </Card.Body>
+
                   </Card>
                 </Col>
               ))}
@@ -680,8 +690,19 @@ const InventoryReport = () => {
                         <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: c.bg }}>
                           <CsLineIcons icon={c.icon} size="24" style={{ color: c.color }} />
                         </div>
+
                       </div>
-                    </Card.Body>
+                    {statsData.topItemsByQuantity && Math.ceil(statsData.topItemsByQuantity.length / topItemsPerPage) > 1 && (
+                        <div className="d-flex justify-content-center mt-4">
+                          <Pagination>
+                            <Pagination.Prev onClick={() => setTopItemsPage(p => Math.max(1, p - 1))} disabled={topItemsPage === 1} />
+                            <Pagination.Item active>{topItemsPage}</Pagination.Item>
+                            <Pagination.Next onClick={() => setTopItemsPage(p => Math.min(Math.ceil(statsData.topItemsByQuantity.length / topItemsPerPage), p + 1))} disabled={topItemsPage === Math.ceil(statsData.topItemsByQuantity.length / topItemsPerPage)} />
+                          </Pagination>
+                        </div>
+                    )}
+                  </Card.Body>
+
                   </Card>
                 </Col>
               ))}
@@ -836,7 +857,7 @@ const InventoryReport = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {reportData.itemSummary.slice(0, 10).map((item, idx) => (
+                          {reportData.itemSummary.slice((itemPage - 1) * itemPerPage, itemPage * itemPerPage).map((item, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                               <td className="py-3">
                                 <div className="d-flex align-items-center gap-2">
@@ -869,7 +890,7 @@ const InventoryReport = () => {
 
                     {/* Mobile Layout */}
                     <div className="d-md-none d-flex flex-column gap-3 mt-2">
-                      {reportData.itemSummary.slice(0, 10).map((item, idx) => (
+                      {reportData.itemSummary.slice((itemPage - 1) * itemPerPage, itemPage * itemPerPage).map((item, idx) => (
                         <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
                           <div className="d-flex justify-content-between align-items-center mb-3">
                             <div className="d-flex align-items-center gap-2">
@@ -921,7 +942,7 @@ const InventoryReport = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {statsData.topItemsByQuantity.slice(0, 10).map((item, idx) => (
+                          {statsData.topItemsByQuantity.slice((topItemsPage - 1) * topItemsPerPage, topItemsPage * topItemsPerPage).map((item, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                               <td className="py-3">
                                 <div className="d-flex align-items-center gap-3">
@@ -945,7 +966,7 @@ const InventoryReport = () => {
 
                     {/* Mobile Layout */}
                     <div className="d-md-none d-flex flex-column gap-3 mt-2">
-                      {statsData.topItemsByQuantity.slice(0, 10).map((item, idx) => (
+                      {statsData.topItemsByQuantity.slice((topItemsPage - 1) * topItemsPerPage, topItemsPage * topItemsPerPage).map((item, idx) => (
                         <div key={idx} className="p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
                           <div className="d-flex justify-content-between align-items-center mb-3">
                             <div className="d-flex align-items-center gap-2">

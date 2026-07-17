@@ -23,6 +23,8 @@ const createPanelUserSchema = Joi.object({
   adminPassword: Joi.string().optional().messages({
     "any.required": "Admin password is required",
   }),
+  accountId: Joi.string().optional(),
+  cashier_type: Joi.string().optional(),
 });
 
 const changePanelPasswordSchema = Joi.object({
@@ -33,6 +35,7 @@ const changePanelPasswordSchema = Joi.object({
     "string.min": "New password must be at least 6 characters",
     "any.required": "New password is required",
   }),
+  accountId: Joi.string().optional(),
 });
 
 module.exports = {

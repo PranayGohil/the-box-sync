@@ -303,7 +303,7 @@ const PrintConfig = () => {
 
                     <Col xs="12" md="6" className="mb-3">
                       <Form.Group>
-                        <Form.Label>Header Note (Printed under Header)</Form.Label>
+                        <Form.Label>Header Note</Form.Label>
                         <Form.Control
                           type="text"
                           name="headerNote"
@@ -318,7 +318,7 @@ const PrintConfig = () => {
 
                     <Col xs="12" md="6" className="mb-3">
                       <Form.Group>
-                        <Form.Label>Footer Note (Printed above Spacing)</Form.Label>
+                        <Form.Label>Footer Note</Form.Label>
                         <Form.Control
                           type="text"
                           name="footerNote"

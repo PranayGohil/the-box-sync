@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Button, Form, Card, Col, Row, Spinner, Alert } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -13,14 +13,14 @@ import CreatableSelect from 'react-select/creatable';
 const customStyles = `
   .add-table-pill-input {
     border-radius: 12px !important;
-    padding: 0.7rem 1.2rem !important;
+    padding: 0.375rem 0.75rem !important;
     border: 1px solid #e5e7eb !important;
     background: #ffffff !important;
     transition: all 0.2s ease !important;
     font-size: 1rem !important;
     font-weight: 600 !important;
     color: #334155 !important;
-    height: 48px !important;
+    height: 38px !important;
   }
   .add-table-pill-input:focus {
     border-color: #23b3f4 !important;
@@ -235,6 +235,8 @@ const AddTable = () => {
     control: (base, state) => ({
       ...base,
       borderRadius: '12px',
+        minHeight: '38px',
+        height: '38px',
       padding: '2px',
       border:
         (formik.touched.area && formik.errors.area) || (isSubmitting && !formik.values.area)
@@ -299,7 +301,7 @@ const AddTable = () => {
                   <div className="d-flex flex-column gap-3">
                     {formik.values.tables.map((table, index) => (
                       <div key={index} className="p-3 p-md-4 rounded-xl border-0 shadow-sm" style={{ background: '#f8fafc', borderRadius: '1.25rem' }}>
-                        <Row className="g-2 g-md-3 align-items-end">
+                        <Row className="g-2 g-md-3 align-items-start">
                           <Col xs={12} md={5}>
                             <Form.Label className="fw-bold small text-muted mb-1">Table No.</Form.Label>
                             <div className="position-relative">
@@ -345,15 +347,18 @@ const AddTable = () => {
                             </div>
                           </Col>
 
-                          <Col xs={3} md={2} className="d-flex justify-content-end pb-1">
-                            <Button
-                              variant="outline-danger"
-                              className="add-table-delete-btn-table"
-                              onClick={() => removeTable(index)}
-                              disabled={isSubmitting || formik.values.tables.length === 1}
-                            >
-                              <CsLineIcons icon="bin" size="18" />
-                            </Button>
+                          <Col xs={3} md={2} className="d-flex flex-column justify-content-end pb-1">
+                            <Form.Label className="d-none d-md-block mb-1">&nbsp;</Form.Label>
+                            <div className="d-flex justify-content-end w-100">
+                              <Button
+                                variant="outline-danger"
+                                className="add-table-delete-btn-table"
+                                onClick={() => removeTable(index)}
+                                disabled={isSubmitting || formik.values.tables.length === 1}
+                              >
+                                <CsLineIcons icon="bin" size="18" />
+                              </Button>
+                            </div>
                           </Col>
                         </Row>
                       </div>
@@ -406,3 +411,4 @@ const AddTable = () => {
 };
 
 export default AddTable;
+

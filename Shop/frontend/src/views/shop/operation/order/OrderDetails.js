@@ -327,16 +327,14 @@ const OrderDetails = () => {
             </Card.Header>
             <Card.Body>
               <div className="mb-4">
-                <div className="text-small text-muted mb-1">CUSTOMER INFO</div>
-                <div className="mb-2">
+                <div className="text-small text-muted mb-2">CUSTOMER INFO</div>
+                <div className="mb-2 d-flex align-items-center">
                   <CsLineIcons icon="user" size={16} className="me-2 text-muted" />
-                  <strong>Name: </strong>
-                  <span>{order.customer_name || 'Guest'}</span>
+                  <span className="fw-bold me-1 text-dark">Name:</span> <span className="text-muted">{order.customer_name || 'Guest'}</span>
                 </div>
-                <div>
+                <div className="mb-2 d-flex align-items-center">
                   <CsLineIcons icon="phone" size={16} className="me-2 text-muted" />
-                  <strong>Contact: </strong>
-                  <span>{order.customer_phone || order.customer_details?.phone || 'N/A'}</span>
+                  <span className="fw-bold me-1 text-dark">Contact:</span> <span className="text-muted">{order.customer_phone || order.customer_details?.phone || 'N/A'}</span>
                 </div>
               </div>
 

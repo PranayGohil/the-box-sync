@@ -1,4 +1,4 @@
-/* Scoped styles from DeleteFeedbackModal */
+﻿/* Scoped styles from DeleteFeedbackModal */
 .delete-feedback-modal-custom-btn-outline {
   border: 1px solid #1ea8e7 !important;
   color: #1ea8e7 !important;
@@ -229,7 +229,8 @@
 /* Scoped styles from AddDishes */
 .add-dishes-pill-input {
   border-radius: 12px !important;
-  padding: 0.7rem 1.2rem !important;
+  padding: 0.375rem 0.75rem !important;
+  height: 38px !important;
   border: 1px solid #e5e7eb !important;
   background: #ffffff !important;
   transition: all 0.2s ease !important;
@@ -372,7 +373,8 @@ textarea.add-dishes-pill-input {
 /* Scoped styles from EditDishCategoryModal */
 .edit-dish-category-modal-pill-input {
   border-radius: 12px !important;
-  padding: 0.7rem 1.2rem !important;
+  padding: 0.375rem 0.75rem !important;
+  height: 38px !important;
   border: 1px solid #e5e7eb !important;
   background: #ffffff !important;
   transition: all 0.2s ease !important;
@@ -440,7 +442,8 @@ textarea.add-dishes-pill-input {
 /* Scoped styles from EditDishModal */
 .edit-dish-modal-pill-input {
   border-radius: 12px !important;
-  padding: 0.7rem 1.2rem !important;
+  padding: 0.375rem 0.75rem !important;
+  height: 38px !important;
   border: 1px solid #e5e7eb !important;
   background: #ffffff !important;
   transition: all 0.2s ease !important;
@@ -492,7 +495,8 @@ textarea.add-dishes-pill-input {
 /* Scoped styles from AddTable */
 .add-table-pill-input {
   border-radius: 12px !important;
-  padding: 0.7rem 1.2rem !important;
+  padding: 0.375rem 0.75rem !important;
+  height: 38px !important;
   border: 1px solid #e5e7eb !important;
   background: #ffffff !important;
   transition: all 0.2s ease !important;

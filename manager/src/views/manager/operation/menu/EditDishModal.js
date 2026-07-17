@@ -1,4 +1,4 @@
-/* eslint-disable react/no-this-in-sfc, func-names */
+﻿/* eslint-disable react/no-this-in-sfc, func-names */
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Button, Form, Spinner, Row, Col } from 'react-bootstrap';
 import { useFormik } from 'formik';
@@ -12,7 +12,7 @@ import CreatableSelect from 'react-select/creatable';
 const customStyles = `
   .pill-input {
     border-radius: 10px !important;
-    padding: 0.45rem 1rem !important;
+    padding: 0.375rem 0.75rem !important;
     border: 1px solid #e5e7eb !important;
     background: #ffffff !important;
     transition: all 0.2s ease !important;
@@ -53,28 +53,7 @@ const customStyles = `
   }
   .custom-btn-outline:hover svg {
     stroke: #fff !important;
-  }
-  .modal-footer {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.75rem !important;
-    border-top: none !important;
-    padding: 1.5rem !important;
-  }
-  .modal-footer .btn {
-    width: 100% !important;
-    margin: 0 !important;
-  }
-  @media (min-width: 576px) {
-    .modal-footer {
-      flex-direction: row !important;
-      justify-content: flex-end !important;
-    }
-    .modal-footer .btn {
-      width: auto !important;
-    }
-  }
-  @media (max-width: 575px) {
+  }    @media (max-width: 575px) {
     .modal-dialog {
       margin: 0.5rem !important;
     }
@@ -117,11 +96,20 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
       backgroundColor: '#fff',
       fontSize: '0.88rem',
       fontWeight: '600',
-      minHeight: '38px',
-      height: '38px',
-      '&:hover': { border: '1px solid #23b3f4' },
+        minHeight: '38px',
+        height: '38px',
+        '&:hover': { border: '1px solid #23b3f4' },
     }),
-    menuPortal: (base) => ({
+      valueContainer: (base) => ({
+        ...base,
+        padding: '0 8px',
+        height: '36px',
+      }),
+      indicatorsContainer: (base) => ({
+        ...base,
+        height: '36px',
+      }),
+      menuPortal: (base) => ({
       ...base,
       zIndex: 9999,
     }),
@@ -247,9 +235,12 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
         fetchMenuData();
         toast.success('Dish updated successfully!');
         handleClose();
-      } catch (err) {
-        console.error('Error updating dish:', err);
-        toast.error(err.response?.data?.message || 'Failed to update dish.');
+      } catch (error) {
+        let errorMsg = error.response?.data?.message || 'Something went wrong';
+        if (typeof errorMsg === 'object') {
+          errorMsg = Object.values(errorMsg).join(', ') || JSON.stringify(errorMsg);
+        }
+        toast.error(errorMsg);
       } finally {
         setIsSubmitting(false);
       }
@@ -291,47 +282,68 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
       <Modal.Body className="py-4">
         <Form id="edit_dish_form" onSubmit={formik.handleSubmit}>
           <Row className="g-3">
-            <Col md={5}>
-              <Form.Group className="mb-4">
-                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="dish_name"
-                  value={formik.values.dish_name}
-                  onChange={formik.handleChange}
-                  disabled={isSubmitting}
-                  className="pill-input shadow-sm"
-                  placeholder="Enter dish name"
-                />
-              </Form.Group>
-            </Col>
+            <Col md={8}>
+              <Row className="g-3">
+                <Col md={7}>
+                  <Form.Group className="mb-1">
+                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="dish_name"
+                      value={formik.values.dish_name}
+                      onChange={formik.handleChange}
+                      disabled={isSubmitting}
+                      className="pill-input shadow-sm"
+                      placeholder="Enter dish name"
+                    />
+                  </Form.Group>
+                </Col>
 
-            <Col md={3}>
-              <Form.Group className="mb-4">
-                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Meal Type</Form.Label>
-                <Select
-                  classNamePrefix="react-select"
-                  options={[
-                    { value: 'veg', label: 'Veg' },
-                    { value: 'non-veg', label: 'Non-Veg' },
-                    { value: 'egg', label: 'Egg' },
-                  ]}
-                  value={{
-                    value: formik.values.meal_type,
-                    label: formik.values.meal_type === 'veg' ? 'Veg' : formik.values.meal_type === 'non-veg' ? 'Non-Veg' : 'Egg',
-                  }}
-                  onChange={(selected) => formik.setFieldValue('meal_type', selected ? selected.value : 'veg')}
-                  placeholder="Select type"
-                  isDisabled={isSubmitting}
-                  styles={selectStyles}
-                />
-              </Form.Group>
+                <Col md={5}>
+                  <Form.Group className="mb-1">
+                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Meal Type</Form.Label>
+                    <Select
+                      classNamePrefix="react-select"
+                      options={[
+                        { value: 'veg', label: 'Veg' },
+                        { value: 'non-veg', label: 'Non-Veg' },
+                        { value: 'egg', label: 'Egg' },
+                      ]}
+                      value={{
+                        value: formik.values.meal_type,
+                        label: formik.values.meal_type === 'veg' ? 'Veg' : formik.values.meal_type === 'non-veg' ? 'Non-Veg' : 'Egg',
+                      }}
+                      onChange={(selected) => formik.setFieldValue('meal_type', selected ? selected.value : 'veg')}
+                      placeholder="Select type"
+                      isDisabled={isSubmitting}
+                      styles={selectStyles}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={12}>
+                  <Form.Group className="mb-4">
+                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Description</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={3}
+                      name="description"
+                      value={formik.values.description}
+                      onChange={formik.handleChange}
+                      disabled={isSubmitting}
+                      className="pill-input shadow-sm"
+                      style={{ paddingLeft: '1.2rem' }}
+                      placeholder="Add dish description..."
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
             </Col>
 
             <Col md={4}>
               <Form.Group className="mb-4">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Dish Image</Form.Label>
-                <div className="d-flex flex-column align-items-center gap-2 p-3 rounded-xl border-dashed" style={{ border: '2px dashed #e5e7eb' }}>
+                <div className="d-flex flex-column align-items-center justify-content-center gap-2 p-3 rounded-xl border-dashed" style={{ border: '2px dashed #e5e7eb', minHeight: '160px' }}>
                   {previewImg ? (
                     <img src={previewImg} alt="Preview" className="rounded shadow-sm" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
                   ) : (
@@ -356,22 +368,6 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                     {previewImg ? 'Change Image' : 'Upload Image'}
                   </label>
                 </div>
-              </Form.Group>
-            </Col>
-
-            <Col md={12}>
-              <Form.Group className="mb-4">
-                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Description</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  name="description"
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                  disabled={isSubmitting}
-                  className="pill-input shadow-sm"
-                  placeholder="Add dish description..."
-                />
               </Form.Group>
             </Col>
 
@@ -423,10 +419,10 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                 </div>
                 <div className="d-flex flex-column gap-2">
                   {(formik.values.variants || []).map((variant, vIdx) => (
-                    <Row key={vIdx} className="g-2 align-items-end mb-2">
+                    <Row key={vIdx} className="g-2 align-items-start mb-2">
                       <Col xs={12} sm={4}>
                         <Form.Group>
-                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem', minHeight: '36px' }}>
                             Size / Variant Name (e.g. Regular, Small)
                           </Form.Label>
                           <CreatableSelect
@@ -434,8 +430,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                minHeight: '48px',
-                                borderRadius: '12px',
+                                minHeight: '38px',
+                                borderRadius: '10px',
                               }),
                             }}
                             isClearable
@@ -451,8 +447,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                       </Col>
                       <Col xs={12} sm={3}>
                         <Form.Group>
-                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                            Price (₹)
+                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem', minHeight: '36px' }}>
+                            Price (â‚¹)
                           </Form.Label>
                           <Form.Control
                             type="text"
@@ -461,7 +457,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                             onChange={formik.handleChange}
                             placeholder="Price"
                             className="pill-input"
-                            style={{ height: '48px', borderRadius: '12px' }}
+                            style={{ height: '38px', borderRadius: '10px' }}
                             isInvalid={formik.touched.variants?.[vIdx]?.price && !!formik.errors.variants?.[vIdx]?.price}
                           />
                           {formik.errors.variants?.[vIdx]?.price && <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>}
@@ -469,7 +465,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                       </Col>
                       <Col xs={10} sm={4}>
                         <Form.Group>
-                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem', minHeight: '36px' }}>
                             Extra Details (e.g. Serves 1-2)
                           </Form.Label>
                           <CreatableSelect
@@ -477,8 +473,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                minHeight: '48px',
-                                borderRadius: '12px',
+                                minHeight: '38px',
+                                borderRadius: '10px',
                               }),
                             }}
                             isClearable
@@ -492,7 +488,11 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                         </Form.Group>
                       </Col>
                       <Col xs={2} sm="auto" className="pb-1 text-end">
-                        <Button
+                        <Form.Group>
+                          <Form.Label className="small mb-1 d-block" style={{ fontSize: '0.75rem', minHeight: '36px' }}>
+                            &nbsp;
+                          </Form.Label>
+                          <Button
                           variant="outline-danger"
                           onClick={() => {
                             const newVariants = [...formik.values.variants];
@@ -505,6 +505,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                         >
                           <CsLineIcons icon="bin" size="14" />
                         </Button>
+                        </Form.Group>
                       </Col>
                     </Row>
                   ))}
@@ -533,10 +534,10 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                 </div>
                 <div className="d-flex flex-column gap-2">
                   {(formik.values.addons || []).map((addon, aIdx) => (
-                    <Row key={aIdx} className="g-2 align-items-end mb-2">
+                    <Row key={aIdx} className="g-2 align-items-start mb-2">
                       <Col xs={8} sm={6}>
                         <Form.Group>
-                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem', minHeight: '36px' }}>
                             Add-on Name (e.g. Extra Sauce)
                           </Form.Label>
                           <CreatableSelect
@@ -544,8 +545,8 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                               ...selectStyles,
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
-                                minHeight: '48px',
-                                borderRadius: '12px',
+                                minHeight: '38px',
+                                borderRadius: '10px',
                               }),
                             }}
                             isClearable
@@ -561,7 +562,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                       </Col>
                       <Col xs={3} sm={4}>
                         <Form.Group>
-                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                          <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem', minHeight: '36px' }}>
                             Price (Extra charge)
                           </Form.Label>
                           <Form.Control
@@ -571,25 +572,30 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                             onChange={formik.handleChange}
                             placeholder="Price"
                             className="pill-input"
-                            style={{ height: '48px', borderRadius: '12px' }}
+                            style={{ height: '38px', borderRadius: '10px' }}
                             isInvalid={formik.touched.addons?.[aIdx]?.price && !!formik.errors.addons?.[aIdx]?.price}
                           />
                           {formik.errors.addons?.[aIdx]?.price && <div className="text-danger small mt-1">{formik.errors.addons[aIdx].price}</div>}
                         </Form.Group>
                       </Col>
                       <Col xs="auto" className="pb-1">
-                        <Button
+                        <Form.Group>
+                          <Form.Label className="small mb-1 d-block" style={{ fontSize: '0.75rem', minHeight: '36px' }}>
+                            &nbsp;
+                          </Form.Label>
+                          <Button
                           variant="outline-danger"
                           onClick={() => {
                             const newAddons = [...formik.values.addons];
                             newAddons.splice(aIdx, 1);
                             formik.setFieldValue('addons', newAddons);
                           }}
-                          style={{ height: '48px', width: '48px', borderRadius: '12px', padding: 0 }}
+                          style={{ height: '38px', width: '38px', borderRadius: '10px', padding: 0 }}
                           className="d-flex align-items-center justify-content-center btn btn-outline-danger"
                         >
                           <CsLineIcons icon="bin" size="14" />
                         </Button>
+                        </Form.Group>
                       </Col>
                     </Row>
                   ))}
@@ -612,16 +618,16 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
         </Form>
       </Modal.Body>
 
-      <Modal.Footer className="border-0">
+      <Modal.Footer className="border-0 pt-0 pb-4 px-4 d-flex flex-column flex-sm-row justify-content-sm-end gap-2">
         <Button
           variant="outline-light"
           onClick={handleClose}
           disabled={isSubmitting}
-          className="rounded-pill px-4 fw-bold custom-btn-outline btn btn-outline-primary"
+          className="rounded-pill px-4 fw-bold custom-btn-outline btn btn-outline-primary w-100 w-sm-auto"
         >
           Cancel
         </Button>
-        <Button type="submit" form="edit_dish_form" disabled={isSubmitting} className="px-5 py-2 custom-btn-outline d-flex align-items-center gap-2">
+        <Button type="submit" form="edit_dish_form" disabled={isSubmitting} className="px-5 py-2 custom-btn-outline d-flex align-items-center justify-content-center gap-2 w-100 w-sm-auto">
           {isSubmitting ? (
             <>
               <Spinner as="span" animation="border" size="sm" />
@@ -640,3 +646,7 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
 };
 
 export default EditDishModal;
+
+
+
+

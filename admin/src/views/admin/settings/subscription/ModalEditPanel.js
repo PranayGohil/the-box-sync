@@ -68,25 +68,25 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
               {
                 adminPassword: formValues.adminPassword,
                 newPassword: formValues.newPassword,
+                ...(planName === 'Create Cashier' && { accountId: data?._id }),
               },
               {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
               }
             );
-            toast.success('Password updated successfully!');
           }
 
           await axios.post(
             `${process.env.REACT_APP_API}/panel-user/${planName}`,
             {
               username: formValues.username,
-              ...(planName === 'Create Cashier' && { cashier_type: formValues.cashier_type }),
+              ...(planName === 'Create Cashier' && { cashier_type: formValues.cashier_type, accountId: data?._id }),
             },
             {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             }
           );
-          toast.success('Panel user updated successfully!');
+          toast.success(showPasswordFields ? 'Panel credentials updated successfully!' : 'Panel user updated successfully!');
         }
 
         onSave({ username: formValues.username });

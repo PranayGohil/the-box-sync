@@ -18,9 +18,9 @@ import { plans, featureCategories } from '../../../../config/plansConfig';
 import ModalEditPanel from './ModalEditPanel';
 import DeletePanelModal from './DeletePanelModal';
 import RaiseInquiryModal from './RaiseInquiryModal';
-import ModalManageCashiers from './ModalManageCashiers';
 
-const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'Payroll By The Box', 'KOT Panel', 'Hotel Manager', 'Create Cashier'];
+
+const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'KOT Panel', 'Hotel Manager', 'Create Cashier'];
 
 const PLAN_DISPLAY_NAMES = {
   Manager: 'Manager Panel',
@@ -119,7 +119,6 @@ const Subscription = () => {
   const [currentPanelData, setCurrentPanelData] = useState(null);
   const [currentPlanName, setCurrentPlanName] = useState('');
 
-  const [showManageCashiersModal, setShowManageCashiersModal] = useState(false);
 
   const [showDeletePanelModal, setShowDeletePanelModal] = useState(false);
   const [deletePlanName, setDeletePlanName] = useState('');
@@ -182,6 +181,13 @@ const Subscription = () => {
       });
       setMissingFeatures(crosses);
 
+      const basePlanSub = userRes.data.data.find(sub => {
+        const p = plansRes.data.data.find(pl => pl._id === sub.plan_id);
+        return p && !p.is_addon;
+      });
+      const impliedStart = basePlanSub ? new Date(basePlanSub.start_date).toLocaleDateString('en-IN') : 'Included in Plan';
+      const impliedEnd = basePlanSub ? new Date(basePlanSub.end_date).toLocaleDateString('en-IN') : 'Included in Plan';
+
       let enriched = userRes.data.data
         .map((sub) => {
           const plan = plansRes.data.data.find((p) => p._id === sub.plan_id);
@@ -208,15 +214,13 @@ const Subscription = () => {
             is_addon: true,
             status: 'active',
             plan_id: `implied_id_${feat}`,
-            formatted_start: 'Included in Plan',
-            formatted_end: 'Included in Plan',
+            formatted_start: impliedStart,
+            formatted_end: impliedEnd,
           };
         })
         .filter(Boolean);
 
       enriched = [...enriched, ...impliedSubs];
-
-      setUserSubscription(enriched);
 
       const panelResults = await Promise.all(
         enriched
@@ -226,13 +230,42 @@ const Subscription = () => {
               .get(`${process.env.REACT_APP_API}/panel-user/${sub.plan_name}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
               })
-              .then((res) => ({ [sub.plan_name]: res.data.exists }))
-              .catch(() => ({ [sub.plan_name]: false }))
+              .then((res) => ({ name: sub.plan_name, exists: res.data.exists, data: res.data.data }))
+              .catch(() => ({ name: sub.plan_name, exists: false, data: null }))
           )
       );
 
-      const accountStatus = Object.assign({}, ...panelResults);
+      const accountStatus = {};
+      const accountData = {};
+      panelResults.forEach((res) => {
+        accountStatus[res.name] = res.exists;
+        accountData[res.name] = res.data;
+      });
       setPanelAccounts(accountStatus);
+
+      const finalEnriched = [];
+      for (const sub of enriched) {
+        if (sub.plan_name === 'Create Cashier') {
+          const cashiers = accountData['Create Cashier'];
+          if (Array.isArray(cashiers) && cashiers.length > 0) {
+            cashiers.forEach((cashier, index) => {
+              finalEnriched.push({
+                ...sub,
+                _id: `cashier_inst_${cashier._id}`,
+                plan_name: 'Cashier Instance',
+                display_name: `Cashier ${index + 1}`,
+                accountId: cashier._id,
+                accountData: cashier,
+              });
+            });
+          }
+          finalEnriched.push(sub);
+        } else {
+          finalEnriched.push(sub);
+        }
+      }
+
+      setUserSubscription(finalEnriched);
 
       const inactivePlans = enriched.filter((sub) => sub.status === 'inactive');
 
@@ -344,8 +377,14 @@ const Subscription = () => {
     }
   };
 
-  const handleEditPanel = async (planName) => {
+  const handleEditPanel = async (planName, accountData = null) => {
     try {
+      if (planName === 'Create Cashier' && accountData) {
+        setCurrentPlanName('Create Cashier');
+        setCurrentPanelData(accountData);
+        setShowPanelModal(true);
+        return;
+      }
       const res = await axios.get(`${process.env.REACT_APP_API}/panel-user/${planName}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
@@ -365,17 +404,9 @@ const Subscription = () => {
     setShowPanelModal(true);
   };
 
-  const handleSavePanel = async (formValues) => {
-    try {
-      await axios.post(`${process.env.REACT_APP_API}/panel-user/${currentPlanName}`, formValues, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      setShowPanelModal(false);
-      fetchData();
-    } catch (err) {
-      console.error('Error saving panel user:', err);
-      toast.error('Failed to save panel user.');
-    }
+  const handleSavePanel = () => {
+    setShowPanelModal(false);
+    fetchData();
   };
 
   const handleRaiseInquiry = (planName) => {
@@ -383,8 +414,9 @@ const Subscription = () => {
     setShowInquiryModal(true);
   };
 
-  const openDeletePanelModal = (planName) => {
+  const openDeletePanelModal = (planName, accountId = null) => {
     setDeletePlanName(planName);
+    setCurrentPanelData((prev) => ({ ...prev, accountId }));
     setShowDeletePanelModal(true);
   };
 
@@ -426,7 +458,7 @@ const Subscription = () => {
       {
         Header: 'Plan Name',
         accessor: 'plan_name',
-        Cell: ({ value }) => <span className="fw-semibold">{getDisplayName(value)}</span>,
+        Cell: ({ row, value }) => <span className="fw-semibold">{row.original.display_name || getDisplayName(value)}</span>,
       },
       {
         Header: 'Start Date',
@@ -471,7 +503,7 @@ const Subscription = () => {
 
           let actionButtons = null;
 
-          if (isActive && PANEL_PLANS.includes(original.plan_name)) {
+          if (isActive && (PANEL_PLANS.includes(original.plan_name) || original.plan_name === 'Cashier Instance')) {
             // Special handling for Create Cashier: always show Manage Cashiers button
             if (original.plan_name === 'Create Cashier') {
               actionButtons = (
@@ -480,12 +512,49 @@ const Subscription = () => {
                   size="sm"
                   className="subscription-custom-btn-outline"
                   style={{ width: '30px', height: '30px', padding: 0 }}
-                  onClick={() => setShowManageCashiersModal(true)}
+                  onClick={() => handleAddPanel('Create Cashier')}
                   disabled={loading}
-                  title="Manage Cashiers"
+                  title="Create New Cashier"
                 >
-                  <CsLineIcons icon="user" size="15" />
+                  <CsLineIcons icon="plus" size="15" />
                 </Button>
+              );
+            } else if (original.plan_name === 'Cashier Instance') {
+              actionButtons = (
+                <>
+                  <Button
+                    variant="none"
+                    size="sm"
+                    className="subscription-custom-btn-outline"
+                    style={{ width: '30px', height: '30px', padding: 0 }}
+                    onClick={() => handleEditPanel('Create Cashier', original.accountData)}
+                    disabled={loading || actionLoading.renew}
+                    title="Edit Cashier"
+                  >
+                    <CsLineIcons icon="edit" size="15" />
+                  </Button>
+                  <Button
+                    variant="none"
+                    size="sm"
+                    className="subscription-custom-btn-danger"
+                    onClick={() => openDeletePanelModal('Create Cashier', original.accountId)}
+                    disabled={loading}
+                    title="Remove Cashier"
+                  >
+                    <CsLineIcons icon="bin" size="15" />
+                  </Button>
+                  <Button
+                    variant="none"
+                    size="sm"
+                    className="subscription-custom-btn-outline"
+                    style={{ width: '30px', height: '30px', padding: 0 }}
+                    onClick={() => handleRedirect('Create Cashier')}
+                    disabled={loading || actionLoading.redirect}
+                    title="Go to Module"
+                  >
+                    <CsLineIcons icon="eye" size="15" />
+                  </Button>
+                </>
               );
             } else {
               actionButtons = panelAccounts[original.plan_name] ? (
@@ -703,7 +772,7 @@ const Subscription = () => {
                       <div className="d-flex justify-content-between align-items-start mb-3">
                         <div>
                           <span className="subscription-mobile-label">Plan Name</span>
-                          <span className="subscription-mobile-value mb-0">{getDisplayName(original.plan_name)}</span>
+                          <span className="subscription-mobile-value mb-0">{original.display_name || getDisplayName(original.plan_name)}</span>
                         </div>
                         <div>
                           {original.status === 'active' && (
@@ -925,10 +994,8 @@ const Subscription = () => {
       )}
 
       {showDeletePanelModal && (
-        <DeletePanelModal show={showDeletePanelModal} handleClose={() => setShowDeletePanelModal(false)} planName={deletePlanName} fetchData={fetchData} />
+        <DeletePanelModal show={showDeletePanelModal} handleClose={() => setShowDeletePanelModal(false)} planName={deletePlanName} accountId={currentPanelData?.accountId} fetchData={fetchData} />
       )}
-
-      <ModalManageCashiers show={showManageCashiersModal} handleClose={() => setShowManageCashiersModal(false)} />
 
       {showInquiryModal && (
         <RaiseInquiryModal show={showInquiryModal} handleClose={() => setShowInquiryModal(false)} subscriptionName={inquirySubName} fetchData={fetchData} />

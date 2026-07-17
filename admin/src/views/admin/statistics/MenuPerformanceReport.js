@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar, Modal, Toast, ToastContainer } from 'react-bootstrap';
+import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar, Modal, Toast, ToastContainer, Pagination } from 'react-bootstrap';
 import axios from 'axios';
 import { format } from 'date-fns';
 import HtmlHead from 'components/html-head/HtmlHead';
@@ -80,6 +80,10 @@ const MenuPerformanceReport = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
+  const [catPage, setCatPage] = useState(1);
+  const catPerPage = 6;
+  const [dishPage, setDishPage] = useState(1);
+  const dishPerPage = 10;
 
   const { currentUser, activePlans } = useContext(AuthContext);
 
@@ -144,7 +148,7 @@ const MenuPerformanceReport = () => {
 
   useEffect(() => {
     fetchMenuReport();
-  }, []);
+  }, [startDate, endDate]);
 
   const getPerformanceLevel = (dish) => {
     if (!reportData) return 'average';
@@ -503,12 +507,7 @@ const MenuPerformanceReport = () => {
                     options={mealTypes.map((type) => ({ value: type, label: type === 'all' ? 'All Meal Types' : type }))}
                   />
                 </Col>
-                <Col xs={12} md={4} lg={2} className="d-flex align-items-end">
-                  <Button className="menu-performance-report-custom-btn-outline w-100" onClick={fetchMenuReport} disabled={loading}>
-                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                    {loading ? 'Processing...' : 'Generate'}
-                  </Button>
-                </Col>
+                
               </Row>
             </Card.Body>
           </Card>
@@ -720,7 +719,7 @@ const MenuPerformanceReport = () => {
                   <CsLineIcons icon="pie-chart" size="18" style={{ color: brandColor }} />
                 </div>
                 <Row className="g-3 mt-1">
-                  {reportData.categoryPerformance.map((category, idx) => (
+                  {reportData.categoryPerformance.slice((catPage - 1) * catPerPage, catPage * catPerPage).map((category, idx) => (
                     <Col lg="4" key={idx}>
                       <Card
                         className="menu-performance-report-interactive-card border-0 p-3 h-100"
@@ -750,6 +749,15 @@ const MenuPerformanceReport = () => {
                     </Col>
                   ))}
                 </Row>
+                {reportData.categoryPerformance.length > catPerPage && (
+                  <div className="d-flex justify-content-center mt-4">
+                    <Pagination size="sm">
+                      <Pagination.Prev onClick={() => setCatPage(p => Math.max(1, p - 1))} disabled={catPage === 1} />
+                      <Pagination.Item active>{catPage}</Pagination.Item>
+                      <Pagination.Next onClick={() => setCatPage(p => Math.min(Math.ceil(reportData.categoryPerformance.length / catPerPage), p + 1))} disabled={catPage === Math.ceil(reportData.categoryPerformance.length / catPerPage)} />
+                    </Pagination>
+                  </div>
+                )}
               </Card.Body>
             </Card>
 
@@ -831,20 +839,21 @@ const MenuPerformanceReport = () => {
                           <span className="fw-bold text-info">{percent.toFixed(1)}%</span>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </Card.Body>
-            </Card>
+                      );
+                    })}
+
+                  </div>
+                </Card.Body>
+              </Card>
 
             {/* Detailed Audit Table */}
             <Card className="menu-performance-report-interactive-card border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
                 <div className="menu-performance-report-card-title-container">
-                  <h2 className="small-title mb-0" style={{ color: brandColor, fontWeight: '800' }}>
+                  <h2 className="small-title mb-0" style={{ color: '#23b3f4', fontWeight: '800' }}>
                     Menu Item Performance Audit
                   </h2>
-                  <CsLineIcons icon="list" size="18" style={{ color: brandColor }} />
+                  <CsLineIcons icon="list" size="18" style={{ color: '#23b3f4' }} />
                 </div>
                 <div className="d-none d-md-block table-responsive mt-3">
                   <Table borderless hover className="align-middle mb-0">
@@ -860,13 +869,13 @@ const MenuPerformanceReport = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredDishes.map((dish, idx) => {
+                      {filteredDishes.slice((dishPage - 1) * dishPerPage, dishPage * dishPerPage).map((dish, idx) => {
                         const performance = getPerformanceLevel(dish);
                         return (
                           <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                             <td className="py-3">
                               <Badge bg={idx < 10 ? 'primary' : 'light'} className={`rounded-pill px-3 py-2 ${idx < 10 ? '' : 'text-dark'}`}>
-                                {idx + 1}
+                                {(dishPage - 1) * dishPerPage + idx + 1}
                               </Badge>
                             </td>
                             <td className="py-3 fw-bold text-dark">{dish.dishName}</td>
@@ -894,7 +903,7 @@ const MenuPerformanceReport = () => {
                   </Table>
                 </div>
                 <div className="d-md-none d-flex flex-column gap-3 mt-3">
-                  {filteredDishes.map((dish, idx) => {
+                  {filteredDishes.slice((dishPage - 1) * dishPerPage, dishPage * dishPerPage).map((dish, idx) => {
                     const performance = getPerformanceLevel(dish);
                     return (
                       <div
@@ -905,7 +914,7 @@ const MenuPerformanceReport = () => {
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <div className="d-flex align-items-center">
                             <Badge bg={idx < 10 ? 'primary' : 'light'} className={`rounded-pill px-2 py-1 me-2 ${idx < 10 ? '' : 'text-dark'}`}>
-                              {idx + 1}
+                              {(dishPage - 1) * dishPerPage + idx + 1}
                             </Badge>
                             <span className="fw-bold text-dark">{dish.dishName}</span>
                           </div>
@@ -938,6 +947,15 @@ const MenuPerformanceReport = () => {
                     );
                   })}
                 </div>
+                {filteredDishes.length > dishPerPage && (
+                  <div className="d-flex justify-content-center mt-4">
+                    <Pagination size="sm">
+                      <Pagination.Prev onClick={() => setDishPage(p => Math.max(1, p - 1))} disabled={dishPage === 1} />
+                      <Pagination.Item active>{dishPage}</Pagination.Item>
+                      <Pagination.Next onClick={() => setDishPage(p => Math.min(Math.ceil(filteredDishes.length / dishPerPage), p + 1))} disabled={dishPage === Math.ceil(filteredDishes.length / dishPerPage)} />
+                    </Pagination>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           </>

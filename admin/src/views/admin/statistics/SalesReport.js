@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, Modal, ProgressBar, Toast, ToastContainer } from 'react-bootstrap';
+import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, Modal, ProgressBar, Toast, ToastContainer, Pagination } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -79,6 +79,10 @@ const SalesReport = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
+  const [revenuePage, setRevenuePage] = useState(1);
+  const revenuePerPage = 10;
+  const [dishPage, setDishPage] = useState(1);
+  const dishPerPage = 10;
 
   const { currentUser, activePlans } = useContext(AuthContext);
 
@@ -217,11 +221,7 @@ const SalesReport = () => {
 
   useEffect(() => {
     fetchSalesReport();
-  }, []);
-
-  useEffect(() => {
-    fetchSalesReport();
-  }, [groupBy, startDate, endDate]);
+  }, [startDate, endDate, groupBy, orderType]);
 
   const showSuccessToast = (message) => {
     setToastMessage(message);
@@ -516,12 +516,7 @@ const SalesReport = () => {
                     />
                   </Form.Group>
                 </Col>
-                <Col xs={12} md={2} className="d-flex align-items-end">
-                  <Button className="sales-report-custom-btn-outline w-100" onClick={fetchSalesReport} disabled={loading}>
-                    <CsLineIcons icon="sync" className={`me-2 ${loading ? 'spin' : ''}`} size="15" />
-                    {loading ? 'Processing...' : 'Generate'}
-                  </Button>
-                </Col>
+                
               </Row>
             </Card.Body>
           </Card>
@@ -662,7 +657,7 @@ const SalesReport = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {sortedRevenueData.map((item, idx) => (
+                          {sortedRevenueData.slice((revenuePage - 1) * revenuePerPage, revenuePage * revenuePerPage).map((item, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px solid rgba(0,0,0,0.02)' }}>
                               <td className="py-3 fw-bold text-dark">{formatTrendDate(item)}</td>
                               <td className="py-3 text-end fw-bold text-primary">{formatCurrency(item.value)}</td>
@@ -676,7 +671,7 @@ const SalesReport = () => {
 
                     {/* Mobile Card View */}
                     <div className="d-block d-md-none mt-3">
-                      {sortedRevenueData.map((item, idx) => (
+                      {sortedRevenueData.slice((revenuePage - 1) * revenuePerPage, revenuePage * revenuePerPage).map((item, idx) => (
                         <div key={idx} className="p-3 mb-3 border rounded-3 shadow-sm" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
                           <div className="d-flex justify-content-between align-items-center mb-2 pb-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
                             <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
@@ -707,10 +702,18 @@ const SalesReport = () => {
                         </div>
                       ))}
                     </div>
+                    {sortedRevenueData.length > revenuePerPage && (
+                      <div className="d-flex justify-content-center mt-3">
+                        <Pagination size="sm">
+                          <Pagination.Prev onClick={() => setRevenuePage(p => Math.max(1, p - 1))} disabled={revenuePage === 1} />
+                          <Pagination.Item active>{revenuePage}</Pagination.Item>
+                          <Pagination.Next onClick={() => setRevenuePage(p => Math.min(Math.ceil(sortedRevenueData.length / revenuePerPage), p + 1))} disabled={revenuePage === Math.ceil(sortedRevenueData.length / revenuePerPage)} />
+                        </Pagination>
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
-
               <Col lg={7}>
                 <Card className="sales-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-0">
@@ -721,7 +724,7 @@ const SalesReport = () => {
                       <CsLineIcons icon="burger" size="18" style={{ color: brandColor }} />
                     </div>
                     <div className="d-flex flex-column">
-                      {reportData.dishes.data.slice(0, 15).map((dish, idx) => {
+                      {reportData.dishes.data.slice((dishPage - 1) * dishPerPage, dishPage * dishPerPage).map((dish, idx) => {
                         const highlightClass = idx < 3 ? `sales-report-dish-row-highlight-${idx}` : '';
                         return (
                           <div key={idx} className={`px-4 py-3 d-flex align-items-center justify-content-between ${highlightClass}`}>
@@ -748,11 +751,38 @@ const SalesReport = () => {
                           </div>
                         );
                       })}
+                      
+                      {reportData.dishes.data.length > dishPerPage && (
+
+                      
+                        <div className="d-flex justify-content-center mt-3">
+
+                      
+                          <Pagination size="sm">
+
+                      
+                            <Pagination.Prev onClick={() => setDishPage(p => Math.max(1, p - 1))} disabled={dishPage === 1} />
+
+                      
+                            <Pagination.Item active>{dishPage}</Pagination.Item>
+
+                      
+                            <Pagination.Next onClick={() => setDishPage(p => Math.min(Math.ceil(reportData.dishes.data.length / dishPerPage), p + 1))} disabled={dishPage === Math.ceil(reportData.dishes.data.length / dishPerPage)} />
+
+                      
+                          </Pagination>
+
+                      
+                        </div>
+
+                      
+                      )}
+
+                      
                     </div>
                   </Card.Body>
                 </Card>
               </Col>
-
               <Col lg={5}>
                 <Card className="sales-report-interactive-card border-0 shadow-sm h-100">
                   <Card.Body className="p-4">

@@ -13,7 +13,7 @@ import PrintBarcodeModal from './PrintBarcodeModal';
 const customStyles = `
   .pill-input {
     border-radius: 10px !important;
-    padding: 0.45rem 1rem !important;
+    padding: 0.375rem 0.75rem !important;
     border: 1px solid #e5e7eb !important;
     background: #ffffff !important;
     transition: all 0.2s ease !important;
@@ -57,21 +57,22 @@ const customStyles = `
   }
   .modal-footer {
     display: flex !important;
-    flex-direction: column !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: 0.75rem !important;
     border-top: none !important;
     padding: 1.5rem !important;
   }
   .modal-footer .btn {
-    width: 100% !important;
+    flex: 1 !important;
     margin: 0 !important;
   }
   @media (min-width: 576px) {
     .modal-footer {
-      flex-direction: row !important;
       justify-content: flex-end !important;
     }
     .modal-footer .btn {
+      flex: none !important;
       width: auto !important;
     }
   }
@@ -278,9 +279,12 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
         fetchCatalogData();
         toast.success('Item updated successfully!');
         handleClose();
-      } catch (err) {
-        console.error('Error updating item:', err);
-        toast.error(err.response?.data?.message || 'Failed to update item.');
+      } catch (error) {
+        let errorMsg = error.response?.data?.message || 'Something went wrong';
+        if (typeof errorMsg === 'object') {
+          errorMsg = Object.values(errorMsg).join(', ') || JSON.stringify(errorMsg);
+        }
+        toast.error(errorMsg);
       } finally {
         setIsSubmitting(false);
       }
@@ -336,49 +340,70 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
           return (
             <Form id="edit_dish_form" onSubmit={formik.handleSubmit}>
               <Row className="g-3">
-                <Col md={shouldShowDietary ? 5 : 8}>
-              <Form.Group className="mb-4">
-                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Item Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="item_name"
-                  value={formik.values.item_name}
-                  onChange={formik.handleChange}
-                  disabled={isSubmitting}
-                  className="pill-input shadow-sm"
-                  placeholder="Enter item name"
-                />
-              </Form.Group>
-            </Col>
+            <Col md={8}>
+              <Row className="g-3">
+                <Col md={shouldShowDietary ? 7 : 12}>
+                  <Form.Group className="mb-1">
+                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Item Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="item_name"
+                      value={formik.values.item_name}
+                      onChange={formik.handleChange}
+                      disabled={isSubmitting}
+                      className="pill-input shadow-sm"
+                      placeholder="Enter item name"
+                    />
+                  </Form.Group>
+                </Col>
 
-            {shouldShowDietary && (
-              <Col md={3}>
-                <Form.Group className="mb-4">
-                  <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Type</Form.Label>
-                  <Select
-                    classNamePrefix="react-select"
-                    options={[
-                      { value: 'veg', label: 'Veg' },
-                      { value: 'non-veg', label: 'Non-Veg' },
-                      { value: 'egg', label: 'Egg' },
-                    ]}
-                    value={{
-                      value: formik.values.type,
-                      label: formik.values.type === 'veg' ? 'Veg' : formik.values.type === 'non-veg' ? 'Non-Veg' : 'Egg'
-                    }}
-                    onChange={(selected) => formik.setFieldValue('type', selected ? selected.value : 'veg')}
-                    placeholder="Select type"
-                    isDisabled={isSubmitting}
-                    styles={selectStyles}
-                  />
-                </Form.Group>
-              </Col>
-            )}
+                {shouldShowDietary && (
+                  <Col md={5}>
+                    <Form.Group className="mb-1">
+                      <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Type</Form.Label>
+                      <Select
+                        classNamePrefix="react-select"
+                        options={[
+                          { value: 'veg', label: 'Veg' },
+                          { value: 'non-veg', label: 'Non-Veg' },
+                          { value: 'egg', label: 'Egg' },
+                        ]}
+                        value={{
+                          value: formik.values.type,
+                          label: formik.values.type === 'veg' ? 'Veg' : formik.values.type === 'non-veg' ? 'Non-Veg' : 'Egg'
+                        }}
+                        onChange={(selected) => formik.setFieldValue('type', selected ? selected.value : 'veg')}
+                        placeholder="Select type"
+                        isDisabled={isSubmitting}
+                        styles={selectStyles}
+                      />
+                    </Form.Group>
+                  </Col>
+                )}
+
+                <Col md={12}>
+                  <Form.Group className="mb-4">
+                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Description</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={3}
+                      name="description"
+                      value={formik.values.description}
+                      onChange={formik.handleChange}
+                      disabled={isSubmitting}
+                      className="pill-input shadow-sm"
+                      style={{ paddingLeft: '1.2rem' }}
+                      placeholder="Add item description..."
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Col>
 
             <Col md={4}>
               <Form.Group className="mb-4">
                 <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Item Image</Form.Label>
-                <div className="d-flex flex-column align-items-center gap-2 p-3 rounded-xl border-dashed" style={{ border: '2px dashed #e5e7eb' }}>
+                <div className="d-flex flex-column align-items-center justify-content-center gap-2 p-3 rounded-xl border-dashed" style={{ border: '2px dashed #e5e7eb', minHeight: '160px' }}>
                   {previewImg ? (
                     <img src={previewImg} alt="Preview" className="rounded shadow-sm" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
                   ) : (
@@ -403,23 +428,6 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                     {previewImg ? 'Change Image' : 'Upload Image'}
                   </label>
                 </div>
-              </Form.Group>
-            </Col>
-
-            <Col md={12}>
-              <Form.Group className="mb-4">
-                <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Description</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  name="description"
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                  disabled={isSubmitting}
-                  className="pill-input shadow-sm"
-                  style={{ paddingLeft: '1.2rem' }}
-                  placeholder="Add item description..."
-                />
               </Form.Group>
             </Col>
 
@@ -453,7 +461,7 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                   <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '1rem' }}>
                     Inventory & Pricing
                   </h6>
-                  {typeof formik.errors?.variants === 'string' && (
+                  {formik.errors.variants && typeof formik.errors.variants === 'string' && (
                     <div className="text-danger small fw-bold">{formik.errors.variants}</div>
                   )}
                 </div>

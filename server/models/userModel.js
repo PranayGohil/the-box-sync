@@ -23,9 +23,10 @@ const userSchema = new Schema({
     type: String,
   },
   password: {
-    type: String,
-    select: false,
-  },
+      type: String,
+      select: false,
+    },
+    passwordChangedAt: Date,
   mobile: {
     type: Number,
   },
@@ -180,13 +181,14 @@ userSchema.index({ restaurant_token: 1 }, { unique: true, sparse: true });
 userSchema.pre("save", async function (next) {
   const user = this;
   if (!user.isModified("password")) {
-    next();
+    return next();
   }
 
   try {
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(user.password, salt);
     user.password = hash;
+    user.passwordChangedAt = new Date(Date.now() - 1000);
     next();
   } catch (error) {
     next(error);

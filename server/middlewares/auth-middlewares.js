@@ -11,6 +11,17 @@ const authMiddleware = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const user = jwt.verify(token, process.env.JWT_SECRETKEY);
     req.user = user;
+
+    // Validate passwordChangedAt
+    const User = require("../models/userModel");
+    const dbUserAuthCheck = await User.findById(user._id).select("passwordChangedAt").lean();
+    if (dbUserAuthCheck && dbUserAuthCheck.passwordChangedAt) {
+      const changedTimestamp = parseInt(dbUserAuthCheck.passwordChangedAt.getTime() / 1000, 10);
+      if (user.iat < changedTimestamp) {
+        return res.status(401).json({ message: "Password recently changed. Please log in again." });
+      }
+    }
+
     
     // Subscription Check for Non-Admin Panels
     if (user.Role && user.Role !== "Admin" && user.Role !== "Super Admin" && user.Role !== "Staff") {

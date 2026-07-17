@@ -4,7 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
+const DeletePanelModal = ({ show, handleClose, planName, accountId, fetchData }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
@@ -25,12 +25,21 @@ const DeletePanelModal = ({ show, handleClose, planName, fetchData }) => {
     setIsDeleting(true);
     setError('');
     try {
-      await axios.delete(`${process.env.REACT_APP_API}/panel-user/${planName}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'x-admin-password': password,
-        },
-      });
+      if (accountId) {
+        await axios.delete(`${process.env.REACT_APP_API}/panel-user/cashier/${accountId}`, {
+          data: { adminPassword: password },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+      } else {
+        await axios.delete(`${process.env.REACT_APP_API}/panel-user/${planName}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'x-admin-password': password,
+          },
+        });
+      }
       fetchData();
       toast.success('Panel credentials deleted successfully!');
       handleCloseModal();

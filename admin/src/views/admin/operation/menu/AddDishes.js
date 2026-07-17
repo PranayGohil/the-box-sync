@@ -437,7 +437,11 @@ const AddDishes = () => {
       history.push('/operations/manage-menu');
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast.error(error.response?.data?.message || 'Failed to save menu.');
+      let errorMsg = error.response?.data?.message || 'Failed to save menu.';
+      if (typeof errorMsg === 'object') {
+        errorMsg = Object.values(errorMsg).join(', ') || JSON.stringify(errorMsg);
+      }
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
       setSubmitting(false);
@@ -460,7 +464,22 @@ const AddDishes = () => {
       border: state.isFocused ? '1px solid #23b3f4' : '1px solid #e5e7eb',
       boxShadow: state.isFocused ? '0 0 0 4px rgba(35, 179, 244, 0.1)' : 'none',
       backgroundColor: '#fff',
+      minHeight: '38px',
+      height: '38px',
       '&:hover': { border: '1px solid #23b3f4' },
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: '0 8px',
+      height: '36px',
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: '36px',
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
     }),
   };
 
@@ -494,7 +513,7 @@ const AddDishes = () => {
                               control: (base, state) => ({
                                 ...selectStyles.control(base, state),
                                 borderColor: values.category === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
-                                minHeight: '48px',
+                                minHeight: '38px',
                               }),
                             }}
                             isClearable
@@ -510,7 +529,9 @@ const AddDishes = () => {
                             }}
                             placeholder="Select or create category"
                           />
-                          <ErrorMessage name="category" component="div" className="text-danger small mt-1" />
+                          <ErrorMessage name="category">
+            {msg => typeof msg === 'string' ? <div className="text-danger small mt-1">{msg}</div> : null}
+        </ErrorMessage>
                         </div>
                       </BForm.Group>
                     </Col>
@@ -522,7 +543,7 @@ const AddDishes = () => {
                             ...selectStyles,
                             control: (base, state) => ({
                               ...selectStyles.control(base, state),
-                              minHeight: '48px',
+                              minHeight: '38px',
                             }),
                           }}
                           isClearable
@@ -566,7 +587,7 @@ const AddDishes = () => {
                               >
                                 <CsLineIcons icon="bin" size="16" />
                               </Button>
-                              <Row className="g-2 g-md-3 align-items-end">
+                              <Row className="g-2 g-md-3 align-items-start">
                                 <Col xs={12} md={6}>
                                   <BForm.Group>
                                     <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
@@ -580,7 +601,7 @@ const AddDishes = () => {
                                             ...selectStyles.control(base, state),
                                             borderColor:
                                               values.dishes[index].dish_name === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
-                                            minHeight: '48px',
+                                            minHeight: '38px',
                                           }),
                                         }}
                                         isClearable
@@ -599,7 +620,7 @@ const AddDishes = () => {
                                   <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
                                     Meal Type
                                   </BForm.Label>
-                                  <div className="d-flex flex-wrap gap-2" style={{ height: '48px', alignItems: 'center' }}>
+                                  <div className="d-flex flex-wrap gap-2" style={{ height: '38px', alignItems: 'center' }}>
                                     {['veg', 'egg', 'non-veg'].map((type) => (
                                       <div
                                         key={type}
@@ -626,7 +647,9 @@ const AddDishes = () => {
                                       <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '0.9rem' }}>
                                         Sizes, Pricing & Details
                                       </h6>
-                                      <ErrorMessage name={`dishes[${index}].variants`} component="div" className="text-danger small fw-bold" />
+                                      <ErrorMessage name={`dishes[${index}].variants`}>
+                                        {msg => typeof msg === 'string' ? <div className="text-danger small fw-bold">{msg}</div> : null}
+                                      </ErrorMessage>
                                     </div>
                                     <FieldArray name={`dishes[${index}].variants`}>
                                       {({ push: pushVariant, remove: removeVariant }) => (
@@ -634,7 +657,7 @@ const AddDishes = () => {
                                           {(dish.variants || []).map((variant, vIdx) => (
                                             <React.Fragment key={vIdx}>
                                               {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
-                                              <Row className="g-2 align-items-end mb-2">
+                                              <Row className="g-2 align-items-start mb-2">
                                                 <Col xs={12} sm={4}>
                                                   <BForm.Group>
                                                     <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
@@ -645,7 +668,7 @@ const AddDishes = () => {
                                                         ...selectStyles,
                                                         control: (base, state) => ({
                                                           ...selectStyles.control(base, state),
-                                                          minHeight: '48px',
+                                                          minHeight: '38px',
                                                           borderRadius: '12px',
                                                         }),
                                                       }}
@@ -669,7 +692,7 @@ const AddDishes = () => {
                                                 <Col xs={12} sm={3}>
                                                   <BForm.Group>
                                                     <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                      Price (₹)
+                                                      Price
                                                     </BForm.Label>
                                                     <BForm.Control
                                                       type="text"
@@ -678,7 +701,7 @@ const AddDishes = () => {
                                                       onChange={handleChange}
                                                       placeholder="Price"
                                                       className="pill-input"
-                                                      style={{ height: '48px', borderRadius: '12px' }}
+                                                      style={{ height: '38px', borderRadius: '12px' }}
                                                     />
                                                     <ErrorMessage
                                                       name={`dishes[${index}].variants[${vIdx}].price`}
@@ -697,7 +720,7 @@ const AddDishes = () => {
                                                         ...selectStyles,
                                                         control: (base, state) => ({
                                                           ...selectStyles.control(base, state),
-                                                          minHeight: '48px',
+                                                          minHeight: '38px',
                                                           borderRadius: '12px',
                                                         }),
                                                       }}
@@ -713,16 +736,15 @@ const AddDishes = () => {
                                                     />
                                                   </BForm.Group>
                                                 </Col>
-                                                <Col xs={2} sm="auto" className="pb-1 text-end">
-                                                  <Button
-                                                    variant="outline-danger"
-                                                    onClick={() => removeVariant(vIdx)}
-                                                    disabled={dish.variants.length === 1}
-                                                    style={{ height: '48px', width: '48px', minWidth: '48px', borderRadius: '12px', padding: 0, flexShrink: 0 }}
-                                                    className="d-flex align-items-center justify-content-center btn btn-outline-danger"
-                                                  >
-                                                    <CsLineIcons icon="bin" size="14" />
-                                                  </Button>
+                                                <Col xs={2} sm="auto" className="pb-1 text-end">                                                  <BForm.Label className="small mb-1 d-block" style={{ fontSize: '0.75rem', visibility: 'hidden' }}>&nbsp;</BForm.Label>                                                 <Button
+                                                  variant="outline-danger"
+                                                  onClick={() => removeVariant(vIdx)}
+                                                  disabled={dish.variants.length === 1}
+                                                  style={{ height: '38px', width: '38px', minWidth: '38px', borderRadius: '12px', padding: 0, flexShrink: 0 }}
+                                                  className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                                >
+                                                  <CsLineIcons icon="bin" size="14" />
+                                                </Button>
                                                 </Col>
                                               </Row>
                                             </React.Fragment>
@@ -756,7 +778,7 @@ const AddDishes = () => {
                                           {(dish.addons || []).map((addon, aIdx) => (
                                             <React.Fragment key={aIdx}>
                                               {aIdx > 0 && <hr className="my-2" style={{ borderTop: '1px dashed #e2e8f0' }} />}
-                                              <Row className="g-2 align-items-end mb-2">
+                                              <Row className="g-2 align-items-start mb-2">
                                                 <Col xs={12} sm={6}>
                                                   <BForm.Group>
                                                     <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
@@ -767,7 +789,7 @@ const AddDishes = () => {
                                                         ...selectStyles,
                                                         control: (base, state) => ({
                                                           ...selectStyles.control(base, state),
-                                                          minHeight: '48px',
+                                                          minHeight: '38px',
                                                           borderRadius: '12px',
                                                         }),
                                                       }}
@@ -800,7 +822,7 @@ const AddDishes = () => {
                                                       onChange={handleChange}
                                                       placeholder="Price"
                                                       className="pill-input"
-                                                      style={{ height: '48px', borderRadius: '12px' }}
+                                                      style={{ height: '38px', borderRadius: '12px' }}
                                                     />
                                                     <ErrorMessage
                                                       name={`dishes[${index}].addons[${aIdx}].price`}
@@ -813,7 +835,7 @@ const AddDishes = () => {
                                                   <Button
                                                     variant="outline-danger"
                                                     onClick={() => removeAddon(aIdx)}
-                                                    style={{ height: '48px', width: '48px', minWidth: '48px', borderRadius: '12px', padding: 0, flexShrink: 0 }}
+                                                    style={{ height: '38px', width: '38px', minWidth: '38px', borderRadius: '12px', padding: 0, flexShrink: 0 }}
                                                     className="d-flex align-items-center justify-content-center btn btn-outline-danger"
                                                   >
                                                     <CsLineIcons icon="bin" size="14" />
@@ -850,7 +872,7 @@ const AddDishes = () => {
                                     <label
                                       htmlFor={`file-${index}`}
                                       className="custom-btn-outline px-3 py-2 rounded-pill small fw-bold cursor-pointer mb-0 d-flex align-items-center justify-content-center w-100"
-                                      style={{ height: '48px' }}
+                                      style={{ height: '38px' }}
                                     >
                                       <CsLineIcons icon="upload" size="14" className="me-2" />
                                       {dish.dish_img ? 'Change Image' : 'Add Image'}
@@ -940,3 +962,4 @@ const AddDishes = () => {
 };
 
 export default AddDishes;
+

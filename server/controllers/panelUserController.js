@@ -107,7 +107,7 @@ exports.changePanelPassword = async (req, res) => {
   try {
     const { planName } = req.params;
     const userId = req.user._id;
-    const { adminPassword, newPassword } = req.body;
+    const { adminPassword, newPassword, accountId } = req.body;
 
     // Verify admin password
     const admin = await User.findById(userId).select('+password');
@@ -120,7 +120,11 @@ exports.changePanelPassword = async (req, res) => {
 
     // Get correct panel model
     const Model = getModel(planName);
-    const panelUser = await Model.findOne({ user_id: userId }).select('+password');
+    let query = { user_id: userId };
+    if (planName === 'Create Cashier' && accountId) {
+      query._id = accountId;
+    }
+    const panelUser = await Model.findOne(query).select('+password');
     if (!panelUser) {
       return res.status(404).json({ message: "Panel account not found" });
     }
