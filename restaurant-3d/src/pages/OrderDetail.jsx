@@ -23,7 +23,7 @@ export default function OrderDetail() {
       try {
         const token = localStorage.getItem('ember-token');
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-        const res = await fetch(`${API_URL}/web-customer/get-order/${orderId}`, {
+        const res = await fetch(`${API_URL}/web-customer/get-order/${orderId}?restaurantCode=${restaurantCode}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -41,7 +41,7 @@ export default function OrderDetail() {
     };
 
     fetchOrderDetails();
-  }, [orderId]);
+  }, [orderId, restaurantCode]);
 
   const handlePrint = () => {
     if (!order || !settings) return;
@@ -99,6 +99,11 @@ export default function OrderDetail() {
           ${order.customer_name ? `
             <tr>
               <td colspan="2" style="padding: 3px 0;"><strong>Customer:</strong> ${order.customer_name}</td>
+            </tr>
+          ` : ''}
+          ${(order.order_type === 'Delivery' && (order.customer_address || order.customer_details?.address)) ? `
+            <tr>
+              <td colspan="2" style="padding: 3px 0; font-size: 12px; line-height: 1.4;"><strong>Delivery Address:</strong> ${order.customer_address || order.customer_details.address}</td>
             </tr>
           ` : ''}
         </table>
@@ -349,6 +354,12 @@ export default function OrderDetail() {
                     <div className="d-flex justify-content-between">
                       <span>Customer Phone:</span>
                       <span className="text-white fw-semibold">{order.customer_phone}</span>
+                    </div>
+                  )}
+                  {order.order_type === 'Delivery' && (order.customer_address || order.customer_details?.address) && (
+                    <div className="d-flex flex-column gap-1 mt-2 pt-2 border-top border-white-10">
+                      <span>Delivery Address:</span>
+                      <span className="text-white fw-semibold" style={{ lineBreak: 'anywhere' }}>{order.customer_address || order.customer_details.address}</span>
                     </div>
                   )}
                 </div>

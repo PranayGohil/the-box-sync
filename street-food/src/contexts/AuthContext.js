@@ -12,22 +12,25 @@ export const AuthProvider = ({ children }) => {
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserSubscriptions = async () => {
+  const fetchUserSubscriptions = async (token) => {
     try {
       const response = await axios.get(
         `${process.env.REACT_APP_API}/subscription/get`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${token || localStorage.getItem('token')}`,
           },
         }
       );
       if (response.data?.data?.length > 0) {
         const active = response.data.data.filter((plan) => plan.status === 'active');
         setActivePlans(active.map((plan) => plan.plan_name));
+      } else {
+        setActivePlans([]);
       }
     } catch (error) {
       console.error('Error fetching subscription plans:', error);
+      setActivePlans([]);
     }
   };
 
@@ -36,29 +39,32 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     console.log(token);
     if (token) {
-      axios
-        .get(`${process.env.REACT_APP_API}/user/get`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
+      const initAuth = async () => {
+        try {
+          const res = await axios.get(`${process.env.REACT_APP_API}/user/get`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           if (res.data === 'Null') {
             console.log('Null Token Expired');
             localStorage.removeItem('token');
             setCurrentUser(null);
             setIsLogin(false);
+          } else {
+            setCurrentUser(res.data);
+            setIsLogin(true);
+            await fetchUserSubscriptions(token);
           }
-          setCurrentUser(res.data);
-          setIsLogin(true);
-        })
-        .catch(() => {
+        } catch {
           localStorage.removeItem('token');
           setCurrentUser(null);
           setIsLogin(false);
-        })
-        .finally(() => setLoading(false));
-      fetchUserSubscriptions();
+        } finally {
+          setLoading(false);
+        }
+      };
+      initAuth();
     } else {
       history.push('/login');
       setLoading(false);

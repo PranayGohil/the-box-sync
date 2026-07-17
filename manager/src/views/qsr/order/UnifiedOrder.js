@@ -241,7 +241,7 @@ const UnifiedOrder = () => {
         custInfo = {
           name: order.customer_details?.name || order.customer_name || '',
           phone: order.customer_details?.phone || order.customer_phone || '',
-          address: order.customer_details?.address || '',
+          address: order.customer_address || order.customer_details?.address || '',
           total_persons: '',
           waiter: '',
           table_no: '',

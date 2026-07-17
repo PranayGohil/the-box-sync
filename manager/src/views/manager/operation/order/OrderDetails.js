@@ -352,6 +352,15 @@ const OrderDetails = () => {
                   <strong>{order.customer_name || 'Guest'}</strong>
                   {order.customer_phone && <span className="ms-2 text-muted">({order.customer_phone})</span>}
                 </div>
+                {order.order_type === 'Delivery' && (order.customer_address || order.customer_details?.address) && (
+                  <div className="mt-2 d-flex align-items-start">
+                    <CsLineIcons icon="pin" size={16} className="me-2 mt-1 text-muted" />
+                    <div>
+                      <span className="text-muted small d-block">Delivery Address:</span>
+                      <strong className="small" style={{ lineBreak: 'anywhere' }}>{order.customer_address || order.customer_details.address}</strong>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Row className="g-3 mb-4">

@@ -15,8 +15,8 @@ const ControlsPageSize = ({ tableInstance, pageSize: propPageSize, onPageSizeCha
             ref={ref}
             {...triggerHandler}
             variant="outline-primary"
-            className="rounded-pill px-3 py-1 fw-bold border-2 small"
-            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
+            className="rounded-pill px-3 py-1 fw-bold border-2 small feedback-page-size-toggle"
+            style={{ display: 'flex', alignItems: 'center' }}
           >
             {pageSize} Items
           </Dropdown.Toggle>

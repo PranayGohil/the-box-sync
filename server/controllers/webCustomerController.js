@@ -1,6 +1,7 @@
 const WebCustomer = require('../models/webCustomerModel');
 const Menu = require('../models/menuModel');
 const Order = require('../models/orderModel');
+const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const Otp = require('../models/otpModel');
@@ -516,6 +517,7 @@ exports.updateCart = async (req, res) => {
 exports.getCustomerOrders = async (req, res) => {
     try {
         const { id } = req.params;
+        const { restaurantCode } = req.query;
 
         const customer = await WebCustomer.findById(id);
         if (!customer) {
@@ -525,7 +527,22 @@ exports.getCustomerOrders = async (req, res) => {
             });
         }
 
-        const orders = await Order.find({ customer_id: id }).sort({ _id: -1 });
+        if (!restaurantCode) {
+            return res.status(400).json({
+                success: false,
+                message: 'Restaurant code is required',
+            });
+        }
+
+        const restaurant = await User.findOne({ restaurant_code: restaurantCode });
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: 'Restaurant not found',
+            });
+        }
+
+        const orders = await Order.find({ customer_id: id, user_id: restaurant._id.toString() }).sort({ _id: -1 });
         if (!orders) {
             return res.status(404).json({
                 success: false,
@@ -550,6 +567,7 @@ exports.getCustomerOrders = async (req, res) => {
 exports.getCustomerOrder = async (req, res) => {
     try {
         const { orderId } = req.params;
+        const { restaurantCode } = req.query;
 
         const orderData = await Order.findById(orderId);
         if (!orderData) {
@@ -559,13 +577,30 @@ exports.getCustomerOrder = async (req, res) => {
             });
         }
 
+        if (!restaurantCode) {
+            return res.status(400).json({
+                success: false,
+                message: 'Restaurant code is required',
+            });
+        }
+
+        const restaurant = await User.findOne({ restaurant_code: restaurantCode });
+        if (!restaurant || orderData.user_id !== restaurant._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied: Order does not belong to this restaurant',
+            });
+        }
+
         let responseData = orderData.toObject();
 
         if (orderData.customer_id) {
             let customerData = await WebCustomer.findById(orderData.customer_id);
             if (customerData) {
                 const customerObj = customerData.toObject();
-                if (!customerObj.address && Array.isArray(customerObj.addresses) && customerObj.addresses.length > 0) {
+                if (orderData.customer_address) {
+                    customerObj.address = orderData.customer_address;
+                } else if (!customerObj.address && Array.isArray(customerObj.addresses) && customerObj.addresses.length > 0) {
                     const defaultAddr = customerObj.addresses.find(a => a.is_default) || customerObj.addresses[0];
                     customerObj.address = `${defaultAddr.address}, ${defaultAddr.city}, ${defaultAddr.pincode}`;
                 }

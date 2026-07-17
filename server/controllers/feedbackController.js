@@ -196,6 +196,11 @@ const replyFeedback = async (req, res) => {
       html: htmlContent,
     });
 
+    await User.updateOne(
+      { _id: userId, "feedbacks._id": feedbackId },
+      { $set: { "feedbacks.$.reply": reply } }
+    );
+
     return res.json({
       success: true,
       message: "Feedback replied successfully.",
