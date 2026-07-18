@@ -504,9 +504,11 @@
             <div class="wrapper my-5">
                 <div class="contents_privacy ">
                     <!-- Token Loading State -->
-                    <div id="tokenLoading" style="display:flex; justify-content:center; align-items:center; min-height:200px;">
+                    <div id="tokenLoading"
+                        style="display:flex; justify-content:center; align-items:center; min-height:200px;">
                         <div class="text-center">
-                            <div class="spin spin-dark" style="width:36px;height:36px;border-width:3px;margin:0 auto 16px; border: 3px solid #e2e8f0; border-top-color: #23b3f4; border-radius: 50%; animation: spin .7s linear infinite;">
+                            <div class="spin spin-dark"
+                                style="width:36px;height:36px;border-width:3px;margin:0 auto 16px; border: 3px solid #e2e8f0; border-top-color: #23b3f4; border-radius: 50%; animation: spin .7s linear infinite;">
                             </div>
                             <p style="color:#64748b;">Loading restaurant details…</p>
                         </div>
@@ -912,6 +914,7 @@
                 if (restaurantInfo.logo) {
                     qs('restaurantLogo').src = UPLOAD_BASE + restaurantInfo.logo;
                     qs('restaurantLogo').style.display = 'block';
+                    console.log(qs('restaurantLogo').src, '--------------------------------restaurantLogo--------------------');
                 } else {
                     qs('restaurantLogo').src = 'assets/images/logo/logo-blue.svg';
                     qs('restaurantLogo').style.display = 'block';

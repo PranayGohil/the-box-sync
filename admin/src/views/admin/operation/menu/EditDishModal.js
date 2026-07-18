@@ -1,4 +1,4 @@
-﻿/* eslint-disable react/no-this-in-sfc, func-names */
+/* eslint-disable react/no-this-in-sfc, func-names */
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Button, Form, Spinner, Row, Col } from 'react-bootstrap';
 import { useFormik } from 'formik';
@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 
 const customStyles = `
   .pill-input {
@@ -96,6 +97,11 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(data?.quantity != null && data.quantity !== '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cropperState, setCropperState] = useState({
+    show: false,
+    imageSrc: '',
+    aspect: 1,
+  });
 
   const selectStyles = {
     control: (base, state) => ({
@@ -369,8 +375,26 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
                     accept="image/*"
                     onChange={(e) => {
                       const file = e.currentTarget.files[0];
-                      formik.setFieldValue('dish_img', file);
-                      if (file) setPreviewImg(URL.createObjectURL(file));
+                      if (file) {
+                        if (!file.type.startsWith('image/')) {
+                          toast.error('Please select a valid image file');
+                          return;
+                        }
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error('Image size should not exceed 5MB');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.addEventListener('load', () => {
+                          setCropperState({
+                            show: true,
+                            imageSrc: reader.result,
+                            aspect: 1,
+                          });
+                        });
+                        reader.readAsDataURL(file);
+                        e.target.value = '';
+                      }
                     }}
                     disabled={isSubmitting}
                   />
@@ -650,6 +674,17 @@ const EditDishModal = ({ show, handleClose, data, fetchMenuData, menuData = [] }
           )}
         </Button>
       </Modal.Footer>
+
+      <ImageCropperModal
+        show={cropperState.show}
+        onHide={() => setCropperState((prev) => ({ ...prev, show: false }))}
+        imageSrc={cropperState.imageSrc}
+        initialAspect={cropperState.aspect}
+        onCropComplete={(croppedFile) => {
+          formik.setFieldValue('dish_img', croppedFile);
+          setPreviewImg(URL.createObjectURL(croppedFile));
+        }}
+      />
     </Modal>
   );
 };
