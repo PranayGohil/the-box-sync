@@ -113,6 +113,9 @@ const orderSchema = new Schema({
   discount_amount: {
     type: Number,
   },
+  discount_reason: {
+    type: String,
+  },
   waveoff_amount: {
     type: Number,
   },

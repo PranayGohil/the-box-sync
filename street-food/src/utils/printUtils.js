@@ -229,7 +229,7 @@ export const printFullBill = (ord, userData, items, subTotal) => {
 
           ${ord.discount_amount > 0 ? `
             <tr>
-              <td class="text-right"><strong>Discount:</strong></td>
+              <td class="text-right"><strong>${ord.discount_reason || 'Discount'}:</strong></td>
               <td class="text-right">-₹${parseFloat(ord.discount_amount).toFixed(2)}</td>
             </tr>
           ` : ''}
@@ -505,6 +505,7 @@ export const printModalBill = async (liveData, setPrinting) => {
       sgst_amount: parseFloat(paymentData.sgstAmount) || 0,
       vat_amount: parseFloat(paymentData.vatAmount) || 0,
       discount_amount: parseFloat(paymentData.discountAmount) || 0,
+      discount_reason: paymentData.appliedPromo ? `${paymentData.appliedPromo.code} APPLIED` : paymentData.discountAmount > 0 && !paymentData.appliedPromo ? 'DISCOUNT/POINTS' : '',
       waveoff_amount: parseFloat(paymentData.waveoffAmount) || 0,
       sub_total: parseFloat(paymentData.subTotal) || 0,
       total_amount: parseFloat(paymentData.total) || 0,

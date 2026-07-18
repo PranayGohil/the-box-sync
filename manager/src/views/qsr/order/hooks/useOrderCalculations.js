@@ -1,11 +1,6 @@
 import { useEffect } from 'react';
 
-const useOrderCalculations = ({
-  orderItems,
-  taxRates,
-  paymentData,
-  setPaymentData,
-}) => {
+const useOrderCalculations = ({ orderItems, taxRates, paymentData, setPaymentData }) => {
   // Calculate totals when order items change
   useEffect(() => {
     const subTotal = orderItems.reduce((sum, item) => sum + item.dish_price * item.quantity, 0);
@@ -113,7 +108,13 @@ const useOrderCalculations = ({
       setPaymentData((prev) => {
         const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
         const pAmount = parseFloat(prev.paidAmount) || 0;
-        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00' };
+        return {
+          ...prev,
+          discountValue: value,
+          discountAmount: discountAmount.toFixed(2),
+          total: total.toFixed(2),
+          waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00',
+        };
       });
     } else {
       const limitedValue = Math.min(dValue, subTotal);
@@ -121,7 +122,13 @@ const useOrderCalculations = ({
       setPaymentData((prev) => {
         const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
         const pAmount = parseFloat(prev.paidAmount) || 0;
-        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00' };
+        return {
+          ...prev,
+          discountValue: value,
+          discountAmount: discountAmount.toFixed(2),
+          total: total.toFixed(2),
+          waveoffAmount: pAmount > 0 ? (total - pAmount).toFixed(2) : '0.00',
+        };
       });
     }
   };

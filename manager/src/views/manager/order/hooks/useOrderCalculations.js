@@ -1,11 +1,6 @@
 import { useEffect } from 'react';
 
-const useOrderCalculations = ({
-  orderItems,
-  taxRates,
-  paymentData,
-  setPaymentData,
-}) => {
+const useOrderCalculations = ({ orderItems, taxRates, paymentData, setPaymentData }) => {
   // Calculate totals when order items change
   useEffect(() => {
     const subTotal = orderItems.reduce((sum, item) => sum + item.dish_price * item.quantity, 0);
@@ -17,13 +12,28 @@ const useOrderCalculations = ({
     const totalTax = cgstAmount + sgstAmount + vatAmount;
 
     setPaymentData((prev) => {
-      // Calculate discount amount based on type
+      // Calculate discount amount based on type or promo
       let discountAmount = 0;
-      const dValue = parseFloat(prev.discountValue) || 0;
-      if (prev.discountType === 'percentage') {
-        discountAmount = (subTotal * dValue) / 100;
+      
+      if (prev.appliedPromo) {
+        if (subTotal >= (prev.appliedPromo.minOrderValue || 0)) {
+          if (prev.appliedPromo.discountType === 'percentage') {
+            discountAmount = (subTotal * prev.appliedPromo.discountValue) / 100;
+            if (prev.appliedPromo.maxDiscountAmount && discountAmount > prev.appliedPromo.maxDiscountAmount) {
+              discountAmount = prev.appliedPromo.maxDiscountAmount;
+            }
+          } else if (prev.appliedPromo.discountType === 'flat') {
+            discountAmount = prev.appliedPromo.discountValue;
+          }
+          // BOGO and Free Item do not affect the monetary cart total directly
+        }
       } else {
-        discountAmount = dValue;
+        const dValue = parseFloat(prev.discountValue) || 0;
+        if (prev.discountType === 'percentage') {
+          discountAmount = (subTotal * dValue) / 100;
+        } else {
+          discountAmount = dValue;
+        }
       }
 
       const total = subTotal + totalTax - discountAmount;
@@ -111,14 +121,28 @@ const useOrderCalculations = ({
       discountAmount = (subTotal * limitedValue) / 100;
       setPaymentData((prev) => {
         const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
-        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), paidAmount: total.toFixed(2), waveoffAmount: '0.00' };
+        return {
+          ...prev,
+          discountValue: value,
+          discountAmount: discountAmount.toFixed(2),
+          total: total.toFixed(2),
+          paidAmount: total.toFixed(2),
+          waveoffAmount: '0.00',
+        };
       });
     } else {
       const limitedValue = Math.min(dValue, subTotal);
       discountAmount = limitedValue;
       setPaymentData((prev) => {
         const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
-        return { ...prev, discountValue: value, discountAmount: discountAmount.toFixed(2), total: total.toFixed(2), paidAmount: total.toFixed(2), waveoffAmount: '0.00' };
+        return {
+          ...prev,
+          discountValue: value,
+          discountAmount: discountAmount.toFixed(2),
+          total: total.toFixed(2),
+          paidAmount: total.toFixed(2),
+          waveoffAmount: '0.00',
+        };
       });
     }
   };

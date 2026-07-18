@@ -672,6 +672,80 @@ const deleteRetentionCampaign = async (req, res) => {
   }
 };
 
+const validatePromoCode = async (req, res) => {
+  try {
+    const user_id = req.user._id || req.user;
+    const { promoCode, phone } = req.body;
+
+    if (!promoCode) {
+      return res.status(400).json({ success: false, message: "Promo code is required" });
+    }
+
+    const campaign = await RetentionCampaign.findOne({ user_id, promoCode, isPromoCode: true, isActive: true });
+    
+    if (!campaign) {
+      return res.status(404).json({ success: false, message: "Invalid or expired promo code" });
+    }
+
+    // Check if campaign has rule conditions
+    if (campaign.conditions && campaign.conditions.length > 0) {
+      if (!phone) {
+        return res.status(401).json({ success: false, message: "This promo code requires you to be an existing customer. Please provide your phone number." });
+      }
+
+      // Check customer rules
+      let customer = await Customer.findOne({ phone, user_id });
+      if (!customer) {
+        return res.status(401).json({ success: false, message: "Customer profile not found. You do not meet the rules for this promo." });
+      }
+
+      let meetsConditions = campaign.conditionMatch === "ALL" ? true : false;
+      
+      for (const cond of campaign.conditions) {
+        let actualValue = 0;
+        if (cond.field === "TOTAL_SPEND") actualValue = customer.total_spend || 0;
+        else if (cond.field === "VISIT_COUNT") actualValue = customer.visit_count || 0;
+        else if (cond.field === "INACTIVITY_DAYS") {
+          const lastVisit = customer.last_visit_date || customer.createdAt;
+          actualValue = Math.floor((new Date() - new Date(lastVisit)) / (1000 * 60 * 60 * 24));
+        }
+
+        let isMatch = false;
+        if (cond.operator === "GREATER_THAN" && actualValue > cond.value) isMatch = true;
+        if (cond.operator === "LESS_THAN" && actualValue < cond.value) isMatch = true;
+        if (cond.operator === "EQUAL" && actualValue === cond.value) isMatch = true;
+
+        if (campaign.conditionMatch === "ALL" && !isMatch) {
+          meetsConditions = false;
+          break;
+        }
+        if (campaign.conditionMatch === "ANY" && isMatch) {
+          meetsConditions = true;
+          break;
+        }
+      }
+
+      if (!meetsConditions) {
+        return res.status(400).json({ success: false, message: "You do not meet the specific requirements to use this promo code." });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Promo code applied successfully",
+      reward: {
+        type: campaign.rewardType,
+        value: campaign.rewardValue,
+        name: campaign.name
+      }
+    });
+
+  } catch (error) {
+    console.error("Error validating promo code:", error);
+    return res.status(500).json({ success: false, message: "Error validating promo code" });
+  }
+};
+
 module.exports = {
   getLoyaltySettings,
   saveLoyaltySettings,
@@ -685,5 +759,6 @@ module.exports = {
   getRetentionCampaigns,
   createRetentionCampaign,
   toggleRetentionCampaignStatus,
-  deleteRetentionCampaign
+  deleteRetentionCampaign,
+  validatePromoCode
 };

@@ -17,6 +17,10 @@ const retentionCampaignSchema = new Schema({
   // Mode of operation
   isAutomated: { type: Boolean, default: true },
   
+  // Promo Code Support
+  isPromoCode: { type: Boolean, default: false },
+  promoCode: { type: String, default: null },
+  
   // Rule Definitions
   conditionMatch: { type: String, enum: ["ALL", "ANY"], default: "ALL" },
   conditions: [conditionSchema],

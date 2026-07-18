@@ -10,6 +10,7 @@ const Layout = ({ children }) => {
   useLayout();
 
   const { pathname } = useLocation();
+  const isOrderPage = ['/order/dine-in', '/order/takeaway', '/order/delivery', '/order/qsr-pos'].some(p => pathname.includes(p));
 
   useEffect(() => {
     document.documentElement.click();
@@ -18,7 +19,7 @@ const Layout = ({ children }) => {
     }, [pathname]);
   return (
     <>
-      <Nav />
+      {!isOrderPage && <Nav />}
       <main>
         <Container fluid>
           <Row className="h-100">

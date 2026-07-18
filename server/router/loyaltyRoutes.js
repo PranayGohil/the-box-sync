@@ -11,7 +11,8 @@ const {
   getRetentionCampaigns,
   createRetentionCampaign,
   toggleRetentionCampaignStatus,
-  deleteRetentionCampaign
+  deleteRetentionCampaign,
+  validatePromoCode
 } = require("../controllers/loyaltyController");
 const authMiddleware = require("../middlewares/auth-middlewares");
 
@@ -40,5 +41,7 @@ loyaltyRouter.get("/retention-campaigns", authMiddleware, getRetentionCampaigns)
 loyaltyRouter.post("/retention-campaigns", authMiddleware, createRetentionCampaign);
 loyaltyRouter.put("/retention-campaigns/toggle/:id", authMiddleware, toggleRetentionCampaignStatus);
 loyaltyRouter.delete("/retention-campaigns/:id", authMiddleware, deleteRetentionCampaign);
+// Promo Code Validation
+loyaltyRouter.post("/validate-promo", authMiddleware, validatePromoCode);
 
 module.exports = loyaltyRouter;

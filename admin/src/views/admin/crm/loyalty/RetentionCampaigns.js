@@ -17,6 +17,8 @@ const RetentionCampaigns = () => {
     name: '',
     triggerType: '',
     isAutomated: true,
+    isPromoCode: false,
+    promoCode: '',
     conditionMatch: 'ALL',
     conditions: [{ field: 'TOTAL_SPEND', operator: 'GREATER_THAN', value: 0 }],
     rewardType: 'POINTS',
@@ -321,9 +323,14 @@ const RetentionCampaigns = () => {
                 <tr key={camp._id}>
                   <td className="fw-bold crm-text-heading">{camp.name}</td>
                   <td>
-                    <Badge bg="info" className="text-white px-3 py-2 rounded-pill">
+                    <Badge bg="info" className="text-white px-3 py-2 rounded-pill mb-1 d-inline-block">
                       {camp.triggerType}
                     </Badge>
+                    {camp.isPromoCode && (
+                      <div className="mt-1">
+                        <Badge bg="primary" className="px-2 py-1"><CsLineIcons icon="tag" size="12" className="me-1"/>{camp.promoCode}</Badge>
+                      </div>
+                    )}
                   </td>
                   <td className="crm-text-body" style={{ maxWidth: '250px' }}>
                     {camp.conditions && camp.conditions.length > 0 ? (
@@ -414,11 +421,17 @@ const RetentionCampaigns = () => {
                     className="fw-bold text-muted mt-2"
                   />
                 </Col>
+
               </Row>
             </div>
 
             <div className="mb-4">
               <h6 className="fw-bold text-primary mb-3">2. Rule Logic</h6>
+              {newCampaign.isPromoCode && (
+                <div className="alert alert-info border-0 rounded-3 mb-3 p-3">
+                  <strong>Promo Code Mode:</strong> You can leave the conditions below completely empty if you want this promo code to be unconditional and usable without a customer login!
+                </div>
+              )}
               <div className="rule-card">
                 <div className="d-flex align-items-center mb-3">
                   <span className="me-2 fw-bold text-muted">Match</span>
@@ -471,7 +484,7 @@ const RetentionCampaigns = () => {
                       />
                     </Col>
                     <Col sm={1} className="text-end">
-                      {newCampaign.conditions.length > 1 && (
+                      {(newCampaign.isPromoCode || newCampaign.conditions.length > 1) && (
                         <button type="button" className="action-btn delete m-0" onClick={() => handleRemoveCondition(index)}>
                           <CsLineIcons icon="close" size="14" />
                         </button>

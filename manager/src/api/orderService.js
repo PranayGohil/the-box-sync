@@ -20,6 +20,12 @@ export const createOrUpdateDeliveryOrder = (payload, token) => {
   });
 };
 
+export const validatePromoCodeAPI = (code, subTotal, token) => {
+  return axios.post(`${API_URL}/promocodes/validate`, { code, subTotal }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
 export const getOrderById = (orderId, token) => {
   return axios.get(`${API_URL}/order/get/${orderId}`, {
     headers: { Authorization: `Bearer ${token}` },

@@ -12,6 +12,7 @@ import WhatsappCampaign from './campaign/WhatsappCampaign';
 import EmailCampaign from './campaign/EmailCampaign';
 import StandardLoyalty from './loyalty/StandardLoyalty';
 import RetentionCampaigns from './loyalty/RetentionCampaigns';
+import PromoCodes from './loyalty/PromoCodes';
 import LedgerLogs from './ledger/LedgerLogs';
 
 const NavContent = () => {
@@ -50,6 +51,10 @@ const NavContent = () => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Retention Loyalty</span>
           </Nav.Link>
+          <Nav.Link as={NavLink} to="/crm/loyalty/promocodes" className="px-0">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Promo Code</span>
+          </Nav.Link>
         </div>
       </div>
 
@@ -77,7 +82,8 @@ const MobileBottomNav = () => {
     { label: 'Email', icon: 'email', to: '/crm/campaign/email' },
     { label: 'Standard', icon: 'star', to: '/crm/loyalty/standard' },
     { label: 'Retention', icon: 'heart', to: '/crm/loyalty/retention' },
-    { label: 'Ledger', icon: 'list', to: '/crm/ledger-logs' },
+    { label: 'Promo Codes', icon: 'tag', to: '/crm/loyalty/promocodes' },
+    { label: 'Ledger Logs', icon: 'list', to: '/crm/ledger-logs' },
   ];
 
   return (
@@ -171,6 +177,7 @@ const Crm = () => {
             <Route exact path="/crm/campaign/email" render={() => <EmailCampaign />} />
             <Route exact path="/crm/loyalty/standard" render={() => <StandardLoyalty />} />
             <Route exact path="/crm/loyalty/retention" render={() => <RetentionCampaigns />} />
+            <Route exact path="/crm/loyalty/promocodes" render={() => <PromoCodes />} />
             <Route exact path="/crm/ledger-logs" render={() => <LedgerLogs />} />
           </Switch>
         </Col>

@@ -76,23 +76,27 @@ const PaymentSummaryBox = ({
             marginBottom: '8px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="d-flex align-items-baseline gap-2">
-              <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>
-                Total:
-              </span>
-              <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b' }}>
-                ₹{totalAmount.toFixed(0)}
-              </span>
+          <div className="d-flex flex-column w-100">
+            <div className="d-flex justify-content-between align-items-center w-100 mb-1">
+              <div className="d-flex align-items-baseline gap-2">
+                <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8' }}>Total:</span>
+                {parseFloat(paymentData.discountAmount) > 0 && (
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8', textDecoration: 'line-through' }}>
+                    ₹{(totalAmount + parseFloat(paymentData.discountAmount)).toFixed(0)}
+                  </span>
+                )}
+                <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b' }}>₹{totalAmount.toFixed(0)}</span>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 700 }}>{totalQty} items</div>
+                {dueAmount > 0.01 && totalPaid > 0 && <div style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444' }}>Due: ₹{dueAmount.toFixed(0)}</div>}
+              </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 700 }}>{totalQty} items</div>
-              {dueAmount > 0.01 && totalPaid > 0 && (
-                <div style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444' }}>
-                  Due: ₹{dueAmount.toFixed(0)}
-                </div>
-              )}
-            </div>
+            {parseFloat(paymentData.discountAmount) > 0 && (
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a', textAlign: 'left' }}>
+                {paymentData.appliedPromo ? `${paymentData.appliedPromo.code} APPLIED` : 'DISCOUNT APPLIED'}
+              </div>
+            )}
           </div>
         </div>
 

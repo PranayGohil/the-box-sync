@@ -310,6 +310,7 @@ const PaymentModal = ({
                   <Form.Select
                     value={paymentData.discountType}
                     onChange={(e) => handleDiscountTypeChange(e.target.value)}
+                    disabled={!!paymentData.appliedPromo}
                     style={{ maxWidth: '65px', borderRight: 'none', borderTopLeftRadius: '10px', borderBottomLeftRadius: '10px', padding: '6px 8px', fontSize: '13px' }}
                   >
                     <option value="amount">₹</option>
@@ -319,6 +320,7 @@ const PaymentModal = ({
                     type="number"
                     value={paymentData.discountValue || ''}
                     onChange={(e) => handleDiscountValueChange(e.target.value)}
+                    disabled={!!paymentData.appliedPromo}
                     placeholder="0"
                     style={{ borderTopRightRadius: '10px', borderBottomRightRadius: '10px', padding: '6px 10px', fontSize: '13px' }}
                   />

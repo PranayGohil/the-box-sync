@@ -2,6 +2,7 @@ require("dotenv").config();
 require("express-async-errors");
 require('./cron/reservationCron');
 require('./cron/dailyStockCron');
+require('./cron/promoCodeCron');
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -37,6 +38,7 @@ const waiterRouter = require("./router/waiterRoutes.js");
 const reservationRouter = require("./router/reservationRoutes.js");
 const dailyStockRouter = require("./router/dailyStockRoutes.js");
 const loyaltyRouter = require("./router/loyaltyRoutes.js");
+const promoCodeRouter = require("./router/promoCodeRoutes.js");
 const notificationRouter = require("./router/notificationRoutes");
 const campaignTemplateRouter = require("./router/campaignTemplateRoutes");
 
@@ -204,6 +206,7 @@ app.use("/api/waiter", waiterRouter);
 app.use("/api/reservation", reservationRouter);
 app.use("/api/daily-stock", dailyStockRouter);
 app.use("/api/loyalty", loyaltyRouter);
+app.use("/api/promocodes", promoCodeRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/campaign-template", campaignTemplateRouter);
 

@@ -1,62 +1,63 @@
 import React from 'react';
 import CreatableSelect from 'react-select/creatable';
 
-/* Compact POS-style input */
+/* Premium POS-style input */
 const inputStyle = {
   width: '100%',
-  height: '30px',
-  padding: '0 8px',
-  fontSize: '12px',
+  height: '36px', /* Reduced for small laptops */
+  padding: '0 10px',
+  fontSize: '12.5px',
   fontWeight: 600,
-  color: '#1e293b',
+  color: '#0f172a',
   border: '1.5px solid rgba(226,232,240,0.9)',
-  borderRadius: '6px',
+  borderRadius: '8px',
   outline: 'none',
-  background: '#f8fafc',
-  transition: 'all 0.18s',
+  background: '#ffffff',
+  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
   boxSizing: 'border-box',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
 };
 
 const labelStyle = {
   fontSize: '10px',
-  fontWeight: 700,
+  fontWeight: 800,
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
-  color: '#94a3b8',
-  marginBottom: '3px',
+  color: '#64748b',
+  marginBottom: '4px',
   display: 'block',
 };
 
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    minHeight: '30px',
-    height: '30px',
-    fontSize: '12px',
+    minHeight: '36px',
+    height: '36px',
+    fontSize: '12.5px',
     fontWeight: 600,
-    color: '#1e293b',
+    color: '#0f172a',
     borderColor: state.isFocused ? 'rgba(35,179,244,0.5)' : 'rgba(226,232,240,0.9)',
-    borderRadius: '6px',
-    background: '#f8fafc',
-    boxShadow: state.isFocused ? '0 0 0 3px rgba(35,179,244,0.1)' : 'none',
-    transition: 'all 0.18s',
+    borderRadius: '8px',
+    background: '#ffffff',
+    boxShadow: state.isFocused ? '0 0 0 3px rgba(35,179,244,0.1)' : '0 1px 2px rgba(0,0,0,0.02)',
+    transition: 'all 0.2s',
     cursor: 'text',
     '&:hover': { borderColor: 'rgba(35,179,244,0.4)' },
   }),
-  valueContainer: (base) => ({ ...base, padding: '0 8px', height: '32px' }),
+  valueContainer: (base) => ({ ...base, padding: '0 10px', height: '36px' }),
   input: (base) => ({ ...base, margin: 0, padding: 0, fontSize: '12.5px' }),
-  singleValue: (base) => ({ ...base, fontSize: '12.5px', fontWeight: 600, color: '#1e293b' }),
+  singleValue: (base) => ({ ...base, fontSize: '12.5px', fontWeight: 600, color: '#0f172a' }),
   placeholder: (base) => ({ ...base, fontSize: '12.5px', color: '#94a3b8', fontWeight: 500 }),
-  indicatorsContainer: (base) => ({ ...base, height: '32px' }),
-  dropdownIndicator: (base) => ({ ...base, padding: '4px 6px' }),
-  clearIndicator: (base) => ({ ...base, padding: '4px 4px' }),
-  catalog: (base) => ({ ...base, borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid rgba(226,232,240,0.9)', zIndex: 9999 }),
+  indicatorsContainer: (base) => ({ ...base, height: '36px' }),
+  dropdownIndicator: (base) => ({ ...base, padding: '6px' }),
+  clearIndicator: (base) => ({ ...base, padding: '6px' }),
+  menu: (base) => ({ ...base, borderRadius: '10px', boxShadow: '0 10px 24px rgba(0,0,0,0.12)', border: '1px solid rgba(226,232,240,0.9)', zIndex: 9999 }),
   option: (base, state) => ({
     ...base,
     fontSize: '12.5px',
     fontWeight: state.isSelected ? 700 : 500,
     background: state.isSelected ? '#23b3f4' : state.isFocused ? 'rgba(35,179,244,0.08)' : '#fff',
-    color: state.isSelected ? '#fff' : '#1e293b',
+    color: state.isSelected ? '#fff' : '#0f172a',
     padding: '8px 12px',
   }),
 };
@@ -89,8 +90,8 @@ const CustomerInfoForm = ({
               onChange={(e) => setCustomerInfo((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="Customer name"
               disabled={isDisabled}
-              onFocus={(e) => { e.target.style.borderColor = 'rgba(35,179,244,0.5)'; e.target.style.background = '#fff'; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(226,232,240,0.9)'; e.target.style.background = '#f8fafc'; }}
+              
+              
             />
           </div>
         )}
@@ -106,8 +107,8 @@ const CustomerInfoForm = ({
               onChange={(e) => setCustomerInfo((prev) => ({ ...prev, phone: e.target.value }))}
               placeholder="Phone"
               disabled={isDisabled}
-              onFocus={(e) => { e.target.style.borderColor = 'rgba(35,179,244,0.5)'; e.target.style.background = '#fff'; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(226,232,240,0.9)'; e.target.style.background = '#f8fafc'; }}
+              
+              
             />
           </div>
         )}
@@ -124,8 +125,8 @@ const CustomerInfoForm = ({
               placeholder="0"
               max={tableInfo.max_person}
               disabled={isDisabled}
-              onFocus={(e) => { e.target.style.borderColor = 'rgba(35,179,244,0.5)'; e.target.style.background = '#fff'; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(226,232,240,0.9)'; e.target.style.background = '#f8fafc'; }}
+              
+              
             />
           </div>
         )}
@@ -143,8 +144,8 @@ const CustomerInfoForm = ({
             onChange={(e) => setCustomerInfo((prev) => ({ ...prev, address: e.target.value }))}
             placeholder="Delivery address"
             disabled={isDisabled}
-            onFocus={(e) => { e.target.style.borderColor = 'rgba(35,179,244,0.5)'; e.target.style.background = '#fff'; }}
-            onBlur={(e) => { e.target.style.borderColor = 'rgba(226,232,240,0.9)'; e.target.style.background = '#f8fafc'; }}
+            
+            
           />
         </div>
       )}

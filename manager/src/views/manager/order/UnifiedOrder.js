@@ -9,6 +9,7 @@ import {
   createOrUpdateDineInOrder,
   createOrUpdateTakeawayOrder,
   createOrUpdateDeliveryOrder,
+  validatePromoCodeAPI,
 } from 'api/orderService';
 import HtmlHead from 'components/html-head/HtmlHead';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -134,6 +135,9 @@ const UnifiedOrder = () => {
 
   const title = `${isEditMode ? 'Edit' : 'New'} ${orderType} Order`;
   const description = 'Manage orders';
+
+  const [promoInput, setPromoInput] = useState('');
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
 
   // ── UI State ──────────────────────────────────────────────────────────────
   const [showCategories, setShowCategories] = useState(false);
@@ -551,6 +555,11 @@ const UnifiedOrder = () => {
     const pointsRate = loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1;
     const pointsDiscountAmount = isRedeeming ? Math.round(redeemPoints * pointsRate) : 0;
 
+    let discountReason = '';
+    if (paymentData.appliedPromo) discountReason = `${paymentData.appliedPromo.code} APPLIED`;
+    else if (pointsDiscountAmount > 0) discountReason = 'POINTS REDEEMED';
+    else if (parseFloat(paymentData.discountAmount) > 0) discountReason = 'DISCOUNT APPLIED';
+
     const orderData = {
       order_type: orderType,
       order_date: orderDate ? new Date(orderDate) : new Date(),
@@ -601,6 +610,7 @@ const UnifiedOrder = () => {
       sgst_amount: parseFloat(paymentData.sgstAmount) || 0,
       vat_amount: parseFloat(paymentData.vatAmount) || 0,
       discount_amount: (parseFloat(paymentData.discountAmount) || 0) + pointsDiscountAmount,
+      discount_reason: discountReason,
       waveoff_amount: parseFloat(paymentData.waveoffAmount) || 0,
       total_amount: Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount) || 0,
       paid_amount: status === 'Paid' ? Math.max(0, parseFloat(paymentData.total) - pointsDiscountAmount) || 0 : parseFloat(paymentData.paidAmount) || 0,
@@ -730,6 +740,74 @@ const UnifiedOrder = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleApplyPromo = async () => {
+    if (!promoInput) return;
+    setIsApplyingPromo(true);
+    const token = localStorage.getItem('token');
+    try {
+      const res = await validatePromoCodeAPI(promoInput, paymentData.subTotal, token);
+      if (res.data.success) {
+        toast.success(res.data.message);
+        setPaymentData((prev) => {
+          const promo = res.data.data;
+          const subTotal = parseFloat(prev.subTotal) || 0;
+          const cgstAmount = parseFloat(prev.cgstAmount) || 0;
+          const sgstAmount = parseFloat(prev.sgstAmount) || 0;
+          const vatAmount = parseFloat(prev.vatAmount) || 0;
+
+          let discountAmount = 0;
+          if (promo.discountType === 'percentage') {
+            discountAmount = (subTotal * promo.discountValue) / 100;
+            if (promo.maxDiscountAmount && discountAmount > promo.maxDiscountAmount) {
+              discountAmount = promo.maxDiscountAmount;
+            }
+          } else if (promo.discountType === 'flat') {
+            discountAmount = promo.discountValue;
+          }
+
+          const total = subTotal + cgstAmount + sgstAmount + vatAmount - discountAmount;
+
+          return {
+            ...prev,
+            appliedPromo: promo,
+            discountType: promo.discountType,
+            discountValue: promo.discountType === 'percentage' || promo.discountType === 'flat' ? promo.discountValue : '',
+            discountAmount: discountAmount.toFixed(2),
+            total: total.toFixed(2),
+            paidAmount: total.toFixed(2),
+            waveoffAmount: '0.00'
+          };
+        });
+        setPromoInput(''); // clear input
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to apply promo code');
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPaymentData((prev) => {
+      const subTotal = parseFloat(prev.subTotal) || 0;
+      const cgstAmount = parseFloat(prev.cgstAmount) || 0;
+      const sgstAmount = parseFloat(prev.sgstAmount) || 0;
+      const vatAmount = parseFloat(prev.vatAmount) || 0;
+      const total = subTotal + cgstAmount + sgstAmount + vatAmount;
+
+      return {
+        ...prev,
+        appliedPromo: null,
+        discountType: 'percentage', // reset default
+        discountValue: '',
+        discountAmount: '0.00',
+        total: total.toFixed(2),
+        paidAmount: total.toFixed(2),
+        waveoffAmount: '0.00'
+      };
+    });
   };
 
   const handleReprintKOT = (record) => {
@@ -979,27 +1057,45 @@ const UnifiedOrder = () => {
 
           {/* Order Panel */}
           <div className="pos-order-panel d-none d-xl-flex">
-            <div className="pos-order-header">
-              <div className="d-flex justify-content-between align-items-center">
-                <div className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>
-                  {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) ? `T-${tableInfo.table_no || customerInfo.table_no}` : 'Order'} (
-                  {orderItems.length})
-                </div>
-                {tokenNumber && (
-                  <div
-                    style={{
-                      background: 'rgba(35,179,244,0.1)',
-                      borderRadius: '50px',
-                      padding: '2px 10px',
-                      color: '#23b3f4',
-                      fontWeight: 800,
-                      fontSize: '11px',
-                    }}
+
+            <div className="pos-promo-section p-2 border-bottom bg-light">
+              {!paymentData.appliedPromo ? (
+                <div className="d-flex gap-2 align-items-center">
+                  <Form.Control
+                    type="text"
+                    size="sm"
+                    placeholder="Enter Promo Code..."
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    disabled={isApplyingPromo}
+                    style={{ fontSize: '11px', textTransform: 'uppercase' }}
+                  />
+                  <Button 
+                    size="sm" 
+                    variant="outline-primary" 
+                    onClick={handleApplyPromo}
+                    disabled={isApplyingPromo || !promoInput}
+                    style={{ fontSize: '11px', padding: '0.2rem 0.75rem', fontWeight: 600 }}
                   >
-                    #{tokenNumber}
+                    {isApplyingPromo ? '...' : 'Apply'}
+                  </Button>
+                </div>
+              ) : (
+                <div className="d-flex justify-content-between align-items-center rounded p-1 px-2" style={{ background: '#dcfce7', border: '1px solid #22c55e' }}>
+                  <div className="d-flex align-items-center gap-2">
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a' }}>
+                      <CsLineIcons icon="tag" size="12" className="me-1" />
+                      {paymentData.appliedPromo.code}
+                    </span>
+                    <span style={{ fontSize: '10px', color: '#15803d', fontWeight: 600 }}>
+                      {paymentData.appliedPromo.discountType === 'bogo' ? '(BOGO)' : paymentData.appliedPromo.discountType === 'free_item' ? '(FREE ITEM)' : '(APPLIED)'}
+                    </span>
                   </div>
-                )}
-              </div>
+                  <Button variant="link" size="sm" className="p-0 text-danger" onClick={handleRemovePromo} style={{ textDecoration: 'none', fontWeight: 700, fontSize: '11px' }}>
+                    Remove
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="pos-customer-section">
@@ -1037,23 +1133,26 @@ const UnifiedOrder = () => {
                   </div>
 
                   {loyaltyProfile.customer.loyalty_points > 0 && (
-                    <div className="d-flex align-items-center mt-1 border-top pt-1 justify-content-between">
-                      <Form.Check
-                        type="checkbox"
-                        id="redeem-loyalty-check"
-                        label="Redeem points for discount"
-                        checked={isRedeeming}
-                        onChange={(e) => {
-                          setIsRedeeming(e.target.checked);
-                          if (e.target.checked) {
-                            setRedeemPoints(loyaltyProfile.customer.loyalty_points);
-                          } else {
-                            setRedeemPoints(0);
-                          }
-                        }}
-                        className="m-0 fw-semibold"
-                        style={{ fontSize: '11px' }}
-                      />
+                    <div className="d-flex align-items-center mt-2 border-top pt-2 justify-content-between">
+                      <div className="d-flex align-items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="redeem-loyalty-check"
+                          checked={isRedeeming}
+                          onChange={(e) => {
+                            setIsRedeeming(e.target.checked);
+                            if (e.target.checked) {
+                              setRedeemPoints(loyaltyProfile.customer.loyalty_points);
+                            } else {
+                              setRedeemPoints(0);
+                            }
+                          }}
+                          style={{ width: '14px', height: '14px', margin: 0, cursor: 'pointer' }}
+                        />
+                        <label htmlFor="redeem-loyalty-check" className="m-0 fw-semibold" style={{ fontSize: '11px', cursor: 'pointer' }}>
+                          Redeem points for discount
+                        </label>
+                      </div>
                       {isRedeeming && (
                         <span className="fw-bold text-success">
                           -₹{Math.round(redeemPoints * (loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1))} off
@@ -1064,7 +1163,7 @@ const UnifiedOrder = () => {
                 </div>
               )}
               {/* Special Instructions - Moved here to save space for cart */}
-              <div className="mt-2">
+              <div className="mt-3">
                 <Form.Control
                   as="textarea"
                   rows={1}

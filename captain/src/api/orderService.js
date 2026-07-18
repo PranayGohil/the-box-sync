@@ -50,3 +50,9 @@ export const getUserTaxInfo = (token) => {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
+
+export const validatePromoCodeAPI = (code, subTotal, token) => {
+  return axios.post(`${process.env.REACT_APP_API}/promocodes/validate`, { code, subTotal }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
