@@ -365,9 +365,8 @@ const ManageWebsite = () => {
     if (!script) {
       script = document.createElement('script');
       script.id = scriptId;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${
-        process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY'
-      }&libraries=places,geometry&loading=async`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY'
+        }&libraries=places,geometry&loading=async`;
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
@@ -376,12 +375,12 @@ const ManageWebsite = () => {
 
   // Google Maps picker modal initialization
   useEffect(() => {
-    if (!showMapModal || !window.google) return () => {};
+    if (!showMapModal || !window.google) return () => { };
 
     const defaultLat = Number(tempLat) || 23.0225;
     const defaultLng = Number(tempLng) || 72.5714;
     const mapDiv = document.getElementById('admin-map-container');
-    if (!mapDiv) return () => {};
+    if (!mapDiv) return () => { };
 
     const map = new window.google.maps.Map(mapDiv, {
       center: { lat: defaultLat, lng: defaultLng },
@@ -568,6 +567,19 @@ const ManageWebsite = () => {
   return (
     <div className="container-fluid qsr-page-container">
       <HtmlHead title={title} description={description} />
+      <style>{`
+        @media (max-width: 991px) {
+          .manage-website-glass-card {
+            margin-bottom: 1.2rem !important;
+          }
+          .manage-website-glass-card .card-body {
+            padding: 1.25rem !important;
+          }
+          .manage-website-section-title {
+            margin-bottom: 1rem !important;
+          }
+        }
+      `}</style>
       <div className="qsr-page-title-container">
         <Row className="g-0 align-items-center">
           <Col xs="auto" className="me-auto">
@@ -611,7 +623,7 @@ const ManageWebsite = () => {
       )}
 
       <Form onSubmit={handleSubmit}>
-        <Row className="g-4">
+        <Row>
           <Col lg={6}>
             {/* General Settings */}
             <Card className="manage-website-glass-card mb-4 border-0">
@@ -622,9 +634,8 @@ const ManageWebsite = () => {
                     <Form.Group className="d-flex flex-column align-items-center mb-3">
                       <Form.Label className="small fw-bold text-muted text-center w-100 mb-3">Logo Image</Form.Label>
                       <div
-                        className={`border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center mb-3 ${
-                          isWideLogo ? 'rounded-3' : 'rounded-circle'
-                        }`}
+                        className={`border border-3 border-light overflow-hidden shadow-sm bg-light d-flex align-items-center justify-content-center mb-3 ${isWideLogo ? 'rounded-3' : 'rounded-circle'
+                          }`}
                         style={isWideLogo ? { width: '200px', height: '100px' } : { width: '120px', height: '120px' }}
                       >
                         {logoPreview ? (
@@ -777,11 +788,11 @@ const ManageWebsite = () => {
                                 // PERMISSION_DENIED
                                 const manual = window.confirm(
                                   'Location access is blocked or disabled in your browser settings.\n\n' +
-                                    'To auto-detect:\n' +
-                                    '1. Click the settings/lock icon in your address bar.\n' +
-                                    "2. Set Location permissions to 'Allow'.\n" +
-                                    '3. Reload the page.\n\n' +
-                                    'Would you like to manually choose your address on the map instead?'
+                                  'To auto-detect:\n' +
+                                  '1. Click the settings/lock icon in your address bar.\n' +
+                                  "2. Set Location permissions to 'Allow'.\n" +
+                                  '3. Reload the page.\n\n' +
+                                  'Would you like to manually choose your address on the map instead?'
                                 );
                                 if (manual) {
                                   setTempLat(23.0225);
@@ -1624,11 +1635,11 @@ const ManageWebsite = () => {
                         // PERMISSION_DENIED
                         alert(
                           'Location access is blocked or disabled in your browser settings.\n\n' +
-                            'To enable:\n' +
-                            '1. Click the settings/lock icon next to the URL in your address bar.\n' +
-                            "2. Set Location permissions to 'Allow'.\n" +
-                            '3. Refresh the page.\n\n' +
-                            "Alternatively, you can manually drag the pin marker on the map to select your restaurant's location."
+                          'To enable:\n' +
+                          '1. Click the settings/lock icon next to the URL in your address bar.\n' +
+                          "2. Set Location permissions to 'Allow'.\n" +
+                          '3. Refresh the page.\n\n' +
+                          "Alternatively, you can manually drag the pin marker on the map to select your restaurant's location."
                         );
                       } else {
                         toast.error('Unable to fetch your location automatically.');
@@ -1727,16 +1738,54 @@ const ManageWebsite = () => {
             z-index: 10000 !important;
           }
           .floating-save-bar {
+            position: fixed !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 1060 !important;
+            bottom: 2rem;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 50px;
+            padding: 12px 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
             border: 1px solid rgba(0, 0, 0, 0.05);
             background: #ffffff;
             color: #495057;
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
           }
           .html-dark .floating-save-bar {
             background: #232323 !important;
             border-color: rgba(255, 255, 255, 0.08) !important;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
             color: #f8f9fa;
+          }
+          @media (max-width: 991px) {
+            .floating-save-bar {
+              bottom: 90px !important;
+              padding: 10px 15px;
+            }
+          }
+          @media (max-width: 576px) {
+            .floating-save-bar {
+              bottom: 90px !important;
+              padding: 8px 12px !important;
+              width: 95% !important;
+              border-radius: 30px !important;
+            }
+            .floating-save-text {
+              font-size: 11px !important;
+              white-space: nowrap !important;
+              line-height: 1.2 !important;
+            }
+            .btn-discard-pill, .btn-save-pill {
+              padding: 6px 12px !important;
+              font-size: 11px !important;
+            }
+            .btn-save-pill svg {
+              display: none !important;
+            }
           }
           .floating-save-text {
             font-size: 14px;
@@ -1781,17 +1830,7 @@ const ManageWebsite = () => {
         `}</style>
 
       {(formik.dirty || logoFile || heroImageFile || legacyImageFile) && (
-        <div
-          className="position-fixed start-50 translate-middle-x floating-save-bar d-flex align-items-center justify-content-between px-4 py-2.5 animate-fade-in"
-          style={{
-            zIndex: 1050,
-            bottom: '2rem',
-            width: '90%',
-            maxWidth: '600px',
-            borderRadius: '50px',
-            padding: '15px',
-          }}
-        >
+        <div className="floating-save-bar animate-fade-in">
           <div className="floating-save-text ps-1">You have unsaved changes</div>
           <div className="d-flex gap-2">
             <button
@@ -1827,7 +1866,7 @@ const ManageWebsite = () => {
               ) : (
                 <>
                   <CsLineIcons icon="save" size="14" className="me-2" />
-                  Save Settings
+                  Save<span className="d-none d-sm-inline"> Settings</span>
                 </>
               )}
             </button>

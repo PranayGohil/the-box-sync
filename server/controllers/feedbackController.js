@@ -1,5 +1,9 @@
 const User = require("../models/userModel");
 const crypto = require("crypto");
+const mongoose = require("mongoose");
+const Order = require("../models/orderModel");
+const Customer = require("../models/customerModel");
+const WebCustomer = require("../models/webCustomerModel");
 const { sendEmail } = require("../utils/emailService");
 
 const addFeedback = async (req, res) => {
@@ -12,6 +16,7 @@ const addFeedback = async (req, res) => {
       rating,
       feedback,
       order_id,
+      tags,
     } = req.body;
 
     if (!restaurant_token || !customer_name || !rating || !feedback) {
@@ -28,6 +33,7 @@ const addFeedback = async (req, res) => {
       feedback,
       date: new Date(),
       order_id: order_id || null,
+      tags: Array.isArray(tags) ? tags : [],
     };
 
     const result = await User.updateOne(
@@ -235,10 +241,92 @@ const generateFeedbackToken = async (req, res) => {
   }
 };
 
+const getOrderDetailForFeedback = async (req, res) => {
+  try {
+    const { orderNo } = req.params;
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: "Token is required." });
+    }
+
+    const restaurant = await User.findOne({ restaurant_token: token });
+    if (!restaurant) {
+      return res.status(404).json({ success: false, message: "Invalid restaurant token." });
+    }
+
+    // Search for order under this restaurant (case-insensitive for order_no, or match ObjectId directly)
+    const isObjectId = mongoose.Types.ObjectId.isValid(orderNo);
+    const orderQuery = {
+      user_id: restaurant._id.toString()
+    };
+    if (isObjectId) {
+      orderQuery.$or = [{ order_no: orderNo.toUpperCase() }, { _id: orderNo }];
+    } else {
+      orderQuery.order_no = orderNo.toUpperCase();
+    }
+
+    const order = await Order.findOne(orderQuery);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found." });
+    }
+
+    let customerEmail = "";
+    let customerPhone = order.customer_phone || "";
+    let customerName = order.customer_name || "";
+
+    if (order.customer_id) {
+      let customer = await Customer.findById(order.customer_id);
+      if (!customer) {
+        customer = await WebCustomer.findById(order.customer_id);
+      }
+      if (customer) {
+        customerEmail = customer.email || "";
+        if (customer.phone) customerPhone = customer.phone;
+        if (customer.name) customerName = customer.name;
+      }
+    }
+
+    // Check if there is already feedback submitted for this order
+    let existingFeedback = null;
+    if (restaurant.feedbacks && restaurant.feedbacks.length > 0) {
+      existingFeedback = restaurant.feedbacks.find(
+        f => f.order_id && f.order_id.toString() === order._id.toString()
+      );
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        name: customerName,
+        email: customerEmail,
+        phone: customerPhone,
+        order_id: order._id,
+        order_no: order.order_no || "",
+        existing_feedback: existingFeedback ? {
+          customer_name: existingFeedback.customer_name || "",
+          customer_email: existingFeedback.customer_email || "",
+          customer_phone: existingFeedback.customer_phone || "",
+          rating: existingFeedback.rating,
+          feedback: existingFeedback.feedback,
+          tags: existingFeedback.tags || [],
+          reply: existingFeedback.reply || null,
+          date: existingFeedback.date
+        } : null
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching order detail for feedback:", error);
+    return res.status(500).json({ success: false, message: "Internal server error." });
+  }
+};
+
 module.exports = {
   addFeedback,
   getFeedbacks,
   deleteFeedback,
   replyFeedback,
   generateFeedbackToken,
+  getOrderDetailForFeedback,
 };

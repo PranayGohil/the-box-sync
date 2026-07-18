@@ -50,7 +50,7 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (!socket) return () => {};
+    if (!socket) return () => { };
     const handleSocketUpdate = () => {
       fetchActiveOrders();
     };
@@ -213,7 +213,7 @@ const Dashboard = () => {
                               </Badge>
                             )}
                             <div
-                              style={{ ...glassCardStyle, border: borderStyle, height: '100%' }}
+                              style={{ ...glassCardStyle, border: borderStyle, height: 'auto' }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.transform = 'translateY(-5px)';
                                 e.currentTarget.style.boxShadow = '0 15px 35px rgba(35,179,244,0.15)';
@@ -238,9 +238,8 @@ const Dashboard = () => {
                                   </h3>
                                 </div>
                                 <div className="w-100">
-                                  <p className="dashboard-table-max-person mb-1">Max Person</p>
-                                  <p className="dashboard-table-capacity mb-2 fw-bold" style={{ color: '#23b3f4' }}>
-                                    {table.max_person}
+                                  <p className="dashboard-table-max-person mb-2">
+                                    Capacity: <span className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>{table.max_person}</span>
                                   </p>
                                   {activeOrder && (
                                     <div className="mb-2">

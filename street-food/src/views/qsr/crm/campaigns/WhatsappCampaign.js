@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Row, Col, Card, Button, Form, Spinner, Modal, InputGroup, Badge, Collapse } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Spinner, Modal, InputGroup, Badge, Collapse, Pagination } from 'react-bootstrap';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -274,6 +274,33 @@ const styles = `
     margin: 1rem 0;
   }
   .empty-picker { text-align: center; padding: 2rem 0; color: #94a3b8; font-size: 0.82rem; }
+  .campaign-pagination .page-item .page-link {
+    color: #23b3f4 !important;
+    border: 1px solid rgba(35, 179, 244, 0.15) !important;
+    border-radius: 50% !important;
+    margin: 0 2px !important;
+    width: 26px !important;
+    height: 26px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 0.72rem !important;
+    transition: all 0.2s ease;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  .campaign-pagination .page-item.active .page-link {
+    background-color: #23b3f4 !important;
+    border-color: #23b3f4 !important;
+    color: #ffffff !important;
+  }
+  .campaign-pagination .page-item.disabled .page-link {
+    color: #94a3b8 !important;
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    opacity: 0.6;
+  }
 `;
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────────── */
@@ -312,6 +339,92 @@ const renderWhatsAppText = (text) => {
 
 
 const MAX_CHARS = 1000;
+
+const MiniTablePagination = ({ page, totalPages, setPage }) => {
+  if (totalPages <= 1) return null;
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 4;
+
+    if (totalPages <= maxPagesToShow) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+      return pages;
+    }
+
+    if (page < 3) {
+      for (let i = 1; i <= 3; i++) {
+        pages.push(i);
+      }
+      pages.push('ellipsis');
+      pages.push(totalPages);
+    } else if (page > totalPages - 2) {
+      pages.push(1);
+      pages.push('ellipsis');
+      for (let i = totalPages - 2; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      pages.push('ellipsis');
+      pages.push(page - 1);
+      pages.push(page);
+      pages.push(page + 1);
+      pages.push('ellipsis');
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
+
+  return (
+    <Pagination className="campaign-pagination justify-content-center mb-0 mt-0">
+      <Pagination.First
+        onClick={() => setPage(1)}
+        disabled={page === 1}
+      >
+        <CsLineIcons icon="arrow-double-left" size="10" />
+      </Pagination.First>
+      <Pagination.Prev
+        disabled={page === 1}
+        onClick={() => setPage(p => Math.max(1, p - 1))}
+      >
+        <CsLineIcons icon="chevron-left" size="10" />
+      </Pagination.Prev>
+
+      {pageNumbers.map((p, index) =>
+        p === 'ellipsis' ? (
+          <Pagination.Ellipsis key={`ellipsis-${index}`} disabled />
+        ) : (
+          <Pagination.Item
+            key={`pagination-${p}`}
+            active={page === p}
+            onClick={() => setPage(p)}
+          >
+            {p}
+          </Pagination.Item>
+        )
+      )}
+
+      <Pagination.Next
+        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+        disabled={page === totalPages}
+      >
+        <CsLineIcons icon="chevron-right" size="10" />
+      </Pagination.Next>
+      <Pagination.Last
+        onClick={() => setPage(totalPages)}
+        disabled={page === totalPages}
+      >
+        <CsLineIcons icon="arrow-double-right" size="10" />
+      </Pagination.Last>
+    </Pagination>
+  );
+};
 
 /* ─── Component ─────────────────────────────────────────────────────────────────── */
 const WhatsappCampaign = () => {
@@ -1263,11 +1376,14 @@ const WhatsappCampaign = () => {
 
               {/* Pagination Controls */}
               {!loadingCustomers && customers.length > 0 && (
-                <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-3 pt-3 border-top gap-2">
-                  <div className="text-muted small" style={{ fontSize: '0.78rem' }}>
+                <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-3 pt-3 border-top gap-3 w-100">
+                  <div className="text-muted small text-center text-sm-start" style={{ fontSize: '0.78rem', flex: '1 1 0px', minWidth: 0 }}>
                     Showing {totalCustomers > 0 ? (page - 1) * limit + 1 : 0} to {Math.min(page * limit, totalCustomers)} of {totalCustomers}
                   </div>
-                  <div className="d-flex align-items-center gap-2">
+                  <div className="d-flex justify-content-center" style={{ flex: '1 1 0px', minWidth: 0 }}>
+                    <MiniTablePagination page={page} totalPages={totalPages} setPage={setPage} />
+                  </div>
+                  <div className="d-flex justify-content-center justify-content-sm-end" style={{ flex: '1 1 0px', minWidth: 0 }}>
                     <Form.Select
                       size="sm"
                       value={limit}
@@ -1283,47 +1399,6 @@ const WhatsappCampaign = () => {
                       <option value={50}>50 Rows</option>
                       <option value={100}>100 Rows</option>
                     </Form.Select>
-                    <div className="d-flex gap-1 align-items-center">
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage(1)}
-                        style={{ padding: '2px 8px', fontSize: '0.78rem', borderRadius: '6px' }}
-                      >
-                        First
-                      </Button>
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        style={{ padding: '2px 8px', fontSize: '0.78rem', borderRadius: '6px' }}
-                      >
-                        Prev
-                      </Button>
-                      <span className="px-2 small fw-bold" style={{ fontSize: '0.78rem', minWidth: '45px', textAlign: 'center' }}>
-                        {page} / {totalPages}
-                      </span>
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        disabled={page === totalPages}
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        style={{ padding: '2px 8px', fontSize: '0.78rem', borderRadius: '6px' }}
-                      >
-                        Next
-                      </Button>
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(totalPages)}
-                        style={{ padding: '2px 8px', fontSize: '0.78rem', borderRadius: '6px' }}
-                      >
-                        Last
-                      </Button>
-                    </div>
                   </div>
                 </div>
               )}

@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthContext } from 'contexts/AuthContext';
+import ReportPagination from './components/ReportPagination';
 
 const FinancialReport = () => {
   const brandColor = '#23b3f4';
@@ -655,11 +656,11 @@ const FinancialReport = () => {
                     </div>
                     {reportData.inventoryPurchases && Math.ceil(reportData.inventoryPurchases.length / invPerPage) > 1 && (
                         <div className="d-flex justify-content-center mt-4">
-                          <Pagination>
-                            <Pagination.Prev onClick={() => setInvPage(p => Math.max(1, p - 1))} disabled={invPage === 1} />
-                            <Pagination.Item active>{invPage}</Pagination.Item>
-                            <Pagination.Next onClick={() => setInvPage(p => Math.min(Math.ceil(reportData.inventoryPurchases.length / invPerPage), p + 1))} disabled={invPage === Math.ceil(reportData.inventoryPurchases.length / invPerPage)} />
-                          </Pagination>
+                          <ReportPagination
+                            currentPage={invPage}
+                            totalPages={Math.ceil(reportData.inventoryPurchases.length / invPerPage)}
+                            onChangePage={setInvPage}
+                          />
                         </div>
                     )}
                   </Card.Body>
@@ -719,11 +720,11 @@ const FinancialReport = () => {
                     </div>
                     {reportData.wastageLogs && Math.ceil(reportData.wastageLogs.length / wastePerPage) > 1 && (
                         <div className="d-flex justify-content-center mt-4">
-                          <Pagination>
-                            <Pagination.Prev onClick={() => setWastePage(p => Math.max(1, p - 1))} disabled={wastePage === 1} />
-                            <Pagination.Item active>{wastePage}</Pagination.Item>
-                            <Pagination.Next onClick={() => setWastePage(p => Math.min(Math.ceil(reportData.wastageLogs.length / wastePerPage), p + 1))} disabled={wastePage === Math.ceil(reportData.wastageLogs.length / wastePerPage)} />
-                          </Pagination>
+                          <ReportPagination
+                            currentPage={wastePage}
+                            totalPages={Math.ceil(reportData.wastageLogs.length / wastePerPage)}
+                            onChangePage={setWastePage}
+                          />
                         </div>
                     )}
                   </Card.Body>
@@ -998,11 +999,11 @@ const FinancialReport = () => {
                 </div>
                 {sortedDailyFinancials.length > dailyPerPage && (
                   <div className="d-flex justify-content-center mt-4">
-                    <Pagination size="sm">
-                      <Pagination.Prev onClick={() => setDailyPage(p => Math.max(1, p - 1))} disabled={dailyPage === 1} />
-                      <Pagination.Item active>{dailyPage}</Pagination.Item>
-                      <Pagination.Next onClick={() => setDailyPage(p => Math.min(Math.ceil(sortedDailyFinancials.length / dailyPerPage), p + 1))} disabled={dailyPage === Math.ceil(sortedDailyFinancials.length / dailyPerPage)} />
-                    </Pagination>
+                    <ReportPagination
+                      currentPage={dailyPage}
+                      totalPages={Math.ceil(sortedDailyFinancials.length / dailyPerPage)}
+                      onChangePage={setDailyPage}
+                    />
                   </div>
                 )}
               </Card.Body>
@@ -1057,11 +1058,11 @@ const FinancialReport = () => {
                   </div>
                   {reportData.inventoryPurchases.length > invPerPage && (
                     <div className="d-flex justify-content-center mt-4">
-                      <Pagination size="sm">
-                        <Pagination.Prev onClick={() => setInvPage(p => Math.max(1, p - 1))} disabled={invPage === 1} />
-                        <Pagination.Item active>{invPage}</Pagination.Item>
-                        <Pagination.Next onClick={() => setInvPage(p => Math.min(Math.ceil(reportData.inventoryPurchases.length / invPerPage), p + 1))} disabled={invPage === Math.ceil(reportData.inventoryPurchases.length / invPerPage)} />
-                      </Pagination>
+                      <ReportPagination
+                        currentPage={invPage}
+                        totalPages={Math.ceil(reportData.inventoryPurchases.length / invPerPage)}
+                        onChangePage={setInvPage}
+                      />
                     </div>
                   )}
                 </Card.Body>
@@ -1104,11 +1105,11 @@ const FinancialReport = () => {
                   </div>
                   {reportData.wastageLogs.length > wastePerPage && (
                     <div className="d-flex justify-content-center mt-4">
-                      <Pagination size="sm">
-                        <Pagination.Prev onClick={() => setWastePage(p => Math.max(1, p - 1))} disabled={wastePage === 1} />
-                        <Pagination.Item active>{wastePage}</Pagination.Item>
-                        <Pagination.Next onClick={() => setWastePage(p => Math.min(Math.ceil(reportData.wastageLogs.length / wastePerPage), p + 1))} disabled={wastePage === Math.ceil(reportData.wastageLogs.length / wastePerPage)} />
-                      </Pagination>
+                      <ReportPagination
+                        currentPage={wastePage}
+                        totalPages={Math.ceil(reportData.wastageLogs.length / wastePerPage)}
+                        onChangePage={setWastePage}
+                      />
                     </div>
                   )}
                 </Card.Body>

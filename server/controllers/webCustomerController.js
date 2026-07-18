@@ -608,6 +608,22 @@ exports.getCustomerOrder = async (req, res) => {
             }
         }
 
+        // Attach order feedback details if customer has submitted a review
+        if (restaurant && Array.isArray(restaurant.feedbacks)) {
+            const fbEntry = restaurant.feedbacks.find(
+                f => f.order_id && f.order_id.toString() === orderId.toString()
+            );
+            if (fbEntry) {
+                responseData.feedback_details = {
+                    rating: fbEntry.rating,
+                    feedback: fbEntry.feedback,
+                    reply: fbEntry.reply || null,
+                    date: fbEntry.date,
+                    tags: fbEntry.tags || []
+                };
+            }
+        }
+
         res.status(200).json({
             success: true,
             data: responseData,

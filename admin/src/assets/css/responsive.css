@@ -1581,8 +1581,8 @@
         padding: 0.75rem 1rem !important;
       }
       .manage-website-pill-input {
-        font-size: 16px !important;
-        height: 45px !important;
+        font-size: 0.875rem !important;
+        height: 42px !important;
       }
       .manage-website-page-title-container h1 {
         font-size: 1.75rem !important;
@@ -1751,6 +1751,7 @@
       transition: all 0.3s ease !important;
       display: flex !important;
       align-items: center !important;
+      justify-content: center !important;
       gap: 8px !important;
     }
     .tax-and-charges-custom-btn-outline:hover {

@@ -7,6 +7,7 @@ import { useGSAPReveal } from '../hooks/useScroll';
 import { useRef } from 'react';
 import { useRestaurant } from '../context/RestaurantContext';
 import { useAuth } from '../context/AppContext';
+import { formatTimeTo12Hour } from '../utils/timeFormatter';
 
 // Inline social SVG icons
 const InstagramIcon = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width="20" height="20"><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" /></svg>);
@@ -222,13 +223,13 @@ export default function Contact() {
                       {settings.opening_hours.map((h, i) => (
                         <div key={i} className="d-flex justify-content-between small pe-2">
                           <span className="text-white-60">{h.day || h.dayRange || 'Everyday'}</span>
-                          <span className="text-white fw-medium">{h.from} - {h.to}</span>
+                          <span className="text-white fw-medium">{formatTimeTo12Hour(h.from)} - {formatTimeTo12Hour(h.to)}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <p className="text-white small fw-medium mb-0">
-                      {settings?.open_days || 'Daily'}: {settings?.open_time_from || '12:00'} – {settings?.open_time_to || '23:00'}
+                      {settings?.open_days || 'Daily'}: {settings?.open_time_from ? formatTimeTo12Hour(settings.open_time_from) : '12:00 PM'} – {settings?.open_time_to ? formatTimeTo12Hour(settings.open_time_to) : '11:00 PM'}
                     </p>
                   )}
                 </div>

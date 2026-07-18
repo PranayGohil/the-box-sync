@@ -94,6 +94,7 @@ const userSchema = new Schema({
       date: { type: Date, default: Date.now },
       order_id: { type: mongoose.Schema.Types.ObjectId, ref: 'order', default: null },
       reply: { type: String },
+      tags: { type: [String], default: [] },
     },
   ],
   purchasedPlan: {

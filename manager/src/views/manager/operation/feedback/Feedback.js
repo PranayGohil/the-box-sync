@@ -236,12 +236,90 @@ const customStyles = `
   }
   @media (max-width: 991px) {
     .inventory-history-table-header-row { display: none !important; }
-    .inventory-history-inventory-row-card { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-    .inventory-history-inventory-row-card > div { width: 100% !important; margin-bottom: 0.25rem; }
-    .inventory-history-inventory-row-card .inventory-history-mobile-label { display: block !important; font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 0.15rem; }
+    .inventory-history-inventory-row-card { display: none !important; }
   }
-  @media (min-width: 992px) {
-    .inventory-history-inventory-row-card .inventory-history-mobile-label { display: none !important; }
+  .feedback-page-size-toggle {
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+  }
+  .inventory-history-search-filter-hub .row {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .inventory-history-search-filter-hub .row > div:not(.feedback-controls-bottom) {
+    display: flex !important;
+    align-items: center !important;
+    height: 40px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .inventory-history-search-filter-hub .dropdown,
+  .inventory-history-search-filter-hub .dropdown-toggle {
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 40px !important;
+  }
+  @media (max-width: 767px) {
+    .inventory-history-search-filter-hub .row > div:not(.feedback-controls-bottom) {
+      height: 32px !important;
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+    .feedback-controls-bottom span {
+      font-size: 0.65rem !important;
+    }
+    .inventory-history-interactive-card {
+      margin-bottom: 1.5rem !important;
+      border-radius: 12px !important;
+    }
+    .inventory-history-search-filter-hub {
+      margin-bottom: 1rem !important;
+      padding: 0.75rem !important;
+      border-radius: 12px !important;
+    }
+    .qsr-page-title-container {
+      margin-bottom: 1rem !important;
+      padding: 0 0.25rem !important;
+    }
+    /* Sizing adjustments for search, filter, and page size dropdown */
+    .inventory-history-search-input-container {
+      height: 32px !important;
+      margin: 0 !important;
+    }
+    .inventory-history-search-input-container input {
+      font-size: 0.75rem !important;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+    }
+    .inventory-history-search-filter-hub .btn-icon-only {
+      width: 32px !important;
+      height: 32px !important;
+    }
+    .inventory-history-search-filter-hub button.feedback-page-size-toggle,
+    .inventory-history-search-filter-hub .feedback-page-size-toggle,
+    .inventory-history-search-filter-hub .dropdown,
+    .inventory-history-search-filter-hub .dropdown-toggle {
+      font-size: 0.7rem !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      height: 32px !important;
+      margin: 0 !important;
+    }
+  }
+  .border-dashed-mobile {
+    border-top: 1px dashed #e2e8f0 !important;
+  }
+  .mobile-actions-wrapper .d-flex {
+    justify-content: flex-start !important;
   }
 `;
 
@@ -352,21 +430,24 @@ const Feedback = () => {
   const columns = React.useMemo(
     () => [
       {
-        Header: 'Customer Name',
-        accessor: 'customer_name',
-        flex: 1.5,
-        Cell: ({ value }) => <span className="fw-bold text-dark">{value}</span>,
-      },
-      {
         Header: 'Contact Info',
         id: 'contact',
-        flex: 2,
+        flex: 2.2,
         Cell: ({ row }) => (
           <div>
-            <div className="text-dark small fw-medium">{row.original.customer_email || 'No Email'}</div>
+            <div className="fw-bold text-dark text-truncate" style={{ fontSize: '0.9rem' }}>
+              {row.original.customer_name || 'Walk-in'}
+            </div>
+            <div className="text-dark small fw-medium mt-1">{row.original.customer_email || 'No Email'}</div>
             <div className="text-muted small mt-1">{row.original.customer_phone || 'No Phone'}</div>
           </div>
         ),
+      },
+      {
+        Header: 'Date',
+        accessor: 'date',
+        flex: 1.2,
+        Cell: ({ value }) => <span className="text-muted small">{value ? new Date(value).toLocaleDateString('en-IN') : 'N/A'}</span>,
       },
       {
         Header: 'Rating',
@@ -380,12 +461,45 @@ const Feedback = () => {
       {
         Header: 'Feedback & Reply',
         accessor: 'feedback',
-        flex: 3.5,
+        flex: 4,
         Cell: ({ row }) => (
           <div>
             <div className="text-dark italic" style={{ fontStyle: 'italic' }}>
               “{row.original.feedback}”
             </div>
+            {Array.isArray(row.original.tags) && row.original.tags.length > 0 && (
+              <div className="d-flex flex-wrap gap-1 mt-2">
+                {row.original.tags.map((tag, tIdx) => (
+                  <span
+                    key={tIdx}
+                    className="badge rounded-pill"
+                    style={{
+                      background: '#f0f9ff',
+                      color: '#0369a1',
+                      border: '1px solid #bae6fd',
+                      fontSize: '11px',
+                      padding: '3px 8px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+            {row.original.order_id && (
+              <div className="mt-2">
+                <Button
+                  variant="link"
+                  className="p-0 text-primary small d-inline-flex align-items-center gap-1"
+                  style={{ fontSize: '11px', textDecoration: 'none' }}
+                  onClick={() => history.push(`/operations/order-details/${row.original.order_id}`)}
+                >
+                  <CsLineIcons icon="shop" size="12" />
+                  <span>View Linked Order</span>
+                </Button>
+              </div>
+            )}
             {row.original.reply && (
               <div className="mt-2 p-2 rounded bg-light" style={{ borderLeft: '3px solid #23b3f4' }}>
                 <span className="feedback-admin-reply-tag">Your Reply:</span>
@@ -396,12 +510,6 @@ const Feedback = () => {
         ),
       },
       {
-        Header: 'Date',
-        accessor: 'date',
-        flex: 1.2,
-        Cell: ({ value }) => <span className="text-muted small">{value ? new Date(value).toLocaleDateString('en-IN') : 'N/A'}</span>,
-      },
-      {
         Header: 'Actions',
         id: 'actions',
         flex: 1.2,
@@ -409,7 +517,11 @@ const Feedback = () => {
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center gap-2">
             {!row.original.reply && (
-              <Button className="feedback-action-btn-circle feedback-btn-reply-active shadow-sm" onClick={() => handleReply(row.original)} title="Reply">
+              <Button
+                className="feedback-action-btn-circle feedback-btn-reply-active shadow-sm"
+                onClick={() => handleReply(row.original)}
+                title="Reply"
+              >
                 <CsLineIcons icon="message" size="16" stroke="currentColor" />
               </Button>
             )}
@@ -449,7 +561,7 @@ const Feedback = () => {
     <div className="inventory-container">
       <style>{customStyles}</style>
       <HtmlHead title={title} description={description} />
-      <div className="container-fluid qsr-page-container">
+      <div className="container-fluid qsr-page-container px-0 px-sm-3">
         {/* Page Header */}
         <div className="qsr-page-title-container">
           <Row className="g-3 align-items-center">
@@ -467,7 +579,7 @@ const Feedback = () => {
 
         {/* Content Card Wrapper */}
         <Card className="inventory-history-interactive-card border-0">
-          <Card.Body className="p-4 p-lg-5">
+          <Card.Body className="p-2 p-sm-4 p-lg-5">
             {/* Title Section */}
             <div className="inventory-history-section-title-wrapper mb-4">
               <div
@@ -485,123 +597,83 @@ const Feedback = () => {
             {/* Table Controls */}
             <div className="inventory-history-search-filter-hub border-0 shadow-sm">
               <Row className="g-2 g-md-3 align-items-center">
-                <Col xs="12" md="6" lg="6">
-                  <div className="inventory-history-search-input-container">
-                    <ControlsSearch tableInstance={tableInstance} />
+                <Col xs="12" md className="flex-grow-1">
+                  <div className="d-flex align-items-center">
+                    <div className="inventory-history-search-input-container flex-grow-1">
+                      <ControlsSearch tableInstance={tableInstance} />
+                    </div>
+                    <Button
+                      variant={showFilters ? 'primary' : 'outline-primary'}
+                      className="btn-icon btn-icon-only position-relative rounded-circle border-2 d-inline-flex align-items-center justify-content-center mx-2"
+                      style={{ width: '40px', height: '40px', flexShrink: 0 }}
+                      onClick={() => setShowFilters(!showFilters)}
+                    >
+                      <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="16" />
+                      {activeFilterCount > 0 && (
+                        <Badge
+                          bg="danger"
+                          className="position-absolute top-0 start-100 translate-middle rounded-circle border border-2 border-white"
+                          style={{ fontSize: '0.65rem', padding: '0.3em 0.5em' }}
+                        >
+                          {activeFilterCount}
+                        </Badge>
+                      )}
+                    </Button>
                   </div>
                 </Col>
-                <Col xs="auto" className="d-none d-md-block">
-                  <Button
-                    variant={showFilters ? 'primary' : 'outline-primary'}
-                    className="btn-icon btn-icon-only position-relative rounded-circle border-2"
-                    style={{ width: '40px', height: '40px' }}
-                    onClick={() => setShowFilters(!showFilters)}
-                  >
-                    <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="16" />
-                    {activeFilterCount > 0 && (
-                      <Badge
-                        bg="danger"
-                        className="position-absolute top-0 start-100 translate-middle rounded-circle border border-2 border-white"
-                        style={{ fontSize: '0.6rem', padding: '0.3em 0.5em' }}
-                      >
-                        {activeFilterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </Col>
-                <Col xs="12" className="d-md-none mt-2">
-                  <Dropdown className="w-100">
-                    <Dropdown.Toggle
-                      as={Button}
-                      variant={filters.rating ? 'primary' : 'outline-primary'}
-                      className="w-100 d-flex align-items-center justify-content-between px-3 border-2 dropdown-toggle-no-arrow"
-                      style={{ height: '40px', borderRadius: '50px' }}
-                    >
-                      <span className="d-flex align-items-center gap-2">
-                        <CsLineIcons icon="filter" size="16" />
-                        {filters.rating ? `${filters.rating} Stars` : 'Filter by Rating'}
-                      </span>
-                      <CsLineIcons icon="chevron-down" size="16" />
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu className="w-100 shadow border-0 rounded-xl mt-1">
-                      <Dropdown.Header className="text-uppercase small fw-bold text-muted px-3 pt-2">Filter by Rating</Dropdown.Header>
-                      <Dropdown.Item active={filters.rating === ''} onClick={() => setFilters({ ...filters, rating: '' })}>
-                        All Ratings
-                      </Dropdown.Item>
-                      <Dropdown.Item active={filters.rating === '5'} onClick={() => setFilters({ ...filters, rating: '5' })}>
-                        5 Stars ★★★★★
-                      </Dropdown.Item>
-                      <Dropdown.Item active={filters.rating === '4'} onClick={() => setFilters({ ...filters, rating: '4' })}>
-                        4 Stars ★★★★
-                      </Dropdown.Item>
-                      <Dropdown.Item active={filters.rating === '3'} onClick={() => setFilters({ ...filters, rating: '3' })}>
-                        3 Stars ★★★
-                      </Dropdown.Item>
-                      <Dropdown.Item active={filters.rating === '2'} onClick={() => setFilters({ ...filters, rating: '2' })}>
-                        2 Stars ★★
-                      </Dropdown.Item>
-                      <Dropdown.Item active={filters.rating === '1'} onClick={() => setFilters({ ...filters, rating: '1' })}>
-                        1 Star ★
-                      </Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </Col>
-                <Col md className="text-md-end d-flex align-items-center justify-content-md-end gap-2 gap-md-3 mt-2 mt-md-0">
-                  <div className="d-none d-lg-block smaller text-muted fw-bold">
+                <Col xs="12" md="auto" className="feedback-controls-bottom d-flex align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3">
+                  <span className="smaller text-muted fw-bold">
                     {loading
                       ? 'Processing...'
                       : `Showing ${filteredFeedbacks.length > 0 ? tableInstance.state.pageIndex * tableInstance.state.pageSize + 1 : 0}-${Math.min(
-                          (tableInstance.state.pageIndex + 1) * tableInstance.state.pageSize,
-                          filteredFeedbacks.length
-                        )} of ${filteredFeedbacks.length}`}
-                  </div>
-                  <div className="d-inline-block">
-                    <ControlsPageSize tableInstance={tableInstance} />
-                  </div>
+                        (tableInstance.state.pageIndex + 1) * tableInstance.state.pageSize,
+                        filteredFeedbacks.length
+                      )} of ${filteredFeedbacks.length}`}
+                  </span>
+                  <ControlsPageSize tableInstance={tableInstance} />
                 </Col>
               </Row>
             </div>
 
+
             {/* Collapsible Filter Panel */}
-            <div className="d-none d-md-block">
-              <Collapse in={showFilters}>
-                <div>
-                  <div className="inventory-history-filter-panel mb-4 shadow-sm">
-                    <Row className="g-3">
-                      <Col md="4">
-                        <span className="text-uppercase small fw-bold text-muted d-block mb-1">From Date</span>
-                        <Form.Control type="date" value={filters.fromDate} onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })} />
-                      </Col>
-                      <Col md="4">
-                        <span className="text-uppercase small fw-bold text-muted d-block mb-1">To Date</span>
-                        <Form.Control type="date" value={filters.toDate} onChange={(e) => setFilters({ ...filters, toDate: e.target.value })} />
-                      </Col>
-                      <Col md="3">
-                        <span className="text-uppercase small fw-bold text-muted d-block mb-1">Rating</span>
-                        <Form.Select value={filters.rating} onChange={(e) => setFilters({ ...filters, rating: e.target.value })}>
-                          <option value="">All Ratings</option>
-                          <option value="5">5 Stars</option>
-                          <option value="4">4 Stars</option>
-                          <option value="3">3 Stars</option>
-                          <option value="2">2 Stars</option>
-                          <option value="1">1 Star</option>
-                        </Form.Select>
-                      </Col>
-                      <Col md="1" className="d-flex align-items-end justify-content-end">
-                        <Button
-                          variant="light"
-                          size="sm"
-                          className="rounded-pill px-4 fw-bold"
-                          onClick={() => setFilters({ fromDate: '', toDate: '', rating: '' })}
-                        >
-                          Clear
-                        </Button>
-                      </Col>
-                    </Row>
-                  </div>
+            <Collapse in={showFilters}>
+              <div>
+                <div className="inventory-history-filter-panel mb-4 shadow-sm">
+                  <Row className="g-3">
+                    <Col xs="6" md="4">
+                      <span className="text-uppercase small fw-bold text-muted d-block mb-1">From Date</span>
+                      <Form.Control type="date" value={filters.fromDate} onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })} />
+                    </Col>
+                    <Col xs="6" md="4">
+                      <span className="text-uppercase small fw-bold text-muted d-block mb-1">To Date</span>
+                      <Form.Control type="date" value={filters.toDate} onChange={(e) => setFilters({ ...filters, toDate: e.target.value })} />
+                    </Col>
+                    <Col xs="12" md="3">
+                      <span className="text-uppercase small fw-bold text-muted d-block mb-1">Rating</span>
+                      <Form.Select value={filters.rating} onChange={(e) => setFilters({ ...filters, rating: e.target.value })}>
+                        <option value="">All Ratings</option>
+                        <option value="5">5 Stars</option>
+                        <option value="4">4 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="2">2 Stars</option>
+                        <option value="1">1 Star</option>
+                      </Form.Select>
+                    </Col>
+                    <Col xs="12" md="1" className="d-flex align-items-end justify-content-md-end justify-content-start mt-2 mt-md-0">
+                      <Button
+                        variant="light"
+                        size="sm"
+                        className="rounded-pill px-4 fw-bold w-100 w-md-auto"
+                        onClick={() => setFilters({ fromDate: '', toDate: '', rating: '' })}
+                      >
+                        Clear
+                      </Button>
+                    </Col>
+                  </Row>
                 </div>
-              </Collapse>
-            </div>
+              </div>
+            </Collapse>
 
             {loading ? (
               <div className="text-center py-5">
@@ -639,21 +711,67 @@ const Feedback = () => {
                   {/* Card rows */}
                   {tableInstance.page.map((row, idx) => {
                     tableInstance.prepareRow(row);
+
+                    const contactCell = row.cells.find(c => c.column.id === 'contact');
+                    const dateCell = row.cells.find(c => c.column.id === 'date');
+                    const ratingCell = row.cells.find(c => c.column.id === 'rating');
+                    const feedbackCell = row.cells.find(c => c.column.id === 'feedback');
+                    const actionsCell = row.cells.find(c => c.column.id === 'actions');
+
                     return (
-                      <div key={idx} className="inventory-history-inventory-row-card shadow-sm">
-                        {row.cells.map((cell, cidx) => (
-                          <div
-                            key={cidx}
-                            style={{
-                              width: cell.column.width || 'auto',
-                              flex: cell.column.flex || (cell.column.id === 'actions' ? 1.2 : 1),
-                            }}
-                          >
-                            <span className="inventory-history-mobile-label">{cell.column.Header}</span>
-                            <div className="inventory-history-col-val">{cell.render('Cell')}</div>
-                          </div>
-                        ))}
-                      </div>
+                      <React.Fragment key={idx}>
+                        {/* Desktop Row view */}
+                        <div className="d-none d-md-flex inventory-history-inventory-row-card shadow-sm">
+                          {row.cells.map((cell, cidx) => (
+                            <div
+                              key={cidx}
+                              style={{
+                                width: cell.column.width || 'auto',
+                                flex: cell.column.flex || (cell.column.id === 'actions' ? 1.2 : 1),
+                              }}
+                            >
+                              <div className="inventory-history-col-val">{cell.render('Cell')}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Mobile Responsive Card view using Bootstrap elements */}
+                        <Card className="d-md-none border mb-3 shadow-sm rounded-3 p-3">
+                          <Row className="g-2">
+                            {/* Contact Info (full width) */}
+                            <Col xs={12} className="mb-2">
+                              <span className="text-uppercase text-muted fw-bold d-block mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Contact Info</span>
+                              <div className="inventory-history-col-val">{contactCell.render('Cell')}</div>
+                            </Col>
+
+                            {/* Date (half width) */}
+                            <Col xs={6} className="mb-2">
+                              <span className="text-uppercase text-muted fw-bold d-block mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Date</span>
+                              <div className="inventory-history-col-val">{dateCell.render('Cell')}</div>
+                            </Col>
+
+                            {/* Rating (half width) */}
+                            <Col xs={6} className="mb-2">
+                              <span className="text-uppercase text-muted fw-bold d-block mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Rating</span>
+                              <div className="inventory-history-col-val">{ratingCell.render('Cell')}</div>
+                            </Col>
+
+                            {/* Feedback & Reply (full width) */}
+                            <Col xs={12} className="mb-2">
+                              <span className="text-uppercase text-muted fw-bold d-block mb-1" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Feedback & Reply</span>
+                              <div className="inventory-history-col-val">{feedbackCell.render('Cell')}</div>
+                            </Col>
+
+                            {/* Actions (full width) */}
+                            <Col xs={12} className="pt-2 border-top border-dashed-mobile mt-1">
+                              <span className="text-uppercase text-muted fw-bold d-block mb-2" style={{ fontSize: '0.65rem', letterSpacing: '0.05em' }}>Actions</span>
+                              <div className="mobile-actions-wrapper">
+                                {actionsCell.render('Cell')}
+                              </div>
+                            </Col>
+                          </Row>
+                        </Card>
+                      </React.Fragment>
                     );
                   })}
                 </div>

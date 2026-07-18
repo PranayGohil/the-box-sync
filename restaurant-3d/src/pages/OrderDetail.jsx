@@ -91,7 +91,7 @@ export default function OrderDetail() {
             <td style="padding: 3px 0; text-align: right;"><strong>Type:</strong> ${order.order_type || 'Dine In'}</td>
           </tr>
           <tr>
-            <td style="padding: 3px 0;"><strong>Date:</strong> ${new Date(order.order_date || order.createdAt).toLocaleString('en-IN')}</td>
+            <td style="padding: 3px 0;"><strong>Date:</strong> ${new Date(order.order_date || order.createdAt).toLocaleString('en-IN', { hour12: true })}</td>
             <td style="padding: 3px 0; text-align: right;">
               ${order.table_no ? `<strong>Table:</strong> ${order.table_no}` : order.token ? `<strong>Token:</strong> ${order.token}` : ''}
             </td>
@@ -218,8 +218,10 @@ export default function OrderDetail() {
     const params = new URLSearchParams({
       token: settings.restaurant_token,
       order_id: order._id,
+      order_no: order.order_no || '',
       name: user?.name || '',
       email: user?.email || '',
+      phone: order.customer_phone || user?.phone || '',
     });
     console.log(`${feedbackBaseUrl}?${params.toString()}`);
     window.open(`${feedbackBaseUrl}?${params.toString()}`, '_blank');
@@ -261,7 +263,8 @@ export default function OrderDetail() {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: true
   });
 
   return (
@@ -286,9 +289,11 @@ export default function OrderDetail() {
             <button onClick={handlePrint} className="btn-ghost py-2 px-4 small d-flex align-items-center gap-2">
               <Printer size={16} /> Print Bill
             </button>
-            <button onClick={handleFeedbackRedirect} className="btn-primary py-2.5 px-4 small d-flex align-items-center gap-2">
-              <MessageSquare size={16} /> Give Feedback
-            </button>
+            {!order.feedback_details && (
+              <button onClick={handleFeedbackRedirect} className="btn-primary py-2.5 px-4 small d-flex align-items-center gap-2">
+                <MessageSquare size={16} /> Give Feedback
+              </button>
+            )}
           </div>
         </div>
 
@@ -455,6 +460,77 @@ export default function OrderDetail() {
             </div>
           </div>
         </div>
+
+        {order.feedback_details && (
+          <div className="row mt-4">
+            <div className="col-12">
+              <div className="glass rounded-4 p-4">
+                <h5 className="text-white fw-bold mb-3 d-flex align-items-center gap-2">
+                  <MessageSquare size={18} className="text-brand-400" /> Your Feedback & Review
+                </h5>
+                
+                <div className="p-3 rounded-3 bg-white-5 border border-white-10">
+                  <div className="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="text-warning fw-bold fs-5">
+                        {'★'.repeat(order.feedback_details.rating)}
+                        {'☆'.repeat(5 - order.feedback_details.rating)}
+                      </span>
+                      <span className="text-white-40 small">
+                        ({order.feedback_details.rating} / 5)
+                      </span>
+                    </div>
+                    <span className="text-white-40 small">
+                      {new Date(order.feedback_details.date).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+
+                  {/* Feedback text */}
+                  <p className="text-white-80 italic mb-3 font-italic" style={{ fontStyle: 'italic' }}>
+                    “{order.feedback_details.feedback}”
+                  </p>
+
+                  {/* Tags */}
+                  {Array.isArray(order.feedback_details.tags) && order.feedback_details.tags.length > 0 && (
+                    <div className="d-flex flex-wrap gap-2 mb-3">
+                      {order.feedback_details.tags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="badge bg-brand-400-10 text-brand-400 border border-brand-400-20 rounded-pill px-2.5 py-1"
+                          style={{ fontSize: '11px', fontWeight: '600' }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Restaurant reply */}
+                  {order.feedback_details.reply ? (
+                    <div className="mt-3 p-3 rounded bg-brand-400-5 border-start border-brand-400 border-width-3" style={{ borderLeft: '4px solid #7444FD' }}>
+                      <span className="text-brand-400 fw-bold d-block small text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>
+                        Restaurant Reply:
+                      </span>
+                      <p className="text-white-90 mb-0 small" style={{ whiteSpace: 'pre-line' }}>
+                        {order.feedback_details.reply}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-white-40 small italic" style={{ fontStyle: 'italic' }}>
+                      Pending reply from restaurant...
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
