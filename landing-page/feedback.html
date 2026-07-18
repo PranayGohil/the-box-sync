@@ -223,6 +223,16 @@
         .selected-tag-badge .remove-btn:hover {
             color: #ef4444;
         }
+
+        #breadcrumbRestaurantName {
+            font-size: 28px !important;
+        }
+
+        @media (max-width: 991px) {
+            #breadcrumbRestaurantName {
+                font-size: 22px !important;
+            }
+        }
     </style>
 </head>
 
@@ -469,19 +479,19 @@
         </div>
     </div>
 
-    <!-- Breadcumb Section S T A R T -->
+    <!-- Breadcrumb -->
     <div class="breadcumb-section fix">
         <div class="breadcumb-container-wrapper" data-bg-src="assets/images/bg/breadcumgBg.png"
-            style="padding: 50px 0 50px;">
+            style="padding: 24px 0 20px;">
             <div class="container">
                 <div class="shape1"><img src="assets/images/shape/breadCumbShape1_1.png" alt="shape"></div>
                 <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape"></div>
                 <div class="breadcumb-wrapper">
-                    <div class="page-heading">
-                        <h1>Feedback Form</h1>
-                        <div class="links">
-                            <a href="index.html">Home<span class="slash">/</span></a> Feedback Form
-                        </div>
+                    <div class="page-heading text-center">
+                        <img id="restaurantLogo" src="" alt="logo"
+                            style="display:none; width: 70px; height: 70px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; margin-left: auto; margin-right: auto; object-fit: cover; background-color: #fff;"
+                            onerror="this.style.display='none';">
+                        <h1 id="breadcrumbRestaurantName">Feedback Form</h1>
                     </div>
                 </div>
             </div>
@@ -493,6 +503,15 @@
         <div class="container">
             <div class="wrapper my-5">
                 <div class="contents_privacy ">
+                    <!-- Token Loading State -->
+                    <div id="tokenLoading" style="display:flex; justify-content:center; align-items:center; min-height:200px;">
+                        <div class="text-center">
+                            <div class="spin spin-dark" style="width:36px;height:36px;border-width:3px;margin:0 auto 16px; border: 3px solid #e2e8f0; border-top-color: #23b3f4; border-radius: 50%; animation: spin .7s linear infinite;">
+                            </div>
+                            <p style="color:#64748b;">Loading restaurant details…</p>
+                        </div>
+                    </div>
+
                     <div id="tokenError"
                         style="display:none; justify-content:center; align-items:center; min-height:200px;">
                         <div class="text-center">
@@ -826,11 +845,15 @@
         const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
             ? 'http://localhost:5001/api'
             : 'https://api.theboxsync.com/api';
+        const UPLOAD_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+            ? 'http://localhost:5001/uploads'
+            : 'https://api.theboxsync.com/uploads';
 
         // ── STATE ──────────────────────────────────────────────────────────────
         let feedbackToken = null;
         let orderId = null;
         let selectedTags = [];
+        let restaurantInfo = null;
 
         const PREDEFINED_SUGGESTIONS = [
             "Excellent Packaging",
@@ -866,8 +889,40 @@
         }
 
         function showTokenError(msg) {
+            qs('tokenLoading').style.display = 'none';
             qs('tokenError').style.display = 'flex';
             qs('tokenErrorMsg').textContent = msg;
+        }
+
+        // ── RESOLVE TOKEN ─────────────────────────────────────────────────────
+        async function resolveToken() {
+            qs('tokenLoading').style.display = 'flex';
+            try {
+                const res = await fetch(`${API_BASE}/reservation/resolve-token/${feedbackToken}`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message);
+
+                restaurantInfo = data.data;
+
+                // Populate branding logo & name
+                if (qs('breadcrumbRestaurantName')) {
+                    qs('breadcrumbRestaurantName').textContent = (restaurantInfo.name ? restaurantInfo.name + ' — ' : '') + 'Feedback Form';
+                }
+
+                if (restaurantInfo.logo) {
+                    qs('restaurantLogo').src = UPLOAD_BASE + restaurantInfo.logo;
+                    qs('restaurantLogo').style.display = 'block';
+                } else {
+                    qs('restaurantLogo').src = 'assets/images/logo/logo-blue.svg';
+                    qs('restaurantLogo').style.display = 'block';
+                }
+
+                qs('tokenLoading').style.display = 'none';
+                qs('feedbackContent').style.display = 'block';
+
+            } catch (err) {
+                showTokenError(err.message || 'Invalid feedback link.');
+            }
         }
 
         function hideFormError() {
@@ -1024,7 +1079,7 @@
         }
 
         // ── INIT ───────────────────────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             feedbackToken = getTokenFromURL();
             orderId = new URLSearchParams(window.location.search).get('order_id') || null;
 
@@ -1033,9 +1088,8 @@
                 return;
             }
 
-            // Token exists — show the form
-            qs('feedbackContent').style.display = 'block';
             qs('feedbackForm').addEventListener('submit', handleSubmit);
+            await resolveToken();
 
             // Prefill customer details from URL if provided
             const params = new URLSearchParams(window.location.search);
