@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import ImageCropperModal from 'components/cropper/ImageCropperModal';
 
 const customStyles = `
   .pill-input {
@@ -154,6 +155,13 @@ const AddDishes = () => {
   const [imagePreviews, setImagePreviews] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [cropperState, setCropperState] = useState({
+    show: false,
+    imageSrc: '',
+    aspect: 1,
+    index: null,
+    setFieldValue: null,
+  });
   const categoryOptions = (suggestions.categories || []).map((c) => ({ label: c, value: c }));
   const dishOptions = (suggestions.dishes || []).map((d) => ({ label: d, value: d }));
   const [counterOptions, setCounterOptions] = useState([]);
@@ -452,8 +460,26 @@ const AddDishes = () => {
   const handleImageChange = (e, index, setFieldValue) => {
     const file = e.currentTarget.files[0];
     if (file) {
-      setFieldValue(`dishes[${index}].dish_img`, file);
-      setImagePreviews((prev) => ({ ...prev, [index]: URL.createObjectURL(file) }));
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should not exceed 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setCropperState({
+          show: true,
+          imageSrc: reader.result,
+          aspect: 1,
+          index,
+          setFieldValue,
+        });
+      });
+      reader.readAsDataURL(file);
+      e.target.value = '';
     }
   };
 
@@ -965,6 +991,22 @@ const AddDishes = () => {
             </Card>
           </div>
         )}
+
+        <ImageCropperModal
+          show={cropperState.show}
+          onHide={() => setCropperState((prev) => ({ ...prev, show: false }))}
+          imageSrc={cropperState.imageSrc}
+          initialAspect={cropperState.aspect}
+          onCropComplete={(croppedFile) => {
+            if (cropperState.setFieldValue && cropperState.index !== null) {
+              cropperState.setFieldValue(`dishes[${cropperState.index}].dish_img`, croppedFile);
+              setImagePreviews((prev) => ({
+                ...prev,
+                [cropperState.index]: URL.createObjectURL(croppedFile),
+              }));
+            }
+          }}
+        />
       </div>
     </>
   );

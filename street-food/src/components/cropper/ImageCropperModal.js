@@ -181,6 +181,7 @@ const ImageCropperModal = ({ show, onHide, imageSrc, onCropComplete, initialAspe
               background={false}
               responsive={true}
               checkOrientation={false}
+              aspectRatio={selectedAspect.value === undefined ? NaN : selectedAspect.value}
             />
           )}
         </div>
