@@ -25,7 +25,7 @@ const Login = () => {
 
   const onSubmit = async (values, { setSubmitting }) => {
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API}/panel-user/login/Create Cashier`, values);
+      const res = await axios.post(`${process.env.REACT_APP_API}/panel-user/login/Cashier`, values);
       if (res.data.message === 'Logged In') {
         const cType = res.data.panelUser?.cashier_type || 'qsr';
         login(res.data.token, res.data.user, cType);

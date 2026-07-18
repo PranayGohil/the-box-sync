@@ -37,8 +37,8 @@ const authMiddleware = async (req, res, next) => {
       const tier = dbUser?.purchasedPlan;
       
       if (tier && !hasAccess) {
-        const fineDineFeats = ['Manager', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Scan For Catalog', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Create Cashier'];
-        const chainFeats = ['Manager', 'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Token Management', 'Scan For Catalog', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box', 'Create Cashier'];
+        const fineDineFeats = ['Manager', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Scan For Catalog', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Cashier'];
+        const chainFeats = ['Manager', 'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Token Management', 'Scan For Catalog', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box', 'Cashier'];
         
         if (tier === 'Fine Dine' && fineDineFeats.includes(user.Role)) hasAccess = true;
         if (tier === 'Chain' && chainFeats.includes(user.Role)) hasAccess = true;
