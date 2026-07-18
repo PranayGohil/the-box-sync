@@ -20,7 +20,7 @@ import DeletePanelModal from './DeletePanelModal';
 import RaiseInquiryModal from './RaiseInquiryModal';
 
 
-const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'KOT Panel', 'Hotel Manager', 'Create Cashier'];
+const PANEL_PLANS = ['Manager', 'QSR', 'Captain Panel', 'KOT Panel', 'Hotel Manager', 'Cashier'];
 
 const PLAN_DISPLAY_NAMES = {
   Manager: 'Manager Panel',
@@ -34,14 +34,14 @@ const PLAN_DISPLAY_NAMES = {
   'Waiter Calling System': 'Waiter Calling System',
   'Whatsapp-Invoice': 'WhatsApp Invoice',
   'KOT Panel': 'Kitchen Display System',
-  'Create Cashier': 'Create Cashier',
+  'Cashier': 'Cashier',
 };
 
 const ADDON_LABEL_TO_DB = {
   'Reservation Management': 'Reservation Manager',
   'QSR Panel': 'QSR',
   'Manager Panel': 'Manager',
-  'Create Cashier': 'Create Cashier',
+  'Cashier': 'Cashier',
   'Captain Panel': 'Captain Panel',
   'Kitchen Display System': 'KOT Panel',
   'Restaurant Website': 'Restaurant Website',
@@ -71,7 +71,7 @@ const ALLOWED_PLANS_BY_TIER = {
     'Dynamic Reports',
     'Whatsapp-Invoice',
     'Restaurant Website',
-    'Create Cashier',
+    'Cashier',
   ],
   Cloud: ['Staff Management', 'QSR', 'KOT Panel', 'Feedback', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website'],
   Chain: [
@@ -90,7 +90,7 @@ const ALLOWED_PLANS_BY_TIER = {
     'Whatsapp-Invoice',
     'Restaurant Website',
     'Payroll By The Box',
-    'Create Cashier',
+    'Cashier',
   ],
 };
 
@@ -245,8 +245,8 @@ const Subscription = () => {
 
       const finalEnriched = [];
       for (const sub of enriched) {
-        if (sub.plan_name === 'Create Cashier') {
-          const cashiers = accountData['Create Cashier'];
+        if (sub.plan_name === 'Cashier') {
+          const cashiers = accountData.Cashier;
           if (Array.isArray(cashiers) && cashiers.length > 0) {
             cashiers.forEach((cashier, index) => {
               finalEnriched.push({
@@ -379,8 +379,8 @@ const Subscription = () => {
 
   const handleEditPanel = async (planName, accountData = null) => {
     try {
-      if (planName === 'Create Cashier' && accountData) {
-        setCurrentPlanName('Create Cashier');
+      if (planName === 'Cashier' && accountData) {
+        setCurrentPlanName('Cashier');
         setCurrentPanelData(accountData);
         setShowPanelModal(true);
         return;
@@ -443,7 +443,7 @@ const Subscription = () => {
         window.open('https://kot.theboxsync.com', '_blank');
       } else if (planName === 'Manager' || planName === 'QSR') {
         window.open('https://manager.theboxsync.com', '_blank');
-      } else if (planName === 'Create Cashier') {
+      } else if (planName === 'Cashier') {
         window.open('https://cashier.theboxsync.com', '_blank');
       } else {
         toast.error('Invalid Plan');
@@ -504,15 +504,15 @@ const Subscription = () => {
           let actionButtons = null;
 
           if (isActive && (PANEL_PLANS.includes(original.plan_name) || original.plan_name === 'Cashier Instance')) {
-            // Special handling for Create Cashier: always show Manage Cashiers button
-            if (original.plan_name === 'Create Cashier') {
+            // Special handling for Cashier: always show Manage Cashiers button
+            if (original.plan_name === 'Cashier') {
               actionButtons = (
                 <Button
                   variant="none"
                   size="sm"
                   className="subscription-custom-btn-outline"
                   style={{ width: '30px', height: '30px', padding: 0 }}
-                  onClick={() => handleAddPanel('Create Cashier')}
+                  onClick={() => handleAddPanel('Cashier')}
                   disabled={loading}
                   title="Create New Cashier"
                 >
@@ -527,7 +527,7 @@ const Subscription = () => {
                     size="sm"
                     className="subscription-custom-btn-outline"
                     style={{ width: '30px', height: '30px', padding: 0 }}
-                    onClick={() => handleEditPanel('Create Cashier', original.accountData)}
+                    onClick={() => handleEditPanel('Cashier', original.accountData)}
                     disabled={loading || actionLoading.renew}
                     title="Edit Cashier"
                   >
@@ -537,7 +537,7 @@ const Subscription = () => {
                     variant="none"
                     size="sm"
                     className="subscription-custom-btn-danger"
-                    onClick={() => openDeletePanelModal('Create Cashier', original.accountId)}
+                    onClick={() => openDeletePanelModal('Cashier', original.accountId)}
                     disabled={loading}
                     title="Remove Cashier"
                   >
@@ -548,7 +548,7 @@ const Subscription = () => {
                     size="sm"
                     className="subscription-custom-btn-outline"
                     style={{ width: '30px', height: '30px', padding: 0 }}
-                    onClick={() => handleRedirect('Create Cashier')}
+                    onClick={() => handleRedirect('Cashier')}
                     disabled={loading || actionLoading.redirect}
                     title="Go to Module"
                   >
@@ -695,7 +695,7 @@ const Subscription = () => {
     {
       columns,
       data: userSubscription,
-      initialState: { pageIndex: 0, pageSize: 100 },
+      initialState: { pageIndex: 0, pageSize: 20 },
     },
     useGlobalFilter,
     useSortBy,

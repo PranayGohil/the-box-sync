@@ -317,20 +317,30 @@ export const filterRoutesByPlans = (routesObj, activePlans = [], cashierType = '
       if (newItem.path && newItem.path.endsWith('/dashboard')) {
         const clonedItem = { ...newItem };
         const localAppRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
-        if (hasManager && hasQsr) {
+        if (cashierType === 'dine-in') {
+          // Only Manager dashboard for dine-in cashier
+          delete clonedItem.subs;
+          clonedItem.component = newItem.component;
+          clonedItem.path = `${localAppRoot}/dashboard/manager`;
+        } else if (cashierType === 'qsr') {
+          // Only QSR dashboard for QSR cashier
+          delete clonedItem.subs;
+          clonedItem.component = qsrComponents.dashboard;
+          clonedItem.path = `${localAppRoot}/dashboard/qsr`;
+        } else if (hasManager && hasQsr) {
           // Both plans active — show both sub-items like manager panel
           clonedItem.subs = [
             { path: '/manager', label: 'Manager Dashboard', component: clonedItem.component },
             { path: '/qsr', label: 'QSR Dashboard', component: qsrComponents.dashboard },
           ];
           delete clonedItem.component;
-        } else if (!hasQsr || cashierType === 'dine-in') {
-          // Only Manager plan or dine-in cashier
+        } else if (!hasQsr) {
+          // Only Manager plan
           delete clonedItem.subs;
           clonedItem.component = newItem.component;
           clonedItem.path = `${localAppRoot}/dashboard/manager`;
         } else {
-          // Only QSR plan or qsr cashier
+          // Only QSR plan
           delete clonedItem.subs;
           clonedItem.component = qsrComponents.dashboard;
           clonedItem.path = `${localAppRoot}/dashboard/qsr`;

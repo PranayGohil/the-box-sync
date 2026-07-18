@@ -15,7 +15,7 @@ const panelModels = {
   "KOT Panel": Kot,
   "Captain Panel": Captain,
   "Hotel Manager": HotelManager,
-  "Create Cashier": Cashier,
+  "Cashier": Cashier,
 };
 
 const getModel = (planName) => {
@@ -32,7 +32,7 @@ exports.getPanelUser = async (req, res) => {
     const Model = getModel(planName);
 
     // For Cashier, return all accounts (multi-cashier support)
-    if (planName === "Create Cashier") {
+    if (planName === "Cashier") {
       const accounts = await Model.find({ user_id: userId }).lean();
       return res.status(200).json({ exists: accounts.length > 0, data: accounts });
     }
@@ -70,7 +70,7 @@ exports.createOrUpdatePanelUser = async (req, res) => {
     let account;
 
     // Multi-cashier support: for Cashier plan, use accountId to determine create vs update
-    if (planName === "Create Cashier") {
+    if (planName === "Cashier") {
       if (accountId) {
         // Edit existing cashier by its _id
         account = await Model.findOne({ _id: accountId, user_id: userId });
@@ -121,7 +121,7 @@ exports.changePanelPassword = async (req, res) => {
     // Get correct panel model
     const Model = getModel(planName);
     let query = { user_id: userId };
-    if (planName === 'Create Cashier' && accountId) {
+    if (planName === 'Cashier' && accountId) {
       query._id = accountId;
     }
     const panelUser = await Model.findOne(query).select('+password');
@@ -264,8 +264,8 @@ exports.panelLogin = async (req, res) => {
     // Check implicit access based on purchased base plan
     const tier = user.purchasedPlan;
     if (tier && !hasAccess) {
-      const fineDineFeats = ['Manager', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Create Cashier'];
-      const chainFeats = ['Manager', 'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Token Management', 'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box', 'Create Cashier'];
+      const fineDineFeats = ['Manager', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Cashier'];
+      const chainFeats = ['Manager', 'QSR', 'Captain Panel', 'KOT Panel', 'Reservation Manager', 'Table Management', 'Token Management', 'Scan For Menu', 'Feedback', 'Waiter Calling System', 'Dynamic Reports', 'Whatsapp-Invoice', 'Restaurant Website', 'Payroll By The Box', 'Cashier'];
 
       if (tier === 'Fine Dine' && fineDineFeats.includes(planName)) hasAccess = true;
       if (tier === 'Chain' && chainFeats.includes(planName)) hasAccess = true;

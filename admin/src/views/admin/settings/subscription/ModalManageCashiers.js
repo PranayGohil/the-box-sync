@@ -50,7 +50,7 @@ function CashierForm({ editing, onSave, onCancel }) {
         }
 
         await axios.post(
-          `${process.env.REACT_APP_API}/panel-user/Create Cashier`,
+          `${process.env.REACT_APP_API}/panel-user/Cashier`,
           payload,
           { headers: AUTH_HEADER() }
         );
@@ -310,7 +310,7 @@ export default function ModalManageCashiers({ show, handleClose }) {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_API}/panel-user/Create Cashier`,
+        `${process.env.REACT_APP_API}/panel-user/Cashier`,
         { headers: AUTH_HEADER() }
       );
       setCashiers(Array.isArray(res.data.data) ? res.data.data : []);

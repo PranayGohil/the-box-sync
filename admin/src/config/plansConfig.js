@@ -107,7 +107,7 @@ export const plans = [
         'WhatsApp Invoice',
         'Restaurant Website',
         'Manager Panel',
-        'Create Cashier',
+        'Cashier',
       ],
       loyalty: [
         'Customer Profiles',
@@ -194,7 +194,7 @@ export const plans = [
         'WhatsApp Invoice',
         'Restaurant Website',
         'Manager Panel',
-        'Create Cashier',
+        'Cashier',
       ],
       loyalty: [
         'Customer Profiles',
@@ -235,7 +235,7 @@ export const featureCategories = [
     features: [
       'QSR Panel',
       'Manager Panel',
-      'Create Cashier',
+      'Cashier',
       'Captain Panel',
       'Kitchen Display System',
       'Reservation Management',

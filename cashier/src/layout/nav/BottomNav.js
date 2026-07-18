@@ -8,7 +8,7 @@ const BottomNav = () => {
   const { isLogin } = useSelector((state) => state.auth);
   const { attrMobile, navClasses } = useSelector((state) => state.menu);
   const { pathname } = useLocation();
-  const { activePlans } = useContext(AuthContext);
+  const { activePlans, cashierType } = useContext(AuthContext);
 
   if (!isLogin || attrMobile) return null;
 
@@ -17,10 +17,11 @@ const BottomNav = () => {
   const isSettings = pathname.startsWith('/settings') || pathname.startsWith('/pages/profile/settings');
   const isOperations = pathname.startsWith('/operations');
 
+  const dashUrl = cashierType === 'dine-in' ? '/dashboard/manager' : '/dashboard/qsr';
   const settingsItems = [
     { to: '/pages/profile/settings', icon: 'user', label: 'Account' },
     { to: '/pages/profile/standard', icon: 'settings-2', label: 'Profile' },
-    { to: '/dashboard', icon: 'home', label: 'Dash' },
+    { to: dashUrl, icon: 'home', label: 'Dash' },
   ];
 
   const operationsItems = [

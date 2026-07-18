@@ -119,9 +119,9 @@ const UnifiedOrder = () => {
   const tableId = urlParams.get('tableId');
   const mode = urlParams.get('mode'); // 'new' | 'edit'
 
-  const { activePlans, kotUserExists } = useContext(AuthContext);
+  const { activePlans, kotUserExists, cashierType } = useContext(AuthContext);
   const canKOT = activePlans ? activePlans.includes('KOT Panel') && kotUserExists : false;
-  const backPath = activePlans && activePlans.includes('Manager') && activePlans.includes('QSR') ? '/dashboard/manager' : '/dashboard';
+  const backPath = cashierType === 'dine-in' ? '/dashboard/manager' : '/dashboard/qsr';
 
   // Default type from URL path
   const defaultType = location.pathname.includes('dine-in') ? 'Dine In' : location.pathname.includes('delivery') ? 'Delivery' : 'Takeaway';

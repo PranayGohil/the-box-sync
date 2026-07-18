@@ -54,7 +54,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
               username: formValues.username,
               password: formValues.newPassword,
               adminPassword: formValues.adminPassword,
-              ...(planName === 'Create Cashier' && { cashier_type: formValues.cashier_type }),
+              ...(planName === 'Cashier' && { cashier_type: formValues.cashier_type }),
             },
             {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -68,7 +68,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
               {
                 adminPassword: formValues.adminPassword,
                 newPassword: formValues.newPassword,
-                ...(planName === 'Create Cashier' && { accountId: data?._id }),
+                ...(planName === 'Cashier' && { accountId: data?._id }),
               },
               {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -80,7 +80,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
             `${process.env.REACT_APP_API}/panel-user/${planName}`,
             {
               username: formValues.username,
-              ...(planName === 'Create Cashier' && { cashier_type: formValues.cashier_type, accountId: data?._id }),
+              ...(planName === 'Cashier' && { cashier_type: formValues.cashier_type, accountId: data?._id }),
             },
             {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -145,7 +145,7 @@ function ModalEditPanel({ show, handleClose, data, planName, onSave }) {
             {renderError('username')}
           </Form.Group>
 
-          {planName === 'Create Cashier' && (
+          {planName === 'Cashier' && (
             <Form.Group className="mb-3">
               <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Cashier Type</Form.Label>
               <div className="d-flex gap-4">
