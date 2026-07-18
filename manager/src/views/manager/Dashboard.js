@@ -7,6 +7,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { useSocket } from 'contexts/SocketContext';
+import Select from 'react-select';
 
 const Dashboard = () => {
   const title = 'Dashboard';
@@ -24,6 +25,7 @@ const Dashboard = () => {
   const [activeDineInOrders, setActiveDineInOrders] = useState([]);
   const [activeTakeawaysAndDeliveries, setActiveTakeawaysAndDeliveries] = useState([]);
   const [mobileActiveSection, setMobileActiveSection] = useState('dine-in'); // 'dine-in' or 'takeaway-delivery'
+  const [selectedArea, setSelectedArea] = useState('');
 
   const findTableId = (tableNo, tableArea) => {
     for (const area of tables) {
@@ -189,6 +191,7 @@ const Dashboard = () => {
     <>
       <HtmlHead title={title} description={description} />
 
+
       <div className="container-fluid px-3 px-lg-4 mb-5 pb-5">
         <div className="page-title-container dashboard-title-container mb-4 mt-2 mt-lg-0">
           <Row className="g-0 align-items-center">
@@ -296,7 +299,55 @@ const Dashboard = () => {
 
         <Row className="gy-4 gx-lg-5">
           <Col xs="12" lg="8" className={mobileActiveSection === 'dine-in' ? 'd-block' : 'd-none d-lg-block'}>
-            {tables.map((tableArea) => (
+            <div className="mb-4 d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2" style={{ position: 'relative', zIndex: 100 }}>
+              <div className="d-flex align-items-center">
+                <div
+                  style={{
+                    width: '8px',
+                    height: '24px',
+                    background: '#23b3f4',
+                    borderRadius: '4px',
+                    marginRight: '12px',
+                    boxShadow: '0 2px 5px rgba(35,179,244,0.3)',
+                  }}
+                />
+                <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>Dine-In Tables</h3>
+              </div>
+              <div className="area-select-wrapper" style={{ width: '200px' }}>
+                <Select
+                  classNamePrefix="react-select"
+                  options={[{ value: '', label: 'All Areas' }, ...tables.map((t) => ({ value: t.area, label: t.area }))]}
+                  value={selectedArea ? { value: selectedArea, label: selectedArea } : { value: '', label: 'All Areas' }}
+                  onChange={(selected) => setSelectedArea(selected ? selected.value : '')}
+                  placeholder="All Areas"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderRadius: '50px',
+                      minHeight: '38px',
+                      height: '38px',
+                      border: '1.5px solid #e2e8f0',
+                      boxShadow: 'none',
+                      '&:hover': { borderColor: '#23b3f4' },
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      borderRadius: '1rem',
+                      overflow: 'hidden',
+                      boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
+                      zIndex: 9999,
+                    }),
+                    option: (base) => ({ ...base, whiteSpace: 'nowrap' }),
+                    placeholder: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600', fontSize: '13px' }),
+                    singleValue: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600', fontSize: '13px' }),
+                  }}
+                />
+              </div>
+            </div>
+
+            {tables
+              .filter((tableArea) => !selectedArea || tableArea.area === selectedArea)
+              .map((tableArea) => (
               <div className="gx-2 mb-5" key={tableArea._id}>
                 <div className="d-flex align-items-center mb-4">
                   <div
@@ -783,51 +834,59 @@ const Dashboard = () => {
       {/* Spacer so sticky bar doesn't overlap last content on mobile */}
       <div className="d-md-none" style={{ height: '90px' }} />
 
-      {/* Mobile sticky bottom action bar — hidden when sidebar is open */}
       {!attrMobile && (
         <div
           className="d-md-none"
           style={{
             position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'rgba(255,255,255,0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            padding: '10px 12px',
+            bottom: '10px',
+            left: '10px',
+            right: '10px',
+            background: '#ffffff',
+            padding: '8px 10px',
             zIndex: 1040,
-            boxShadow: '0 -10px 30px rgba(35,179,244,0.1)',
-            borderTop: '1px solid rgba(35,179,244,0.1)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+            borderRadius: '20px',
+            border: '1px solid #f1f5f9',
           }}
         >
           <div className="d-flex gap-2 align-items-center">
-            <Button className="flex-grow-1 custom-btn-outline py-2" onClick={() => createNewOrder('takeaway')}>
-              + Takeaway
+            <Button
+              className="custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-1.5 py-2 px-1"
+              style={{ height: '40px' }}
+              onClick={() => createNewOrder('takeaway')}
+            >
+              <CsLineIcons icon="plus" size="14" />
+              <span style={{ fontSize: '0.85rem' }}>Takeaway</span>
             </Button>
-            <Button className="flex-grow-1 custom-btn-outline py-2" onClick={() => createNewOrder('delivery')}>
-              + Delivery
+            <Button
+              className="custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-1.5 py-2 px-1"
+              style={{ height: '40px' }}
+              onClick={() => createNewOrder('delivery')}
+            >
+              <CsLineIcons icon="plus" size="14" />
+              <span style={{ fontSize: '0.85rem' }}>Delivery</span>
             </Button>
             {showOnlinePartners ? (
               <Button
                 variant="light"
-                className="d-flex align-items-center justify-content-center p-0 position-relative"
-                style={{ width: '42px', height: '42px', borderRadius: '12px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
+                className="d-flex align-items-center justify-content-center p-0 position-relative flex-shrink-0"
+                style={{ width: '40px', height: '40px', minWidth: '40px', borderRadius: '12px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
                 onClick={() => setShowOnlinePartners(false)}
               >
-                <CsLineIcons icon="close" size="20" style={{ color: '#dc3545' }} />
+                <CsLineIcons icon="close" size="18" style={{ color: '#dc3545' }} />
               </Button>
             ) : (
               <Button
                 variant="light"
-                className="d-flex align-items-center justify-content-center p-0 position-relative"
-                style={{ width: '42px', height: '42px', borderRadius: '12px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
+                className="d-flex align-items-center justify-content-center p-0 position-relative flex-shrink-0"
+                style={{ width: '40px', height: '40px', minWidth: '40px', borderRadius: '12px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
                 onClick={() => {
                   setShowOnlinePartners(true);
                   setMobileActiveSection('takeaway-delivery');
                 }}
               >
-                <CsLineIcons icon="shipping" size="20" style={{ color: '#475569' }} />
+                <CsLineIcons icon="shipping" size="18" style={{ color: '#475569' }} />
                 {websiteIncomingOrders.length > 0 && (
                   <span
                     style={{

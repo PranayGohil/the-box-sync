@@ -30,6 +30,11 @@ const OrderDetails = () => {
   const [inputPhoneNumber, setInputPhoneNumber] = useState('');
   const [inputCustomerName, setInputCustomerName] = useState('');
   const [restaurantInfo, setRestaurantInfo] = useState(null);
+  const [showEditCustomerModal, setShowEditCustomerModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -195,6 +200,56 @@ const OrderDetails = () => {
     await sendWhatsAppMessage(customerPhone);
   };
 
+  const openEditCustomerModal = () => {
+    setEditName(order.customer_name || '');
+    setEditPhone(order.customer_phone || order.customer_details?.phone || '');
+    setEditAddress(order.customer_address || order.customer_details?.address || '');
+    setShowEditCustomerModal(true);
+  };
+
+  const handleEditCustomerSave = async () => {
+    if (!editPhone || editPhone.replace(/\D/g, '').length < 10) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    setEditSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const payload = {
+        customer_name: editName,
+        customer_phone: editPhone.replace(/\D/g, ''),
+        customer_address: editAddress,
+      };
+      const res = await axios.put(
+        `${process.env.REACT_APP_API}/order/update-status/${order.id}`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) {
+        setOrder((prev) => ({
+          ...prev,
+          customer_name: editName,
+          customer_phone: editPhone.replace(/\D/g, ''),
+          customer_address: editAddress,
+          customer_details: {
+            ...prev?.customer_details,
+            phone: editPhone.replace(/\D/g, ''),
+            address: editAddress,
+          },
+        }));
+        toast.success('Customer details updated successfully');
+        setShowEditCustomerModal(false);
+      } else {
+        toast.error(res.data.message || 'Failed to update customer details');
+      }
+    } catch (err) {
+      console.error('Failed to save customer details:', err);
+      toast.error('Failed to update customer details');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -283,6 +338,15 @@ const OrderDetails = () => {
             </Button>
             <Button
               variant="outline-primary"
+              onClick={openEditCustomerModal}
+              disabled={!order}
+              className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
+              style={{ minWidth: '130px', borderColor: '#23b3f4', color: '#23b3f4' }}
+            >
+              <CsLineIcons icon="edit" className="me-2" size="15" /> <span>Edit Customer</span>
+            </Button>
+            <Button
+              variant="outline-primary"
               onClick={handleWhatsAppShare}
               disabled={sharing || !order}
               className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
@@ -324,29 +388,46 @@ const OrderDetails = () => {
       <Row className="mb-n4">
         <Col xl="5" className="mb-4">
           <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: '1.25rem' }}>
-            <Card.Header className="border-0 bg-transparent pt-4 px-4">
+            <Card.Header className="border-0 bg-transparent pt-4 px-4 pb-0">
               <h4 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
                 <CsLineIcons icon="info-hexagon" className="me-2" size="20" />
                 Order Information
               </h4>
             </Card.Header>
-            <Card.Body>
+            <Card.Body className="pt-2 px-4 pb-4">
               <div className="mb-4">
-                <div className="text-small text-muted mb-2">CUSTOMER INFO</div>
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <div className="text-small text-muted">CUSTOMER INFO</div>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="p-0 text-muted"
+                    style={{ fontSize: '12px', textDecoration: 'none' }}
+                    onClick={openEditCustomerModal}
+                    title="Edit customer details"
+                  >
+                    <CsLineIcons icon="edit" size={13} className="me-1" />
+                    Edit
+                  </Button>
+                </div>
                 <div className="mb-2 d-flex align-items-center">
                   <CsLineIcons icon="user" size={16} className="me-2 text-muted" />
-                  <span className="fw-bold me-1 text-dark">Name:</span> <span className="text-muted">{order.customer_name || 'Guest'}</span>
+                  <span className="fw-bold me-1 text-dark">Name:</span> <span className="text-muted">{order.customer_name || <span className="text-danger fst-italic">Not set</span>}</span>
                 </div>
                 <div className="mb-2 d-flex align-items-center">
                   <CsLineIcons icon="phone" size={16} className="me-2 text-muted" />
-                  <span className="fw-bold me-1 text-dark">Contact:</span> <span className="text-muted">{order.customer_phone || order.customer_details?.phone || 'N/A'}</span>
+                  <span className="fw-bold me-1 text-dark">Contact:</span> <span className="text-muted">{order.customer_phone || order.customer_details?.phone || <span className="text-danger fst-italic">Not set</span>}</span>
                 </div>
-                {order.order_type === 'Delivery' && (order.customer_address || order.customer_details?.address) && (
+                {(order.order_type === 'Delivery') && (
                   <div className="mt-2 d-flex align-items-start">
                     <CsLineIcons icon="pin" size={16} className="me-2 mt-1 text-muted" />
                     <div>
-                      <strong>Address: </strong>
-                      <span style={{ lineBreak: 'anywhere' }}>{order.customer_address || order.customer_details.address}</span>
+                      <span className="text-muted small d-block">Delivery Address:</span>
+                      {(order.customer_address || order.customer_details?.address) ? (
+                        <strong className="small" style={{ lineBreak: 'anywhere' }}>{order.customer_address || order.customer_details.address}</strong>
+                      ) : (
+                        <span className="text-danger fst-italic small">Not set</span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -427,13 +508,13 @@ const OrderDetails = () => {
 
         <Col xl="7" className="mb-4">
           <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: '1.25rem' }}>
-            <Card.Header className="border-0 bg-transparent pt-4 px-4">
+            <Card.Header className="border-0 bg-transparent pt-4 px-4 pb-0">
               <h4 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4' }}>
                 <CsLineIcons icon="restaurant" className="me-2" size="20" />
                 Order Items
               </h4>
             </Card.Header>
-            <Card.Body>
+            <Card.Body className="pt-2 px-4 pb-4">
               <div className="table-responsive d-none d-md-block">
                 <Table className="align-middle" hover>
                   <thead className="table-light">
@@ -443,7 +524,7 @@ const OrderDetails = () => {
                       <th scope="col" className="text-muted text-small text-uppercase text-center">Quantity</th>
                       <th scope="col" className="text-muted text-small text-uppercase text-end">Price</th>
                       <th scope="col" className="text-muted text-small text-uppercase text-end">Amount</th>
-                      <th scope="col" className="text-muted text-small text-uppercase text-center">Status</th>
+                      {/* <th scope="col" className="text-muted text-small text-uppercase text-center">Status</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -468,7 +549,7 @@ const OrderDetails = () => {
                         <td className="text-center">{item.quantity}</td>
                         <td className="text-end">₹ {parseFloat(item.dish_price).toFixed(2)}</td>
                         <td className="text-end fw-medium text-primary">₹ {(parseFloat(item.dish_price) * parseFloat(item.quantity)).toFixed(2)}</td>
-                        <td className="text-center">
+                        {/* <td className="text-center">
                           <Badge bg={
                             item.status === 'Served' || item.status === 'Completed' || item.status === 'Paid' ? 'success' :
                               item.status === 'Preparing' || item.status === 'KOT' ? 'warning' :
@@ -476,7 +557,7 @@ const OrderDetails = () => {
                           } className="rounded-pill px-3">
                             {item.status || 'Pending'}
                           </Badge>
-                        </td>
+                        </td> */}
                       </tr>
                     ))}
                   </tbody>
@@ -689,6 +770,102 @@ const OrderDetails = () => {
             onClick={saveCustomerDetailsAndSend}
           >
             Send WhatsApp
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Edit Customer Modal */}
+      <Modal show={showEditCustomerModal} onHide={() => setShowEditCustomerModal(false)} centered>
+        <style>{`
+          .edit-customer-input {
+            border-radius: 10px !important;
+            border: 2px solid #e2e8f0 !important;
+            padding: 10px 15px !important;
+            font-size: 14px !important;
+            transition: all 0.2s ease-in-out !important;
+          }
+          .edit-customer-input:focus {
+            border-color: #23b3f4 !important;
+            box-shadow: 0 0 0 4px rgba(35, 179, 244, 0.15) !important;
+            outline: none !important;
+          }
+        `}</style>
+        <Modal.Header closeButton style={{ borderBottom: '1px solid #f1f5f9', padding: '20px 24px' }}>
+          <Modal.Title className="d-flex align-items-center gap-2">
+            <div
+              style={{
+                background: '#23b3f4',
+                color: '#fff',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <CsLineIcons icon="user" size={18} />
+            </div>
+            <span>Edit Customer Details</span>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '24px', background: '#fff' }}>
+          <Form.Group className="mb-3">
+            <Form.Label className="small fw-bold text-secondary">Customer Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter customer name"
+              className="edit-customer-input"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label className="small fw-bold text-secondary">Phone Number *</Form.Label>
+            <Form.Control
+              type="text"
+              pattern="[0-9]*"
+              maxLength="10"
+              placeholder="Enter 10-digit mobile number"
+              className="edit-customer-input"
+              value={editPhone}
+              onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, ''))}
+            />
+          </Form.Group>
+          {order?.order_type === 'Delivery' && (
+            <Form.Group className="mb-3">
+              <Form.Label className="small fw-bold text-secondary">Delivery Address</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="Enter delivery address"
+                className="edit-customer-input"
+                value={editAddress}
+                onChange={(e) => setEditAddress(e.target.value)}
+              />
+            </Form.Group>
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '16px 24px' }}>
+          <Button
+            variant="light"
+            className="rounded-pill px-4 fw-bold"
+            onClick={() => setShowEditCustomerModal(false)}
+            disabled={editSaving}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="rounded-pill px-4 fw-bold"
+            style={{ background: '#23b3f4', border: 'none', color: '#fff' }}
+            onClick={handleEditCustomerSave}
+            disabled={editSaving}
+          >
+            {editSaving ? (
+              <><Spinner as="span" animation="border" size="sm" className="me-2" />Saving...</>
+            ) : (
+              <><CsLineIcons icon="check" size={15} className="me-2" />Save Changes</>
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Row, Col, Card, Button, Form, Spinner, Alert, Modal } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -52,6 +53,7 @@ const validationSchema = Yup.object().shape({
 
 const ManageWebsite = () => {
   const history = useHistory();
+  const { attrMobile } = useSelector((state) => state.menu);
   const title = 'Manage Website';
   const description = 'Update restaurant details, story, testimonials and social links.';
   const breadcrumbs = [
@@ -1829,7 +1831,7 @@ const ManageWebsite = () => {
           }
         `}</style>
 
-      {(formik.dirty || logoFile || heroImageFile || legacyImageFile) && (
+      {!attrMobile && (formik.dirty || logoFile || heroImageFile || legacyImageFile) && (
         <div className="floating-save-bar animate-fade-in">
           <div className="floating-save-text ps-1">You have unsaved changes</div>
           <div className="d-flex gap-2">

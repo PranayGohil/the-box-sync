@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, Switch, Route } from 'react-router-dom';
 import { Button, Row, Col, Card, Badge } from 'react-bootstrap';
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -12,6 +13,7 @@ const Dashboard = () => {
   const title = 'Dashboard';
   const description = 'Restaurant performance and insights';
   const history = useHistory();
+  const { attrMobile } = useSelector((state) => state.menu);
   const { socket } = useSocket();
 
   const breadcrumbs = [
@@ -427,74 +429,76 @@ const Dashboard = () => {
       </Switch>
 
       {/* Mobile sticky bottom action bar — Standardized with elevation */}
-      <div
-        className="d-md-none"
-        style={{
-          position: 'fixed',
-          bottom: '10px',
-          left: '10px',
-          right: '10px',
-          background: '#ffffff',
-          padding: '10px 16px',
-          zIndex: 1040,
-          boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-          borderRadius: '20px',
-          border: '1px solid #f1f5f9',
-        }}
-      >
-        <div className="d-flex gap-3 align-items-center">
-          <Button
-            className="custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-2"
-            style={{ height: '42px' }}
-            onClick={createNewOrder}
-          >
-            <CsLineIcons icon="plus" size="18" />
-            <span style={{ fontSize: '0.95rem' }}>New Order</span>
-          </Button>
-          {showOnlinePartners ? (
+      {!attrMobile && (
+        <div
+          className="d-md-none"
+          style={{
+            position: 'fixed',
+            bottom: '10px',
+            left: '10px',
+            right: '10px',
+            background: '#ffffff',
+            padding: '10px 16px',
+            zIndex: 1040,
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+            borderRadius: '20px',
+            border: '1px solid #f1f5f9',
+          }}
+        >
+          <div className="d-flex gap-3 align-items-center">
             <Button
-              variant="light"
-              className="d-flex align-items-center justify-content-center p-0 position-relative"
-              style={{ width: '42px', height: '42px', borderRadius: '12px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
-              onClick={() => setShowOnlinePartners(false)}
+              className="custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-2"
+              style={{ height: '42px' }}
+              onClick={createNewOrder}
             >
-              <CsLineIcons icon="close" size="20" style={{ color: '#dc3545' }} />
+              <CsLineIcons icon="plus" size="18" />
+              <span style={{ fontSize: '0.95rem' }}>New Order</span>
             </Button>
-          ) : (
-            <Button
-              variant="light"
-              className="d-flex align-items-center justify-content-center p-0 position-relative"
-              style={{ width: '42px', height: '42px', borderRadius: '12px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
-              onClick={() => setShowOnlinePartners(true)}
-            >
-              <CsLineIcons icon="shipping" size="20" style={{ color: '#475569' }} />
-              {websiteIncomingOrders.length > 0 && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    background: '#dc3545',
-                    color: '#ffffff',
-                    borderRadius: '50%',
-                    width: '18px',
-                    height: '18px',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 5px rgba(220, 53, 69, 0.4)',
-                    zIndex: 10,
-                  }}
-                >
-                  {websiteIncomingOrders.length}
-                </span>
-              )}
-            </Button>
-          )}
+            {showOnlinePartners ? (
+              <Button
+                variant="light"
+                className="d-flex align-items-center justify-content-center p-0 position-relative flex-shrink-0"
+                style={{ width: '42px', height: '42px', minWidth: '42px', borderRadius: '12px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
+                onClick={() => setShowOnlinePartners(false)}
+              >
+                <CsLineIcons icon="close" size="20" style={{ color: '#dc3545' }} />
+              </Button>
+            ) : (
+              <Button
+                variant="light"
+                className="d-flex align-items-center justify-content-center p-0 position-relative flex-shrink-0"
+                style={{ width: '42px', height: '42px', minWidth: '42px', borderRadius: '12px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
+                onClick={() => setShowOnlinePartners(true)}
+              >
+                <CsLineIcons icon="shipping" size="20" style={{ color: '#475569' }} />
+                {websiteIncomingOrders.length > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      background: '#dc3545',
+                      color: '#ffffff',
+                      borderRadius: '50%',
+                      width: '18px',
+                      height: '18px',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 5px rgba(220, 53, 69, 0.4)',
+                      zIndex: 10,
+                    }}
+                  >
+                    {websiteIncomingOrders.length}
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };
