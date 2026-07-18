@@ -391,7 +391,7 @@ const TaxAndCharges = () => {
                   <div className="mt-4">
                     <Button
                       variant="none"
-                      className="tax-and-charges-custom-btn-outline mb-3 w-100 w-md-auto"
+                      className="tax-and-charges-custom-btn-outline text-center mb-3 w-100 w-md-auto"
                       onClick={addContainer}
                       disabled={containerSaving}
                     >

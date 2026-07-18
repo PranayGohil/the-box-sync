@@ -69,7 +69,7 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (!socket) return () => {};
+    if (!socket) return () => { };
     const handleSocketUpdate = () => {
       console.log('Realtime order update (Manager): fetching active orders');
       fetchActiveOrders();
@@ -261,9 +261,8 @@ const Dashboard = () => {
           >
             <Button
               variant="none"
-              className={`flex-grow-1 rounded-pill py-2 fw-bold text-center border-0 transition-all d-flex align-items-center justify-content-center ${
-                mobileActiveSection === 'dine-in' ? 'bg-primary text-white shadow-sm' : 'text-muted'
-              }`}
+              className={`flex-grow-1 rounded-pill py-2 fw-bold text-center border-0 transition-all d-flex align-items-center justify-content-center ${mobileActiveSection === 'dine-in' ? 'bg-primary text-white shadow-sm' : 'text-muted'
+                }`}
               style={{ fontSize: '0.85rem' }}
               onClick={() => {
                 setMobileActiveSection('dine-in');
@@ -275,9 +274,8 @@ const Dashboard = () => {
             </Button>
             <Button
               variant="none"
-              className={`flex-grow-1 rounded-pill py-2 fw-bold text-center border-0 transition-all d-flex align-items-center justify-content-center ${
-                mobileActiveSection === 'takeaway-delivery' ? 'bg-primary text-white shadow-sm' : 'text-muted'
-              }`}
+              className={`flex-grow-1 rounded-pill py-2 fw-bold text-center border-0 transition-all d-flex align-items-center justify-content-center ${mobileActiveSection === 'takeaway-delivery' ? 'bg-primary text-white shadow-sm' : 'text-muted'
+                }`}
               style={{ fontSize: '0.85rem' }}
               onClick={() => setMobileActiveSection('takeaway-delivery')}
             >
@@ -360,7 +358,7 @@ const Dashboard = () => {
                               </Badge>
                             )}
                             <div
-                              style={{ ...glassCardStyle, border: borderStyle, height: '100%' }}
+                              style={{ ...glassCardStyle, border: borderStyle, height: 'auto' }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.transform = 'translateY(-5px)';
                                 e.currentTarget.style.boxShadow = '0 15px 35px rgba(35,179,244,0.15)';
@@ -390,17 +388,16 @@ const Dashboard = () => {
                                         String(table.table_no).length <= 2
                                           ? '1.5rem'
                                           : String(table.table_no).length <= 4
-                                          ? '1.1rem'
-                                          : '0.75rem',
+                                            ? '1.1rem'
+                                            : '0.75rem',
                                     }}
                                   >
                                     {table.table_no}
                                   </h3>
                                 </div>
                                 <div className="w-100">
-                                  <p className="dashboard-table-max-person mb-1">Max Person</p>
-                                  <p className="dashboard-table-capacity mb-2 fw-bold" style={{ color: '#23b3f4' }}>
-                                    {table.max_person}
+                                  <p className="dashboard-table-max-person mb-2">
+                                    Capacity: <span className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>{table.max_person}</span>
                                   </p>
                                   {activeOrder && (
                                     <div className="mb-2">
@@ -657,8 +654,8 @@ const Dashboard = () => {
                                 order.order_status === 'Paid' || order.order_status === 'Save' || order.order_status === 'Delivered'
                                   ? 'success'
                                   : order.order_status === 'Out for Delivery'
-                                  ? 'info'
-                                  : 'warning'
+                                    ? 'info'
+                                    : 'warning'
                               }
                               className={order.order_status === 'KOT' ? 'text-dark' : 'text-white'}
                               style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}

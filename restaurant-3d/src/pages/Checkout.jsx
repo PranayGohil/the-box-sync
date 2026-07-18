@@ -7,9 +7,9 @@ import { useCart, useAuth } from '../context/AppContext';
 import { useRestaurant } from '../context/RestaurantContext';
 import { useGSAPReveal } from '../hooks/useScroll';
 import toast from 'react-hot-toast';
+import { formatTimeTo12Hour } from '../utils/timeFormatter';
 
 const PAYMENT_METHODS = [
-  { id: 'card', label: 'Credit / Debit Card', Icon: CreditCard },
   { id: 'upi', label: 'UPI / Google Pay', Icon: Smartphone },
   { id: 'cod', label: 'Cash on Delivery', Icon: Banknote },
 ];
@@ -140,10 +140,10 @@ export default function Checkout() {
   const getOpeningHoursString = () => {
     if (!settings) return "";
     if (settings.opening_hours && settings.opening_hours.length > 0) {
-      return settings.opening_hours.map(h => `${h.day}: ${h.from} - ${h.to}`).join(', ');
+      return settings.opening_hours.map(h => `${h.day}: ${formatTimeTo12Hour(h.from)} - ${formatTimeTo12Hour(h.to)}`).join(', ');
     }
     if (settings.open_time_from && settings.open_time_to) {
-      return `Everyday: ${settings.open_time_from} - ${settings.open_time_to}`;
+      return `Everyday: ${formatTimeTo12Hour(settings.open_time_from)} - ${formatTimeTo12Hour(settings.open_time_to)}`;
     }
     return "12:00 PM - 11:00 PM";
   };

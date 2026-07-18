@@ -666,7 +666,7 @@ export default function Profile() {
                     Placed: {(() => {
                       const dateVal = order.order_date?.$date || order.order_date || order.createdAt || order.updated_at?.$date || order.updated_at;
                       const parsed = new Date(dateVal);
-                      return isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                      return isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
                     })()}
                   </div>
                   <div className="border-top border-white-10 pt-3">

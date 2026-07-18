@@ -248,7 +248,7 @@ const customStyles = `
     margin-top: 0 !important;
     margin-bottom: 0 !important;
   }
-  .inventory-history-search-filter-hub .row > div {
+  .inventory-history-search-filter-hub .row > div:not(.feedback-controls-bottom) {
     display: flex !important;
     align-items: center !important;
     height: 40px !important;
@@ -265,12 +265,15 @@ const customStyles = `
     height: 40px !important;
   }
   @media (max-width: 767px) {
-    .inventory-history-search-filter-hub .row > div {
+    .inventory-history-search-filter-hub .row > div:not(.feedback-controls-bottom) {
       height: 32px !important;
       margin-top: 0 !important;
       margin-bottom: 0 !important;
       padding-top: 0 !important;
       padding-bottom: 0 !important;
+    }
+    .feedback-controls-bottom span {
+      font-size: 0.65rem !important;
     }
     .inventory-history-interactive-card {
       margin-bottom: 1.5rem !important;
@@ -298,7 +301,6 @@ const customStyles = `
     .inventory-history-search-filter-hub .btn-icon-only {
       width: 32px !important;
       height: 32px !important;
-      margin: 0 !important;
     }
     .inventory-history-search-filter-hub button.feedback-page-size-toggle,
     .inventory-history-search-filter-hub .feedback-page-size-toggle,
@@ -465,8 +467,28 @@ const Feedback = () => {
             <div className="text-dark italic" style={{ fontStyle: 'italic' }}>
               “{row.original.feedback}”
             </div>
+            {Array.isArray(row.original.tags) && row.original.tags.length > 0 && (
+              <div className="d-flex flex-wrap gap-1 mt-2">
+                {row.original.tags.map((tag, tIdx) => (
+                  <span
+                    key={tIdx}
+                    className="badge rounded-pill"
+                    style={{
+                      background: '#f0f9ff',
+                      color: '#0369a1',
+                      border: '1px solid #bae6fd',
+                      fontSize: '11px',
+                      padding: '3px 8px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
             {row.original.order_id && (
-              <div className="mt-1">
+              <div className="mt-2">
                 <Button
                   variant="link"
                   className="p-0 text-primary small d-inline-flex align-items-center gap-1"
@@ -494,13 +516,15 @@ const Feedback = () => {
         headerClassName: 'text-center',
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center gap-2">
-            <Button
-              className="feedback-action-btn-circle feedback-btn-reply-active shadow-sm"
-              onClick={() => handleReply(row.original)}
-              title={row.original.reply ? 'View / Edit Reply' : 'Reply'}
-            >
-              <CsLineIcons icon="message" size="16" stroke="currentColor" />
-            </Button>
+            {!row.original.reply && (
+              <Button
+                className="feedback-action-btn-circle feedback-btn-reply-active shadow-sm"
+                onClick={() => handleReply(row.original)}
+                title="Reply"
+              >
+                <CsLineIcons icon="message" size="16" stroke="currentColor" />
+              </Button>
+            )}
             <Button
               className="feedback-action-btn-circle feedback-btn-delete-active shadow-sm"
               onClick={() => {
@@ -572,44 +596,45 @@ const Feedback = () => {
 
             {/* Table Controls */}
             <div className="inventory-history-search-filter-hub border-0 shadow-sm">
-              <Row className="g-2 g-md-3 align-items-center flex-nowrap">
-                <Col xs className="flex-grow-1">
-                  <div className="inventory-history-search-input-container">
-                    <ControlsSearch tableInstance={tableInstance} />
+              <Row className="g-2 g-md-3 align-items-center">
+                <Col xs="12" md className="flex-grow-1">
+                  <div className="d-flex align-items-center">
+                    <div className="inventory-history-search-input-container flex-grow-1">
+                      <ControlsSearch tableInstance={tableInstance} />
+                    </div>
+                    <Button
+                      variant={showFilters ? 'primary' : 'outline-primary'}
+                      className="btn-icon btn-icon-only position-relative rounded-circle border-2 d-inline-flex align-items-center justify-content-center ms-2"
+                      style={{ width: '40px', height: '40px', flexShrink: 0 }}
+                      onClick={() => setShowFilters(!showFilters)}
+                    >
+                      <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="16" />
+                      {activeFilterCount > 0 && (
+                        <Badge
+                          bg="danger"
+                          className="position-absolute top-0 start-100 translate-middle rounded-circle border border-2 border-white"
+                          style={{ fontSize: '0.65rem', padding: '0.3em 0.5em' }}
+                        >
+                          {activeFilterCount}
+                        </Badge>
+                      )}
+                    </Button>
                   </div>
                 </Col>
-                <Col xs="auto" className="px-1 d-flex justify-content-center align-items-center flex-shrink-0">
-                  <Button
-                    variant={showFilters ? 'primary' : 'outline-primary'}
-                    className="btn-icon btn-icon-only position-relative rounded-circle border-2 d-inline-flex align-items-center justify-content-center"
-                    style={{ width: '40px', height: '40px' }}
-                    onClick={() => setShowFilters(!showFilters)}
-                  >
-                    <CsLineIcons icon={showFilters ? 'close' : 'filter'} size="16" />
-                    {activeFilterCount > 0 && (
-                      <Badge
-                        bg="danger"
-                        className="position-absolute top-0 start-100 translate-middle rounded-circle border border-2 border-white"
-                        style={{ fontSize: '0.65rem', padding: '0.3em 0.5em' }}
-                      >
-                        {activeFilterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </Col>
-                <Col xs="auto" className="ps-1 text-end d-flex align-items-center justify-content-end gap-2 gap-md-3 mt-0 flex-shrink-0">
-                  <span className="d-none d-lg-inline-block smaller text-muted fw-bold">
+                <Col xs="12" md="auto" className="feedback-controls-bottom d-flex align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3">
+                  <span className="smaller text-muted fw-bold">
                     {loading
                       ? 'Processing...'
                       : `Showing ${filteredFeedbacks.length > 0 ? tableInstance.state.pageIndex * tableInstance.state.pageSize + 1 : 0}-${Math.min(
-                          (tableInstance.state.pageIndex + 1) * tableInstance.state.pageSize,
-                          filteredFeedbacks.length
-                        )} of ${filteredFeedbacks.length}`}
+                        (tableInstance.state.pageIndex + 1) * tableInstance.state.pageSize,
+                        filteredFeedbacks.length
+                      )} of ${filteredFeedbacks.length}`}
                   </span>
                   <ControlsPageSize tableInstance={tableInstance} />
                 </Col>
               </Row>
             </div>
+
 
             {/* Collapsible Filter Panel */}
             <Collapse in={showFilters}>
@@ -686,7 +711,7 @@ const Feedback = () => {
                   {/* Card rows */}
                   {tableInstance.page.map((row, idx) => {
                     tableInstance.prepareRow(row);
-                    
+
                     const contactCell = row.cells.find(c => c.column.id === 'contact');
                     const dateCell = row.cells.find(c => c.column.id === 'date');
                     const ratingCell = row.cells.find(c => c.column.id === 'rating');

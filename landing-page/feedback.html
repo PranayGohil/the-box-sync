@@ -99,7 +99,7 @@
             display: flex;
             flex-direction: row-reverse;
             /* visually reverses so star1 appears last = rightmost */
-            justify-content: center;
+            justify-content: left;
             gap: 6px;
             margin-bottom: 8px;
         }
@@ -129,6 +129,99 @@
         input[type=radio]~label::before,
         input[type=radio]:checked~label::before {
             display: none !important;
+        }
+
+        /* ── Tags and Custom Tag Styles ── */
+        .btn-tag {
+            background: #fff;
+            color: #475569;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 50px;
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .btn-tag:hover {
+            border-color: #23b3f4;
+            color: #23b3f4;
+            background: rgba(35, 179, 244, 0.03);
+        }
+
+        .btn-tag.active {
+            background: #23b3f4;
+            border-color: #23b3f4;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(35, 179, 244, 0.25);
+        }
+
+        #custom-trigger-btn {
+            border-style: dashed !important;
+            color: #23b3f4 !important;
+            border-color: #23b3f4 !important;
+            font-weight: 700 !important;
+        }
+
+        #custom-trigger-btn.active {
+            border-style: solid !important;
+            background: #23b3f4 !important;
+            border-color: #23b3f4 !important;
+            color: #fff !important;
+        }
+
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            margin-top: 4px;
+        }
+
+        .suggestion-item {
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #334155;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .suggestion-item:hover {
+            background: #f1f5f9;
+            color: #23b3f4;
+        }
+
+        .selected-tag-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f0f9ff;
+            color: #0369a1;
+            border: 1.5px solid #bae6fd;
+            border-radius: 50px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .selected-tag-badge .remove-btn {
+            cursor: pointer;
+            color: #0384c7;
+            font-weight: bold;
+            font-size: 14px;
+            transition: color 0.15s;
+        }
+
+        .selected-tag-badge .remove-btn:hover {
+            color: #ef4444;
         }
     </style>
 </head>
@@ -423,42 +516,32 @@
 
                             <div class="form-group row">
                                 <div class="col-md-6">
+                                    <label for="order_no">Order Number</label>
+                                    <input type="text" name="order_no" id="order_no" class="form-control w-100"
+                                        placeholder="e.g. ORD-000072">
+                                    <div class="field-error" id="err-order_no">Please enter a valid order number.</div>
+                                </div>
+                                <div class="col-md-6">
                                     <label for="name">Name <span style="color:#c8121c;">*</span></label>
                                     <input type="text" name="name" id="name" class="form-control w-100"
                                         placeholder="Enter your full name">
                                     <div class="field-error" id="err-name">Please enter your full name.</div>
                                 </div>
+                            </div>
+
+                            <div class="form-group row" style="margin-top: 15px;">
                                 <div class="col-md-6">
                                     <label for="email">Email <span style="color:#c8121c;">*</span></label>
-                                    <div class="input-group">
-                                        <input type="email" name="email" id="email" class="form-control"
-                                            placeholder="Enter your email address" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                        <button class="theme-btn btn-sm" type="button" id="sendOtpBtn" style="padding: 10px 20px; font-size: 13px; height: auto; border-top-left-radius: 0; border-bottom-left-radius: 0;">
-                                            Send OTP
-                                        </button>
-                                    </div>
+                                    <input type="email" name="email" id="email" class="form-control w-100"
+                                        placeholder="Enter your email address">
                                     <div class="field-error" id="err-email">Enter a valid email address.</div>
                                 </div>
-                            </div>
-
-                            <div class="form-group row" id="otpGroup" style="display: none; margin-top: 15px;">
-                                <div class="col-12">
-                                    <label for="otp">Enter Verification Code (OTP) <span style="color:#c8121c;">*</span></label>
-                                    <div class="input-group" style="max-width: 400px;">
-                                        <input type="text" name="otp" id="otp" class="form-control" placeholder="Enter 6-digit OTP" maxlength="6" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                        <button class="theme-btn btn-sm" type="button" id="verifyOtpBtn" style="padding: 10px 20px; font-size: 13px; height: auto; border-top-left-radius: 0; border-bottom-left-radius: 0;">
-                                            Verify Code
-                                        </button>
-                                    </div>
-                                    <div class="field-error" id="err-otp">Invalid or expired code. Please check and try again.</div>
-                                    <div class="alert-msg alert-success" id="otpSuccess" style="display: none; margin-top: 8px; padding: 8px 12px;">Email verified successfully!</div>
+                                <div class="col-md-6">
+                                    <label for="number">Phone Number <span style="color:#c8121c;">*</span></label>
+                                    <input type="text" name="number" id="number" class="form-control w-100"
+                                        placeholder="Enter your phone number">
+                                    <div class="field-error" id="err-number">Please enter a valid phone number.</div>
                                 </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="number">Phone Number</label>
-                                <input type="number" name="number" id="number" class="form-control"
-                                    placeholder="Enter your phone number">
                             </div>
 
                             <div class="form-group">
@@ -483,6 +566,42 @@
                                 <div class="field-error text-center" id="err-rating">
                                     Please click the stars to give a rating.
                                 </div>
+                            </div>
+
+                            <div class="form-group mt-4">
+                                <label id='tags-section-label'
+                                    style="font-weight: 700; color: #475569; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px;">What
+                                    did you like or dislike? (Select Tags)</label>
+                                <div class="d-flex flex-wrap gap-2 mt-2" id="quick-tags-container">
+                                    <button type="button" class="btn-tag" data-tag="Great Food">Great Food</button>
+                                    <button type="button" class="btn-tag" data-tag="Friendly Staff">Friendly
+                                        Staff</button>
+                                    <button type="button" class="btn-tag" data-tag="Fast Service">Fast Service</button>
+                                    <button type="button" class="btn-tag" data-tag="Cleanliness">Cleanliness</button>
+                                    <button type="button" class="btn-tag" data-tag="Slow Service">Slow Service</button>
+                                    <button type="button" class="btn-tag" data-tag="Cold Food">Cold Food</button>
+                                    <button type="button" class="btn-tag" id="custom-trigger-btn">+ Custom</button>
+                                </div>
+
+                                <div id="custom-tag-wrapper"
+                                    style="display: none; margin-top: 15px; position: relative;">
+                                    <label for="custom-tag-input"
+                                        style="font-size: 0.82rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">Add
+                                        Custom Tag / Suggestions</label>
+                                    <div class="input-group">
+                                        <input type="text" id="custom-tag-input" class="form-control"
+                                            placeholder="Type custom tag or search..."
+                                            style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                        <button class="theme-btn btn-sm" type="button" id="addCustomTagBtn"
+                                            style="padding: 10px 20px; font-size: 13px; height: auto; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                            Add
+                                        </button>
+                                    </div>
+                                    <div id="suggestions-box" class="suggestions-dropdown shadow-sm"
+                                        style="display: none;"></div>
+                                </div>
+
+                                <div class="d-flex flex-wrap gap-2 mt-3" id="selected-custom-tags-container"></div>
                             </div>
 
                             <div class="form-group">
@@ -711,8 +830,19 @@
         // ── STATE ──────────────────────────────────────────────────────────────
         let feedbackToken = null;
         let orderId = null;
-        let emailVerified = false;
-        let otpCooldownTimer = null;
+        let selectedTags = [];
+
+        const PREDEFINED_SUGGESTIONS = [
+            "Excellent Packaging",
+            "Fresh Ingredients",
+            "Good Portion Size",
+            "Helpful Support",
+            "Great Value",
+            "Noisy Ambience",
+            "Limited Menu",
+            "Long Wait Time",
+            "Wrong Item"
+        ];
 
         // ── HELPERS ────────────────────────────────────────────────────────────
         const qs = (id) => document.getElementById(id);
@@ -738,7 +868,6 @@
         function showTokenError(msg) {
             qs('tokenError').style.display = 'flex';
             qs('tokenErrorMsg').textContent = msg;
-            // Keep feedbackContent hidden — form never shows
         }
 
         function hideFormError() {
@@ -767,6 +896,134 @@
         }
 
         // ── INIT ───────────────────────────────────────────────────────────────
+        // ── Read-only mode helper if feedback already submitted for this order ──
+        function toggleFormReadOnly(isReadOnly, feedbackData = null) {
+            qs('name').disabled = isReadOnly;
+            qs('email').disabled = isReadOnly;
+            qs('number').disabled = isReadOnly;
+            qs('comment').disabled = isReadOnly;
+
+            const ratingInputs = document.querySelectorAll('input[name="rating"]');
+            ratingInputs.forEach(input => {
+                input.disabled = isReadOnly;
+                if (!isReadOnly) input.checked = false;
+            });
+
+            const standardTagsContainer = qs('quick-tags-container');
+            const customContainer = qs('selected-custom-tags-container');
+            const tagsLabel = qs('tags-section-label');
+            const customTriggerBtn = qs('custom-trigger-btn');
+            const tagBtns = document.querySelectorAll('#quick-tags-container .btn-tag');
+
+            if (isReadOnly) {
+                standardTagsContainer.classList.remove('d-flex');
+                standardTagsContainer.classList.add('d-none');
+                customTriggerBtn.style.display = 'none';
+                qs('custom-tag-wrapper').style.display = 'none';
+
+                selectedTags = feedbackData ? (feedbackData.tags || []) : [];
+
+                if (selectedTags.length > 0) {
+                    tagsLabel.style.display = 'block';
+                    tagsLabel.textContent = 'Submitted Tags';
+                    customContainer.innerHTML = '';
+                    selectedTags.forEach(tag => {
+                        const badge = document.createElement('span');
+                        badge.className = 'selected-tag-badge';
+                        badge.innerHTML = `${tag}`;
+                        customContainer.appendChild(badge);
+                    });
+                    customContainer.classList.remove('d-none');
+                    customContainer.classList.add('d-flex');
+                } else {
+                    tagsLabel.style.display = 'none';
+                    customContainer.innerHTML = '';
+                    customContainer.classList.remove('d-flex');
+                    customContainer.classList.add('d-none');
+                }
+            } else {
+                standardTagsContainer.classList.remove('d-none');
+                standardTagsContainer.classList.add('d-flex');
+                customTriggerBtn.style.display = 'inline-block';
+                tagsLabel.style.display = 'block';
+                tagsLabel.textContent = 'What did you like or dislike? (Select Tags)';
+                customContainer.innerHTML = '';
+                customContainer.classList.remove('d-none');
+                customContainer.classList.add('d-flex');
+
+                selectedTags = [];
+                tagBtns.forEach(btn => {
+                    btn.style.pointerEvents = 'auto';
+                    btn.classList.remove('active');
+                });
+            }
+
+            const submitBtn = qs('submitBtn');
+            const submittedNotice = qs('submittedNotice');
+            if (isReadOnly) {
+                submitBtn.style.display = 'none';
+                if (!submittedNotice) {
+                    const notice = document.createElement('div');
+                    notice.id = 'submittedNotice';
+                    notice.className = 'alert-msg alert-success show mt-4 text-center';
+                    notice.style.fontWeight = '600';
+                    notice.innerHTML = '<i class="fas fa-check-circle me-2"></i> You have already submitted feedback for this order. Thank you!';
+                    submitBtn.parentNode.insertBefore(notice, submitBtn);
+                } else {
+                    submittedNotice.style.display = 'block';
+                }
+            } else {
+                submitBtn.style.display = 'block';
+                if (submittedNotice) {
+                    submittedNotice.style.display = 'none';
+                }
+            }
+
+            const replyBox = qs('merchantReplyBox');
+            if (isReadOnly && feedbackData && feedbackData.reply) {
+                if (!replyBox) {
+                    const box = document.createElement('div');
+                    box.id = 'merchantReplyBox';
+                    box.className = 'p-3 mt-4 rounded-3';
+                    box.style.background = '#f1f5f9';
+                    box.style.borderLeft = '4px solid #23b3f4';
+                    box.innerHTML = `
+                        <strong style="color: #23b3f4; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Restaurant Reply:</strong>
+                        <p style="margin: 0; color: #334155; font-size: 0.9rem; line-height: 1.5; white-space: pre-line;">${feedbackData.reply}</p>
+                    `;
+                    qs('feedbackForm').appendChild(box);
+                } else {
+                    replyBox.innerHTML = `
+                        <strong style="color: #23b3f4; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Restaurant Reply:</strong>
+                        <p style="margin: 0; color: #334155; font-size: 0.9rem; line-height: 1.5; white-space: pre-line;">${feedbackData.reply}</p>
+                    `;
+                    replyBox.style.display = 'block';
+                }
+            } else {
+                if (replyBox) {
+                    replyBox.style.display = 'none';
+                }
+            }
+
+            if (isReadOnly && feedbackData) {
+                qs('name').value = feedbackData.customer_name || '';
+                qs('email').value = feedbackData.customer_email || '';
+                qs('number').value = feedbackData.customer_phone || '';
+                qs('comment').value = feedbackData.feedback || '';
+
+                if (feedbackData.rating) {
+                    const ratingInput = qs(`star${feedbackData.rating}`);
+                    if (ratingInput) ratingInput.checked = true;
+                }
+            } else if (!isReadOnly) {
+                qs('name').value = '';
+                qs('email').value = '';
+                qs('number').value = '';
+                qs('comment').value = '';
+            }
+        }
+
+        // ── INIT ───────────────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             feedbackToken = getTokenFromURL();
             orderId = new URLSearchParams(window.location.search).get('order_id') || null;
@@ -780,129 +1037,284 @@
             qs('feedbackContent').style.display = 'block';
             qs('feedbackForm').addEventListener('submit', handleSubmit);
 
-            // Prefill customer details from URL if provided (direct link from order details page)
+            // Prefill customer details from URL if provided
             const params = new URLSearchParams(window.location.search);
             const prefilledName = params.get('name');
             const prefilledEmail = params.get('email');
-            if (prefilledName && prefilledEmail) {
-                qs('name').value = decodeURIComponent(prefilledName);
-                qs('email').value = decodeURIComponent(prefilledEmail);
-                qs('name').disabled = true;
-                qs('email').disabled = true;
-                emailVerified = true;
-                
-                // Hide Send OTP button and make input look normal
-                const sendOtpBtn = qs('sendOtpBtn');
-                if (sendOtpBtn) sendOtpBtn.style.display = 'none';
-                qs('email').style.borderTopRightRadius = '5px';
-                qs('email').style.borderBottomRightRadius = '5px';
+            const prefilledPhone = params.get('phone') || params.get('number');
+            const prefilledOrderNo = params.get('order_no');
+
+            const initialOrderQuery = prefilledOrderNo || orderId;
+            if (initialOrderQuery) {
+                fetch(`${API_BASE}/feedback/order-details/${encodeURIComponent(initialOrderQuery)}?token=${feedbackToken}`)
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.success && result.data) {
+                            qs('order_no').value = result.data.order_no || '';
+                            qs('order_no').disabled = true;
+
+                            if (result.data.existing_feedback) {
+                                toggleFormReadOnly(true, result.data.existing_feedback);
+                            }
+
+                            if (result.data.existing_feedback) {
+                                toggleFormReadOnly(true, result.data.existing_feedback);
+                            } else {
+                                if (result.data.name) {
+                                    qs('name').value = result.data.name;
+                                    qs('name').disabled = false; // Always editable
+                                }
+                                if (result.data.email) {
+                                    qs('email').value = result.data.email;
+                                    qs('email').disabled = true; // Lock if exists
+                                } else {
+                                    qs('email').disabled = false;
+                                }
+                                if (result.data.phone) {
+                                    qs('number').value = result.data.phone;
+                                    qs('number').disabled = true; // Lock if exists
+                                } else {
+                                    qs('number').disabled = false;
+                                }
+                            }
+                            if (result.data.order_id) {
+                                orderId = result.data.order_id;
+                            }
+                        }
+                    })
+                    .catch(err => console.error('Initial order lookup failed:', err));
             }
 
-            // -- Event listener for Send OTP --
-            qs('sendOtpBtn').addEventListener('click', async () => {
-                const email = qs('email').value.trim();
-                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                    showFieldError('err-email', true);
-                    setInputError('email', true);
-                    return;
-                }
-                showFieldError('err-email', false);
-                setInputError('email', false);
-                hideFormError();
+            if (prefilledName) {
+                qs('name').value = decodeURIComponent(prefilledName);
+                qs('name').disabled = false; // Always editable
+            }
+            if (prefilledEmail) {
+                qs('email').value = decodeURIComponent(prefilledEmail);
+                qs('email').disabled = true; // Lock if exists
+            }
+            if (prefilledPhone) {
+                qs('number').value = decodeURIComponent(prefilledPhone);
+                qs('number').disabled = true; // Lock if exists
+            }
 
-                const btn = qs('sendOtpBtn');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spin" style="width:12px; height:12px; margin-right:4px;"></span> Sending...';
+            // Debounced lookup on manual Order Number entry
+            let lookupTimeout = null;
+            qs('order_no').addEventListener('input', () => {
+                const orderNo = qs('order_no').value.trim();
+                showFieldError('err-order_no', false);
+                setInputError('order_no', false);
 
-                try {
-                    const res = await fetch(`${API_BASE}/otp/send-verification`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, purpose: 'feedback_verification' })
-                    });
-                    const data = await res.json();
-                    if (!data.success) throw new Error(data.message);
+                if (lookupTimeout) clearTimeout(lookupTimeout);
 
-                    // Show OTP input group
-                    qs('otpGroup').style.display = 'flex';
-                    startOtpCooldown();
-                    showFieldError('err-otp', false);
-                    qs('otpSuccess').style.display = 'none';
+                if (orderNo.length >= 3) {
+                    lookupTimeout = setTimeout(async () => {
+                        try {
+                            const res = await fetch(`${API_BASE}/feedback/order-details/${encodeURIComponent(orderNo)}?token=${feedbackToken}`);
+                            const result = await res.json();
+                            if (result.success && result.data) {
+                                orderId = result.data.order_id || null;
 
-                    // Alert success
-                    showFormError('Verification code sent to your email.', true);
-                } catch (err) {
-                    showFormError(err.message || 'Failed to send OTP code. Please try again.');
-                    btn.disabled = false;
-                    btn.textContent = 'Send OTP';
+                                if (result.data.existing_feedback) {
+                                    toggleFormReadOnly(true, result.data.existing_feedback);
+                                } else {
+                                    toggleFormReadOnly(false);
+                                    qs('name').value = result.data.name || '';
+                                    qs('name').disabled = false; // Always editable
+
+                                    if (result.data.email) {
+                                        qs('email').value = result.data.email;
+                                        qs('email').disabled = true; // Lock if exists
+                                    } else {
+                                        qs('email').disabled = false;
+                                    }
+                                    if (result.data.phone) {
+                                        qs('number').value = result.data.phone;
+                                        qs('number').disabled = true; // Lock if exists
+                                    } else {
+                                        qs('number').disabled = false;
+                                    }
+                                }
+
+                                qs('order_no').style.borderColor = '#10b981';
+                                setTimeout(() => { qs('order_no').style.borderColor = ''; }, 2000);
+                            } else {
+                                qs('order_no').style.borderColor = '';
+                                toggleFormReadOnly(false);
+                            }
+                        } catch (err) {
+                            console.error('Order lookup failed:', err);
+                            qs('order_no').style.borderColor = '';
+                            toggleFormReadOnly(false);
+                        }
+                    }, 500);
+                } else {
+                    qs('order_no').style.borderColor = '';
+                    toggleFormReadOnly(false);
                 }
             });
 
-            // -- Event listener for Verify OTP --
-            qs('verifyOtpBtn').addEventListener('click', async () => {
-                const email = qs('email').value.trim();
-                const code = qs('otp').value.trim();
-                if (!code || code.length !== 6) {
-                    showFieldError('err-otp', true);
-                    setInputError('otp', true);
-                    return;
+            // ── TAGS EVENT LISTENERS ──
+            // Toggling Quick Common Tags
+            qs('quick-tags-container').addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-tag');
+                if (!btn) return;
+
+                if (btn.id === 'custom-trigger-btn') return;
+
+                const tag = btn.getAttribute('data-tag');
+                if (selectedTags.includes(tag)) {
+                    selectedTags = selectedTags.filter(t => t !== tag);
+                    btn.classList.remove('active');
+                } else {
+                    selectedTags.push(tag);
+                    btn.classList.add('active');
                 }
-                showFieldError('err-otp', false);
-                setInputError('otp', false);
-                hideFormError();
+            });
 
-                const btn = qs('verifyOtpBtn');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spin" style="width:12px; height:12px; margin-right:4px;"></span> Verifying...';
-
-                try {
-                    const res = await fetch(`${API_BASE}/otp/verify-email`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, code, purpose: 'feedback_verification' })
-                    });
-                    const data = await res.json();
-                    if (!data.success) throw new Error(data.message);
-
-                    emailVerified = true;
-                    qs('otpSuccess').style.display = 'block';
-                    qs('otpSuccess').textContent = 'Email verified successfully!';
-                    qs('email').disabled = true;
-                    qs('otp').disabled = true;
-                    qs('sendOtpBtn').disabled = true;
-                    qs('verifyOtpBtn').disabled = true;
-                    showFieldError('err-otp', false);
-
-                    // Alert success
-                    showFormError('Email verified successfully! You can now submit feedback.', true);
-                } catch (err) {
-                    showFieldError('err-otp', true);
-                    qs('err-otp').textContent = err.message || 'Invalid or expired OTP.';
-                    setInputError('otp', true);
-                    btn.disabled = false;
-                    btn.textContent = 'Verify Code';
+            // Toggle custom tag input visibility
+            qs('custom-trigger-btn').addEventListener('click', () => {
+                const wrapper = qs('custom-tag-wrapper');
+                const btn = qs('custom-trigger-btn');
+                if (wrapper.style.display === 'none') {
+                    wrapper.style.display = 'block';
+                    btn.classList.add('active');
+                    qs('custom-tag-input').focus();
+                } else {
+                    wrapper.style.display = 'none';
+                    btn.classList.remove('active');
                 }
+            });
+
+            // Show suggestions dropdown on input focus
+            const tagInput = qs('custom-tag-input');
+            const suggestBox = qs('suggestions-box');
+
+            tagInput.addEventListener('focus', () => {
+                renderSuggestions(tagInput.value.trim());
+            });
+
+            // Filter suggestions as user types
+            tagInput.addEventListener('input', () => {
+                renderSuggestions(tagInput.value.trim());
+            });
+
+            // Close suggestions dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!tagInput.contains(e.target) && !suggestBox.contains(e.target)) {
+                    suggestBox.style.display = 'none';
+                }
+            });
+
+            // Add Custom Tag via Add Button click
+            qs('addCustomTagBtn').addEventListener('click', () => {
+                addCustomTag();
+            });
+
+            // Add Custom Tag via Enter keypress
+            tagInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addCustomTag();
+                }
+            });
+
+            // Suggestion click selection helper
+            suggestBox.addEventListener('click', (e) => {
+                const item = e.target.closest('.suggestion-item');
+                if (!item) return;
+                const tag = item.getAttribute('data-tag');
+                addTagToList(tag);
+                tagInput.value = '';
+                suggestBox.style.display = 'none';
             });
         });
 
-        function startOtpCooldown() {
-            let cooldown = 60;
-            const btn = qs('sendOtpBtn');
-            btn.disabled = true;
-            
-            if (otpCooldownTimer) clearInterval(otpCooldownTimer);
-            otpCooldownTimer = setInterval(() => {
-                cooldown--;
-                if (cooldown <= 0) {
-                    clearInterval(otpCooldownTimer);
-                    btn.disabled = false;
-                    btn.textContent = 'Resend OTP';
-                } else {
-                    btn.textContent = `Resend in ${cooldown}s`;
-                }
-            }, 1000);
+        // ── SUGGESTIONS LOGIC ──
+        function renderSuggestions(query) {
+            const suggestBox = qs('suggestions-box');
+            suggestBox.innerHTML = '';
+
+            // Filter out already selected tags and check for substring match
+            const filtered = PREDEFINED_SUGGESTIONS.filter(tag => {
+                return !selectedTags.includes(tag) &&
+                    (!query || tag.toLowerCase().includes(query.toLowerCase()));
+            });
+
+            if (filtered.length === 0) {
+                suggestBox.style.display = 'none';
+                return;
+            }
+
+            filtered.forEach(tag => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.setAttribute('data-tag', tag);
+                div.textContent = tag;
+                suggestBox.appendChild(div);
+            });
+
+            suggestBox.style.display = 'block';
         }
 
+        // Add tag handler
+        function addTagToList(tag) {
+            const cleanTag = tag.trim();
+            if (!cleanTag) return;
+            if (selectedTags.includes(cleanTag)) return;
+
+            selectedTags.push(cleanTag);
+            renderSelectedCustomTags();
+
+            // Symmetrically check if this custom tag was one of the quick common pills, and highlight it active
+            const quickBtn = document.querySelector(`#quick-tags-container .btn-tag[data-tag="${cleanTag}"]`);
+            if (quickBtn) {
+                quickBtn.classList.add('active');
+            }
+        }
+
+        function addCustomTag() {
+            const tagInput = qs('custom-tag-input');
+            const val = tagInput.value.trim();
+            if (val) {
+                addTagToList(val);
+                tagInput.value = '';
+                qs('suggestions-box').style.display = 'none';
+            }
+        }
+
+        // Render custom chosen tags below
+        function renderSelectedCustomTags() {
+            const container = qs('selected-custom-tags-container');
+            container.innerHTML = '';
+
+            // Render all chosen tags that are NOT displayed in the quick common section
+            const quickCommonTags = ["Great Food", "Friendly Staff", "Fast Service", "Cleanliness", "Slow Service", "Cold Food"];
+
+            selectedTags.forEach(tag => {
+                if (quickCommonTags.includes(tag)) return; // Already highlighted in common list, no need to show double
+
+                const badge = document.createElement('span');
+                badge.className = 'selected-tag-badge animate__animated animate__fadeIn';
+                badge.innerHTML = `
+                    ${tag}
+                    <span class="remove-btn" onclick="removeSelectedTag('${tag.replace(/'/g, "\\'")}')">&times;</span>
+                `;
+                container.appendChild(badge);
+            });
+        }
+
+        // Remove tag handler
+        window.removeSelectedTag = function (tag) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+            renderSelectedCustomTags();
+
+            // Deactivate quick pill
+            const quickBtn = document.querySelector(`#quick-tags-container .btn-tag[data-tag="${tag}"]`);
+            if (quickBtn) {
+                quickBtn.classList.remove('active');
+            }
+        };
 
         // ── HANDLE SUBMIT ──────────────────────────────────────────────────────
         async function handleSubmit(event) {
@@ -916,14 +1328,6 @@
             const ratingInput = document.querySelector('input[name="rating"]:checked');
             const feedback = qs('comment').value.trim();
 
-            console.log({
-                feedbackToken,
-                customer_name,
-                customer_email,
-                customer_phone,
-                rating: ratingInput ? ratingInput.value : null,
-                feedback,
-            });
             // ── Validate each field individually ──
             let valid = true;
 
@@ -944,12 +1348,18 @@
                 showFieldError('err-email', true);
                 setInputError('email', true);
                 valid = false;
-            } else if (!emailVerified) {
-                showFormError('Please verify your email address using OTP.');
-                valid = false;
             } else {
                 showFieldError('err-email', false);
                 setInputError('email', false);
+            }
+
+            if (!customer_phone) {
+                showFieldError('err-number', true);
+                setInputError('number', true);
+                valid = false;
+            } else {
+                showFieldError('err-number', false);
+                setInputError('number', false);
             }
 
             if (!ratingInput) {
@@ -989,6 +1399,7 @@
                         rating: Number(ratingInput.value),
                         feedback,
                         order_id: orderId,
+                        tags: selectedTags
                     }),
                 });
 
@@ -1049,6 +1460,7 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
         }
+
     </script>
 </body>
 

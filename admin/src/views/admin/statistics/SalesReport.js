@@ -10,6 +10,7 @@ import autoTable from 'jspdf-autotable';
 import { format, isToday, isYesterday } from 'date-fns';
 import { enIN } from 'date-fns/locale';
 import { AuthContext } from 'contexts/AuthContext';
+import ReportPagination from './components/ReportPagination';
 
 const FilterSelect = ({ value, onChange, options }) => {
   const [open, setOpen] = useState(false);
@@ -623,7 +624,7 @@ const SalesReport = () => {
                       <div>
                         <div className="sales-report-stat-label mb-2">Report Period</div>
                         <div className="sales-report-stat-value" style={{ fontSize: '1.2rem' }}>
-                          {format(new Date(startDate), 'MMM dd')} - {format(new Date(endDate), 'MMM dd')}
+                          {format(new Date(startDate), 'dd MMM')} - {format(new Date(endDate), 'dd MMM')}
                         </div>
                       </div>
                       <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: brandBg }}>
@@ -704,11 +705,11 @@ const SalesReport = () => {
                     </div>
                     {sortedRevenueData.length > revenuePerPage && (
                       <div className="d-flex justify-content-center mt-3">
-                        <Pagination size="sm">
-                          <Pagination.Prev onClick={() => setRevenuePage(p => Math.max(1, p - 1))} disabled={revenuePage === 1} />
-                          <Pagination.Item active>{revenuePage}</Pagination.Item>
-                          <Pagination.Next onClick={() => setRevenuePage(p => Math.min(Math.ceil(sortedRevenueData.length / revenuePerPage), p + 1))} disabled={revenuePage === Math.ceil(sortedRevenueData.length / revenuePerPage)} />
-                        </Pagination>
+                        <ReportPagination
+                          currentPage={revenuePage}
+                          totalPages={Math.ceil(sortedRevenueData.length / revenuePerPage)}
+                          onChangePage={setRevenuePage}
+                        />
                       </div>
                     )}
                   </Card.Body>
@@ -753,29 +754,13 @@ const SalesReport = () => {
                       })}
                       
                       {reportData.dishes.data.length > dishPerPage && (
-
-                      
                         <div className="d-flex justify-content-center mt-3">
-
-                      
-                          <Pagination size="sm">
-
-                      
-                            <Pagination.Prev onClick={() => setDishPage(p => Math.max(1, p - 1))} disabled={dishPage === 1} />
-
-                      
-                            <Pagination.Item active>{dishPage}</Pagination.Item>
-
-                      
-                            <Pagination.Next onClick={() => setDishPage(p => Math.min(Math.ceil(reportData.dishes.data.length / dishPerPage), p + 1))} disabled={dishPage === Math.ceil(reportData.dishes.data.length / dishPerPage)} />
-
-                      
-                          </Pagination>
-
-                      
+                          <ReportPagination
+                            currentPage={dishPage}
+                            totalPages={Math.ceil(reportData.dishes.data.length / dishPerPage)}
+                            onChangePage={setDishPage}
+                          />
                         </div>
-
-                      
                       )}
 
                       

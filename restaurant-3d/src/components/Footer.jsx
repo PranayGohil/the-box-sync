@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Flame, MapPin, Phone, Mail } from 'lucide-react';
 import { useRestaurant } from '../context/RestaurantContext';
 import { useTheme } from '../context/AppContext';
+import { formatTimeTo12Hour } from '../utils/timeFormatter';
 
 // Inline social SVG icons (not available in this lucide version)
 const InstagramIcon = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4"><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" /></svg>);
@@ -158,13 +159,13 @@ export default function Footer() {
                   {settings.opening_hours.map((h, i) => (
                     <div key={i} className="d-flex justify-content-between" style={{ fontSize: '0.75rem' }}>
                       <span className="text-white-60">{h.day || h.dayRange || 'Everyday'}</span>
-                      <span className="text-white fw-medium">{h.from} - {h.to}</span>
+                      <span className="text-white fw-medium">{formatTimeTo12Hour(h.from)} - {formatTimeTo12Hour(h.to)}</span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="fw-semibold text-white mb-0 text-center" style={{ fontSize: '0.75rem' }}>
-                  {settings?.open_time_from ? `${settings.open_time_from} - ${settings.open_time_to}` : '12:00 PM – 11:00 PM'}
+                  {settings?.open_time_from ? `${formatTimeTo12Hour(settings.open_time_from)} - ${formatTimeTo12Hour(settings.open_time_to)}` : '12:00 PM – 11:00 PM'}
                 </p>
               )}
             </div>

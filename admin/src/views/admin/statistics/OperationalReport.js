@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthContext } from 'contexts/AuthContext';
+import ReportPagination from './components/ReportPagination';
 
 const OperationalReport = () => {
   const brandColor = '#23b3f4';
@@ -674,11 +675,11 @@ const OperationalReport = () => {
                   </Table>
                   {reportData.waiterPerformance.length > waiterPerPage && (
                     <div className="d-flex justify-content-end mt-3">
-                      <Pagination size="sm">
-                        <Pagination.Prev onClick={() => setWaiterPage(p => Math.max(1, p - 1))} disabled={waiterPage === 1} />
-                        <Pagination.Item active>{waiterPage}</Pagination.Item>
-                        <Pagination.Next onClick={() => setWaiterPage(p => Math.min(Math.ceil(reportData.waiterPerformance.length / waiterPerPage), p + 1))} disabled={waiterPage === Math.ceil(reportData.waiterPerformance.length / waiterPerPage)} />
-                      </Pagination>
+                      <ReportPagination
+                        currentPage={waiterPage}
+                        totalPages={Math.ceil(reportData.waiterPerformance.length / waiterPerPage)}
+                        onChangePage={setWaiterPage}
+                      />
                     </div>
                   )}
                 </div>
@@ -727,11 +728,11 @@ const OperationalReport = () => {
                   </Table>
                   {reportData.tablePerformance.length > tablePerPage && (
                     <div className="d-flex justify-content-end mt-3">
-                      <Pagination size="sm">
-                        <Pagination.Prev onClick={() => setTablePage(p => Math.max(1, p - 1))} disabled={tablePage === 1} />
-                        <Pagination.Item active>{tablePage}</Pagination.Item>
-                        <Pagination.Next onClick={() => setTablePage(p => Math.min(Math.ceil(reportData.tablePerformance.length / tablePerPage), p + 1))} disabled={tablePage === Math.ceil(reportData.tablePerformance.length / tablePerPage)} />
-                      </Pagination>
+                      <ReportPagination
+                        currentPage={tablePage}
+                        totalPages={Math.ceil(reportData.tablePerformance.length / tablePerPage)}
+                        onChangePage={setTablePage}
+                      />
                     </div>
                   )}
                 </div>
@@ -769,11 +770,11 @@ const OperationalReport = () => {
                     </div>
                     {reportData.peakHours.length > hourPerPage && (
                       <div className="d-flex justify-content-center mt-3">
-                        <Pagination size="sm">
-                          <Pagination.Prev onClick={() => setHourPage(p => Math.max(1, p - 1))} disabled={hourPage === 1} />
-                          <Pagination.Item active>{hourPage}</Pagination.Item>
-                          <Pagination.Next onClick={() => setHourPage(p => Math.min(Math.ceil(reportData.peakHours.length / hourPerPage), p + 1))} disabled={hourPage === Math.ceil(reportData.peakHours.length / hourPerPage)} />
-                        </Pagination>
+                        <ReportPagination
+                          currentPage={hourPage}
+                          totalPages={Math.ceil(reportData.peakHours.length / hourPerPage)}
+                          onChangePage={setHourPage}
+                        />
                       </div>
                     )}
                   </Card.Body>

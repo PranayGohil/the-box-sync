@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthContext } from 'contexts/AuthContext';
+import ReportPagination from './components/ReportPagination';
 
 const FilterSelect = ({ value, onChange, options }) => {
   const [open, setOpen] = useState(false);
@@ -751,11 +752,11 @@ const MenuPerformanceReport = () => {
                 </Row>
                 {reportData.categoryPerformance.length > catPerPage && (
                   <div className="d-flex justify-content-center mt-4">
-                    <Pagination size="sm">
-                      <Pagination.Prev onClick={() => setCatPage(p => Math.max(1, p - 1))} disabled={catPage === 1} />
-                      <Pagination.Item active>{catPage}</Pagination.Item>
-                      <Pagination.Next onClick={() => setCatPage(p => Math.min(Math.ceil(reportData.categoryPerformance.length / catPerPage), p + 1))} disabled={catPage === Math.ceil(reportData.categoryPerformance.length / catPerPage)} />
-                    </Pagination>
+                    <ReportPagination
+                      currentPage={catPage}
+                      totalPages={Math.ceil(reportData.categoryPerformance.length / catPerPage)}
+                      onChangePage={setCatPage}
+                    />
                   </div>
                 )}
               </Card.Body>
@@ -949,11 +950,11 @@ const MenuPerformanceReport = () => {
                 </div>
                 {filteredDishes.length > dishPerPage && (
                   <div className="d-flex justify-content-center mt-4">
-                    <Pagination size="sm">
-                      <Pagination.Prev onClick={() => setDishPage(p => Math.max(1, p - 1))} disabled={dishPage === 1} />
-                      <Pagination.Item active>{dishPage}</Pagination.Item>
-                      <Pagination.Next onClick={() => setDishPage(p => Math.min(Math.ceil(filteredDishes.length / dishPerPage), p + 1))} disabled={dishPage === Math.ceil(filteredDishes.length / dishPerPage)} />
-                    </Pagination>
+                    <ReportPagination
+                      currentPage={dishPage}
+                      totalPages={Math.ceil(filteredDishes.length / dishPerPage)}
+                      onChangePage={setDishPage}
+                    />
                   </div>
                 )}
               </Card.Body>

@@ -72,7 +72,7 @@ export default function MenuHighlights() {
       image: finalImg
     };
     addItem(cartItem);
-    toast.success(`${item.name} added!`, {
+    toast.success(`${item.dish_name} added!`, {
       icon: '🛒',
       style: { background: '#1A1A1A', color: '#fff', border: '1px solid rgba(242,122,26,0.3)', borderRadius: '12px' },
     });

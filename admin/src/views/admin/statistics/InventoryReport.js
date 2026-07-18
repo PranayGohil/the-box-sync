@@ -12,6 +12,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthContext } from 'contexts/AuthContext';
+import ReportPagination from './components/ReportPagination';
 
 Chart.register(...registerables);
 
@@ -640,11 +641,11 @@ const InventoryReport = () => {
                     </div>
                     {reportData.itemSummary && Math.ceil(reportData.itemSummary.length / itemPerPage) > 1 && (
                         <div className="d-flex justify-content-center mt-4">
-                          <Pagination>
-                            <Pagination.Prev onClick={() => setItemPage(p => Math.max(1, p - 1))} disabled={itemPage === 1} />
-                            <Pagination.Item active>{itemPage}</Pagination.Item>
-                            <Pagination.Next onClick={() => setItemPage(p => Math.min(Math.ceil(reportData.itemSummary.length / itemPerPage), p + 1))} disabled={itemPage === Math.ceil(reportData.itemSummary.length / itemPerPage)} />
-                          </Pagination>
+                          <ReportPagination
+                            currentPage={itemPage}
+                            totalPages={Math.ceil(reportData.itemSummary.length / itemPerPage)}
+                            onChangePage={setItemPage}
+                          />
                         </div>
                     )}
                   </Card.Body>
@@ -694,11 +695,11 @@ const InventoryReport = () => {
                       </div>
                     {statsData.topItemsByQuantity && Math.ceil(statsData.topItemsByQuantity.length / topItemsPerPage) > 1 && (
                         <div className="d-flex justify-content-center mt-4">
-                          <Pagination>
-                            <Pagination.Prev onClick={() => setTopItemsPage(p => Math.max(1, p - 1))} disabled={topItemsPage === 1} />
-                            <Pagination.Item active>{topItemsPage}</Pagination.Item>
-                            <Pagination.Next onClick={() => setTopItemsPage(p => Math.min(Math.ceil(statsData.topItemsByQuantity.length / topItemsPerPage), p + 1))} disabled={topItemsPage === Math.ceil(statsData.topItemsByQuantity.length / topItemsPerPage)} />
-                          </Pagination>
+                          <ReportPagination
+                            currentPage={topItemsPage}
+                            totalPages={Math.ceil(statsData.topItemsByQuantity.length / topItemsPerPage)}
+                            onChangePage={setTopItemsPage}
+                          />
                         </div>
                     )}
                   </Card.Body>

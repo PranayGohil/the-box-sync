@@ -6,6 +6,7 @@ const {
   deleteFeedback,
   replyFeedback,
   generateFeedbackToken,
+  getOrderDetailForFeedback,
 } = require("../controllers/feedbackController");
 const adminAuth = require("../middlewares/adminAuth");
 
@@ -20,5 +21,6 @@ feedbackRouter.route("/reply/:id").post(authMiddleware, replyFeedback);
 feedbackRouter
   .route("/generate-token")
   .post(authMiddleware, adminAuth, generateFeedbackToken);
+feedbackRouter.route("/order-details/:orderNo").get(getOrderDetailForFeedback);
 
 module.exports = feedbackRouter;
