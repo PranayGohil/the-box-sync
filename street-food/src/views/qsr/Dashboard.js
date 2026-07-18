@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, Switch, Route } from 'react-router-dom';
 import { Button, Row, Col, Card, Badge, Dropdown } from 'react-bootstrap';
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -25,6 +26,7 @@ const Dashboard = () => {
   const title = 'Dashboard';
   const description = 'Restaurant performance and insights';
   const history = useHistory();
+  const { attrMobile } = useSelector((state) => state.menu);
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -238,40 +240,42 @@ const Dashboard = () => {
       </Switch>
 
       {/* Mobile sticky bottom action bar — Standardized with elevation */}
-      <div
-        className="d-md-none"
-        style={{
-          position: 'fixed',
-          bottom: '10px',
-          left: '10px',
-          right: '10px',
-          background: '#ffffff',
-          padding: '12px 20px',
-          zIndex: 1040,
-          boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-          borderRadius: '20px',
-          border: '1px solid #f1f5f9',
-        }}
-      >
-        <div className="d-flex gap-3 align-items-center">
-          <Button
-            className="custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-3"
-            style={{ height: '54px' }}
-            onClick={createNewOrder}
-          >
-            <CsLineIcons icon="plus" size="20" />
-            <span style={{ fontSize: '1rem' }}>New Order</span>
-          </Button>
-          <Button
-            variant="light"
-            className="d-flex align-items-center justify-content-center p-0"
-            style={{ width: '54px', height: '54px', borderRadius: '15px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
-            onClick={() => history.push('/order/delivery-partners')}
-          >
-            <CsLineIcons icon="shipping" size="24" style={{ color: '#475569' }} />
-          </Button>
+      {!attrMobile && (
+        <div
+          className="d-md-none"
+          style={{
+            position: 'fixed',
+            bottom: '10px',
+            left: '10px',
+            right: '10px',
+            background: '#ffffff',
+            padding: '12px 20px',
+            zIndex: 1040,
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+            borderRadius: '20px',
+            border: '1px solid #f1f5f9',
+          }}
+        >
+          <div className="d-flex gap-3 align-items-center">
+            <Button
+              className="custom-btn-outline flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-3"
+              style={{ height: '54px' }}
+              onClick={createNewOrder}
+            >
+              <CsLineIcons icon="plus" size="20" />
+              <span style={{ fontSize: '1rem' }}>New Order</span>
+            </Button>
+            <Button
+              variant="light"
+              className="d-flex align-items-center justify-content-center p-0 flex-shrink-0"
+              style={{ width: '54px', height: '54px', minWidth: '54px', borderRadius: '15px', border: '1.5px solid #f1f5f9', background: '#f8fafc' }}
+              onClick={() => history.push('/order/delivery-partners')}
+            >
+              <CsLineIcons icon="shipping" size="24" style={{ color: '#475569' }} />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

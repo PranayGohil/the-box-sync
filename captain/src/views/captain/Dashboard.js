@@ -5,6 +5,7 @@ import axios from 'axios';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { useSocket } from 'contexts/SocketContext';
+import Select from 'react-select';
 import UnifiedOrder from './order/UnifiedOrder';
 
 const Dashboard = () => {
@@ -20,6 +21,7 @@ const Dashboard = () => {
 
   const [tables, setTables] = useState([]);
   const [activeDineInOrders, setActiveDineInOrders] = useState([]);
+  const [selectedArea, setSelectedArea] = useState('');
 
   const fetchTables = async () => {
     try {
@@ -139,6 +141,7 @@ const Dashboard = () => {
     <>
       <HtmlHead title={title} description={description} />
 
+
       <div className="container-fluid px-3 px-lg-4 mb-5 pb-5">
         <div className="page-title-container dashboard-title-container mb-4 mt-2 mt-lg-0">
           <Row className="g-0 align-items-center">
@@ -151,7 +154,55 @@ const Dashboard = () => {
 
         <Row className="gy-4 gx-lg-5">
           <Col xs="12">
-            {tables.map((tableArea) => (
+            <div className="mb-4 d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2" style={{ position: 'relative', zIndex: 100 }}>
+              <div className="d-flex align-items-center">
+                <div
+                  style={{
+                    width: '8px',
+                    height: '24px',
+                    background: '#23b3f4',
+                    borderRadius: '4px',
+                    marginRight: '12px',
+                    boxShadow: '0 2px 5px rgba(35,179,244,0.3)',
+                  }}
+                />
+                <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>Dine-In Tables</h3>
+              </div>
+              <div className="area-select-wrapper" style={{ width: '200px' }}>
+                <Select
+                  classNamePrefix="react-select"
+                  options={[{ value: '', label: 'All Areas' }, ...tables.map((t) => ({ value: t.area, label: t.area }))]}
+                  value={selectedArea ? { value: selectedArea, label: selectedArea } : { value: '', label: 'All Areas' }}
+                  onChange={(selected) => setSelectedArea(selected ? selected.value : '')}
+                  placeholder="All Areas"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderRadius: '50px',
+                      minHeight: '38px',
+                      height: '38px',
+                      border: '1.5px solid #e2e8f0',
+                      boxShadow: 'none',
+                      '&:hover': { borderColor: '#23b3f4' },
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      borderRadius: '1rem',
+                      overflow: 'hidden',
+                      boxShadow: '0 8px 32px rgba(31, 38, 135, 0.12)',
+                      zIndex: 9999,
+                    }),
+                    option: (base) => ({ ...base, whiteSpace: 'nowrap' }),
+                    placeholder: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600', fontSize: '13px' }),
+                    singleValue: (base) => ({ ...base, color: '#23b3f4', fontWeight: '600', fontSize: '13px' }),
+                  }}
+                />
+              </div>
+            </div>
+
+            {tables
+              .filter((tableArea) => !selectedArea || tableArea.area === selectedArea)
+              .map((tableArea) => (
               <div className="gx-2 mb-5" key={tableArea._id}>
                 <div className="d-flex align-items-center mb-4">
                   <div
