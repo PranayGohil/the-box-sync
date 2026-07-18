@@ -24,7 +24,7 @@ const report = {
 };
 
 const selectPlan = lazy(() => import('views/default/SelectPlan'));
-const crmSettings = lazy(() => import('views/admin/crm/LoyaltySettings'));
+const crm = lazy(() => import('views/admin/crm/Crm'));
 
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
 
@@ -57,10 +57,10 @@ const allRoutes = {
       planRequirement: ['Staff Management'],
     },
     {
-      path: `${appRoot}/crm-settings`,
-      label: 'CRM & Loyalty',
+      path: `${appRoot}/crm`,
+      label: 'CRM',
       icon: 'gift',
-      component: crmSettings,
+      component: crm,
       planRequirement: ['In-built CRM', 'Customer Profiles', 'Reservation Manager', 'Feedback'],
     },
     {

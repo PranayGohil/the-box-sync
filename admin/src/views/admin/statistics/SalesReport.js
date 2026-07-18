@@ -485,7 +485,7 @@ const SalesReport = () => {
                 <Col xs={12} md={3}>
                   <Form.Group>
                     <Form.Label className="sales-report-stat-label mb-2">End Date</Form.Label>
-                    <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    <Form.Control type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
                   </Form.Group>
                 </Col>
                 <Col xs={12} md={2}>

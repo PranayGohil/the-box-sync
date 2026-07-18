@@ -420,7 +420,7 @@ const ViewAttendance = () => {
                         />
                         <Form.Control
                           type="date"
-                          value={endDate}
+                          value={endDate} min={startDate}
                           onChange={(e) => setEndDate(e.target.value)}
                           className="me-2"
                           size="sm"

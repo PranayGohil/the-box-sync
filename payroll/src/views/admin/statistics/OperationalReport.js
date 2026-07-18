@@ -555,7 +555,7 @@ const OperationalReport = () => {
               </Col>
               <Col md={5}>
                 <Form.Label className="stat-label mb-2">End Date</Form.Label>
-                <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <Form.Control type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
               </Col>
               <Col md={2}>
                 <Button className="custom-btn-outline w-100" onClick={fetchOperationalReport} disabled={loading}>

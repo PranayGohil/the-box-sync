@@ -1031,7 +1031,7 @@ const ViewAttendance = () => {
               <Form.Control
                 className="filter-pill-input shadow-sm"
                 type="date"
-                value={endDate}
+                value={endDate} min={startDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
             </Col>

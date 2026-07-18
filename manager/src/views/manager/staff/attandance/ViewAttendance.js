@@ -615,7 +615,7 @@ const ViewAttendance = () => {
             </Col>
             <Col md={3}>
               <Form.Label>End Date</Form.Label>
-              <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Form.Control type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
             </Col>
             <Col md={2}>
               <Form.Label>Status</Form.Label>

@@ -421,6 +421,7 @@ const orderController = async (req, res) => {
 
     // ✅ 1. Save customer if provided
     if (customerInfo && (customerInfo.phone || customerInfo.email)) {
+      customerInfo.user_id = req.user._id || req.user;
       const customer = new Customer(customerInfo);
       const savedCustomer = await customer.save();
       orderInfo.customer_id = savedCustomer._id;
@@ -609,10 +610,12 @@ const dineInController = async (req, res) => {
         if (customerInfo.phone) {
           existingCustomer = await Customer.findOne({
             phone: customerInfo.phone,
+            user_id: req.user._id || req.user,
           });
         } else if (customerInfo.email) {
           existingCustomer = await Customer.findOne({
             email: customerInfo.email,
+            user_id: req.user._id || req.user,
           });
         }
 
@@ -625,6 +628,7 @@ const dineInController = async (req, res) => {
           );
         } else {
           // Create new customer
+          customerInfo.user_id = req.user._id || req.user;
           const customer = new Customer(customerInfo);
           savedCustomer = await customer.save();
         }
@@ -875,10 +879,12 @@ const takeawayController = async (req, res) => {
         if (customerInfo.phone) {
           existingCustomer = await Customer.findOne({
             phone: customerInfo.phone,
+            user_id: req.user._id || req.user,
           });
         } else if (customerInfo.email) {
           existingCustomer = await Customer.findOne({
             email: customerInfo.email,
+            user_id: req.user._id || req.user,
           });
         }
 
@@ -891,6 +897,7 @@ const takeawayController = async (req, res) => {
           );
         } else {
           // Create new customer
+          customerInfo.user_id = req.user._id || req.user;
           const customer = new Customer(customerInfo);
           savedCustomer = await customer.save();
         }
@@ -1123,10 +1130,12 @@ const deliveryController = async (req, res) => {
       if (customerInfo.phone) {
         existingCustomer = await Customer.findOne({
           phone: customerInfo.phone,
+          user_id: req.user._id || req.user,
         });
       } else if (customerInfo.email) {
         existingCustomer = await Customer.findOne({
           email: customerInfo.email,
+          user_id: req.user._id || req.user,
         });
       }
 
@@ -1139,6 +1148,7 @@ const deliveryController = async (req, res) => {
         );
       } else {
         // Create new customer
+        customerInfo.user_id = req.user._id || req.user;
         const customer = new Customer(customerInfo);
         savedCustomer = await customer.save();
       }
@@ -1848,18 +1858,18 @@ const updateOrderStatus = async (req, res) => {
       order.customer_phone = customer_phone;
       if (customer_phone) {
         try {
-          let existingCustomer = await Customer.findOne({ phone: customer_phone });
+          let existingCustomer = await Customer.findOne({ phone: customer_phone, user_id: req.user._id || req.user });
           if (existingCustomer) {
             existingCustomer.name = customer_name || existingCustomer.name || order.customer_name;
             await existingCustomer.save();
             order.customer_id = existingCustomer._id;
           } else {
-            const newCust = new Customer({
+            const newCustomer = new Customer({
               phone: customer_phone,
               name: customer_name || order.customer_name || 'Guest',
-              user_id: order.user_id
+              user_id: req.user._id || req.user
             });
-            const savedCust = await newCust.save();
+            const savedCust = await newCustomer.save();
             order.customer_id = savedCust._id;
           }
         } catch (err) {

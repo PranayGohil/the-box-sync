@@ -490,7 +490,7 @@ const MenuPerformanceReport = () => {
                 </Col>
                 <Col xs={12} md={6} lg={2}>
                   <Form.Label className="menu-performance-report-stat-label mb-2">End Date</Form.Label>
-                  <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <Form.Control type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
                 </Col>
                 <Col xs={12} md={4} lg={3}>
                   <Form.Label className="menu-performance-report-stat-label mb-2">Category</Form.Label>

@@ -8,7 +8,7 @@ const Order = require("../models/orderModel");
 // Get or initialize global loyalty settings
 const getLoyaltySettings = async (req, res) => {
   try {
-    const user_id = req.user; // Tenant ID from authMiddleware
+    const user_id = req.user._id || req.user; // Tenant ID from authMiddleware
     let settings = await LoyaltySetting.findOne({ user_id });
     
     if (!settings) {
@@ -26,7 +26,7 @@ const getLoyaltySettings = async (req, res) => {
 // Update/Save global loyalty settings
 const saveLoyaltySettings = async (req, res) => {
   try {
-    const user_id = req.user;
+    const user_id = req.user._id || req.user;
     const updateData = req.body;
     
     let settings = await LoyaltySetting.findOneAndUpdate(
@@ -45,11 +45,17 @@ const saveLoyaltySettings = async (req, res) => {
 // Fetch customer profile details by phone number (including visit insights, points balance, and active quests)
 const getCustomerProfile = async (req, res) => {
   try {
-    const user_id = req.user;
+    const user_id = req.user._id || req.user;
     const { phone } = req.params;
     
-    let customer = await Customer.findOne({ phone, user_id });
-    
+    let customer = await Customer.findOne({ phone, user_id }).sort({ loyalty_points: -1, visit_count: -1, _id: -1 });
+    if (customer && !customer.name) {
+      const fallbackNameCust = await Customer.findOne({ phone, user_id, name: { $nin: ["", null, "Walk-in Customer"] } });
+      if (fallbackNameCust) {
+        customer.name = fallbackNameCust.name;
+        await customer.save();
+      }
+    }
     // Auto-create basic profile if this is the customer's first POS interaction
     if (!customer) {
       customer = new Customer({
@@ -113,8 +119,9 @@ const getCustomerProfile = async (req, res) => {
 };
 
 // Points Earn & Redeem core hook inside POS order checkout
-const processOrderLoyalty = async (user_id, orderId, orderAmount, customerId, pointsRedeemed = 0) => {
+const processOrderLoyalty = async (user_id_param, orderId, orderAmount, customerId, pointsRedeemed = 0) => {
   try {
+    const user_id = user_id_param._id ? user_id_param._id.toString() : user_id_param;
     const settings = await LoyaltySetting.findOne({ user_id }) || { earnRateSpent: 10, earnRatePoints: 1, redeemRatePoints: 100, redeemRateDiscount: 10, isActive: true };
     if (!settings.isActive) return;
 
@@ -321,7 +328,7 @@ const evaluateFoodQuests = async (user_id, customerId, order, orderedCategories)
 // CRUD Quests inside Admin Dashboard
 const getActiveQuests = async (req, res) => {
   try {
-    const user_id = req.user;
+    const user_id = req.user._id || req.user;
     const quests = await Quest.find({ user_id }).sort({ createdAt: -1 });
     return res.status(200).json({ success: true, data: quests });
   } catch (error) {
@@ -332,7 +339,7 @@ const getActiveQuests = async (req, res) => {
 
 const createQuest = async (req, res) => {
   try {
-    const user_id = req.user;
+    const user_id = req.user._id || req.user;
     const { name, challengeType, targetCount, rewardType, rewardValue, durationDays } = req.body;
     
     if (!name || !challengeType || !targetCount || !rewardType || !rewardValue) {
@@ -359,7 +366,7 @@ const createQuest = async (req, res) => {
 
 const toggleQuestStatus = async (req, res) => {
   try {
-    const user_id = req.user;
+    const user_id = req.user._id || req.user;
     const { id } = req.params;
     
     const quest = await Quest.findOne({ _id: id, user_id });
@@ -379,11 +386,25 @@ const toggleQuestStatus = async (req, res) => {
 
 const getLoyaltyTransactions = async (req, res) => {
   try {
-    const user_id = req.user;
-    const transactions = await LoyaltyTransaction.find({ user_id })
+    const user_id = req.user._id || req.user;
+    const { startDate, endDate, auditType } = req.query;
+    let query = { user_id };
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+      };
+    }
+    if (auditType && auditType !== 'ALL') {
+      if (auditType === 'BONUS') {
+        query.type = { $in: ['BONUS', 'CAMPAIGN'] };
+      } else {
+        query.type = auditType;
+      }
+    }
+    const transactions = await LoyaltyTransaction.find(query)
       .populate("customer_id", "name phone")
-      .sort({ createdAt: -1 })
-      .limit(50);
+      .sort({ createdAt: -1 });
       
     return res.status(200).json({ success: true, data: transactions });
   } catch (error) {
@@ -395,7 +416,7 @@ const getLoyaltyTransactions = async (req, res) => {
 // Scheduler route for Automated Retention Campaigns ( Birthday & Win-back 30 day triggers)
 const triggerAutomatedCampaigns = async (req, res) => {
   try {
-    const user_id = req.user;
+    const user_id = req.user._id || req.user;
     const settings = await LoyaltySetting.findOne({ user_id });
     if (!settings || !settings.isActive) {
       return res.status(400).json({ success: false, message: "Loyalty engine is inactive for this store" });
@@ -486,14 +507,168 @@ const triggerAutomatedCampaigns = async (req, res) => {
       }
     }
 
+    // 3. Process Advanced Custom Campaigns
+    let customTriggered = 0;
+    const customCampaigns = await RetentionCampaign.find({ user_id, isAutomated: true, isActive: true });
+    
+    if (customCampaigns.length > 0) {
+      const allCustomers = await Customer.find({ user_id });
+      for (const campaign of customCampaigns) {
+        if (!campaign.conditions || campaign.conditions.length === 0) continue;
+        
+        for (const customer of allCustomers) {
+          let conditionsMatchedCount = 0;
+          
+          for (const condition of campaign.conditions) {
+            let matched = false;
+            let compareValue = null;
+            
+            if (condition.field === "TOTAL_SPEND") compareValue = customer.total_spend;
+            else if (condition.field === "VISIT_COUNT") compareValue = customer.visit_count;
+            else if (condition.field === "INACTIVITY_DAYS") {
+               if (customer.last_visit_date) {
+                 compareValue = Math.floor((new Date() - new Date(customer.last_visit_date)) / (1000 * 60 * 60 * 24));
+               } else {
+                 compareValue = 0;
+               }
+            }
+            
+            if (compareValue !== null) {
+              if (condition.operator === "GREATER_THAN" && compareValue > condition.value) matched = true;
+              else if (condition.operator === "LESS_THAN" && compareValue < condition.value) matched = true;
+              else if (condition.operator === "EQUAL" && compareValue === condition.value) matched = true;
+            }
+            
+            if (matched) conditionsMatchedCount++;
+          }
+          
+          const isMatch = campaign.conditionMatch === "ALL" 
+            ? (conditionsMatchedCount === campaign.conditions.length)
+            : (conditionsMatchedCount > 0);
+          
+          if (isMatch) {
+            const alreadyAwarded = await LoyaltyTransaction.findOne({
+              customer_id: customer._id,
+              type: "CAMPAIGN",
+              description: { $regex: new RegExp(`Campaign Rule: ${campaign.name}`, "i") }
+            });
+            
+            if (!alreadyAwarded) {
+              let rewardDescription = "";
+              if (campaign.rewardType === "POINTS") {
+                 customer.loyalty_points += Number(campaign.rewardValue);
+                 rewardDescription = `Awarded ${campaign.rewardValue} points.`;
+              } else if (campaign.rewardType === "DISCOUNT_PERCENT") {
+                 rewardDescription = `Awarded ${campaign.rewardValue}% Discount.`;
+              } else if (campaign.rewardType === "DISCOUNT_AMOUNT") {
+                 rewardDescription = `Awarded Flat ₹${campaign.rewardValue} Discount.`;
+              } else if (campaign.rewardType === "FREE_ITEM") {
+                 rewardDescription = `Awarded Free Item: ${campaign.rewardValue}.`;
+              }
+              
+              await customer.save();
+              
+              const campaignTx = new LoyaltyTransaction({
+                user_id,
+                customer_id: customer._id,
+                type: "CAMPAIGN",
+                points: campaign.rewardType === "POINTS" ? Number(campaign.rewardValue) : 0,
+                description: `Campaign Rule: ${campaign.name}. ${rewardDescription}`
+              });
+              await campaignTx.save();
+              customTriggered++;
+            }
+          }
+        }
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: "Behavioral campaigns processed successfully",
-      stats: { winbackTriggered, birthdayTriggered }
+      stats: { winbackTriggered, birthdayTriggered, customTriggered }
     });
   } catch (error) {
     console.error("Error executing behavioral campaigns:", error);
     return res.status(500).json({ success: false, message: "Error executing campaigns" });
+  }
+};
+
+const RetentionCampaign = require("../models/retentionCampaignModel");
+
+const getRetentionCampaigns = async (req, res) => {
+  try {
+    const user_id = req.user._id || req.user;
+    const campaigns = await RetentionCampaign.find({ user_id }).sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, data: campaigns });
+  } catch (error) {
+    console.error("Error fetching retention campaigns:", error);
+    return res.status(500).json({ success: false, message: "Error fetching retention campaigns" });
+  }
+};
+
+const createRetentionCampaign = async (req, res) => {
+  try {
+    const user_id = req.user._id || req.user;
+    const { name, triggerType, isAutomated, conditionMatch, conditions, rewardType, rewardValue } = req.body;
+    
+    if (!name || !triggerType || !rewardType || rewardValue === undefined) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    const campaign = new RetentionCampaign({
+      user_id,
+      name,
+      triggerType,
+      isAutomated: isAutomated !== undefined ? isAutomated : true,
+      conditionMatch: conditionMatch || "ALL",
+      conditions: conditions || [],
+      rewardType,
+      rewardValue
+    });
+    
+    await campaign.save();
+    return res.status(201).json({ success: true, data: campaign, message: "Retention Campaign created successfully" });
+  } catch (error) {
+    console.error("Error creating retention campaign:", error);
+    return res.status(500).json({ success: false, message: "Error creating retention campaign" });
+  }
+};
+
+const toggleRetentionCampaignStatus = async (req, res) => {
+  try {
+    const user_id = req.user._id || req.user;
+    const { id } = req.params;
+    
+    const campaign = await RetentionCampaign.findOne({ _id: id, user_id });
+    if (!campaign) {
+      return res.status(404).json({ success: false, message: "Campaign not found" });
+    }
+    
+    campaign.isActive = !campaign.isActive;
+    await campaign.save();
+    
+    return res.status(200).json({ success: true, data: campaign, message: `Campaign set to ${campaign.isActive ? 'Active' : 'Inactive'}` });
+  } catch (error) {
+    console.error("Error toggling campaign status:", error);
+    return res.status(500).json({ success: false, message: "Error updating campaign status" });
+  }
+};
+
+const deleteRetentionCampaign = async (req, res) => {
+  try {
+    const user_id = req.user._id || req.user;
+    const { id } = req.params;
+    
+    const campaign = await RetentionCampaign.findOneAndDelete({ _id: id, user_id });
+    if (!campaign) {
+      return res.status(404).json({ success: false, message: "Campaign not found" });
+    }
+    
+    return res.status(200).json({ success: true, message: "Retention Campaign deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting campaign:", error);
+    return res.status(500).json({ success: false, message: "Error deleting campaign" });
   }
 };
 
@@ -506,5 +681,9 @@ module.exports = {
   createQuest,
   toggleQuestStatus,
   getLoyaltyTransactions,
-  triggerAutomatedCampaigns
+  triggerAutomatedCampaigns,
+  getRetentionCampaigns,
+  createRetentionCampaign,
+  toggleRetentionCampaignStatus,
+  deleteRetentionCampaign
 };

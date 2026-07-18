@@ -7,7 +7,11 @@ const {
   createQuest,
   toggleQuestStatus,
   getLoyaltyTransactions,
-  triggerAutomatedCampaigns
+  triggerAutomatedCampaigns,
+  getRetentionCampaigns,
+  createRetentionCampaign,
+  toggleRetentionCampaignStatus,
+  deleteRetentionCampaign
 } = require("../controllers/loyaltyController");
 const authMiddleware = require("../middlewares/auth-middlewares");
 
@@ -30,5 +34,11 @@ loyaltyRouter.get("/transactions", authMiddleware, getLoyaltyTransactions);
 
 // Manual or Cron trigger for Re-engagement Campaigns
 loyaltyRouter.post("/run-campaigns", authMiddleware, triggerAutomatedCampaigns);
+
+// Dynamic Retention Campaigns
+loyaltyRouter.get("/retention-campaigns", authMiddleware, getRetentionCampaigns);
+loyaltyRouter.post("/retention-campaigns", authMiddleware, createRetentionCampaign);
+loyaltyRouter.put("/retention-campaigns/toggle/:id", authMiddleware, toggleRetentionCampaignStatus);
+loyaltyRouter.delete("/retention-campaigns/:id", authMiddleware, deleteRetentionCampaign);
 
 module.exports = loyaltyRouter;

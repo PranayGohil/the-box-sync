@@ -547,7 +547,7 @@ const FinancialReport = () => {
                 </Col>
                 <Col xs={12} md={6}>
                   <Form.Label className="financial-report-stat-label mb-2">Audit End Date</Form.Label>
-                  <Form.Control type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <Form.Control type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
                 </Col>
                 
               </Row>

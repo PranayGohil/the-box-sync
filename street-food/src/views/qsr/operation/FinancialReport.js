@@ -651,7 +651,7 @@ const FinancialReport = () => {
               </Col>
               <Col xs={12} md={3}>
                 <Form.Label className="financial-report-stat-label mb-2">End Date</Form.Label>
-                <Form.Control type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setDatePreset('custom'); }} />
+                <Form.Control type="date" value={endDate} min={startDate} onChange={(e) => { setEndDate(e.target.value); setDatePreset('custom'); }} />
               </Col>
               <Col xs={12} md={3}>
                 <Button className="financial-report-custom-btn-outline w-100" onClick={fetchFinancialReport} disabled={loading}>

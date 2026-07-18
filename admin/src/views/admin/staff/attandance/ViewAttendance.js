@@ -590,7 +590,7 @@ const ViewAttendance = () => {
             </Col>
             <Col md={3}>
               <Form.Label className="small fw-bold text-muted text-uppercase">End Date</Form.Label>
-              <Form.Control className="rounded-3 border-0 shadow-sm py-2" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Form.Control className="rounded-3 border-0 shadow-sm py-2" type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
             </Col>
             <Col md={2}>
               <Form.Label className="small fw-bold text-muted text-uppercase">Status</Form.Label>
