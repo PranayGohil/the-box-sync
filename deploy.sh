@@ -13,9 +13,9 @@ set -euo pipefail
 # ==============================================================================
 # Environment Setup (for non-interactive SSH sessions)
 # ==============================================================================
-# Disable exit-on-error temporarily to safely source environment files
-set +e
-for profile in "$HOME/.nvm/nvm.sh" "$HOME/.profile" "$HOME/.bashrc" "/etc/profile"; do
+# Disable exit-on-error and unbound-variable checks temporarily to safely source environment files
+set +eu
+for profile in "${HOME:-/root}/.nvm/nvm.sh" "${HOME:-/root}/.profile" "${HOME:-/root}/.bashrc" "/etc/profile"; do
   if [ -f "$profile" ]; then
     # shellcheck disable=SC1090
     . "$profile" >/dev/null 2>&1
@@ -26,10 +26,11 @@ done
 if command -v nvm >/dev/null 2>&1; then
   nvm use default >/dev/null 2>&1 || true
 fi
-set -e
+set -eu
+
 
 # Ensure standard system binary folders are in PATH
-export PATH="$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin"
+export PATH="$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${HOME:-/root}/.local/bin"
 
 
 # ANSI color codes for logs
