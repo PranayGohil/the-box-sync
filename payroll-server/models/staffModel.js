@@ -57,6 +57,11 @@ const addStaff = new Schema({
     type: String,
     default: null,
   },
+  shift_id: {
+    type: Schema.Types.ObjectId,
+    ref: "shift",
+    default: null,
+  },
   salary: {
     type: Number,
   },

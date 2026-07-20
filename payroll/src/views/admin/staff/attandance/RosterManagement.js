@@ -5,6 +5,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 
 export default function RosterManagement() {
@@ -37,21 +38,12 @@ export default function RosterManagement() {
     setWeekStartDate(d.toISOString().split('T')[0]);
   };
 
-  // Dynamic Shifts State with LocalStorage Persistence
-  const [shifts, setShifts] = useState(() => {
-    const saved = localStorage.getItem('roster_shifts');
-    if (saved) return JSON.parse(saved);
-    return [
-      { id: 'morning', label: 'Morning (09:00 - 18:00)', short: 'Morning', className: 'shift-morning' },
-      { id: 'evening', label: 'Evening (14:00 - 23:00)', short: 'Evening', className: 'shift-evening' },
-      { id: 'night', label: 'Night (22:00 - 07:00)', short: 'Night', className: 'shift-night' },
-      { id: 'off', label: 'Weekly Off', short: 'Off', className: 'shift-off' },
-    ];
-  });
+  // Dynamic Shifts State
+  const [shifts, setShifts] = useState([
+    { id: 'off', label: 'Weekly Off', short: 'Off', className: 'shift-off' }
+  ]);
 
-  useEffect(() => {
-    localStorage.setItem('roster_shifts', JSON.stringify(shifts));
-  }, [shifts]);
+  // We don't save shifts to localStorage anymore, it comes from backend
 
   const [showShiftModal, setShowShiftModal] = useState(false);
   const [newShift, setNewShift] = useState({ short: '', start: '09:00', end: '18:00', className: 'shift-morning' });
@@ -67,20 +59,46 @@ export default function RosterManagement() {
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
   });
 
+  // Helper to format date as DD/MM/YYYY
+  const formatDateDDMMYYYY = (dateObj) => {
+    const d = String(dateObj.getDate()).padStart(2, '0');
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const y = dateObj.getFullYear();
+    return `${d}/${m}/${y}`;
+  };
+
   const fetchStaffAndRoster = async () => {
     setLoading(true);
     try {
+      // 1. Fetch all shifts
+      const shiftsRes = await axios.get(`${process.env.REACT_APP_API}/shift/all`, authHeader());
+      let loadedShifts = [{ id: 'off', label: 'Weekly Off', short: 'Off', className: 'shift-off' }];
+      if (shiftsRes.data && shiftsRes.data.success) {
+        const dbShifts = shiftsRes.data.data.map((s, index) => ({
+          id: s._id,
+          label: `${s.name} (${s.start_time} - ${s.end_time})`,
+          short: s.name,
+          className: `shift-morning` // We can assign colors dynamically if needed
+        }));
+        loadedShifts = [...loadedShifts, ...dbShifts];
+      }
+      setShifts(loadedShifts);
+
+      // 2. Fetch staff list (using attendance/today just to get active staff list)
       const res = await axios.get(`${process.env.REACT_APP_API}/attendance/today`, authHeader());
       if (res.data && res.data.data) {
-        setStaffList(res.data.data.map(d => d.staff || d).filter(Boolean));
+        const staffs = res.data.data.map(d => d.staff || d).filter(Boolean);
+        setStaffList(staffs);
 
-        // Load saved roster from localStorage to simulate DB persistence
-        const savedRosterStr = localStorage.getItem('roster_data');
-        const existingRoster = savedRosterStr ? JSON.parse(savedRosterStr) : {};
+        // 3. Fetch saved roster for the week
+        const formattedDates = weekDays.map(d => formatDateDDMMYYYY(d));
+        const rosterRes = await axios.post(`${process.env.REACT_APP_API}/roster/week`, { dates: formattedDates }, authHeader());
+        const dbRoster = rosterRes.data?.data || {};
 
-        const initialRoster = { ...existingRoster };
-        res.data.data.forEach(d => {
-          const staffObj = d.staff || d;
+        const initialRoster = { ...dbRoster };
+        const defaultShiftId = loadedShifts.length > 1 ? loadedShifts[1].id : 'off';
+
+        staffs.forEach(staffObj => {
           if (!staffObj || !staffObj._id) return;
           if (!initialRoster[staffObj._id]) initialRoster[staffObj._id] = {};
 
@@ -100,7 +118,6 @@ export default function RosterManagement() {
                   isOff = true;
                 }
               }
-              // Implicit Sunday off if not overridden in custom settings
               if (!customMatch && dayName.toLowerCase() === 'sunday') {
                 const hasSundayConfig = staff.custom_weekly_offs.some(wo => wo.day && wo.day.toLowerCase() === 'sunday');
                 if (!hasSundayConfig) isOff = true;
@@ -116,19 +133,21 @@ export default function RosterManagement() {
                 if (strOff.some(w => typeof w === 'string' && w.toLowerCase() === dayName.toLowerCase())) isOff = true;
               }
             }
-
             return isOff;
           };
 
           weekDays.forEach(day => {
-            const dateStr = day.toISOString().split('T')[0];
+            // Use DD/MM/YYYY for keys in UI rosterData to match DB response
+            const dateStr = formatDateDDMMYYYY(day);
             const dayName = day.toLocaleDateString('en-US', { weekday: 'long' });
 
             if (!initialRoster[staffObj._id][dateStr]) {
               if (isWeeklyOff(staffObj, dayName, day)) {
                 initialRoster[staffObj._id][dateStr] = 'off';
               } else {
-                initialRoster[staffObj._id][dateStr] = 'morning'; // Default shift
+                const staffShiftId = staffObj.shift_id?._id || staffObj.shift_id;
+                const isValidShift = staffShiftId ? loadedShifts.some(s => s.id === staffShiftId) : false;
+                initialRoster[staffObj._id][dateStr] = isValidShift ? staffShiftId : defaultShiftId;
               }
             }
           });
@@ -151,7 +170,7 @@ export default function RosterManagement() {
     fetchStaffAndRoster();
     setSelectedStaff([]); // Reset selection when week changes
     if (weekDays.length > 0) {
-      setBulkDay(weekDays[0].toISOString().split('T')[0]);
+      setBulkDay(formatDateDDMMYYYY(weekDays[0]));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekStartDate]);
@@ -202,25 +221,69 @@ export default function RosterManagement() {
   };
 
   const handleSaveRoster = async () => {
-    // Save to localStorage to persist across week navigation
-    localStorage.setItem('roster_data', JSON.stringify(rosterData));
-    toast.success('Shifts saved successfully!');
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_API}/roster/bulk-save`, { rosterData }, authHeader());
+      if (res.data.success) {
+        toast.success('Shifts saved successfully!');
+      } else {
+        toast.error(res.data.message || 'Failed to save roster');
+      }
+    } catch (err) {
+      console.error("Error saving roster:", err);
+      toast.error('Failed to save roster');
+    }
   };
 
-  const handleAddShift = () => {
+  const handleAddShift = async () => {
     if (!newShift.short) {
       toast.error('Please enter a shift name.');
       return;
     }
-    const id = newShift.short.toLowerCase().replace(/\s+/g, '-');
-    const label = `${newShift.short} (${newShift.start} - ${newShift.end})`;
-    setShifts(prev => [...prev, { id, label, short: newShift.short, className: newShift.className }]);
-    setNewShift({ short: '', start: '09:00', end: '18:00', className: 'shift-morning' });
-    toast.success('Shift added successfully!');
+    
+    try {
+      const payload = {
+        name: newShift.short,
+        start_time: newShift.start,
+        end_time: newShift.end
+      };
+      const res = await axios.post(`${process.env.REACT_APP_API}/shift/create`, payload, authHeader());
+      if (res.data.success) {
+        toast.success('Shift added successfully!');
+        setNewShift({ short: '', start: '09:00', end: '18:00', className: 'shift-morning' });
+        // Refresh the list to get the new shift with its real MongoDB _id
+        fetchStaffAndRoster();
+      } else {
+        toast.error(res.data.message || 'Failed to add shift.');
+      }
+    } catch (err) {
+      console.error('Error adding shift:', err);
+      if (err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else {
+        toast.error('Failed to add shift.');
+      }
+    }
   };
 
-  const handleRemoveShift = (id) => {
-    setShifts(prev => prev.filter(s => s.id !== id));
+  const handleRemoveShift = async (id) => {
+    if (id === 'off') {
+      toast.error('Cannot remove the Weekly Off default shift.');
+      return;
+    }
+    
+    try {
+      const res = await axios.delete(`${process.env.REACT_APP_API}/shift/delete/${id}`, authHeader());
+      if (res.data.success) {
+        toast.success('Shift deleted successfully!');
+        // Remove locally from UI
+        setShifts(prev => prev.filter(s => s.id !== id));
+      } else {
+        toast.error(res.data.message || 'Failed to delete shift.');
+      }
+    } catch (err) {
+      console.error('Error deleting shift:', err);
+      toast.error('Failed to delete shift.');
+    }
   };
 
   const shiftDropdown = (staffId, dateStr, currentShift) => {
@@ -293,20 +356,20 @@ export default function RosterManagement() {
         </Row>
 
         {/* Bulk Action Bar */}
-        <Card className="glass-card border-0 shadow-sm p-3 mb-4" style={{ background: '#f8fafc' }}>
+        <Card className="glass-card border-0 shadow-sm p-3 mb-4 position-relative" style={{ background: '#f8fafc', zIndex: 10 }}>
           <div className="fw-bold text-muted small text-uppercase mb-3">Bulk Assign Shift</div>
           <Row className="g-3">
             <Col xs={12} md={4}>
               <Dropdown className="w-100 shadow-sm">
                 <Dropdown.Toggle variant="white" className="w-100 text-start d-flex justify-content-between align-items-center py-2 border rounded-3 bg-white">
                   {bulkDay ? (() => {
-                    const found = weekDays.find(d => d.toISOString().split('T')[0] === bulkDay);
+                    const found = weekDays.find(d => formatDateDDMMYYYY(d) === bulkDay);
                     return found ? found.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Select Day...';
                   })() : 'Select Day...'}
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="w-100 shadow-sm border-0" style={{ borderRadius: '10px', maxHeight: '250px', overflowY: 'auto' }}>
                   {weekDays.map(day => {
-                    const dateStr = day.toISOString().split('T')[0];
+                    const dateStr = formatDateDDMMYYYY(day);
                     return (
                       <Dropdown.Item key={dateStr} onClick={() => setBulkDay(dateStr)} active={bulkDay === dateStr} className="py-2">
                         {day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -349,7 +412,7 @@ export default function RosterManagement() {
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="table-responsive d-none d-lg-block">
+              <div className="table-responsive d-none d-lg-block" style={{ paddingBottom: '200px' }}>
                 <table className="roster-table">
                   <thead>
                     <tr>
@@ -393,9 +456,10 @@ export default function RosterManagement() {
                           </div>
                         </td>
                         {weekDays.map(day => {
-                          const dateStr = day.toISOString().split('T')[0];
-                          const currentShift = staff?._id ? (rosterData[staff._id]?.[dateStr] || 'morning') : 'morning';
-                          return (
+                        const dateStr = formatDateDDMMYYYY(day);
+                        const isToday = day.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                        const currentShift = staff?._id ? (rosterData[staff._id]?.[dateStr] || 'off') : 'off';
+                        return (
                             <td key={dateStr}>
                               {shiftDropdown(staff?._id, dateStr, currentShift)}
                             </td>
@@ -440,8 +504,8 @@ export default function RosterManagement() {
                         </div>
                         <div className="row g-2">
                           {weekDays.map(day => {
-                            const dateStr = day.toISOString().split('T')[0];
-                            const currentShift = staff?._id ? (rosterData[staff._id]?.[dateStr] || 'morning') : 'morning';
+                            const dateStr = formatDateDDMMYYYY(day);
+                            const currentShift = staff?._id ? (rosterData[staff._id]?.[dateStr] || 'off') : 'off';
                             return (
                               <div className="col-12" key={dateStr}>
                                 <div className="d-flex align-items-center justify-content-between p-2 rounded bg-white border border-light">

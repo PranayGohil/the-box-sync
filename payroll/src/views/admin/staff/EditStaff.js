@@ -61,6 +61,7 @@ const EditStaff = () => {
   const [showAddDeductionModal, setShowAddDeductionModal] = useState(false);
   const [newFieldName, setNewFieldName] = useState('');
   const [branches, setBranches] = useState([]);
+  const [shifts, setShifts] = useState([]);
   // Common restaurant staff positions
   const commonPositions = [
     'Manager',
@@ -290,6 +291,7 @@ const EditStaff = () => {
       weekly_off_policy: 'global',
       custom_weekly_offs: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
       leave_policy_configuration: [],
+      shift_id: '',
       position: '',
       branch_id: '',
       photo: '',
@@ -416,6 +418,59 @@ const EditStaff = () => {
       setIsCapturing(false);
     }
   };
+
+  useEffect(() => {
+    let interval;
+    const detectFace = async () => {
+      if (webcamRef.current && webcamRef.current.video.readyState === 4 && faceapi.nets.tinyFaceDetector.params) {
+        const { video } = webcamRef.current;
+        const canvas = document.getElementById('faceCanvas');
+        if (!canvas) return;
+        try {
+          const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+          const dims = faceapi.matchDimensions(canvas, video, true);
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          if (detection) {
+            const resized = faceapi.resizeResults(detection, dims);
+            const { x, y, width, height } = resized.detection.box;
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#23b3f4';
+            ctx.strokeRect(x, y, width, height);
+            ctx.font = 'bold 12px Inter, sans-serif';
+            const labelText = 'FACE DETECTED';
+            const textWidth = ctx.measureText(labelText).width;
+            ctx.save();
+            ctx.translate(x + (textWidth + 16) / 2, y - 15);
+            ctx.scale(-1, 1);
+            ctx.fillStyle = 'rgba(35, 179, 244, 0.85)';
+            ctx.fillRect(-(textWidth + 16) / 2, -10, textWidth + 16, 20);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(labelText, -textWidth / 2, 4);
+            ctx.restore();
+            setFaceBox(resized.detection.box);
+          } else {
+            setFaceBox(null);
+          }
+        } catch (error) {
+          setFaceBox(null);
+        }
+      }
+    };
+    if (showFaceModal) {
+      setTimeout(() => {
+        interval = setInterval(detectFace, 300);
+      }, 100);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+      const canvas = document.getElementById('faceCanvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    };
+  }, [showFaceModal]);
 
   const grossSalary = Object.values(values.salary_structure?.custom_earnings || {}).reduce((acc, val) => acc + (Number(val) || 0), 0);
   const pfPercentage = Number(values.salary_structure?.deductions?.pf_percentage || 0);
@@ -613,7 +668,7 @@ const EditStaff = () => {
       try {
         setLoading((prev) => ({ ...prev, initial: true }));
 
-        const [positionsRes, staffRes, branchesRes] = await Promise.all([
+        const [positionsRes, staffRes, branchesRes, shiftsRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
@@ -621,6 +676,9 @@ const EditStaff = () => {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
           axios.get(`${process.env.REACT_APP_API}/branch/all`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/shift/all`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
@@ -655,6 +713,10 @@ const EditStaff = () => {
 
         if (branchesRes.data?.success) {
           setBranches(branchesRes.data.data);
+        }
+
+        if (shiftsRes.data?.success) {
+          setShifts(shiftsRes.data.data);
         }
 
         setPositions(positionsRes.data.data);
@@ -695,7 +757,8 @@ const EditStaff = () => {
         setFieldValue('salary_calculation_base', staff.salary_calculation_base || 'working_days');
         setFieldValue('attendance_method', staff.attendance_method || 'any');
         setFieldValue('weekly_off_policy', staff.weekly_off_policy || 'global');
-        setFieldValue('custom_weekly_offs', staff.custom_weekly_offs || [{ day: 'Sunday', type: 'all_weeks', weeks: [] }]);
+        setFieldValue('custom_weekly_offs', staff.custom_weekly_offs && staff.custom_weekly_offs.length > 0 ? staff.custom_weekly_offs : [{ day: 'Sunday', type: 'all_weeks', weeks: [] }]);
+        setFieldValue('shift_id', staff.shift_id || '');
         setFieldValue('leave_policy_configuration', staff.leave_policy_configuration || []);
 
         // Pre-fill custom_earnings using branch-specific configuration
@@ -991,7 +1054,7 @@ const EditStaff = () => {
 
                 <Row className="g-3 mt-1">
                   <Col md={4}>
-                    <Form.Group className="mb-3">
+                    <Form.Group>
                       <Form.Label className="small fw-bold">Gender</Form.Label>
                       <Select
                         classNamePrefix="react-select"
@@ -1025,15 +1088,7 @@ const EditStaff = () => {
                           onChange={handleChange}
                           isInvalid={touched.birth_date && errors.birth_date}
                           disabled={loading.submitting}
-                          className="pe-5"
                         />
-                        <div 
-                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ cursor: 'pointer', zIndex: 5 }}
-                          onClick={() => birthDateRef.current?.showPicker()}
-                        >
-                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
-                        </div>
                       </div>
                       {touched.birth_date && errors.birth_date && (
                         <div className="text-danger mt-1 small">{errors.birth_date}</div>
@@ -1052,15 +1107,7 @@ const EditStaff = () => {
                           onChange={handleChange}
                           isInvalid={touched.joining_date && errors.joining_date}
                           disabled={loading.submitting}
-                          className="pe-5"
                         />
-                        <div 
-                          className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                          style={{ cursor: 'pointer', zIndex: 5 }}
-                          onClick={() => joiningDateRef.current?.showPicker()}
-                        >
-                          <CsLineIcons icon="calendar" size="18" className="text-primary" />
-                        </div>
                       </div>
                       {touched.joining_date && errors.joining_date && (
                         <div className="text-danger mt-1 small">{errors.joining_date}</div>
@@ -1206,7 +1253,7 @@ const EditStaff = () => {
                 </div>
 
                 <Row className="g-3 mb-3">
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Job Position</Form.Label>
                       <CreatableSelect
@@ -1226,7 +1273,7 @@ const EditStaff = () => {
                       )}
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Branch</Form.Label>
                       <Form.Select
@@ -1243,6 +1290,24 @@ const EditStaff = () => {
                         ))}
                       </Form.Select>
                       {touched.branch_id && errors.branch_id && <div className="text-danger mt-1 small fw-bold">{errors.branch_id}</div>}
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Shift Timing</Form.Label>
+                      <Form.Select
+                        name="shift_id"
+                        value={values.shift_id}
+                        onChange={handleChange}
+                        isInvalid={touched.shift_id && errors.shift_id}
+                        disabled={loading.submitting}
+                        style={{ height: '38px', borderRadius: '8px' }}
+                      >
+                        <option value="">Select Shift</option>
+                        {shifts.map(shift => (
+                          <option key={shift._id} value={shift._id}>{shift.name} ({shift.start_time} - {shift.end_time})</option>
+                        ))}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -1302,7 +1367,7 @@ const EditStaff = () => {
                   <>
                     <hr className="my-4 opacity-50" />
 
-                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                       <CsLineIcons icon="money" size="18" />
                       Salary Structure Breakdown
                     </h6>
@@ -1486,7 +1551,7 @@ const EditStaff = () => {
                 )}
 
                 <hr className="my-4 opacity-50" />
-                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                   <CsLineIcons icon="calendar" size="18" />
                   Weekly Off Policy
                 </h6>
@@ -1606,7 +1671,7 @@ const EditStaff = () => {
                 <hr className="my-4 opacity-50" />
                 {globalLeavePolicies && globalLeavePolicies.length > 0 && (
                   <>
-                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                       <CsLineIcons icon="calendar" size="18" />
                       Leave Policy Configuration
                     </h6>
@@ -1647,7 +1712,7 @@ const EditStaff = () => {
                 )}
                 
                 <hr className="my-4 opacity-50" />
-                <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                   <CsLineIcons icon="trend-up" size="18" />
                   Upcoming Increment Plan
                 </h6>
@@ -1777,7 +1842,7 @@ const EditStaff = () => {
             {/* Profile Photo Card */}
             <Card className="glass-card border-0 mb-4 text-center">
               <Card.Body className="p-4">
-                <div className="section-header text-start mb-3">
+                <div className="section-header text-start mb-4">
                   <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                     <CsLineIcons icon="camera" size="20" className="text-primary" />
                     Profile Photo
@@ -1907,7 +1972,7 @@ const EditStaff = () => {
                 </div>
 
                 <div className="bg-light rounded p-3 mb-4 border border-faint">
-                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                     <CsLineIcons icon="credit-card" size="18" />
                     PAN Card Details (Required)
                   </h6>
@@ -1927,9 +1992,9 @@ const EditStaff = () => {
 
                   <Form.Group className="mb-0">
                     <Form.Label>PAN Card Image</Form.Label>
-                    <div className="id-preview-container mb-2">
+                    <div className="id-preview-container mb-2" style={{ border: '2px dashed #ddd', borderRadius: '10px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f9f9f9', minHeight: '150px' }}>
                       {panImagePreview ? (
-                        <img src={panImagePreview} alt="PAN Card" className="preview-image" style={{ maxHeight: '100px' }} />
+                        <img src={panImagePreview} alt="PAN Card" className="preview-image" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
                       ) : (
                         <div className="text-center p-4">
                           <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
@@ -1963,7 +2028,7 @@ const EditStaff = () => {
                 </div>
 
                 <div className="bg-light rounded p-3 mb-4 border border-faint">
-                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                     <CsLineIcons icon="file-text" size="18" />
                     Additional Identification (Required)
                   </h6>
@@ -2013,9 +2078,9 @@ const EditStaff = () => {
                 <div className="id-previews">
                   <div className="mb-3">
                     <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Front Image</div>
-                    <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed" style={{ minHeight: '120px' }}>
+                    <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed id-preview-container" style={{ minHeight: '150px', border: '2px dashed #ddd', borderRadius: '10px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f9f9f9' }}>
                       {frontImagePreview ? (
-                        <img src={frontImagePreview} alt="Front" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
+                        <img src={frontImagePreview} alt="Front" className="img-fluid rounded preview-image" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
                       ) : (
                         <div className="py-4"><CsLineIcons icon="image" size="32" className="text-muted opacity-20" /></div>
                       )}
@@ -2045,9 +2110,9 @@ const EditStaff = () => {
                   {(values.document_type === 'National Identity Card' || values.document_type === 'Aadhar Card') && (
                     <div className="mb-2">
                       <div className="small text-muted mb-2 fw-bold text-uppercase opacity-50 letter-spacing-1">Back Image</div>
-                      <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed" style={{ minHeight: '120px' }}>
+                      <div className="bg-light rounded-3 p-2 mb-2 text-center border border-dashed id-preview-container" style={{ minHeight: '150px', border: '2px dashed #ddd', borderRadius: '10px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f9f9f9' }}>
                         {backImagePreview ? (
-                          <img src={backImagePreview} alt="Back" className="img-fluid rounded" style={{ maxHeight: '100px' }} />
+                          <img src={backImagePreview} alt="Back" className="img-fluid rounded preview-image" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
                         ) : (
                           <div className="py-4"><CsLineIcons icon="image" size="32" className="text-muted opacity-20" /></div>
                         )}
@@ -2157,61 +2222,6 @@ const EditStaff = () => {
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 4px rgba(35, 179, 244, 0.2);
                 border: 3px solid #e2e8f0;
               }
-
-              .scanner-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(to bottom, rgba(35,179,244,0.15) 0%, rgba(35,179,244,0) 10%, rgba(35,179,244,0) 90%, rgba(35,179,244,0.15) 100%);
-                pointer-events: none;
-                z-index: 10;
-              }
-
-              @keyframes scan {
-                0% { top: 0%; }
-                50% { top: 100%; }
-                100% { top: 0%; }
-              }
-
-              .scanner-laser-line {
-                position: absolute;
-                left: 0;
-                width: 100%;
-                height: 3px;
-                background: rgba(35, 179, 244, 0.8);
-                box-shadow: 0 0 12px 4px rgba(35, 179, 244, 0.8);
-                z-index: 11;
-                pointer-events: none;
-                animation: scan 4s linear infinite;
-              }
-
-              .camera-status-text {
-                position: absolute;
-                bottom: 1.25rem;
-                left: 50%;
-                transform: translateX(-50%);
-                color: white;
-                padding: 0.45rem 1.5rem;
-                border-radius: 50px;
-                font-weight: 700;
-                font-size: 0.8rem;
-                letter-spacing: 0.08em;
-                z-index: 12;
-                white-space: nowrap;
-                backdrop-filter: blur(5px);
-                transition: all 0.3s ease;
-                text-transform: uppercase;
-              }
-              .camera-status-text.status-warning {
-                background: rgba(245, 158, 11, 0.8);
-                box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
-              }
-              .camera-status-text.status-success {
-                background: rgba(16, 185, 129, 0.8);
-                box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
-              }
             `}</style>
             
             {loading.faceModels ? (
@@ -2230,6 +2240,7 @@ const EditStaff = () => {
                   <Webcam
                     ref={webcamRef}
                     audio={false}
+                    mirrored={true}
                     screenshotFormat="image/jpeg"
                     videoConstraints={{
                       facingMode: 'user',
@@ -2243,7 +2254,6 @@ const EditStaff = () => {
                       height: '100%',
                       objectFit: 'cover',
                       zIndex: 1,
-                      transform: 'scaleX(-1)',
                     }}
                   />
 
@@ -2262,13 +2272,6 @@ const EditStaff = () => {
                       transform: 'scaleX(-1)',
                     }}
                   />
-
-                  <div className="scanner-laser-line" />
-                  <div className="scanner-overlay" />
-                  
-                  <div className={`camera-status-text ${faceBox ? 'status-success' : 'status-warning'}`}>
-                    {faceBox ? 'FACE DETECTED' : 'ALIGN YOUR FACE'}
-                  </div>
                 </div>
 
                 <div className="mt-4 mb-2 text-center">

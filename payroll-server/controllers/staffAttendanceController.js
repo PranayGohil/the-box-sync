@@ -4,26 +4,31 @@ const PayrollConfig = require("../models/PayrollConfig");
 const User = require("../models/userModel");
 const LeaveBalance = require("../models/leaveBalanceModel");
 const LeaveRequest = require("../models/leaveRequestModel");
+const Roster = require("../models/rosterModel");
 const fs = require("fs");
 const path = require("path");
 
-// Helper: Compute minutes late (positive) given in_time string and org_rules config
-const computeLateMinutes = (inTimeStr, orgRules) => {
-    if (!inTimeStr || !orgRules) return 0;
-    const shiftStart = parseTimeToMinutes(orgRules.shift_start_time || '09:00 AM');
-    const threshold = Number(orgRules.late_threshold_minutes) || 0;
+// Helper: Compute minutes late (positive) given in_time string and org_rules/shift config
+const computeLateMinutes = (inTimeStr, rules) => {
+    if (!inTimeStr || !rules) return 0;
+    const shiftStart = parseTimeToMinutes(rules.start_time || rules.shift_start_time || '09:00 AM');
+    const threshold = Number(rules.late_threshold_minutes) || 0;
     const inMins = parseTimeToMinutes(inTimeStr);
     const lateBy = inMins - (shiftStart + threshold);
     return lateBy > 0 ? lateBy : 0;
 };
 
-// Helper: Compute overtime hours (positive) given out_time string and org_rules config
-const computeOvertimeHours = (outTimeStr, orgRules) => {
-    if (!outTimeStr || !orgRules) return 0;
-    const shiftEnd = parseTimeToMinutes(orgRules.shift_end_time || '06:00 PM');
-    const outMins = parseTimeToMinutes(outTimeStr);
-    const overtimeMins = outMins - shiftEnd;
-    return overtimeMins > 0 ? Math.round((overtimeMins / 60) * 100) / 100 : 0;
+// Helper: Fetch shift configuration (Shift model or roster)
+const getShiftConfig = async (staffId, date) => {
+    try {
+        const roster = await Roster.findOne({ staff_id: staffId, date: date }).populate('shift_id').lean();
+        if (roster && roster.shift_id) return roster.shift_id;
+        const staff = await Staff.findById(staffId).populate('shift_id').lean();
+        return staff ? staff.shift_id : null;
+    } catch (error) {
+        console.error("Error fetching shift config:", error);
+        return null;
+    }
 };
 
 // Time utility: Parses a string like "09:00 AM" or "01:00 PM" into total minutes from midnight
@@ -85,6 +90,24 @@ const calculateRecordWorkingMinutes = (record, config) => {
     return totalMins;
 };
 
+// Helper: Compute overtime hours (positive) given the full record and config/shift
+const computeOvertimeHours = (record, config, shift) => {
+    if (!record || !config || !config.org_rules) return 0;
+    
+    // Calculate total actual minutes worked
+    const actualMins = calculateRecordWorkingMinutes(record, config);
+    
+    // Calculate required shift minutes
+    const rules = shift || config.org_rules;
+    const shiftStart = parseTimeToMinutes(rules.start_time || rules.shift_start_time || '09:00 AM');
+    const shiftEnd = parseTimeToMinutes(rules.end_time || rules.shift_end_time || '06:00 PM');
+    let requiredMins = shiftEnd - shiftStart;
+    if (requiredMins < 0) requiredMins += 24 * 60; // overnight shift
+    
+    const overtimeMins = actualMins - requiredMins;
+    return overtimeMins > 0 ? Math.round((overtimeMins / 60) * 100) / 100 : 0;
+};
+
 // ── Helper: get today's date in IST (YYYY-MM-DD) ─────────────────────────────
 const getTodayIST = () => {
     const options = {
@@ -96,6 +119,24 @@ const getTodayIST = () => {
     const parts = new Intl.DateTimeFormat("en-CA", options).format(new Date());
     // en-CA gives YYYY-MM-DD format directly
     return parts;
+};
+
+// Helper: Get assigned shift from Roster DB or Staff default
+const getAssignedShift = async (staff, dateStr) => {
+    if (!dateStr || !staff) return staff.shift_id;
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        try {
+            const roster = await Roster.findOne({ staff_id: staff._id, date: formattedDate }).populate('shift_id').lean();
+            if (roster) {
+                return roster.is_off ? { is_off: true } : roster.shift_id;
+            }
+        } catch (e) {
+            console.error("Error fetching roster shift:", e);
+        }
+    }
+    return staff.shift_id;
 };
 
 // ── Helper: Check if a date is a week off ──────────────────────────────────────
@@ -324,7 +365,7 @@ const checkIn = async (req, res) => {
     }
 
     try {
-        const staff = await Staff.findById(staff_id).lean();
+        const staff = await Staff.findById(staff_id).populate('shift_id').lean();
         if (!staff) {
             return res.status(404).json({ message: "Staff not found" });
         }
@@ -402,7 +443,9 @@ const checkIn = async (req, res) => {
                 // Only set late on the first check-in of the day (i.e. the daily in_time)
                 const isFirstCheckIn = (record.sessions && record.sessions.length <= 1);
                 if (isFirstCheckIn) {
-                    record.late_by_minutes = computeLateMinutes(record.in_time, config.org_rules);
+                    const assignedShift = await getAssignedShift(staff, date);
+                    const rulesToUse = (assignedShift && assignedShift.is_off) ? null : (assignedShift || config.org_rules);
+                    record.late_by_minutes = computeLateMinutes(record.in_time, rulesToUse);
                 }
             }
         } catch (configErr) {
@@ -426,7 +469,7 @@ const checkOut = async (req, res) => {
     }
 
     try {
-        const staff = await Staff.findById(staff_id).lean();
+        const staff = await Staff.findById(staff_id).populate('shift_id').lean();
         if (!staff) {
             return res.status(404).json({ message: "Staff not found" });
         }
@@ -471,7 +514,9 @@ const checkOut = async (req, res) => {
         try {
             const config = await PayrollConfig.getEffectiveConfig(staff.user_id, staff.branch_id);
             if (config && config.org_rules && record.out_time) {
-                record.overtime_hours = computeOvertimeHours(record.out_time, config.org_rules);
+                const assignedShift = await getAssignedShift(staff, date);
+                const shiftToUse = (assignedShift && assignedShift.is_off) ? null : assignedShift;
+                record.overtime_hours = computeOvertimeHours(record, config, shiftToUse);
             }
         } catch (configErr) {
             console.warn("Could not load PayrollConfig for overtime check:", configErr.message);
@@ -662,7 +707,7 @@ const kioskScan = async (req, res) => {
     }
 
     try {
-        const staff = await Staff.findOne({ user_id: company_id, staff_id: scanned_id }).lean();
+        const staff = await Staff.findOne({ user_id: company_id, staff_id: scanned_id }).populate('shift_id').lean();
         if (!staff) {
             return res.status(404).json({ success: false, message: "Employee not found." });
         }
@@ -751,7 +796,8 @@ const getKioskFaces = async (req, res) => {
             user_id: company_id,
             face_encoding: { $exists: true, $ne: null, $not: { $size: 0 } },
         })
-        .select("_id staff_id f_name l_name face_encoding photo")
+        .select("_id staff_id f_name l_name face_encoding photo shift_id")
+        .populate("shift_id")
         .lean();
         
         // Get today's date in IST
@@ -767,11 +813,32 @@ const getKioskFaces = async (req, res) => {
         todayRecords.forEach(r => {
             attendanceMap[r.staff_id.toString()] = r;
         });
+
+        // Query today's roster for the company's staff
+        const parts = today.split('-');
+        const formattedToday = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        const todayRosters = await Roster.find({ 
+            staff_id: { $in: staffWithFaces.map(s => s._id) },
+            date: formattedToday
+        }).populate("shift_id").lean();
+
+        const rosterMap = {};
+        todayRosters.forEach(r => {
+            rosterMap[r.staff_id.toString()] = r;
+        });
         
-        const data = staffWithFaces.map(staff => ({
-            ...staff,
-            todayAttendance: attendanceMap[staff._id.toString()] || null
-        }));
+        const data = staffWithFaces.map(staff => {
+            let assignedShift = staff.shift_id;
+            const staffRoster = rosterMap[staff._id.toString()];
+            if (staffRoster) {
+                assignedShift = staffRoster.is_off ? { is_off: true } : staffRoster.shift_id;
+            }
+            return {
+                ...staff,
+                shift_id: assignedShift,
+                todayAttendance: attendanceMap[staff._id.toString()] || null
+            };
+        });
         
         res.status(200).json({ 
             success: true, 

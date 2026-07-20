@@ -225,7 +225,7 @@ const KioskScan = () => {
           if (overtimeMins > 0) {
             const otHours = Math.floor(overtimeMins / 60);
             const otMins = overtimeMins % 60;
-            statusBadgeText = `Overtime: ${otHours > 0 ? `${otHours}h ` : ''}${otMins}m`;
+            statusBadgeText = `Overtime: ${String(otHours).padStart(2, '0')}:${String(otMins).padStart(2, '0')}`;
             statusBadgeType = 'warning';
           } else if (completedMins < standardMins) {
             statusBadgeText = 'Early Check-Out';
@@ -238,7 +238,9 @@ const KioskScan = () => {
           const hasAlreadyCheckedInToday = todayAtt && (todayAtt.in_time || (todayAtt.sessions && todayAtt.sessions.length > 0));
           const lateMins = hasAlreadyCheckedInToday ? 0 : getLateMinutes(currentTime, orgRules);
           if (lateMins > 0) {
-            statusBadgeText = `Late: ${lateMins}m`;
+            const lHours = Math.floor(lateMins / 60);
+            const lMins = lateMins % 60;
+            statusBadgeText = `Late: ${String(lHours).padStart(2, '0')}:${String(lMins).padStart(2, '0')}`;
             statusBadgeType = 'danger';
           } else {
             statusBadgeText = 'On Time';

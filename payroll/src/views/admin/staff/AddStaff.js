@@ -46,6 +46,7 @@ const AddStaff = () => {
   const [branches, setBranches] = useState([]);
   const [payrollConfig, setPayrollConfig] = useState(null);
   const [globalLeavePolicies, setGlobalLeavePolicies] = useState([]);
+  const [shifts, setShifts] = useState([]);
   const [uploadingFiles, setUploadingFiles] = useState({
     photo: false,
     front_image: false,
@@ -174,9 +175,6 @@ const AddStaff = () => {
 
     email: Yup.string().required('Email is required').email('Enter a valid email address'),
 
-
-
-    department: Yup.string().required('Department is required'),
     salary: Yup.number()
       .typeError('Salary must be a number')
       .positive('Must be positive')
@@ -285,6 +283,7 @@ const AddStaff = () => {
       weekly_off_policy: 'global',
       custom_weekly_offs: [{ day: 'Sunday', type: 'all_weeks', weeks: [] }],
       leave_policy_configuration: [],
+      shift_id: '',
       position: '',
       branch_id: '',
       photo: '',
@@ -402,7 +401,21 @@ const AddStaff = () => {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           if (detection) {
             const resized = faceapi.resizeResults(detection, dims);
-            faceapi.draw.drawDetections(canvas, resized);
+            const { x, y, width, height } = resized.detection.box;
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#23b3f4';
+            ctx.strokeRect(x, y, width, height);
+            ctx.font = 'bold 12px Inter, sans-serif';
+            const labelText = 'FACE DETECTED';
+            const textWidth = ctx.measureText(labelText).width;
+            ctx.save();
+            ctx.translate(x + (textWidth + 16) / 2, y - 15);
+            ctx.scale(-1, 1);
+            ctx.fillStyle = 'rgba(35, 179, 244, 0.85)';
+            ctx.fillRect(-(textWidth + 16) / 2, -10, textWidth + 16, 20);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(labelText, -textWidth / 2, 4);
+            ctx.restore();
             setFaceBox(resized.detection.box);
           } else {
             setFaceBox(null);
@@ -642,7 +655,7 @@ const AddStaff = () => {
         setLoading((prev) => ({ ...prev, initial: true }));
         setCountries(Country.getAllCountries());
 
-        const [positionsRes, configRes, leavePolicyRes, nextIdRes, branchesRes] = await Promise.all([
+        const [positionsRes, configRes, leavePolicyRes, nextIdRes, branchesRes, shiftsRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
@@ -657,12 +670,18 @@ const AddStaff = () => {
           }),
           axios.get(`${process.env.REACT_APP_API}/branch/all`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/shift/all`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
 
         setPositions(positionsRes.data.data);
         if (branchesRes.data?.success) {
           setBranches(branchesRes.data.data);
+        }
+        if (shiftsRes.data?.success) {
+          setShifts(shiftsRes.data.data);
         }
         if (nextIdRes.data?.success) {
           formik.setFieldValue('staff_id', nextIdRes.data.data);
@@ -886,7 +905,7 @@ const AddStaff = () => {
               {/* Main Details Section */}
               <Card className="glass-card border-0 mb-4">
                 <Card.Body className="p-4">
-                  <div className="section-header">
+                  <div className="section-header mb-4">
                     <div className="d-flex align-items-center gap-2 mb-0">
                       <div className="bg-soft-primary p-2 rounded-3">
                         <CsLineIcons icon="user" size="20" className="text-primary" />
@@ -897,7 +916,7 @@ const AddStaff = () => {
 
                   <Row className="g-3">
                     <Col md={4}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Staff ID</Form.Label>
                         <Form.Control
                           type="text"
@@ -912,7 +931,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
                     <Col md={4}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>First Name</Form.Label>
                         <Form.Control
                           type="text"
@@ -927,7 +946,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
                     <Col md={4}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Last Name</Form.Label>
                         <Form.Control
                           type="text"
@@ -943,7 +962,7 @@ const AddStaff = () => {
                     </Col>
 
                     <Col md={4}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Gender</Form.Label>
                         <Select
                           classNamePrefix="react-select"
@@ -968,7 +987,7 @@ const AddStaff = () => {
                     </Col>
 
                     <Col md={4}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Birth Date</Form.Label>
                         <div className="position-relative date-input-container">
                           <Form.Control
@@ -979,15 +998,7 @@ const AddStaff = () => {
                             onChange={handleChange}
                             isInvalid={touched.birth_date && errors.birth_date}
                             disabled={loading.submitting}
-                            className="pe-5"
                           />
-                          <div
-                            className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                            style={{ cursor: 'pointer', zIndex: 5 }}
-                            onClick={() => birthDateRef.current?.showPicker()}
-                          >
-                            <CsLineIcons icon="calendar" size="18" className="text-primary" />
-                          </div>
                         </div>
                         {touched.birth_date && errors.birth_date && (
                           <div className="text-danger mt-1 small">{errors.birth_date}</div>
@@ -995,7 +1006,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
                     <Col md={4}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Joining Date</Form.Label>
                         <div className="position-relative date-input-container">
                           <Form.Control
@@ -1006,15 +1017,7 @@ const AddStaff = () => {
                             onChange={handleChange}
                             isInvalid={touched.joining_date && errors.joining_date}
                             disabled={loading.submitting}
-                            className="pe-5"
                           />
-                          <div
-                            className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted"
-                            style={{ cursor: 'pointer', zIndex: 5 }}
-                            onClick={() => joiningDateRef.current?.showPicker()}
-                          >
-                            <CsLineIcons icon="calendar" size="18" className="text-primary" />
-                          </div>
                         </div>
                         {touched.joining_date && errors.joining_date && (
                           <div className="text-danger mt-1 small">{errors.joining_date}</div>
@@ -1023,7 +1026,7 @@ const AddStaff = () => {
                     </Col>
 
                     <Col xs={12}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Residential Address</Form.Label>
                         <Form.Control
                           as="textarea"
@@ -1040,7 +1043,7 @@ const AddStaff = () => {
                     </Col>
 
                     <Col md={3}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Country</Form.Label>
                         <Select
                           classNamePrefix="react-select"
@@ -1060,7 +1063,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
                     <Col md={3}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>State</Form.Label>
                         <Select
                           classNamePrefix="react-select"
@@ -1080,7 +1083,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
                     <Col md={3}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>City</Form.Label>
                         <Select
                           classNamePrefix="react-select"
@@ -1100,7 +1103,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
                     <Col md={3}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Pincode</Form.Label>
                         <Form.Control
                           type="text"
@@ -1153,7 +1156,7 @@ const AddStaff = () => {
               {/* Employment & Payroll Section */}
               <Card className="glass-card border-0 mb-4">
                 <Card.Body className="p-4">
-                  <div className="section-header">
+                  <div className="section-header mb-4">
                     <div className="d-flex align-items-center gap-2 mb-0">
                       <div className="bg-soft-primary p-2 rounded-3">
                         <CsLineIcons icon="suitcase" size="20" className="text-primary" />
@@ -1163,7 +1166,7 @@ const AddStaff = () => {
                   </div>
 
                   <Row className="g-3 mb-3">
-                    <Col md={6}>
+                    <Col md={4}>
                       <Form.Group>
                         <Form.Label>Job Position</Form.Label>
                         <CreatableSelect
@@ -1181,7 +1184,7 @@ const AddStaff = () => {
                         {touched.position && errors.position && <div className="text-danger mt-1 small fw-bold">{errors.position}</div>}
                       </Form.Group>
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       <Form.Group>
                         <Form.Label>Branch</Form.Label>
                         <Form.Select
@@ -1200,11 +1203,29 @@ const AddStaff = () => {
                         {touched.branch_id && errors.branch_id && <div className="text-danger mt-1 small fw-bold">{errors.branch_id}</div>}
                       </Form.Group>
                     </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label>Shift Timing</Form.Label>
+                        <Form.Select
+                          name="shift_id"
+                          value={values.shift_id}
+                          onChange={handleChange}
+                          isInvalid={touched.shift_id && errors.shift_id}
+                          disabled={loading.submitting}
+                          style={{ height: '38px', borderRadius: '8px' }}
+                        >
+                          <option value="">Select Shift</option>
+                          {shifts.map(shift => (
+                            <option key={shift._id} value={shift._id}>{shift.name} ({shift.start_time} - {shift.end_time})</option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
                   </Row>
 
                   <Row className="g-3">
                     <Col md={6}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Salary Calculation Base</Form.Label>
                         <Select
                           classNamePrefix="react-select"
@@ -1227,7 +1248,7 @@ const AddStaff = () => {
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      <Form.Group className="mb-3">
+                      <Form.Group>
                         <Form.Label>Work Location</Form.Label>
                         <div className="d-flex gap-2">
                           <div
@@ -1257,7 +1278,7 @@ const AddStaff = () => {
                     <>
                       <hr className="my-4 opacity-50" />
 
-                      <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                      <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                         <CsLineIcons icon="money" size="18" />
                         Salary Structure Breakdown
                       </h6>
@@ -1441,7 +1462,7 @@ const AddStaff = () => {
                   )}
 
                   <hr className="my-4 opacity-50" />
-                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                     <CsLineIcons icon="calendar" size="18" />
                     Weekly Off Policy
                   </h6>
@@ -1559,7 +1580,7 @@ const AddStaff = () => {
                   </div>
                   {globalLeavePolicies && globalLeavePolicies.length > 0 && (
                     <>
-                      <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                      <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                         <CsLineIcons icon="calendar" size="18" />
                         Leave Policy Configuration
                       </h6>
@@ -1599,7 +1620,7 @@ const AddStaff = () => {
                       <hr className="my-4 opacity-50" />
                     </>
                   )}
-                  <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                  <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                     <CsLineIcons icon="trend-up" size="18" />
                     Upcoming Increment Plan
                   </h6>
@@ -1726,7 +1747,7 @@ const AddStaff = () => {
               {/* Profile Photo Section */}
               <Card className="glass-card border-0 mb-4 text-center">
                 <Card.Body className="p-4">
-                  <div className="section-header text-start">
+                  <div className="section-header text-start mb-4">
                     <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                       <CsLineIcons icon="camera" size="20" className="text-primary" />
                       Profile Photo
@@ -1736,7 +1757,7 @@ const AddStaff = () => {
                   <div className="d-flex flex-column align-items-center">
                     <div className="preview-container mb-3 shadow-sm border-2">
                       {photoPreview ? (
-                        <img src={photoPreview} alt="Preview" className="preview-image" />
+                        <img src={photoPreview} alt="Preview" className="preview-image" style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '50%' }} />
                       ) : (
                         <CsLineIcons icon="user" size="40" className="text-muted opacity-20" />
                       )}
@@ -1764,7 +1785,7 @@ const AddStaff = () => {
               {/* Account & Compliance Section */}
               <Card className="glass-card border-0 mb-4">
                 <Card.Body className="p-4">
-                  <div className="section-header">
+                  <div className="section-header mb-4">
                     <div className="d-flex align-items-center gap-2 mb-0">
                       <div className="bg-soft-primary p-2 rounded-3">
                         <CsLineIcons icon="wallet" size="20" className="text-primary" />
@@ -1856,7 +1877,7 @@ const AddStaff = () => {
                   </div>
 
                   <div className="bg-light rounded p-3 mb-4 border border-faint">
-                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                       <CsLineIcons icon="credit-card" size="18" />
                       PAN Card Details (Required)
                     </h6>
@@ -1876,9 +1897,9 @@ const AddStaff = () => {
 
                     <Form.Group className="mb-0">
                       <Form.Label>PAN Card Image</Form.Label>
-                      <div className="id-preview-container mb-2">
+                      <div className="id-preview-container mb-2" style={{ border: '2px dashed #ddd', borderRadius: '10px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f9f9f9', minHeight: '150px' }}>
                         {panImagePreview ? (
-                          <img src={panImagePreview} alt="PAN Card" className="preview-image" />
+                          <img src={panImagePreview} alt="PAN Card" className="preview-image" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
                         ) : (
                           <div className="text-center p-4">
                             <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
@@ -1909,7 +1930,7 @@ const AddStaff = () => {
                   </div>
 
                   <div className="bg-light rounded p-3 mb-4 border border-faint">
-                    <h6 className="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                    <h6 className="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
                       <CsLineIcons icon="file-text" size="18" />
                       Additional Identification (Required)
                     </h6>
@@ -1959,9 +1980,9 @@ const AddStaff = () => {
 
                     <Form.Group className="mb-4">
                       <Form.Label>Front Image</Form.Label>
-                      <div className="id-preview-container mb-2">
+                      <div className="id-preview-container mb-2" style={{ border: '2px dashed #ddd', borderRadius: '10px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f9f9f9', minHeight: '150px' }}>
                         {frontImagePreview ? (
-                          <img src={frontImagePreview} alt="Front" className="preview-image" />
+                          <img src={frontImagePreview} alt="Front" className="preview-image" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
                         ) : (
                           <div className="text-center p-4">
                             <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
@@ -1995,9 +2016,9 @@ const AddStaff = () => {
                     {(values.document_type === 'National Identity Card' || values.document_type === 'Aadhar Card') && (
                       <Form.Group className="mb-4">
                         <Form.Label>Back Image</Form.Label>
-                        <div className="id-preview-container mb-2">
+                        <div className="id-preview-container mb-2" style={{ border: '2px dashed #ddd', borderRadius: '10px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f9f9f9', minHeight: '150px' }}>
                           {backImagePreview ? (
-                            <img src={backImagePreview} alt="Back" className="preview-image" />
+                            <img src={backImagePreview} alt="Back" className="preview-image" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} />
                           ) : (
                             <div className="text-center p-4">
                               <CsLineIcons icon="file-image" size="32" className="text-muted mb-2" />
@@ -2088,61 +2109,6 @@ const AddStaff = () => {
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 4px rgba(35, 179, 244, 0.2);
                 border: 3px solid #e2e8f0;
               }
-
-              .scanner-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(to bottom, rgba(35,179,244,0.15) 0%, rgba(35,179,244,0) 10%, rgba(35,179,244,0) 90%, rgba(35,179,244,0.15) 100%);
-                pointer-events: none;
-                z-index: 10;
-              }
-
-              @keyframes scan {
-                0% { top: 0%; }
-                50% { top: 100%; }
-                100% { top: 0%; }
-              }
-
-              .scanner-laser-line {
-                position: absolute;
-                left: 0;
-                width: 100%;
-                height: 3px;
-                background: rgba(35, 179, 244, 0.8);
-                box-shadow: 0 0 12px 4px rgba(35, 179, 244, 0.8);
-                z-index: 11;
-                pointer-events: none;
-                animation: scan 4s linear infinite;
-              }
-
-              .camera-status-text {
-                position: absolute;
-                bottom: 1.25rem;
-                left: 50%;
-                transform: translateX(-50%);
-                color: white;
-                padding: 0.45rem 1.5rem;
-                border-radius: 50px;
-                font-weight: 700;
-                font-size: 0.8rem;
-                letter-spacing: 0.08em;
-                z-index: 12;
-                white-space: nowrap;
-                backdrop-filter: blur(5px);
-                transition: all 0.3s ease;
-                text-transform: uppercase;
-              }
-              .camera-status-text.status-warning {
-                background: rgba(245, 158, 11, 0.8);
-                box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
-              }
-              .camera-status-text.status-success {
-                background: rgba(16, 185, 129, 0.8);
-                box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
-              }
             `}</style>
 
             {loading.faceModels ? (
@@ -2161,6 +2127,7 @@ const AddStaff = () => {
                   <Webcam
                     ref={webcamRef}
                     audio={false}
+                    mirrored={true}
                     screenshotFormat="image/jpeg"
                     videoConstraints={{
                       facingMode: 'user',
@@ -2174,7 +2141,6 @@ const AddStaff = () => {
                       height: '100%',
                       objectFit: 'cover',
                       zIndex: 1,
-                      transform: 'scaleX(-1)',
                     }}
                   />
 
@@ -2193,13 +2159,6 @@ const AddStaff = () => {
                       transform: 'scaleX(-1)',
                     }}
                   />
-
-                  <div className="scanner-laser-line" />
-                  <div className="scanner-overlay" />
-
-                  <div className={`camera-status-text ${faceBox ? 'status-success' : 'status-warning'}`}>
-                    {faceBox ? 'FACE DETECTED' : 'ALIGN YOUR FACE'}
-                  </div>
                 </div>
 
                 <div className="mt-4 mb-2 text-center">

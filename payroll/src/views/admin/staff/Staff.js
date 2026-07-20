@@ -1,4 +1,5 @@
 import React from 'react';
+// Force reload
 import { Row, Col, Nav } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { LAYOUT } from 'constants.js';
@@ -13,6 +14,7 @@ import EditStaff from './EditStaff';
 import StaffProfile from './StaffProfile';
 import ManageAttendance from './attandance/ManageAttendance';
 import ViewAttendance from './attandance/ViewAttendance';
+import RosterManagement from './attandance/RosterManagement';
 import PayrollSettings from './payroll/PayrollSettings';
 import EditWordTemplate from './payroll/EditWordTemplate';
 import ManagePayroll from './payroll/ManagePayroll';
@@ -50,6 +52,10 @@ const NavContent = ({ path }) => {
           <Nav.Link as={NavLink} to={`${path}/attendance`} className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Manage Attendance</span>
+          </Nav.Link>
+          <Nav.Link as={NavLink} to={`${path}/roster`} className="px-0">
+            <i className="me-2 sw-3 d-inline-block" />
+            <span className="align-middle">Manage Roster</span>
           </Nav.Link>
         </div>
       </div>
@@ -173,6 +179,8 @@ const Staff = () => {
   const { width } = useWindowSize();
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10) || 1200;
+  const location = useLocation();
+  const hideSidebar = location.pathname.includes('/add') || location.pathname.includes('/edit');
 
   return (
     <div className="position-relative pb-7 pb-lg-0">
@@ -224,17 +232,17 @@ const Staff = () => {
       `}</style>
 
       {/* MOBILE BOTTOM NAV */}
-      {width && width < lgBreakpoint && <MobileBottomNav path={path} />}
+      {width && width < lgBreakpoint && !hideSidebar && <MobileBottomNav path={path} />}
 
       <Row>
-        {width && width >= lgBreakpoint ? (
+        {width && width >= lgBreakpoint && !hideSidebar ? (
           <Col xs="auto" className="d-flex pe-lg-3">
             <div className="nav flex-column sw-25 mt-2">
               <NavContent path={path} />
             </div>
           </Col>
         ) : (
-          <div className="pt-4" />
+          !hideSidebar && <div className="pt-4" />
         )}
         <Col>
           <Switch>
@@ -248,6 +256,7 @@ const Staff = () => {
             {/* Attendance */}
             <Route exact path={`${path}/attendance`} component={ManageAttendance} />
             <Route exact path={`${path}/attendance/view/:id`} component={ViewAttendance} />
+            <Route exact path={`${path}/roster`} component={RosterManagement} />
 
             {/* Payroll */}
             <Route exact path={`${path}/payroll/settings`} component={PayrollSettings} />

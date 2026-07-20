@@ -92,6 +92,8 @@ app.use("/api/department", require("./router/departmentRouter"));
 app.use("/api/branch", require("./router/branchRoutes"));
 app.use("/api/expenses", require("./router/expenseRouter"));
 app.use("/api/feedback", require("./router/feedbackRouter"));
+app.use("/api/shift", require("./router/shiftRouter"));
+app.use("/api/roster", require("./router/rosterRouter"));
 
 const errorHandler = require("./middlewares/errorHandler");
 app.use(errorHandler);

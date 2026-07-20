@@ -453,6 +453,10 @@ const addStaff = async (req, res) => {
       }
     }
 
+    if (staffData.shift_id === "") {
+      staffData.shift_id = null;
+    }
+
     if (req.files?.photo?.[0]) {
       const webpFilename = await convertToWebp(req.files.photo[0]);
       staffData.photo = `/staff/profile/${webpFilename}`;
@@ -569,6 +573,10 @@ const updateStaff = async (req, res) => {
       } catch (e) {
         console.error("Invalid bank_account JSON");
       }
+    }
+
+    if (staffData.shift_id === "") {
+      staffData.shift_id = null;
     }
 
     if (staffData.password) {

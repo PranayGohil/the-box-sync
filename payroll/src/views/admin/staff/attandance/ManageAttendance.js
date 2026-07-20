@@ -667,9 +667,10 @@ export default function ManageAttendance() {
           const { todayAttendance } = row.original;
           if (!todayAttendance) return <span className="text-muted fw-medium">—</span>;
           const lateMin = todayAttendance.late_by_minutes || 0;
+          const formatHHMM = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
           const lateBadge = lateMin > 0 ? (
             <span className="ms-1" style={{ display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.55rem', borderRadius: '50px', fontSize: '0.7rem', fontWeight: 700, background: 'rgba(239,68,68,0.1)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)' }}>
-              🔴 Late {lateMin}m
+              🔴 Late {formatHHMM(lateMin)}
             </span>
           ) : null;
           if (todayAttendance.sessions && todayAttendance.sessions.length > 0) {
@@ -703,9 +704,10 @@ export default function ManageAttendance() {
           const { todayAttendance } = row.original;
           if (!todayAttendance) return <span className="text-muted fw-medium">—</span>;
           const otHours = todayAttendance.overtime_hours || 0;
+          const formatHHMM = (h) => { const m = Math.round(h * 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`; };
           const otBadge = otHours > 0 ? (
             <span className="ms-1" style={{ display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.55rem', borderRadius: '50px', fontSize: '0.7rem', fontWeight: 700, background: 'rgba(109,40,217,0.1)', color: '#7c3aed', border: '1px solid rgba(109,40,217,0.2)' }}>
-              ⚡ OT {otHours}h
+              ⚡ OT {formatHHMM(otHours)}
             </span>
           ) : null;
           if (todayAttendance.sessions && todayAttendance.sessions.length > 0) {

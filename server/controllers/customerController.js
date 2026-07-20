@@ -422,8 +422,29 @@ exports.getQSRCustomerList = async (req, res) => {
         {
           $lookup: {
             from: "customers",
-            localField: "phone",
-            foreignField: "phone",
+            let: { orderPhone: "$phone", orderUserId: user_id },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$phone", "$$orderPhone"] },
+                      {
+                        $or: [
+                          { $eq: ["$user_id", "$$orderUserId"] },
+                          { $eq: [{ $type: "$user_id" }, "missing"] },
+                          { $eq: ["$user_id", null] }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                // Prioritize profiles with most points/visits (matches Ledger logic)
+                $sort: { loyalty_points: -1, visit_count: -1, user_id: -1, _id: -1 }
+              }
+            ],
             as: "profile",
           },
         },
@@ -481,7 +502,7 @@ exports.getQSRCustomerList = async (req, res) => {
       types.forEach((t) => { if (t) freq[t] = (freq[t] || 0) + 1; });
       const most_used_type = Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0] || null;
       return {
-        name: c.name || null,
+        name: c.profile?.name || c.name || null,
         phone: c.phone,
         total_orders: c.total_orders,
         total_amount: parseFloat((c.total_amount || 0).toFixed(2)),
