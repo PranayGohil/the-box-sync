@@ -16,6 +16,7 @@ const panelModels = {
   "Captain Panel": Captain,
   "Hotel Manager": HotelManager,
   "Cashier": Cashier,
+  "Create Cashier": Cashier,
 };
 
 const getModel = (planName) => {
