@@ -20,6 +20,15 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # Source system and user profiles to load Node.js/NVM environment
+            set +e
+            [ -f /etc/profile ] && . /etc/profile
+            [ -f ~/.profile ] && . ~/.profile
+            [ -f ~/.bashrc ] && . ~/.bashrc
+            [ -f ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh
+            command -v nvm >/dev/null 2>&1 && nvm use default
+            set -e
+            
             cd ${{ secrets.PROJECT_PATH }}
             BRANCH="${{ github.ref_name }}"
             # Save the current commit hash before pulling new changes
