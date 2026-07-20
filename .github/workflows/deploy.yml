@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - master
 
 jobs:
   deploy:
@@ -20,5 +21,16 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd ${{ secrets.PROJECT_PATH }}
+            BRANCH="${{ github.ref_name }}"
+            # Save the current commit hash before pulling new changes
+            PREV_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
+            # Pull the latest changes for the pushed branch on the VPS
+            git fetch origin "$BRANCH"
+            git reset --hard origin/"$BRANCH"
+            # Make deploy.sh executable and run it
             chmod +x deploy.sh
-            ./deploy.sh
+            if [ -n "$PREV_COMMIT" ]; then
+              ./deploy.sh "$PREV_COMMIT"
+            else
+              ./deploy.sh
+            fi

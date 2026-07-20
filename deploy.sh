@@ -19,6 +19,7 @@ NC='\033[0m' # No Color
 
 # Flag for forcing full deployment
 FORCE_DEPLOY=false
+PREV_COMMIT_ARG=""
 
 # Error handler trap
 cleanup_on_error() {
@@ -50,7 +51,7 @@ log_error() {
 
 # Print usage
 usage() {
-  echo "Usage: $0 [options]"
+  echo "Usage: $0 [options] [PREV_COMMIT_HASH]"
   echo "Options:"
   echo "  -f, --force    Force deployment/build of all applications in the repository"
   echo "  -h, --help     Show this help message"
@@ -68,11 +69,17 @@ while [[ $# -gt 0 ]]; do
       usage
       ;;
     *)
-      log_error "Unknown option: $1"
-      usage
+      if [[ "$1" =~ ^[0-9a-f]{40}$ ]]; then
+        PREV_COMMIT_ARG="$1"
+        shift
+      else
+        log_error "Unknown option or invalid commit SHA: $1"
+        usage
+      fi
       ;;
   esac
 done
+
 
 # Detect the application directory for a given changed file path
 # Traverses up directories until it finds a package.json
@@ -196,15 +203,21 @@ main() {
     log_info "FORCE DEPLOYMENT REQUESTED. Rebuilding all apps..."
     read -r -a changed_apps <<< "$(find_all_apps)"
   else
-    # Save the current commit hash before pulling new changes
-    PREV_COMMIT=$(git rev-parse HEAD)
-    
-    log_info "Pulling latest code from origin/$CURRENT_BRANCH..."
-    git fetch origin "$CURRENT_BRANCH"
-    git reset --hard origin/"$CURRENT_BRANCH"
-    
-    # Save the new commit hash after pull
-    NEW_COMMIT=$(git rev-parse HEAD)
+    if [ -n "$PREV_COMMIT_ARG" ]; then
+      PREV_COMMIT="$PREV_COMMIT_ARG"
+      NEW_COMMIT=$(git rev-parse HEAD)
+      log_info "Deploying changes since commit: $PREV_COMMIT (new commit: $NEW_COMMIT)"
+    else
+      # Save the current commit hash before pulling new changes
+      PREV_COMMIT=$(git rev-parse HEAD)
+      
+      log_info "Pulling latest code from origin/$CURRENT_BRANCH..."
+      git fetch origin "$CURRENT_BRANCH"
+      git reset --hard origin/"$CURRENT_BRANCH"
+      
+      # Save the new commit hash after pull
+      NEW_COMMIT=$(git rev-parse HEAD)
+    fi
     
     # If the commit hashes are the same, nothing new was pulled
     if [ "$PREV_COMMIT" = "$NEW_COMMIT" ]; then
