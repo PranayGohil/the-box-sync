@@ -1,8 +1,12 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const MobileCartBar = ({ orderItems, paymentData, setShowCartSheet }) => {
-  if (orderItems.length === 0) return null;
+  const { navClasses } = useSelector((state) => state.menu);
+  const isSidebarOpen = !!(navClasses && navClasses['mobile-side-in']);
+
+  if (orderItems.length === 0 || isSidebarOpen) return null;
 
   const totalQty = orderItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = parseFloat(paymentData.total) || 0;

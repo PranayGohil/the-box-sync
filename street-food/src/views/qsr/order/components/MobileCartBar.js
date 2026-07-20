@@ -1,8 +1,12 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const MobileCartBar = ({ orderItems, paymentData, setShowCartSheet }) => {
-  if (orderItems.length === 0) return null;
+  const { navClasses } = useSelector((state) => state.menu);
+  const isSidebarOpen = !!(navClasses && navClasses['mobile-side-in']);
+
+  if (orderItems.length === 0 || isSidebarOpen) return null;
 
   const totalQty = orderItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = parseFloat(paymentData.total) || 0;
@@ -18,7 +22,7 @@ const MobileCartBar = ({ orderItems, paymentData, setShowCartSheet }) => {
             right: 0;
             background: #ffffff; 
             padding: 12px 16px;
-            z-index: 99; 
+            z-index: 1040; 
             cursor: pointer;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
             border-top: 1px solid rgba(226,232,240,0.9);
@@ -31,13 +35,14 @@ const MobileCartBar = ({ orderItems, paymentData, setShowCartSheet }) => {
             from { transform: translateY(100%); }
             to { transform: translateY(0); }
           }
-          .mobile-sticky-spacer { display: none !important; }
+          .mobile-sticky-spacer { height: 72px; }
         }
         @media (min-width: 1200px) {
-          .mobile-cart-bar { display: none !important; }
+          .mobile-cart-bar, .mobile-sticky-spacer { display: none !important; }
         }
       `}</style>
 
+      <div className="mobile-sticky-spacer" />
       <div
         role="button"
         tabIndex={0}
