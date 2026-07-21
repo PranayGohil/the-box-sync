@@ -255,241 +255,375 @@ export const printFullBill = (ord, userData, items, subTotal) => {
   `;
 };
 
-const handleMobilePrintOption = (orderId) => {
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  if (isAndroid) {
-    const useBluetooth = window.confirm(
-      "Select printing method:\n\nClick 'OK' to print via Bluetooth Print app.\nClick 'Cancel' to use standard browser print."
-    );
-    if (useBluetooth) {
-      if (!orderId) {
-        toast.warning("Cannot print via Bluetooth app: Order ID is missing. Please save the order first.");
-        return true;
-      }
-      const apiBase = process.env.REACT_APP_API || 'http://localhost:5001/api';
-      const printUrl = `${apiBase}/order/bluetooth-json/${orderId}`;
-      window.location.href = `my.bluetoothprint.scheme://${printUrl}`;
-      return true;
+const showMobilePrintDialog = (orderId, onStandardPrint, onCancel, setPrinting) => {
+  // Create modal container
+  const modalContainer = document.createElement('div');
+  modalContainer.id = 'custom-print-modal';
+  modalContainer.style.position = 'fixed';
+  modalContainer.style.top = '0';
+  modalContainer.style.left = '0';
+  modalContainer.style.width = '100vw';
+  modalContainer.style.height = '100vh';
+  modalContainer.style.backgroundColor = 'rgba(15, 23, 42, 0.6)';
+  modalContainer.style.backdropFilter = 'blur(4px)';
+  modalContainer.style.display = 'flex';
+  modalContainer.style.alignItems = 'center';
+  modalContainer.style.justifyContent = 'center';
+  modalContainer.style.zIndex = '99999';
+  modalContainer.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
+  // Create modal card
+  const card = document.createElement('div');
+  card.style.backgroundColor = '#ffffff';
+  card.style.borderRadius = '16px';
+  card.style.padding = '24px';
+  card.style.width = '90%';
+  card.style.maxWidth = '320px';
+  card.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+  card.style.textAlign = 'center';
+  card.style.animation = 'scaleUpPrint 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+  // Animation CSS
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'print-modal-animation-style';
+  styleSheet.innerHTML = `
+    @keyframes scaleUpPrint {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
-  }
-  return false;
+  `;
+  document.head.appendChild(styleSheet);
+
+  // Modal Title
+  const title = document.createElement('h3');
+  title.innerText = 'Select Print Option';
+  title.style.margin = '0 0 8px 0';
+  title.style.fontSize = '18px';
+  title.style.fontWeight = '700';
+  title.style.color = '#1e293b';
+
+  // Modal Description
+  const desc = document.createElement('p');
+  desc.innerText = 'Choose how you want to print this bill:';
+  desc.style.margin = '0 0 20px 0';
+  desc.style.fontSize = '14px';
+  desc.style.color = '#64748b';
+  desc.style.lineHeight = '1.4';
+
+  const cleanUp = () => {
+    try {
+      document.body.removeChild(modalContainer);
+      const styleNode = document.getElementById('print-modal-animation-style');
+      if (styleNode) document.head.removeChild(styleNode);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Bluetooth button
+  const btBtn = document.createElement('button');
+  btBtn.innerText = 'Print via Bluetooth App';
+  btBtn.style.width = '100%';
+  btBtn.style.padding = '12px';
+  btBtn.style.marginBottom = '8px';
+  btBtn.style.border = 'none';
+  btBtn.style.borderRadius = '10px';
+  btBtn.style.backgroundColor = '#23b3f4';
+  btBtn.style.color = '#ffffff';
+  btBtn.style.fontWeight = '600';
+  btBtn.style.fontSize = '14px';
+  btBtn.style.cursor = 'pointer';
+  btBtn.style.transition = 'background-color 0.2s';
+  btBtn.onclick = () => {
+    cleanUp();
+    if (!orderId) {
+      toast.warning("Cannot print via Bluetooth app: Order ID is missing. Please save the order first.");
+      if (typeof setPrinting === 'function') {
+        try {
+          setPrinting((prev) => (prev && typeof prev === 'object' ? { ...prev, [orderId]: false } : false));
+        } catch (e) {
+          setPrinting(false);
+        }
+      }
+      return;
+    }
+    const apiBase = process.env.REACT_APP_API || 'http://localhost:5001/api';
+    const printUrl = `${apiBase}/order/bluetooth-json/${orderId}`;
+    window.location.href = `my.bluetoothprint.scheme://${printUrl}`;
+    if (typeof setPrinting === 'function') {
+      try {
+        setPrinting((prev) => (prev && typeof prev === 'object' ? { ...prev, [orderId]: false } : false));
+      } catch (e) {
+        setPrinting(false);
+      }
+    }
+  };
+
+  // Standard print button
+  const stdBtn = document.createElement('button');
+  stdBtn.innerText = 'Standard Print / PDF';
+  stdBtn.style.width = '100%';
+  stdBtn.style.padding = '12px';
+  stdBtn.style.marginBottom = '16px';
+  stdBtn.style.border = '1px solid #e2e8f0';
+  stdBtn.style.borderRadius = '10px';
+  stdBtn.style.backgroundColor = '#f8fafc';
+  stdBtn.style.color = '#334155';
+  stdBtn.style.fontWeight = '600';
+  stdBtn.style.fontSize = '14px';
+  stdBtn.style.cursor = 'pointer';
+  stdBtn.style.transition = 'background-color 0.2s';
+  stdBtn.onclick = () => {
+    cleanUp();
+    onStandardPrint();
+  };
+
+  // Cancel button
+  const cancelLink = document.createElement('div');
+  cancelLink.innerText = 'Cancel';
+  cancelLink.style.color = '#64748b';
+  cancelLink.style.fontSize = '14px';
+  cancelLink.style.cursor = 'pointer';
+  cancelLink.style.fontWeight = '500';
+  cancelLink.style.display = 'inline-block';
+  cancelLink.onclick = () => {
+    cleanUp();
+    onCancel();
+  };
+
+  // Assemble
+  card.appendChild(title);
+  card.appendChild(desc);
+  card.appendChild(btBtn);
+  card.appendChild(stdBtn);
+  card.appendChild(cancelLink);
+  modalContainer.appendChild(card);
+  document.body.appendChild(modalContainer);
 };
 
 export const openPrintWindow = async (order_id, setPrinting) => {
-  if (handleMobilePrintOption(order_id)) {
-    if (typeof setPrinting === 'function') {
-      try {
-        setPrinting((prev) => {
-          if (prev && typeof prev === 'object') {
-            return { ...prev, [order_id]: false };
-          }
-          return false;
-        });
-      } catch (e) {
-        setPrinting(false);
-      }
-    }
-    return;
-  }
-  try {
-    if (typeof setPrinting === 'function') {
-      try {
-        setPrinting((prev) => {
-          if (prev && typeof prev === 'object') {
-            return { ...prev, [order_id]: true };
-          }
-          return true;
-        });
-      } catch (e) {
-        setPrinting(true);
-      }
-    }
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
-    const token = localStorage.getItem('token');
-    const [userRes, orderRes] = await Promise.all([
-      getUserTaxInfo(token),
-      getOrderById(order_id, token),
-    ]);
-
-    const order = orderRes.data.data;
-    const userData = userRes.data;
-
-    const groupedByCounter = {};
-    order.order_items.forEach(item => {
-      const counterName = item.counter || 'Default';
-      if (!groupedByCounter[counterName]) groupedByCounter[counterName] = [];
-      groupedByCounter[counterName].push(item);
-    });
-
-    let printFrame = document.getElementById('print-frame');
-    if (!printFrame) {
-      printFrame = document.createElement('iframe');
-      printFrame.id = 'print-frame';
-      printFrame.style.position = 'absolute';
-      printFrame.style.width = '0px';
-      printFrame.style.height = '0px';
-      printFrame.style.border = '0px';
-      printFrame.style.top = '0px';
-      printFrame.style.left = '0px';
-      document.body.appendChild(printFrame);
-
-      const style = document.createElement('style');
-      style.innerHTML = `
-        @media print {
-          body > *:not(#print-frame) {
-            display: none !important;
-          }
-          #print-frame {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            display: block !important;
-          }
+  const executeStandardPrint = async () => {
+    try {
+      if (typeof setPrinting === 'function') {
+        try {
+          setPrinting((prev) => {
+            if (prev && typeof prev === 'object') {
+              return { ...prev, [order_id]: true };
+            }
+            return true;
+          });
+        } catch (e) {
+          setPrinting(true);
         }
-      `;
-      document.head.appendChild(style);
-    }
-    const printWindow = printFrame.contentWindow;
+      }
 
-    const printSettings = userData?.printSettings || {};
-    const paperWidth = printSettings.paperWidth || '58mm';
-    const maxContainerWidth = paperWidth === '80mm' ? '390px' : '290px';
+      const token = localStorage.getItem('token');
+      const [userRes, orderRes] = await Promise.all([
+        getUserTaxInfo(token),
+        getOrderById(order_id, token),
+      ]);
 
-    let allBillsHTML = printFullBill(order, userData, order.order_items, order.sub_total);
-    Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-      allBillsHTML += printCounterBill(order, userData, counterName, items);
-    });
+      const order = orderRes.data.data;
+      const userData = userRes.data;
 
-    printWindow.document.write(`
-      <html>
-      <head>
-        <title>Print Bills</title>
-        <style>
-          @page {
-            margin: 0;
-          }
-          body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            color: #000;
-            background: #fff;
-          }
-          .receipt-container {
-            width: 100%;
-            max-width: ${maxContainerWidth};
-            margin: 0;
-            padding: 6px;
-            box-sizing: border-box;
-          }
-          .receipt-header {
-            text-align: center;
-            margin-bottom: 6px;
-          }
-          .receipt-header h2 {
-            margin: 0 0 2px 0;
-            font-size: 13px;
-            font-weight: bold;
-          }
-          .receipt-header h3 {
-            margin: 0 0 2px 0;
-            font-size: 12px;
-            font-weight: bold;
-          }
-          .receipt-header p {
-            margin: 1px 0;
-            font-size: 10px;
-          }
-          .dashed-line {
-            border: none;
-            border-top: 1px dashed #000;
-            margin: 6px 0;
-          }
-          .info-table {
-            width: 100%;
-            font-size: 10px;
-            margin-bottom: 6px;
-          }
-          .info-table td {
-            padding: 1px 0;
-          }
-          .items-table {
-            width: 100%;
-            font-size: 10px;
-            margin-bottom: 6px;
-            border-collapse: collapse;
-          }
-          .items-table th {
-            border-bottom: 1px dashed #000;
-            padding: 3px 1px;
-            font-weight: bold;
-          }
-          .items-table td {
-            padding: 3px 1px;
-            vertical-align: top;
-          }
-          .total-table {
-            width: 100%;
-            font-size: 10px;
-            margin-top: 2px;
-            border-collapse: collapse;
-          }
-          .total-table td {
-            padding: 2px 1px;
-          }
-          .text-center {
-            text-align: center;
-          }
-          .text-right {
-            text-align: right;
-          }
-          .text-left {
-            text-align: left;
-          }
+      const groupedByCounter = {};
+      order.order_items.forEach(item => {
+        const counterName = item.counter || 'Default';
+        if (!groupedByCounter[counterName]) groupedByCounter[counterName] = [];
+        groupedByCounter[counterName].push(item);
+      });
+
+      let printFrame = document.getElementById('print-frame');
+      if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'print-frame';
+        printFrame.style.position = 'absolute';
+        printFrame.style.width = '0px';
+        printFrame.style.height = '0px';
+        printFrame.style.border = '0px';
+        printFrame.style.top = '0px';
+        printFrame.style.left = '0px';
+        document.body.appendChild(printFrame);
+
+        const style = document.createElement('style');
+        style.innerHTML = `
           @media print {
+            body > *:not(#print-frame) {
+              display: none !important;
+            }
+            #print-frame {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              height: 100% !important;
+              display: block !important;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      const printWindow = printFrame.contentWindow;
+
+      const printSettings = userData?.printSettings || {};
+      const paperWidth = printSettings.paperWidth || '58mm';
+      const maxContainerWidth = paperWidth === '80mm' ? '390px' : '290px';
+
+      let allBillsHTML = printFullBill(order, userData, order.order_items, order.sub_total);
+      Object.entries(groupedByCounter).forEach(([counterName, items]) => {
+        allBillsHTML += printCounterBill(order, userData, counterName, items);
+      });
+
+      printWindow.document.write(`
+        <html>
+        <head>
+          <title>Print Bills</title>
+          <style>
+            @page {
+              margin: 0;
+            }
             body {
-              width: 100%;
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+              font-size: 11px;
+              color: #000;
+              background: #fff;
             }
             .receipt-container {
-              max-width: 100% !important;
-              padding: 0 6px 0 6px !important;
-              margin: 0 0 70px 0 !important;
-              border: none !important;
+              width: 100%;
+              max-width: ${maxContainerWidth};
+              margin: 0;
+              padding: 6px;
+              box-sizing: border-box;
             }
-          }
-        </style>
-        <script>
-          window.onload = function() {
-            window.focus();
-            window.print();
-            setTimeout(function() { window.close(); }, 100);
-          };
-        </script>
-      </head>
-      <body>${allBillsHTML}</body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-  } catch (err) {
-    console.error('Print error:', err);
-    toast.error('Failed to print bills');
-  } finally {
-    if (typeof setPrinting === 'function') {
-      try {
-        setPrinting((prev) => {
-          if (prev && typeof prev === 'object') {
-            return { ...prev, [order_id]: false };
-          }
-          return false;
-        });
-      } catch (e) {
-        setPrinting(false);
+            .receipt-header {
+              text-align: center;
+              margin-bottom: 6px;
+            }
+            .receipt-header h2 {
+              margin: 0 0 2px 0;
+              font-size: 13px;
+              font-weight: bold;
+            }
+            .receipt-header h3 {
+              margin: 0 0 2px 0;
+              font-size: 12px;
+              font-weight: bold;
+            }
+            .receipt-header p {
+              margin: 1px 0;
+              font-size: 10px;
+            }
+            .dashed-line {
+              border: none;
+              border-top: 1px dashed #000;
+              margin: 6px 0;
+            }
+            .info-table {
+              width: 100%;
+              font-size: 10px;
+              margin-bottom: 6px;
+            }
+            .info-table td {
+              padding: 1px 0;
+            }
+            .items-table {
+              width: 100%;
+              font-size: 10px;
+              margin-bottom: 6px;
+              border-collapse: collapse;
+            }
+            .items-table th {
+              border-bottom: 1px dashed #000;
+              padding: 3px 1px;
+              font-weight: bold;
+            }
+            .items-table td {
+              padding: 3px 1px;
+              vertical-align: top;
+            }
+            .total-table {
+              width: 100%;
+              font-size: 10px;
+              margin-top: 2px;
+              border-collapse: collapse;
+            }
+            .total-table td {
+              padding: 2px 1px;
+            }
+            .text-center {
+              text-align: center;
+            }
+            .text-right {
+              text-align: right;
+            }
+            .text-left {
+              text-align: left;
+            }
+            @media print {
+              body {
+                width: 100%;
+              }
+              .receipt-container {
+                max-width: 100% !important;
+                padding: 0 6px 0 6px !important;
+                margin: 0 0 70px 0 !important;
+                border: none !important;
+              }
+            }
+          </style>
+          <script>
+            window.onload = function() {
+              window.focus();
+              window.print();
+              setTimeout(function() { window.close(); }, 100);
+            };
+          </script>
+        </head>
+        <body>${allBillsHTML}</body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+    } catch (err) {
+      console.error('Print error:', err);
+      toast.error('Failed to print bills');
+    } finally {
+      if (typeof setPrinting === 'function') {
+        try {
+          setPrinting((prev) => {
+            if (prev && typeof prev === 'object') {
+              return { ...prev, [order_id]: false };
+            }
+            return false;
+          });
+        } catch (e) {
+          setPrinting(false);
+        }
       }
     }
+  };
+
+  if (isMobile) {
+    showMobilePrintDialog(
+      order_id,
+      executeStandardPrint,
+      () => {
+        if (typeof setPrinting === 'function') {
+          try {
+            setPrinting((prev) => (prev && typeof prev === 'object' ? { ...prev, [order_id]: false } : false));
+          } catch (e) {
+            setPrinting(false);
+          }
+        }
+      },
+      setPrinting
+    );
+  } else {
+    await executeStandardPrint();
   }
 };
 
