@@ -926,8 +926,9 @@ const takeawayController = async (req, res) => {
     // ✅ 3. Handle order cancellation
     if (orderInfo.order_status === "Cancelled") {
       let isDeleted = false;
+      let existingOrder = null;
       if (orderId) {
-        const existingOrder = await Order.findById(orderId);
+        existingOrder = await Order.findById(orderId);
         if (existingOrder && existingOrder.order_status === "Save" && existingOrder.order_items.every(item => item.status === "Pending")) {
           await Order.findByIdAndDelete(orderId);
           isDeleted = true;
@@ -942,6 +943,11 @@ const takeawayController = async (req, res) => {
         if (io && connectedUsers && connectedUsers[key]) {
           io.to(connectedUsers[key]).emit("kot_update");
         }
+        
+        // Broadcast to customer that their order is cancelled (even if we hard-deleted it)
+        const orderToBroadcast = existingOrder.toObject ? existingOrder.toObject() : existingOrder;
+        orderToBroadcast.order_status = "Cancelled";
+        broadcastOrderUpdate(req, orderToBroadcast);
 
         return res.status(200).json({
           status: "success",
@@ -985,6 +991,8 @@ const takeawayController = async (req, res) => {
           "kot_update"
         );
       }
+      
+      broadcastOrderUpdate(req, savedOrder);
 
       return res.status(200).json({
         status: "success",
@@ -1039,6 +1047,8 @@ const takeawayController = async (req, res) => {
           );
         }
       }
+      
+      broadcastOrderUpdate(req, savedOrder);
 
       return res.status(200).json({
         status: "success",
@@ -1048,13 +1058,11 @@ const takeawayController = async (req, res) => {
     }
 
     // ✅ 5. Handle new order creation
-    // Generate token for new takeaway orders
+    // Generate token for new orders
     let token = null;
-    if (orderInfo.order_status !== "Save") {
-      token = await generateToken(req.user, orderInfo.order_source);
-      orderInfo.token = token;
-      orderInfo.order_no = await generateOrderNo(req.user);
-    }
+    token = await generateToken(req.user, orderInfo.order_source);
+    orderInfo.token = token;
+    orderInfo.order_no = await generateOrderNo(req.user);
 
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
@@ -1082,6 +1090,8 @@ const takeawayController = async (req, res) => {
         );
       }
     }
+    
+    broadcastOrderUpdate(req, savedOrder);
 
     return res.status(200).json({
       status: "success",
@@ -1459,13 +1469,17 @@ const deliveryFromSiteController = async (req, res) => {
   try {
     let { orderInfo, customerInfo } = req.body;
     const orderId = orderInfo.order_id;
-    const restaurant_code = req.params.rescode;
+    const identifier = req.params.rescode;
 
-    const restauant = await User.findOne({ restaurant_code });
+    const restauant = await User.findOne({
+      $or: [{ restaurant_code: identifier }, { restaurant_token: identifier }]
+    });
 
     if (!restauant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
+
+    const restaurant_code = restauant.restaurant_code;
 
     const settings = await Website.findOne({ user_id: restauant._id.toString() });
     if (settings && !isRestaurantOpen(settings)) {
@@ -1486,11 +1500,11 @@ const deliveryFromSiteController = async (req, res) => {
       !customerInfo ||
       !customerInfo.name ||
       !customerInfo.phone ||
-      !customerInfo.address
+      (orderInfo.order_type === 'Delivery' && !customerInfo.address)
     ) {
       return res.status(400).json({
         message:
-          "Customer name, phone, and address are required for delivery orders",
+          "Customer name and phone are required. Address is required for delivery.",
       });
     }
 
@@ -1636,7 +1650,9 @@ const deliveryFromSiteController = async (req, res) => {
     }
 
     // ✅ 5. Handle new order creation
-    orderInfo.order_no = await generateOrderNo(restauant._id);
+    // order_no is explicitly skipped here to prevent wasting tokens on cancelled orders.
+    // It will be assigned when the street food vendor accepts it on their dashboard.
+    orderInfo.order_no = "";
     const newOrder = new Order(orderInfo);
     savedOrder = await newOrder.save();
 
@@ -1648,7 +1664,7 @@ const deliveryFromSiteController = async (req, res) => {
     const userId = restauant._id;
     const role = "Manager";
     const key = `${userId}_${role}`;
-    if (key && connectedUsers[key]) {
+    if (key && connectedUsers && connectedUsers[key]) {
       const notification = await Notification.create({
         restaurant_id: restauant._id,
         sender: "Web Customer",
@@ -1656,7 +1672,7 @@ const deliveryFromSiteController = async (req, res) => {
         type: "web_order_recieved",
         data: savedOrder,
       });
-      io.to(connectedUsers[key]).emit("web_order_recieved", notification);
+      if (io) io.to(connectedUsers[key]).emit("web_order_recieved", notification);
     }
 
     return res.status(200).json({
@@ -1667,6 +1683,8 @@ const deliveryFromSiteController = async (req, res) => {
       orderId: savedOrder._id,
     });
   } catch (error) {
+    const fs = require('fs');
+    fs.appendFileSync('c:\\Projects\\TheBoxSync\\server\\error_log.txt', error.stack + '\n');
     console.error("Error processing delivery order:", error);
     res.status(500).json({
       message: "Internal server error",
@@ -1899,6 +1917,16 @@ const updateOrderStatus = async (req, res) => {
           status: "Cancelled",
         }));
       }
+    }
+    
+    // Delayed token generation logic
+    if (req.body.isAcceptance) {
+       if (!order.order_no) {
+           order.order_no = await generateOrderNo(order.user_id);
+       }
+       if (!order.token) {
+           order.token = await generateToken(order.user_id, order.order_source);
+       }
     }
 
     await order.save();

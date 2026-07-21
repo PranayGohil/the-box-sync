@@ -206,7 +206,7 @@ const getMenuDataByToken = async (req, res) => {
     const restaurant_token = req.params.token;
 
     const restaurant = await User.findOne({ restaurant_token })
-      .select("_id name city logo")  // ← fix: space not comma, add city & logo for branding
+      .select("_id name city logo restaurant_code")  // ← fix: space not comma, add city & logo for branding
       .lean();
 
     if (!restaurant) {
@@ -223,6 +223,7 @@ const getMenuDataByToken = async (req, res) => {
       restaurant_name: restaurant.name,
       restaurant_city: restaurant.city || "",
       restaurant_logo: restaurant.logo || "",
+      restaurant_code: restaurant.restaurant_code || "",
     });
 
   } catch (error) {

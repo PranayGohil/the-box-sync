@@ -1,0 +1,5 @@
+ValidationError: order validation failed: order_source: `Website` is not a valid enum value for path `order_source`.
+    at Document.invalidate (C:\Projects\TheBoxSync\server\node_modules\mongoose\lib\document.js:3354:32)
+    at C:\Projects\TheBoxSync\server\node_modules\mongoose\lib\document.js:3115:17
+    at C:\Projects\TheBoxSync\server\node_modules\mongoose\lib\schemaType.js:1410:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:84:11)

@@ -708,9 +708,9 @@
                             <div class="menu-filter-sort-row">
                                 <div class="menu-filter">
                                     <button class="filter-btn active" data-filter="all">All</button>
-                                    <button class="filter-btn" data-filter="veg"><span class="veg-icon"></span> Veg</button>
-                                    <button class="filter-btn" data-filter="nonveg"><span class="nonveg-icon"></span> Non-Veg</button>
-                                    <button class="filter-btn" data-filter="egg"><span class="egg-icon"></span> Egg</button>
+                                    <button class="filter-btn" data-filter="veg" style="display: none;" id="filterVegBtn"><span class="veg-icon"></span> Veg</button>
+                                    <button class="filter-btn" data-filter="nonveg" style="display: none;" id="filterNonVegBtn"><span class="nonveg-icon"></span> Non-Veg</button>
+                                    <button class="filter-btn" data-filter="egg" style="display: none;" id="filterEggBtn"><span class="egg-icon"></span> Egg</button>
                                     <button class="filter-btn" data-filter="special"><i class="fas fa-star mr-1" style="color: #e8a020;"></i> Special</button>
                                 </div>
                                 <div class="sort-select-wrapper">
@@ -820,7 +820,7 @@
                     qs('headerTableNo').style.display = 'block';
                 }
 
-                allMenuData = data.data || [];
+                allMenuData = data.data || [];let hasVeg = false;let hasNonVeg = false;let hasEgg = false;allMenuData.forEach(cat => {(cat.dishes || []).forEach(dish => {const m = (dish.meal_type || cat.meal_type || '').toLowerCase();if (m === 'veg') hasVeg = true;if (m === 'non-veg' || m === 'nonveg') hasNonVeg = true;if (m === 'egg') hasEgg = true;});});if (hasVeg) {const btn = document.getElementById('filterVegBtn');if (btn) btn.style.display = 'inline-block';}if (hasNonVeg) {const btn = document.getElementById('filterNonVegBtn');if (btn) btn.style.display = 'inline-block';}if (hasEgg) {const btn = document.getElementById('filterEggBtn');if (btn) btn.style.display = 'inline-block';}
 
                 $('#tokenLoading').hide();
                 $('#mainContent').show();

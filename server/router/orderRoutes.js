@@ -21,6 +21,7 @@ const { getBluetoothPrintJson } = require("../controllers/printController");
 const orderRouter = express.Router();
 
 orderRouter.route("/get/:id").get(authMiddleware, getOrderData);
+orderRouter.route("/track/:id").get(getOrderData); // Public tracking route
 
 orderRouter.route("/get-active").get(authMiddleware, getActiveOrders);
 

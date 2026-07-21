@@ -987,22 +987,52 @@ const validateOrder = () => {
       {/* POS Wrapper */}
       <div className="pos-wrapper">
         {/* Top Bar */}
-        <div className="pos-topbar">
-          {tokenNumber && (
-            <div
-              style={{
-                border: '1.5px solid #23b3f4',
-                borderRadius: '50px',
-                padding: '3px 12px',
-                color: '#23b3f4',
-                fontWeight: 700,
-                fontSize: '12px',
-                flexShrink: 0,
-              }}
-            >
-              Token #{tokenNumber}
+        <div className="pos-topbar d-flex align-items-center px-3 py-2 border-bottom" style={{ gap: '15px', background: '#fff' }}>
+          <Button 
+            variant="outline-info" 
+            className="rounded-pill d-flex align-items-center px-3 py-1 text-decoration-none" 
+            onClick={() => history.goBack()}
+            style={{ fontWeight: 600, fontSize: '0.9rem', borderColor: '#23b3f4', color: '#23b3f4' }}
+          >
+            <CsLineIcons icon="arrow-left" size="15" className="me-2" />
+            Back
+          </Button>
+          
+          <div className="fs-4 fw-bold" style={{ color: '#23b3f4' }}>
+            {orderId ? 'Edit' : 'New'} Order
+          </div>
+          
+          <div className="d-flex align-items-center ms-auto" style={{ gap: '10px' }}>
+            <span className="text-muted fw-semibold" style={{ fontSize: '13px' }}>Date:</span>
+            <div style={{ width: '200px' }}>
+              <DatePicker
+                showTimeSelect
+                timeFormat="hh:mm a"
+                timeIntervals={15}
+                timeCaption="Time"
+                dateFormat="dd/MM/yyyy hh:mm a"
+                selected={orderDate ? new Date(orderDate) : new Date()}
+                onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
+                customInput={<CustomDateInput />}
+              />
             </div>
-          )}
+            {tokenNumber && (
+              <div
+                style={{
+                  border: '1.5px solid #23b3f4',
+                  borderRadius: '50px',
+                  padding: '3px 12px',
+                  color: '#23b3f4',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  flexShrink: 0,
+                  marginLeft: '10px'
+                }}
+              >
+                Token #{tokenNumber}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* POS Body */}
@@ -1249,73 +1279,7 @@ const validateOrder = () => {
       >
         <h6 className="mb-2 fw-bold text-muted border-bottom pb-2">Customer Details</h6>
 
-        {/* Row 1: Order Type + Order Date */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-          {/* <div style={{ flex: 1 }}>
-            <label
-              style={{
-                fontSize: '10px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                color: '#94a3b8',
-                marginBottom: '3px',
-                display: 'block',
-              }}
-            >
-              Order Type
-            </label>
-            <Form.Select
-              size="sm"
-              value={orderType}
-              onChange={(e) => handleOrderTypeChange(e.target.value)}
-              disabled={isEditMode}
-              style={{
-                width: '100%',
-                height: '30px',
-                padding: '0 8px',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#1e293b',
-                border: '1.5px solid rgba(226,232,240,0.9)',
-                borderRadius: '6px',
-                outline: 'none',
-                background: '#f8fafc',
-                transition: 'all 0.18s',
-                boxSizing: 'border-box',
-              }}
-            >
-              <option value="Takeaway">Takeaway</option>
-              <option value="Dine In">Dine In</option>
-              <option value="Delivery">Delivery</option>
-            </Form.Select>
-          </div> */}
-          <div style={{ flex: 1.5 }}>
-            <label
-              style={{
-                fontSize: '10px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                color: '#94a3b8',
-                marginBottom: '3px',
-                display: 'block',
-              }}
-            >
-              Order Date
-            </label>
-            <DatePicker
-              showTimeSelect
-              timeFormat="hh:mm a"
-              timeIntervals={15}
-              timeCaption="Time"
-              dateFormat="dd/MM/yyyy hh:mm a"
-              selected={orderDate ? new Date(orderDate) : new Date()}
-              onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
-              customInput={<CustomDateInput />}
-            />
-          </div>
-        </div>
+        {/* Order Date has been moved to Top Bar */}
 
         <CustomerInfoForm
           customerInfo={customerInfo}

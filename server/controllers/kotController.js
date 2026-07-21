@@ -15,9 +15,10 @@ const showKOTs = async (req, res) => {
     console.log("order_source", order_source);
 
     const match = {
-      user_id: userId,
+      user_id: userId.toString(),
       $or: [
         { order_status: "KOT" },
+        { order_status: "Preparing" },
         {
           $and: [
             { order_status: "Paid" },
@@ -188,13 +189,27 @@ const updateAllDishStatus = async (req, res) => {
       if (io && connectedUsers && connectedUsers[keyKOT]) {
         io.to(connectedUsers[keyKOT]).emit("kot_update");
       }
+      
+      if (io) {
+        const updatedOrder = await Order.findById(orderId);
+        if (updatedOrder) {
+          io.to(`order_${orderId}`).emit("order_updated", updatedOrder);
+        }
+      }
 
       return res.json({ success: true, message: "Preparing items updated", result });
     } else {
       // Update all items
+      const updateData = { "order_items.$[].status": status };
+      
+      // If Street food order is completed, mark the main order status as completed too
+      if (orderSource === 'Restaurant Website' && status === 'Completed') {
+          updateData.order_status = 'Completed';
+      }
+
       const result = await Order.updateOne(
         { _id: orderId, user_id: userId },
-        { $set: { "order_items.$[].status": status } }
+        { $set: updateData }
       );
 
       if (result.matchedCount === 0) {
@@ -230,6 +245,13 @@ const updateAllDishStatus = async (req, res) => {
       const keyKOT = `${req.user._id}_KOT`;
       if (io && connectedUsers && connectedUsers[keyKOT]) {
         io.to(connectedUsers[keyKOT]).emit("kot_update");
+      }
+
+      if (io) {
+        const updatedOrder = await Order.findById(orderId);
+        if (updatedOrder) {
+          io.to(`order_${orderId}`).emit("order_updated", updatedOrder);
+        }
       }
 
       return res.json({ success: true, message: "All item statuses updated", result });

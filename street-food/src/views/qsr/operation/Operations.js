@@ -201,7 +201,7 @@ const MobileBottomNav = () => {
         {navItems.map((item) => {
           let isActive = false;
           if (item.label === 'Order') {
-            isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details');
+            isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details') || pathname.startsWith('/operations/web-orders');
           } else if (item.label === 'Menu') {
             isActive = pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
           } else {

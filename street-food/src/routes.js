@@ -8,6 +8,7 @@ const qsr = {
   operation: lazy(() => import('views/qsr/operation/Operations')),
   kot: lazy(() => import('views/qsr/kot/ViewKots')),
   crm: lazy(() => import('views/qsr/crm/Crm')),
+  streetFood: lazy(() => import('views/qsr/kot/StreetFoodDashboard')),
 };
 
 const order = {
@@ -32,7 +33,13 @@ const allRoutes = {
       path: DEFAULT_PATHS.APP,
       exact: true,
       redirect: true,
-      to: `${appRoot}/order/new`,
+      to: `${appRoot}/street-food`,
+    },
+    {
+      path: `${appRoot}/street-food`,
+      label: 'Dashboard',
+      icon: 'screen',
+      component: qsr.streetFood,
     },
     {
       path: `${appRoot}/order/new`,

@@ -19,14 +19,14 @@ import ControlsSearch from './components/ControlsSearch';
 import Table from './components/Table';
 import TablePagination from './components/TablePagination';
 
-const OrderHistory = () => {
-  const title = 'Order History';
-  const description = 'Order history with advanced filters.';
+const WebOrders = () => {
+  const title = 'Web Orders';
+  const description = 'Manage incoming web orders from the landing page.';
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
     { to: 'operations', text: 'Operations' },
-    { to: 'operations/order-history', text: 'Order History' },
+    { to: 'operations/web-orders', text: 'Web Orders' },
   ];
 
   const history = useHistory();
@@ -65,7 +65,7 @@ const OrderHistory = () => {
   const [exportFilters, setExportFilters] = useState({
     orderStatus: '',
     orderType: '',
-    orderSource: 'QSR',
+    orderSource: 'Website',
     paymentType: '',
     tableArea: '',
     fromDate: '',
@@ -89,7 +89,7 @@ const OrderHistory = () => {
         limit: pageSize,
         sortBy,
         sortOrder,
-        order_source: ['QSR', 'Restaurant Website'],
+        order_source: ['Website'],
       };
 
       if (searchTerm.trim()) {
@@ -1506,4 +1506,4 @@ const OrderHistory = () => {
   );
 };
 
-export default OrderHistory;
+export default WebOrders;
