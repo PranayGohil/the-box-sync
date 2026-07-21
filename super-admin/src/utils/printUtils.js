@@ -281,6 +281,7 @@ const showMobilePrintDialog = (orderId, onStandardPrint, onCancel, setPrinting) 
   card.style.maxWidth = '320px';
   card.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
   card.style.textAlign = 'center';
+  card.style.marginTop = '-60px';
   card.style.animation = 'scaleUpPrint 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
 
   // Animation CSS
