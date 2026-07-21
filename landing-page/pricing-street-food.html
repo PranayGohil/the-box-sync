@@ -14,7 +14,7 @@
     content="All-in-one POS solution for modern restaurants. Manage orders, menus, pricing, and delivery integrations with real-time control using TheBox." />
 
   <!-- ======== Page title ============ -->
-  <title>TheBox - Pricing</title>
+  <title>TheBox - Street Food Pricing</title>
   <!--<< Favcion >>-->
   <link rel="shortcut icon" href="assets/images/favicon.png" />
   <!--<< Bootstrap min.css >>-->
@@ -143,9 +143,9 @@
         <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape" /></div>
         <div class="breadcumb-wrapper">
           <div class="page-heading">
-            <h1>Pricing</h1>
+            <h1>Street Food Pricing</h1>
             <div class="links">
-              <a href="index.html">Home<span class="slash">/</span></a>Pricing
+              <a href="index.html">Home<span class="slash">/</span></a>Street Food Pricing
             </div>
           </div>
         </div>
@@ -157,13 +157,33 @@
   <section class="pricing-section section-padding  fix">
     <div class="container-fluid px-4 px-xl-5">
       <div class="section-title text-center mxw-685 mx-auto">
-        <h2 class="title">Smart POS solutions without the high cost.</h2>
-        <p class="text">Simple, transparent pricing with no surprises or extra charges.</p>
+        <h2 class="title">Simple POS plans for Street Food counters.</h2>
+        <p class="text">No hidden setups, transparent annual billing built for street vendors.</p>
       </div>
       <div class="pricing-wrapper style1">
         <div class="tab-content mt-4" id="pills-tabContent">
           <div class="tab-pane fade active show" role="tabpanel" aria-labelledby="pills-monthly-tab">
-            <div class="row gy-5 gx-3" id="pricing-plans-container">
+            
+        <style>
+          .pricing-tab-buttons button.active {
+            background: #1ea8e7 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 10px rgba(30, 168, 231, 0.3);
+          }
+          .pricing-tab-buttons button:hover:not(.active) {
+            color: #1ea8e7 !important;
+          }
+        </style>
+        <div class="pricing-tab-button-wrapper text-center mb-5">
+          <div class="pricing-tab-buttons d-inline-flex align-items-center p-1" style="background: rgba(30, 168, 231, 0.08); border-radius: 30px;">
+            <button id="btn-monthly" class="btn px-4 py-2 border-0" style="font-weight: 600; font-size: 15px; border-radius: 20px; transition: all 0.3s; background: transparent; color: #555;">Monthly</button>
+            <button id="btn-yearly" class="btn px-4 py-2 border-0 active" style="font-weight: 600; font-size: 15px; border-radius: 20px; transition: all 0.3s; background: transparent; color: #555;">Yearly</button>
+          </div>
+        </div>
+        <div class="tab-content mt-4" id="pills-tabContent">
+          <div class="tab-pane fade active show" role="tabpanel" aria-labelledby="pills-monthly-tab">
+            <div id="pricing-plans-container" class="row gy-5 gx-3">
+              <!-- Dynamic pricing cards will be injected here -->
             </div>
           </div>
         </div>
@@ -202,113 +222,70 @@
   <script src="assets/js/main.js"></script>
 
   <script>
+  </script>
+  
+  <script>
     // Configuration Data for Pricing Plans
     const plansData = [
   {
-    "name": "QSR",
-    "price": "₹8,000",
-    "actualPrice": "₹10,000",
-    "tagline": "Here are the key features that highlight our plans:",
+    "name": "STREET FOOD BASIC",
+    "prices": {
+      "monthly": {
+        "price": "₹199",
+        "period": "month",
+        "actualPrice": "₹249"
+      },
+      "yearly": {
+        "price": "₹1,999",
+        "period": "year",
+        "actualPrice": "₹2,499"
+      }
+    },
+    "tagline": "Essential features for street stalls and quick food counters.",
     "isPopular": false,
     "features": [
       {
         "category": "BILLING & CORE",
         "items": [
           {
+            "name": "Billing Operations",
+            "checked": true
+          },
+          {
+            "name": "Dish & Menu Setup",
+            "checked": true
+          },
+          {
+            "name": "Scan and Menu",
+            "checked": true
+          },
+          {
+            "name": "WhatsApp Invoices",
+            "checked": true
+          },
+          {
             "name": "Inventory Management",
             "checked": true
           },
           {
-            "name": "Statistics Management",
+            "name": "USB/Bluetooth Printing",
             "checked": true
           },
           {
-            "name": "Third-party Integrations",
+            "name": "Cash Registry Log",
             "checked": true
           },
           {
-            "name": "In-built CRM",
-            "checked": true
-          },
-          {
-            "name": "Menu Management",
-            "checked": true
-          },
-          {
-            "name": "Staff Management",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Users & Terminals",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Cash Register",
-            "checked": true
-          },
-          {
-            "name": "Multi-terminal Billing",
+            "name": "Basic Sales Reports",
             "checked": true
           }
         ]
       },
       {
-        "category": "ADD-ONS",
+        "category": "ADD-ONS & INTEGRATIONS",
         "items": [
           {
-            "name": "QSR Panel",
-            "checked": true
-          },
-          {
-            "name": "Manager Panel",
-            "checked": false
-          },
-          {
-            "name": "Cashier",
-            "checked": false
-          },
-          {
-            "name": "Captain Panel",
-            "checked": false
-          },
-          {
-            "name": "Kitchen Display System",
-            "checked": true
-          },
-          {
-            "name": "Reservation Management",
-            "checked": false
-          },
-          {
-            "name": "Table Management",
-            "checked": false
-          },
-          {
-            "name": "Token Management",
-            "checked": true
-          },
-          {
-            "name": "Scan & QR Order",
-            "checked": true
-          },
-          {
-            "name": "QR-based Feedback",
-            "checked": true
-          },
-          {
-            "name": "Waiter Calling System",
-            "checked": false
-          },
-          {
-            "name": "Dynamic Reports",
-            "checked": true
-          },
-          {
-            "name": "WhatsApp Invoice",
-            "checked": true
-          },
-          {
-            "name": "Restaurant Website",
+            "name": "Scan & Order",
             "checked": false
           }
         ]
@@ -317,28 +294,15 @@
         "category": "LOYALTY & CRM ENGINE",
         "items": [
           {
-            "name": "Customer Profiles",
-            "checked": true
-          },
-          {
-            "name": "Points Earn/Redeem at POS",
-            "checked": true
-          },
-          {
-            "name": "Automated Retention Campaigns",
+            "name": "Customer Database Profiles",
             "checked": false
           },
           {
-            "name": "Gamified Loyalty — Food Quests",
+            "name": "Custom WhatsApp Campaigns",
             "checked": false
-          }
-        ]
-      },
-      {
-        "category": "ADVANCED",
-        "items": [
+          },
           {
-            "name": "TheBoxSync Payroll",
+            "name": "Loyalty Points Engine",
             "checked": false
           }
         ]
@@ -347,15 +311,11 @@
         "category": "SUPPORT",
         "items": [
           {
-            "name": "24/7 Support",
+            "name": "Free Staff Training",
             "checked": true
           },
           {
-            "name": "Free Training",
-            "checked": true
-          },
-          {
-            "name": "Free Staff Re-training",
+            "name": "24/7 Email Support",
             "checked": true
           },
           {
@@ -367,596 +327,64 @@
     ]
   },
   {
-    "name": "CAFÉ",
-    "price": "₹10,000",
-    "actualPrice": "₹12,500",
-    "tagline": "Here are the key features that highlight our plans:",
-    "isPopular": false,
-    "features": [
-      {
-        "category": "BILLING & CORE",
-        "items": [
-          {
-            "name": "Inventory Management",
-            "checked": true
-          },
-          {
-            "name": "Statistics Management",
-            "checked": true
-          },
-          {
-            "name": "Third-party Integrations",
-            "checked": true
-          },
-          {
-            "name": "In-built CRM",
-            "checked": true
-          },
-          {
-            "name": "Menu Management",
-            "checked": true
-          },
-          {
-            "name": "Staff Management",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Users & Terminals",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Cash Register",
-            "checked": true
-          },
-          {
-            "name": "Multi-terminal Billing",
-            "checked": true
-          }
-        ]
+    "name": "STREET FOOD GROWTH",
+    "prices": {
+      "monthly": {
+        "price": "₹399",
+        "period": "month",
+        "actualPrice": "₹799"
       },
-      {
-        "category": "ADD-ONS",
-        "items": [
-          {
-            "name": "QSR Panel",
-            "checked": true
-          },
-          {
-            "name": "Manager Panel",
-            "checked": false
-          },
-          {
-            "name": "Cashier",
-            "checked": false
-          },
-          {
-            "name": "Captain Panel",
-            "checked": false
-          },
-          {
-            "name": "Kitchen Display System",
-            "checked": true
-          },
-          {
-            "name": "Reservation Management",
-            "checked": false
-          },
-          {
-            "name": "Table Management",
-            "checked": false
-          },
-          {
-            "name": "Token Management",
-            "checked": true
-          },
-          {
-            "name": "Scan & QR Order",
-            "checked": true
-          },
-          {
-            "name": "QR-based Feedback",
-            "checked": true
-          },
-          {
-            "name": "Waiter Calling System",
-            "checked": false
-          },
-          {
-            "name": "Dynamic Reports",
-            "checked": true
-          },
-          {
-            "name": "WhatsApp Invoice",
-            "checked": true
-          },
-          {
-            "name": "Restaurant Website",
-            "checked": true
-          }
-        ]
-      },
-      {
-        "category": "LOYALTY & CRM ENGINE",
-        "items": [
-          {
-            "name": "Customer Profiles",
-            "checked": true
-          },
-          {
-            "name": "Points Earn/Redeem at POS",
-            "checked": true
-          },
-          {
-            "name": "Automated Retention Campaigns",
-            "checked": true
-          },
-          {
-            "name": "Gamified Loyalty — Food Quests",
-            "checked": false
-          }
-        ]
-      },
-      {
-        "category": "ADVANCED",
-        "items": [
-          {
-            "name": "TheBoxSync Payroll",
-            "checked": false
-          }
-        ]
-      },
-      {
-        "category": "SUPPORT",
-        "items": [
-          {
-            "name": "24/7 Support",
-            "checked": true
-          },
-          {
-            "name": "Free Training",
-            "checked": true
-          },
-          {
-            "name": "Free Staff Re-training",
-            "checked": true
-          },
-          {
-            "name": "Dedicated Account Manager",
-            "checked": false
-          }
-        ]
+      "yearly": {
+        "price": "₹3,999",
+        "period": "year",
+        "actualPrice": "₹7,999"
       }
-    ]
-  },
-  {
-    "name": "FINE DINE",
-    "price": "₹16,000",
-    "actualPrice": "₹20,000",
-    "tagline": "Here are the key features that highlight our plans:",
-    "isPopular": false,
-    "features": [
-      {
-        "category": "BILLING & CORE",
-        "items": [
-          {
-            "name": "Inventory Management",
-            "checked": true
-          },
-          {
-            "name": "Statistics Management",
-            "checked": true
-          },
-          {
-            "name": "Third-party Integrations",
-            "checked": true
-          },
-          {
-            "name": "In-built CRM",
-            "checked": true
-          },
-          {
-            "name": "Menu Management",
-            "checked": true
-          },
-          {
-            "name": "Staff Management",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Users & Terminals",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Cash Register",
-            "checked": true
-          },
-          {
-            "name": "Multi-terminal Billing",
-            "checked": true
-          }
-        ]
-      },
-      {
-        "category": "ADD-ONS",
-        "items": [
-          {
-            "name": "QSR Panel",
-            "checked": false
-          },
-          {
-            "name": "Manager Panel",
-            "checked": true
-          },
-          {
-            "name": "Cashier",
-            "checked": true
-          },
-          {
-            "name": "Captain Panel",
-            "checked": true
-          },
-          {
-            "name": "Kitchen Display System",
-            "checked": true
-          },
-          {
-            "name": "Reservation Management",
-            "checked": true
-          },
-          {
-            "name": "Table Management",
-            "checked": true
-          },
-          {
-            "name": "Token Management",
-            "checked": false
-          },
-          {
-            "name": "Scan & QR Order",
-            "checked": true
-          },
-          {
-            "name": "QR-based Feedback",
-            "checked": true
-          },
-          {
-            "name": "Waiter Calling System",
-            "checked": true
-          },
-          {
-            "name": "Dynamic Reports",
-            "checked": true
-          },
-          {
-            "name": "WhatsApp Invoice",
-            "checked": true
-          },
-          {
-            "name": "Restaurant Website",
-            "checked": true
-          }
-        ]
-      },
-      {
-        "category": "LOYALTY & CRM ENGINE",
-        "items": [
-          {
-            "name": "Customer Profiles",
-            "checked": true
-          },
-          {
-            "name": "Points Earn/Redeem at POS",
-            "checked": true
-          },
-          {
-            "name": "Automated Retention Campaigns",
-            "checked": true
-          },
-          {
-            "name": "Gamified Loyalty — Food Quests",
-            "checked": true
-          }
-        ]
-      },
-      {
-        "category": "ADVANCED",
-        "items": [
-          {
-            "name": "TheBoxSync Payroll",
-            "checked": false
-          }
-        ]
-      },
-      {
-        "category": "SUPPORT",
-        "items": [
-          {
-            "name": "24/7 Support",
-            "checked": true
-          },
-          {
-            "name": "Free Training",
-            "checked": true
-          },
-          {
-            "name": "Free Staff Re-training",
-            "checked": true
-          },
-          {
-            "name": "Dedicated Account Manager",
-            "checked": false
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "CLOUD",
-    "price": "₹10,000",
-    "actualPrice": "₹12,500",
-    "tagline": "Here are the key features that highlight our plans:",
-    "isPopular": false,
-    "features": [
-      {
-        "category": "BILLING & CORE",
-        "items": [
-          {
-            "name": "Inventory Management",
-            "checked": true
-          },
-          {
-            "name": "Statistics Management",
-            "checked": true
-          },
-          {
-            "name": "Third-party Integrations",
-            "checked": true
-          },
-          {
-            "name": "In-built CRM",
-            "checked": true
-          },
-          {
-            "name": "Menu Management",
-            "checked": true
-          },
-          {
-            "name": "Staff Management",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Users & Terminals",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Cash Register",
-            "checked": true
-          },
-          {
-            "name": "Multi-terminal Billing",
-            "checked": true
-          }
-        ]
-      },
-      {
-        "category": "ADD-ONS",
-        "items": [
-          {
-            "name": "QSR Panel",
-            "checked": false
-          },
-          {
-            "name": "Manager Panel",
-            "checked": false
-          },
-          {
-            "name": "Cashier",
-            "checked": false
-          },
-          {
-            "name": "Captain Panel",
-            "checked": false
-          },
-          {
-            "name": "Kitchen Display System",
-            "checked": true
-          },
-          {
-            "name": "Reservation Management",
-            "checked": false
-          },
-          {
-            "name": "Table Management",
-            "checked": false
-          },
-          {
-            "name": "Token Management",
-            "checked": false
-          },
-          {
-            "name": "Scan & QR Order",
-            "checked": false
-          },
-          {
-            "name": "QR-based Feedback",
-            "checked": true
-          },
-          {
-            "name": "Waiter Calling System",
-            "checked": false
-          },
-          {
-            "name": "Dynamic Reports",
-            "checked": true
-          },
-          {
-            "name": "WhatsApp Invoice",
-            "checked": true
-          },
-          {
-            "name": "Restaurant Website",
-            "checked": false
-          }
-        ]
-      },
-      {
-        "category": "LOYALTY & CRM ENGINE",
-        "items": [
-          {
-            "name": "Customer Profiles",
-            "checked": true
-          },
-          {
-            "name": "Points Earn/Redeem at POS",
-            "checked": true
-          },
-          {
-            "name": "Automated Retention Campaigns",
-            "checked": true
-          },
-          {
-            "name": "Gamified Loyalty — Food Quests",
-            "checked": false
-          }
-        ]
-      },
-      {
-        "category": "ADVANCED",
-        "items": [
-          {
-            "name": "TheBoxSync Payroll",
-            "checked": false
-          }
-        ]
-      },
-      {
-        "category": "SUPPORT",
-        "items": [
-          {
-            "name": "24/7 Support",
-            "checked": true
-          },
-          {
-            "name": "Free Training",
-            "checked": true
-          },
-          {
-            "name": "Free Staff Re-training",
-            "checked": true
-          },
-          {
-            "name": "Dedicated Account Manager",
-            "checked": false
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "CHAIN",
-    "price": "₹24,000",
-    "actualPrice": "₹30,000",
-    "tagline": "Here are the key features that highlight our plans:",
+    },
+    "tagline": "Advanced CRM and operations for multiple stalls and premium trucks.",
     "isPopular": true,
     "features": [
       {
         "category": "BILLING & CORE",
         "items": [
           {
+            "name": "Billing Operations",
+            "checked": true
+          },
+          {
+            "name": "Dish & Menu Setup",
+            "checked": true
+          },
+          {
+            "name": "Scan and Menu",
+            "checked": true
+          },
+          {
+            "name": "WhatsApp Invoices",
+            "checked": true
+          },
+          {
             "name": "Inventory Management",
             "checked": true
           },
           {
-            "name": "Statistics Management",
+            "name": "USB/Bluetooth Printing",
             "checked": true
           },
           {
-            "name": "Third-party Integrations",
+            "name": "Cash Registry Log",
             "checked": true
           },
           {
-            "name": "In-built CRM",
-            "checked": true
-          },
-          {
-            "name": "Menu Management",
-            "checked": true
-          },
-          {
-            "name": "Staff Management",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Users & Terminals",
-            "checked": true
-          },
-          {
-            "name": "Unlimited Cash Register",
-            "checked": true
-          },
-          {
-            "name": "Multi-terminal Billing",
+            "name": "Advanced Sales Reports",
             "checked": true
           }
         ]
       },
       {
-        "category": "ADD-ONS",
+        "category": "ADD-ONS & INTEGRATIONS",
         "items": [
           {
-            "name": "QSR Panel",
-            "checked": true
-          },
-          {
-            "name": "Manager Panel",
-            "checked": true
-          },
-          {
-            "name": "Cashier",
-            "checked": true
-          },
-          {
-            "name": "Captain Panel",
-            "checked": true
-          },
-          {
-            "name": "Kitchen Display System",
-            "checked": true
-          },
-          {
-            "name": "Reservation Management",
-            "checked": true
-          },
-          {
-            "name": "Table Management",
-            "checked": true
-          },
-          {
-            "name": "Token Management",
-            "checked": true
-          },
-          {
-            "name": "Scan & QR Order",
-            "checked": true
-          },
-          {
-            "name": "QR-based Feedback",
-            "checked": true
-          },
-          {
-            "name": "Waiter Calling System",
-            "checked": true
-          },
-          {
-            "name": "Dynamic Reports",
-            "checked": true
-          },
-          {
-            "name": "WhatsApp Invoice",
-            "checked": true
-          },
-          {
-            "name": "Restaurant Website",
+            "name": "Scan & Order",
             "checked": true
           }
         ]
@@ -965,28 +393,15 @@
         "category": "LOYALTY & CRM ENGINE",
         "items": [
           {
-            "name": "Customer Profiles",
+            "name": "Customer Database Profiles",
             "checked": true
           },
           {
-            "name": "Points Earn/Redeem at POS",
+            "name": "Custom WhatsApp Campaigns",
             "checked": true
           },
           {
-            "name": "Automated Retention Campaigns",
-            "checked": true
-          },
-          {
-            "name": "Gamified Loyalty — Food Quests",
-            "checked": true
-          }
-        ]
-      },
-      {
-        "category": "ADVANCED",
-        "items": [
-          {
-            "name": "TheBoxSync Payroll",
+            "name": "Loyalty Points Engine",
             "checked": true
           }
         ]
@@ -995,15 +410,11 @@
         "category": "SUPPORT",
         "items": [
           {
-            "name": "24/7 Support",
+            "name": "Free Staff Training",
             "checked": true
           },
           {
-            "name": "Free Training",
-            "checked": true
-          },
-          {
-            "name": "Free Staff Re-training",
+            "name": "24/7 Email Support",
             "checked": true
           },
           {
@@ -1017,7 +428,9 @@
 ];
 
     const checkSvg = `<div style="flex-shrink:0; display:flex; align-items:center; margin-top:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 15 15" fill="none"><path opacity="0.992" fill-rule="evenodd" clip-rule="evenodd" d="M7.22393 0C10.1444 0.0048682 12.3871 1.22628 13.952 3.66423C15.1321 5.76513 15.3168 7.95136 14.5062 10.2229C13.3721 12.8859 11.3758 14.4614 8.51719 14.9495C5.62984 15.2424 3.28454 14.2622 1.48125 12.0088C-0.0776275 9.77987 -0.406074 7.37811 0.495906 4.80353C1.26674 2.9139 2.5754 1.53341 4.42187 0.662026C5.31983 0.270692 6.25384 0.0500183 7.22393 0ZM11.2269 4.43403C11.6225 4.43526 11.7508 4.62002 11.6118 4.98829C9.90797 6.93843 8.20413 8.8886 6.50032 10.8387C6.34295 10.9814 6.17359 10.9968 5.99226 10.8849C5.24811 9.89445 4.50399 8.904 3.75985 7.91352C3.63052 7.68883 3.67671 7.50922 3.89841 7.37466C3.99079 7.35412 4.08316 7.35412 4.17554 7.37466C4.74004 7.75441 5.30458 8.1342 5.86909 8.51396C6.02234 8.62678 6.18659 8.64729 6.36176 8.57554C7.97994 7.1872 9.60165 5.80667 11.2269 4.43403Z" fill="#54daff" /></svg></div>`;
-    const crossSvg = `<div style="flex-shrink:0; display:flex; align-items:center; margin-top:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="7.5" fill="#dc3545" /><path d="M4.5 4.5L10.5 10.5M10.5 4.5L4.5 10.5" stroke="white" stroke-width="1.8" stroke-linecap="round" /></svg></div>`;
+    const crossSvg = `<div style="flex-shrink:0; display:flex; align-items:center; margin-top:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 15 15" fill="none"><path opacity="0.992" fill-rule="evenodd" clip-rule="evenodd" d="M7.5 0C11.6421 0 15 3.35786 15 7.5C15 11.6421 11.6421 15 7.5 15C3.35786 15 0 11.6421 0 7.5C0 3.35786 3.35786 0 7.5 0ZM10.5303 4.46967C10.8232 4.17678 11.2981 4.17678 11.591 4.46967C11.8839 4.76256 11.8839 5.23744 11.591 5.53033L9.12132 8L11.591 10.4697C11.8839 10.7626 11.8839 11.2374 11.591 11.5303C11.2981 11.8232 10.8232 11.8232 10.5303 11.5303L8.06066 9.06066L5.53033 11.591C5.23744 11.8839 4.76256 11.8839 4.46967 11.591C4.17678 11.2981 4.17678 10.8232 4.46967 10.5303L6.93934 8L4.46967 5.53033C4.17678 5.23744 4.17678 4.76256 4.46967 4.46967C4.76256 4.17678 5.23744 4.17678 5.53033 4.46967L8 6.93934L10.5303 4.46967Z" fill="#dc3545" /></svg></div>`;
+
+    let currentBillingPeriod = 'yearly';
 
     function renderPricingPlans() {
       const container = document.getElementById('pricing-plans-container');
@@ -1027,6 +440,8 @@
         const popularBadge = plan.isPopular
           ? `<span class="badge" style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); background-color:#28a745; color:white; padding:8px 14px; font-size:12px; font-weight:bold; border-radius:15px; letter-spacing:0.5px;">MOST POPULAR</span>`
           : '';
+
+        const priceInfo = plan.prices[currentBillingPeriod];
 
         const featuresHtml = plan.features.map(cat => {
           const itemsHtml = cat.items.map(item => {
@@ -1054,8 +469,9 @@
               <div class="pricing-card-header" style="margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid rgba(0,0,0,0.05);">
                 <h6 style="font-size: 22px; margin-bottom: 8px; text-transform: uppercase; font-weight: 800;">${plan.name}</h6>
                 <div class="price-wrapper" style="margin-bottom:10px;">
-                  <span class="price" style="font-size: 32px; font-weight: 800;">${plan.price}</span>
-                  <span class="actualprice text-decoration-line-through text-muted" style="font-size: 15px; margin-left:8px;">${plan.actualPrice}</span>
+                  <span class="price" style="font-size: 32px; font-weight: 800;">${priceInfo.price}</span>
+                  <span class="period" style="font-size: 14px; color: #777;">/ ${priceInfo.period}</span>
+                  <span class="actualprice text-decoration-line-through text-muted" style="font-size: 15px; margin-left:8px;">${priceInfo.actualPrice}</span>
                 </div>
                 <p class="text" style="font-size: 14px; line-height:1.5;">${plan.tagline}</p>
               </div>
@@ -1071,10 +487,26 @@
           </div>`;
       }).join('');
     }
-  </script>
-  <script>
+
     document.addEventListener('DOMContentLoaded', function () {
       renderPricingPlans();
+
+      // Switch billing period event listeners
+      document.getElementById('btn-monthly').addEventListener('click', function () {
+        currentBillingPeriod = 'monthly';
+        this.classList.add('active');
+        document.getElementById('btn-yearly').classList.remove('active');
+        renderPricingPlans();
+        attachSearchTriggers();
+      });
+
+      document.getElementById('btn-yearly').addEventListener('click', function () {
+        currentBillingPeriod = 'yearly';
+        this.classList.add('active');
+        document.getElementById('btn-monthly').classList.remove('active');
+        renderPricingPlans();
+        attachSearchTriggers();
+      });
 
       const enquiryForm = document.querySelector('.search-wrap form');
       if (!enquiryForm) return;
@@ -1092,7 +524,7 @@
 
       // ── Validation helpers ──────────────────────────────
       function isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        return /^[^s@]+@[^s@]+.[^s@]+$/.test(email);
       }
       function isValidPhone(phone) {
         return /^\+?[1-9][0-9]{7,14}$/.test(phone.replace(/\s+/g, ''));
@@ -1213,6 +645,7 @@
       });
     });
   </script>
+
 </body>
 
 </html>
