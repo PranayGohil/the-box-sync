@@ -43,6 +43,22 @@ const seedStreetFoodPlans = async () => {
         applicable_to: "street-food",
         features: ["CRM campaigns", "Customer Relationship Management"],
       },
+      {
+        plan_name: "Scan and Order - Monthly",
+        plan_price: 99,
+        plan_duration: 1,
+        is_addon: true,
+        applicable_to: "street-food",
+        features: ["Self-service ordering", "Real-time Order Dashboard"],
+      },
+      {
+        plan_name: "Scan and Order - Yearly",
+        plan_price: 999,
+        plan_duration: 12,
+        is_addon: true,
+        applicable_to: "street-food",
+        features: ["Self-service ordering", "Real-time Order Dashboard"],
+      },
     ];
 
     for (const plan of streetFoodPlans) {
