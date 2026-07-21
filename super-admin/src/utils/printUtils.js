@@ -256,8 +256,8 @@ export const printFullBill = (ord, userData, items, subTotal) => {
 };
 
 const handleMobilePrintOption = (orderId) => {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-  if (isMobile) {
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid) {
     const useBluetooth = window.confirm(
       "Select printing method:\n\nClick 'OK' to print via Bluetooth Print app.\nClick 'Cancel' to use standard browser print."
     );
