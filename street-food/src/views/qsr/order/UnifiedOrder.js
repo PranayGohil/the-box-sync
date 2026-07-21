@@ -123,6 +123,9 @@ const UnifiedOrder = () => {
   const { activePlans } = useContext(AuthContext);
   const canKOT = false;
 
+  // Compute back/exit path based on Scan and Order plan
+  const backPath = activePlans.includes('Scan and Order') ? '/dashboard' : '/operations/order-history';
+
   // Default type from URL path
   const defaultType = location.pathname.includes('dine-in') ? 'Dine In' : location.pathname.includes('delivery') ? 'Delivery' : 'Takeaway';
 
@@ -886,7 +889,7 @@ const validateOrder = () => {
 
         let targetPath = redirectPath || nextLocation || '/order/new';
         if (targetPath === '/operations') {
-          targetPath = '/operations/order-history';
+          targetPath = backPath;
         }
         allowNavigationRef.current = true;
 
@@ -991,7 +994,7 @@ const validateOrder = () => {
           <Button 
             variant="outline-info" 
             className="rounded-pill d-flex align-items-center px-3 py-1 text-decoration-none" 
-            onClick={() => history.push('/operations/order-history')}
+          onClick={() => history.push(backPath)}
             style={{ fontWeight: 600, fontSize: '0.9rem', borderColor: '#23b3f4', color: '#23b3f4' }}
           >
             <CsLineIcons icon="arrow-left" size="15" className="me-2" />
@@ -1243,6 +1246,7 @@ const validateOrder = () => {
         hasUnpaidBill={hasUnpaidBill}
         handleOpenPaymentModal={handleOpenPaymentModal}
         setOrderItems={setOrderItems}
+        exitPath={backPath}
       />
 
       {/* Mobile Bottom Sheet */}

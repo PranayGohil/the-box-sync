@@ -12,12 +12,26 @@ import { getRoutes } from 'routing/helper';
 import allRoutes from 'routes.js';
 import Loading from 'components/loading/Loading';
 import { AuthContext } from 'contexts/AuthContext';
+import { DEFAULT_PATHS } from 'config.js';
+
+const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1) : DEFAULT_PATHS.APP;
 
 const App = () => {
   const { currentUser, isLogin } = useSelector((state) => state.auth);
   const { activePlans, loading } = useContext(AuthContext);
 
-  const routes = useMemo(() => getRoutes({ data: allRoutes, isLogin, userRole: currentUser.role, activePlans }), [isLogin, currentUser, activePlans]);
+  // Determine home route based on Scan and Order plan
+  const dynamicRoutes = useMemo(() => {
+    const hasScanAndOrder = activePlans.includes('Scan and Order');
+    return {
+      ...allRoutes,
+      mainMenuItems: allRoutes.mainMenuItems.map((r) =>
+        r.redirect ? { ...r, to: hasScanAndOrder ? `${appRoot}/dashboard` : `${appRoot}/order/new` } : r
+      ),
+    };
+  }, [activePlans]);
+
+  const routes = useMemo(() => getRoutes({ data: dynamicRoutes, isLogin, userRole: currentUser.role, activePlans }), [isLogin, currentUser, activePlans, dynamicRoutes]);
 
   if (loading) {
     return <Loading />;

@@ -33,13 +33,14 @@ const allRoutes = {
       path: DEFAULT_PATHS.APP,
       exact: true,
       redirect: true,
-      to: `${appRoot}/street-food`,
+      to: `${appRoot}/dashboard`,
     },
     {
-      path: `${appRoot}/street-food`,
+      path: `${appRoot}/dashboard`,
       label: 'Dashboard',
       icon: 'screen',
       component: qsr.streetFood,
+      planRequirement: ['Scan and Order'],
     },
     {
       path: `${appRoot}/order/new`,

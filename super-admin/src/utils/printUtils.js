@@ -264,7 +264,7 @@ const showMobilePrintDialog = (orderId, onStandardPrint, onCancel, setPrinting) 
   modalContainer.style.left = '0';
   modalContainer.style.width = '100vw';
   modalContainer.style.height = '100vh';
-  modalContainer.style.backgroundColor = 'rgba(15, 23, 42, 0.6)';
+  modalContainer.style.backgroundColor = 'rgba(15, 23, 42, 0.4)';
   modalContainer.style.backdropFilter = 'blur(4px)';
   modalContainer.style.display = 'flex';
   modalContainer.style.alignItems = 'center';
@@ -275,13 +275,14 @@ const showMobilePrintDialog = (orderId, onStandardPrint, onCancel, setPrinting) 
   // Create modal card
   const card = document.createElement('div');
   card.style.backgroundColor = '#ffffff';
-  card.style.borderRadius = '16px';
+  card.style.borderRadius = '20px';
   card.style.padding = '24px';
   card.style.width = '90%';
-  card.style.maxWidth = '320px';
+  card.style.maxWidth = '360px';
   card.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
-  card.style.textAlign = 'center';
   card.style.marginTop = '-60px';
+  card.style.display = 'flex';
+  card.style.flexDirection = 'column';
   card.style.animation = 'scaleUpPrint 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
 
   // Animation CSS
@@ -295,22 +296,6 @@ const showMobilePrintDialog = (orderId, onStandardPrint, onCancel, setPrinting) 
   `;
   document.head.appendChild(styleSheet);
 
-  // Modal Title
-  const title = document.createElement('h3');
-  title.innerText = 'Select Print Option';
-  title.style.margin = '0 0 8px 0';
-  title.style.fontSize = '18px';
-  title.style.fontWeight = '700';
-  title.style.color = '#1e293b';
-
-  // Modal Description
-  const desc = document.createElement('p');
-  desc.innerText = 'Choose how you want to print this bill:';
-  desc.style.margin = '0 0 20px 0';
-  desc.style.fontSize = '14px';
-  desc.style.color = '#64748b';
-  desc.style.lineHeight = '1.4';
-
   const cleanUp = () => {
     try {
       document.body.removeChild(modalContainer);
@@ -321,21 +306,131 @@ const showMobilePrintDialog = (orderId, onStandardPrint, onCancel, setPrinting) 
     }
   };
 
-  // Bluetooth button
-  const btBtn = document.createElement('button');
-  btBtn.innerText = 'Print via Bluetooth App';
-  btBtn.style.width = '100%';
-  btBtn.style.padding = '12px';
-  btBtn.style.marginBottom = '8px';
-  btBtn.style.border = 'none';
-  btBtn.style.borderRadius = '10px';
-  btBtn.style.backgroundColor = '#23b3f4';
-  btBtn.style.color = '#ffffff';
-  btBtn.style.fontWeight = '600';
-  btBtn.style.fontSize = '14px';
-  btBtn.style.cursor = 'pointer';
-  btBtn.style.transition = 'background-color 0.2s';
-  btBtn.onclick = () => {
+  // Header Container
+  const header = document.createElement('div');
+  header.style.display = 'flex';
+  header.style.alignItems = 'center';
+  header.style.paddingBottom = '16px';
+  header.style.borderBottom = '1px solid #f1f5f9';
+  header.style.marginBottom = '16px';
+
+  // Header Icon Container
+  const iconContainer = document.createElement('div');
+  iconContainer.style.width = '40px';
+  iconContainer.style.height = '40px';
+  iconContainer.style.borderRadius = '10px';
+  iconContainer.style.backgroundColor = '#e3f2fd';
+  iconContainer.style.color = '#2196f3';
+  iconContainer.style.display = 'flex';
+  iconContainer.style.alignItems = 'center';
+  iconContainer.style.justifyContent = 'center';
+  iconContainer.style.marginRight = '12px';
+  iconContainer.style.flexShrink = '0';
+  iconContainer.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 6 2 18 2 18 9"></polyline>
+      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+      <rect x="6" y="14" width="12" height="8"></rect>
+    </svg>
+  `;
+
+  // Header Title
+  const title = document.createElement('h4');
+  title.innerText = 'Select Print Option';
+  title.style.margin = '0';
+  title.style.fontSize = '16px';
+  title.style.fontWeight = '700';
+  title.style.color = '#1e293b';
+  title.style.flexGrow = '1';
+
+  // Header Close Button
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  `;
+  closeBtn.style.border = 'none';
+  closeBtn.style.background = 'none';
+  closeBtn.style.cursor = 'pointer';
+  closeBtn.style.padding = '4px';
+  closeBtn.style.display = 'flex';
+  closeBtn.style.alignItems = 'center';
+  closeBtn.style.justifyContent = 'center';
+  closeBtn.style.flexShrink = '0';
+  closeBtn.onclick = () => {
+    cleanUp();
+    onCancel();
+  };
+
+  header.appendChild(iconContainer);
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  // Description
+  const desc = document.createElement('p');
+  desc.innerText = 'Choose how you want to print this bill:';
+  desc.style.margin = '0 0 16px 0';
+  desc.style.fontSize = '14px';
+  desc.style.color = '#64748b';
+  desc.style.textAlign = 'left';
+
+  // Bluetooth Option Card
+  const btCard = document.createElement('div');
+  btCard.style.display = 'flex';
+  btCard.style.alignItems = 'center';
+  btCard.style.padding = '14px';
+  btCard.style.border = '1px solid #e2e8f0';
+  btCard.style.borderRadius = '12px';
+  btCard.style.marginBottom = '12px';
+  btCard.style.cursor = 'pointer';
+  btCard.style.transition = 'all 0.2s ease';
+  btCard.style.textAlign = 'left';
+  btCard.style.backgroundColor = '#ffffff';
+
+  const btIconContainer = document.createElement('div');
+  btIconContainer.style.width = '36px';
+  btIconContainer.style.height = '36px';
+  btIconContainer.style.borderRadius = '50%';
+  btIconContainer.style.backgroundColor = '#e0f7fa';
+  btIconContainer.style.color = '#00b8d4';
+  btIconContainer.style.display = 'flex';
+  btIconContainer.style.alignItems = 'center';
+  btIconContainer.style.justifyContent = 'center';
+  btIconContainer.style.marginRight = '12px';
+  btIconContainer.style.flexShrink = '0';
+  btIconContainer.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m7 7 10 10-5 5V2l5 5L7 17"></path>
+    </svg>
+  `;
+
+  const btTextContainer = document.createElement('div');
+  const btTitle = document.createElement('div');
+  btTitle.innerText = 'Print via Bluetooth App';
+  btTitle.style.fontSize = '14px';
+  btTitle.style.fontWeight = '600';
+  btTitle.style.color = '#334155';
+  const btDesc = document.createElement('div');
+  btDesc.innerText = 'Use Bluetooth thermal printer app';
+  btDesc.style.fontSize = '11px';
+  btDesc.style.color = '#64748b';
+  btTextContainer.appendChild(btTitle);
+  btTextContainer.appendChild(btDesc);
+
+  btCard.appendChild(btIconContainer);
+  btCard.appendChild(btTextContainer);
+
+  btCard.onmouseenter = () => {
+    btCard.style.borderColor = '#23b3f4';
+    btCard.style.backgroundColor = '#f0f9ff';
+  };
+  btCard.onmouseleave = () => {
+    btCard.style.borderColor = '#e2e8f0';
+    btCard.style.backgroundColor = '#ffffff';
+  };
+  btCard.onclick = () => {
     cleanUp();
     if (!orderId) {
       toast.warning("Cannot print via Bluetooth app: Order ID is missing. Please save the order first.");
@@ -360,44 +455,107 @@ const showMobilePrintDialog = (orderId, onStandardPrint, onCancel, setPrinting) 
     }
   };
 
-  // Standard print button
-  const stdBtn = document.createElement('button');
-  stdBtn.innerText = 'Standard Print / PDF';
-  stdBtn.style.width = '100%';
-  stdBtn.style.padding = '12px';
-  stdBtn.style.marginBottom = '16px';
-  stdBtn.style.border = '1px solid #e2e8f0';
-  stdBtn.style.borderRadius = '10px';
-  stdBtn.style.backgroundColor = '#f8fafc';
-  stdBtn.style.color = '#334155';
-  stdBtn.style.fontWeight = '600';
-  stdBtn.style.fontSize = '14px';
-  stdBtn.style.cursor = 'pointer';
-  stdBtn.style.transition = 'background-color 0.2s';
-  stdBtn.onclick = () => {
+  // Standard Print Option Card
+  const stdCard = document.createElement('div');
+  stdCard.style.display = 'flex';
+  stdCard.style.alignItems = 'center';
+  stdCard.style.padding = '14px';
+  stdCard.style.border = '1px solid #e2e8f0';
+  stdCard.style.borderRadius = '12px';
+  stdCard.style.marginBottom = '16px';
+  stdCard.style.cursor = 'pointer';
+  stdCard.style.transition = 'all 0.2s ease';
+  stdCard.style.textAlign = 'left';
+  stdCard.style.backgroundColor = '#ffffff';
+
+  const stdIconContainer = document.createElement('div');
+  stdIconContainer.style.width = '36px';
+  stdIconContainer.style.height = '36px';
+  stdIconContainer.style.borderRadius = '50%';
+  stdIconContainer.style.backgroundColor = '#fce4ec';
+  stdIconContainer.style.color = '#e91e63';
+  stdIconContainer.style.display = 'flex';
+  stdIconContainer.style.alignItems = 'center';
+  stdIconContainer.style.justifyContent = 'center';
+  stdIconContainer.style.marginRight = '12px';
+  stdIconContainer.style.flexShrink = '0';
+  stdIconContainer.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="16" y1="13" x2="8" y2="13"></line>
+      <line x1="16" y1="17" x2="8" y2="17"></line>
+      <polyline points="10 9 9 9 8 9"></polyline>
+    </svg>
+  `;
+
+  const stdTextContainer = document.createElement('div');
+  const stdTitle = document.createElement('div');
+  stdTitle.innerText = 'Standard Print / PDF';
+  stdTitle.style.fontSize = '14px';
+  stdTitle.style.fontWeight = '600';
+  stdTitle.style.color = '#334155';
+  const stdDesc = document.createElement('div');
+  stdDesc.innerText = 'Print from browser or save as PDF';
+  stdDesc.style.fontSize = '11px';
+  stdDesc.style.color = '#64748b';
+  stdTextContainer.appendChild(stdTitle);
+  stdTextContainer.appendChild(stdDesc);
+
+  stdCard.appendChild(stdIconContainer);
+  stdCard.appendChild(stdTextContainer);
+
+  stdCard.onmouseenter = () => {
+    stdCard.style.borderColor = '#23b3f4';
+    stdCard.style.backgroundColor = '#f0f9ff';
+  };
+  stdCard.onmouseleave = () => {
+    stdCard.style.borderColor = '#e2e8f0';
+    stdCard.style.backgroundColor = '#ffffff';
+  };
+  stdCard.onclick = () => {
     cleanUp();
     onStandardPrint();
   };
 
-  // Cancel button
-  const cancelLink = document.createElement('div');
-  cancelLink.innerText = 'Cancel';
-  cancelLink.style.color = '#64748b';
-  cancelLink.style.fontSize = '14px';
-  cancelLink.style.cursor = 'pointer';
-  cancelLink.style.fontWeight = '500';
-  cancelLink.style.display = 'inline-block';
-  cancelLink.onclick = () => {
+  // Footer Container
+  const footer = document.createElement('div');
+  footer.style.display = 'flex';
+  footer.style.justifyContent = 'flex-end';
+  footer.style.paddingTop = '16px';
+  footer.style.borderTop = '1px solid #f1f5f9';
+
+  // Cancel Button
+  const cancelBtn = document.createElement('button');
+  cancelBtn.innerText = 'Cancel';
+  cancelBtn.style.backgroundColor = '#e2e8f0';
+  cancelBtn.style.color = '#475569';
+  cancelBtn.style.border = 'none';
+  cancelBtn.style.borderRadius = '9999px';
+  cancelBtn.style.padding = '10px 24px';
+  cancelBtn.style.fontWeight = '600';
+  cancelBtn.style.fontSize = '14px';
+  cancelBtn.style.cursor = 'pointer';
+  cancelBtn.style.transition = 'background-color 0.2s';
+  cancelBtn.onmouseenter = () => {
+    cancelBtn.style.backgroundColor = '#cbd5e1';
+  };
+  cancelBtn.onmouseleave = () => {
+    cancelBtn.style.backgroundColor = '#e2e8f0';
+  };
+  cancelBtn.onclick = () => {
     cleanUp();
     onCancel();
   };
 
-  // Assemble
-  card.appendChild(title);
+  footer.appendChild(cancelBtn);
+
+  // Assemble Card
+  card.appendChild(header);
   card.appendChild(desc);
-  card.appendChild(btBtn);
-  card.appendChild(stdBtn);
-  card.appendChild(cancelLink);
+  card.appendChild(btCard);
+  card.appendChild(stdCard);
+  card.appendChild(footer);
   modalContainer.appendChild(card);
   document.body.appendChild(modalContainer);
 };

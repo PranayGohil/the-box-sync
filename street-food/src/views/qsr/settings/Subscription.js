@@ -53,16 +53,24 @@ const Subscription = () => {
         );
       }
 
-      // Check if inquiry exists for Basic CRM
-      try {
-        const queryRes = await axios.get(
-          `${process.env.REACT_APP_API}/customerquery/get-customer-query/Basic CRM`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
-        setExistingQueries({ 'Basic CRM': !!queryRes.data?.exists });
-      } catch (queryErr) {
-        console.error('Error checking query status', queryErr);
-      }
+      // Check if inquiry exists for addons
+      const addonNames = ['Basic CRM', 'Scan and Order'];
+      const queryStatus = {};
+      await Promise.all(
+        addonNames.map(async (name) => {
+          try {
+            const queryRes = await axios.get(
+              `${process.env.REACT_APP_API}/customerquery/get-customer-query/${name}`,
+              { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+            );
+            queryStatus[name] = !!queryRes.data?.exists;
+          } catch (queryErr) {
+            console.error(`Error checking query status for ${name}`, queryErr);
+            queryStatus[name] = false;
+          }
+        })
+      );
+      setExistingQueries(queryStatus);
     } catch (err) {
       console.error('Failed to load subscription details', err);
       toast.error('Failed to load subscription details');
@@ -100,6 +108,9 @@ const Subscription = () => {
 
   const activeCrmSub = subscriptions.find((sub) => sub.plan_name.startsWith('Basic CRM') && sub.status === 'active');
   const expiredCrmSub = subscriptions.find((sub) => sub.plan_name.startsWith('Basic CRM') && sub.status === 'inactive');
+
+  const activeScanSub = subscriptions.find((sub) => sub.plan_name.startsWith('Scan and Order') && sub.status === 'active');
+  const expiredScanSub = subscriptions.find((sub) => sub.plan_name.startsWith('Scan and Order') && sub.status === 'inactive');
 
   if (loading) {
     return (
@@ -178,6 +189,24 @@ const Subscription = () => {
             </div>
           )}
 
+          {/* Scan and Order Plan */}
+          {activeScanSub && (
+            <div className="p-4 rounded-3 bg-light border mb-4">
+              <Row className="align-items-center">
+                <Col xs={12} md={8}>
+                  <h5 className="fw-bold text-primary mb-1">{activeScanSub.plan_name}</h5>
+                  <p className="text-muted small mb-0">Access customer self-service QR ordering and the real-time order dashboard.</p>
+                  <small className="text-muted d-block mt-2">Valid till: {activeScanSub.formatted_end}</small>
+                </Col>
+                <Col xs={12} md={4} className="text-md-end mt-3 mt-md-0">
+                  <Badge bg="none" className="bg-success text-white px-3 py-2 rounded-pill">
+                    Active
+                  </Badge>
+                </Col>
+              </Row>
+            </div>
+          )}
+
           {/* Expired CRM Plan (if not active but exists) */}
           {!activeCrmSub && expiredCrmSub && (
             <div className="p-4 rounded-3 bg-light border mb-4">
@@ -206,50 +235,123 @@ const Subscription = () => {
               </Row>
             </div>
           )}
+
+          {/* Expired Scan and Order Plan (if not active but exists) */}
+          {!activeScanSub && expiredScanSub && (
+            <div className="p-4 rounded-3 bg-light border mb-4">
+              <Row className="align-items-center">
+                <Col xs={12} md={8}>
+                  <h5 className="fw-bold text-primary mb-1">{expiredScanSub.plan_name}</h5>
+                  <p className="text-muted small mb-0">Access customer self-service QR ordering and the real-time order dashboard.</p>
+                  <small className="text-muted d-block mt-2">Expired on: {expiredScanSub.formatted_end}</small>
+                </Col>
+                <Col xs={12} md={4} className="text-md-end mt-3 mt-md-0">
+                  <div className="d-flex flex-column align-items-md-end gap-2">
+                    <Badge bg="none" className="bg-danger text-white px-3 py-2 rounded-pill">
+                      Expired
+                    </Badge>
+                    <Button
+                      variant="none"
+                      size="sm"
+                      className="profile-custom-btn-outline mt-1 px-3"
+                      onClick={() => handleRenew(expiredScanSub._id)}
+                      disabled={renewing}
+                    >
+                      {renewing ? <Spinner animation="border" size="sm" /> : <CsLineIcons icon="refresh-horizontal" size="14" />} Renew Addon
+                    </Button>
+                  </div>
+                </Col>
+              </Row>
+            </div>
+          )}
         </Card.Body>
       </Card>
 
       {/* Available Upgrades */}
-      {!activeCrmSub && (
+      {(!activeCrmSub || !activeScanSub) && (
         <Card className="profile-glass-card border-0 mb-4">
           <Card.Body className="p-4 p-md-5">
             <h4 className="fw-bold mb-4">Available Upgrades & Add-ons</h4>
-            <div className="p-4 rounded-3 bg-light border mb-4">
-              <Row className="align-items-center">
-                <Col xs={12} md={8}>
-                  <h5 className="fw-bold text-primary mb-1">Basic CRM</h5>
-                  <p className="text-muted small mb-3">
-                    Unlock CRM campaigns, view customer order histories, and run WhatsApp campaigns to engage with your customers.
-                  </p>
-                  <div className="d-flex gap-3 text-muted small">
-                    <span><strong>Monthly:</strong> ₹59 / month</span>
-                    <span><strong>Yearly:</strong> ₹599 / year</span>
-                  </div>
-                </Col>
-                <Col xs={12} md={4} className="text-md-end mt-3 mt-md-0">
-                  {existingQueries['Basic CRM'] ? (
-                    <Button
-                      variant="outline-secondary"
-                      className="opacity-75 px-4 rounded-pill"
-                      disabled
-                    >
-                      <CsLineIcons icon="hourglass" size="14" className="me-2" /> Inquiry Pending
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="none"
-                      className="profile-custom-btn-outline px-4 rounded-pill"
-                      onClick={() => {
-                        setInquirySubName('Basic CRM');
-                        setShowInquiryModal(true);
-                      }}
-                    >
-                      <CsLineIcons icon="email" size="14" className="me-2" /> Send Inquiry
-                    </Button>
-                  )}
-                </Col>
-              </Row>
-            </div>
+            
+            {/* CRM Addon */}
+            {!activeCrmSub && (
+              <div className="p-4 rounded-3 bg-light border mb-4">
+                <Row className="align-items-center">
+                  <Col xs={12} md={8}>
+                    <h5 className="fw-bold text-primary mb-1">Basic CRM</h5>
+                    <p className="text-muted small mb-3">
+                      Unlock CRM campaigns, view customer order histories, and run WhatsApp campaigns to engage with your customers.
+                    </p>
+                    <div className="d-flex gap-3 text-muted small">
+                      <span><strong>Monthly:</strong> ₹59 / month</span>
+                      <span><strong>Yearly:</strong> ₹599 / year</span>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={4} className="text-md-end mt-3 mt-md-0">
+                    {existingQueries['Basic CRM'] ? (
+                      <Button
+                        variant="outline-secondary"
+                        className="opacity-75 px-4 rounded-pill"
+                        disabled
+                      >
+                        <CsLineIcons icon="hourglass" size="14" className="me-2" /> Inquiry Pending
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="none"
+                        className="profile-custom-btn-outline px-4 rounded-pill"
+                        onClick={() => {
+                          setInquirySubName('Basic CRM');
+                          setShowInquiryModal(true);
+                        }}
+                      >
+                        <CsLineIcons icon="email" size="14" className="me-2" /> Send Inquiry
+                      </Button>
+                    )}
+                  </Col>
+                </Row>
+              </div>
+            )}
+
+            {/* Scan and Order Addon */}
+            {!activeScanSub && (
+              <div className="p-4 rounded-3 bg-light border mb-4">
+                <Row className="align-items-center">
+                  <Col xs={12} md={8}>
+                    <h5 className="fw-bold text-primary mb-1">Scan and Order</h5>
+                    <p className="text-muted small mb-3">
+                      Unlock customer self-service QR ordering and real-time dashboard order tracking.
+                    </p>
+                    <div className="d-flex gap-3 text-muted small">
+                      <span><strong>Monthly:</strong> ₹99 / month</span>
+                      <span><strong>Yearly:</strong> ₹999 / year</span>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={4} className="text-md-end mt-3 mt-md-0">
+                    {existingQueries['Scan and Order'] ? (
+                      <Button
+                        variant="outline-secondary"
+                        className="opacity-75 px-4 rounded-pill"
+                        disabled
+                      >
+                        <CsLineIcons icon="hourglass" size="14" className="me-2" /> Inquiry Pending
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="none"
+                        className="profile-custom-btn-outline px-4 rounded-pill"
+                        onClick={() => {
+                          setInquirySubName('Scan and Order');
+                          setShowInquiryModal(true);
+                        }}
+                      >
+                        <CsLineIcons icon="email" size="14" className="me-2" /> Send Inquiry
+                      </Button>
+                    )}
+                  </Col>
+                </Row>
+              </div>
+            )}
           </Card.Body>
         </Card>
       )}
