@@ -991,7 +991,7 @@ const validateOrder = () => {
           <Button 
             variant="outline-info" 
             className="rounded-pill d-flex align-items-center px-3 py-1 text-decoration-none" 
-            onClick={() => history.goBack()}
+            onClick={() => history.push('/operations/order-history')}
             style={{ fontWeight: 600, fontSize: '0.9rem', borderColor: '#23b3f4', color: '#23b3f4' }}
           >
             <CsLineIcons icon="arrow-left" size="15" className="me-2" />
