@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zxx">
+<!--<< Header Area >>-->
+
+<head>
+  <!-- ========== Meta Tags ========== -->
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="Gramentheme" />
+  <meta name="keywords"
+    content="restaurant POS software, menu management POS, food delivery integration, inventory management restaurant, billing software, cloud POS system, restaurant analytics, online order management" />
+  <meta name="description"
+    content="All-in-one POS solution for modern restaurants. Manage orders, menus, pricing, and delivery integrations with real-time control using TheBox." />
+
+  <!-- ======== Page title ============ -->
+  <title>TheBox - Street Food Pricing</title>
+  <!--<< Favcion >>-->
+  <link rel="shortcut icon" href="assets/images/favicon.png" />
+  <!--<< Bootstrap min.css >>-->
+  <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+  <!--<< All Min Css >>-->
+  <link rel="stylesheet" href="assets/css/all.min.css" />
+  <!--<< Animate.css >>-->
+  <link rel="stylesheet" href="assets/css/animate.css" />
+  <!--<< Magnific popup.css >>-->
+  <link rel="stylesheet" href="assets/css/magnific-popup.css" />
+  <!--<< MeanMenu.css >>-->
+  <link rel="stylesheet" href="assets/css/meanmenu.css" />
+  <!--<< Swiper Bundle.css >>-->
+  <link rel="stylesheet" href="assets/css/swiper-bundle.min.css" />
+  <!--<< NiceSelect.css >>-->
+  <link rel="stylesheet" href="assets/css/nice-select.css" />
+  <!--<< Main.css >>-->
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <style>
+    p {
+      font-size: 14px;
+    }
+
+    .section-title .title {
+      font-size: 30px;
+    }
+
+    @media screen and (max-width: 767px) {
+      .section-title .title {
+        font-size: 25px !important;
+      }
+
+      p {
+        font-size: 13px;
+        line-height: normal;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Preloader Start -->
+  <div id="preloader" class="preloader">
+    <div class="animation-preloader">
+      <div class="spinner"></div>
+      <div class="txt-loading">
+        <span data-text-preloader="T" class="letters-loading"> T </span>
+        <span data-text-preloader="H" class="letters-loading"> H </span>
+        <span data-text-preloader="E" class="letters-loading"> E </span>
+        <span data-text-preloader="B" class="letters-loading"> B </span>
+        <span data-text-preloader="O" class="letters-loading"> O </span>
+        <span data-text-preloader="X" class="letters-loading"> X </span>
+      </div>
+      <p class="text-center">Loading</p>
+    </div>
+    <div class="loader">
+      <div class="row">
+        <div class="col-3 loader-section section-left">
+          <div class="bg"></div>
+        </div>
+        <div class="col-3 loader-section section-left">
+          <div class="bg"></div>
+        </div>
+        <div class="col-3 loader-section section-right">
+          <div class="bg"></div>
+        </div>
+        <div class="col-3 loader-section section-right">
+          <div class="bg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mouse Cursor Start -->
+  <div class="mouse-cursor cursor-outer"></div>
+  <div class="mouse-cursor cursor-inner"></div>
+
+  <!-- Back To Top Start -->
+  <button id="back-top" class="back-to-top"><i class="fa-solid fa-chevron-up"></i></button>
+
+  <!-- Centralized Header Area -->
+  <script src="assets/js/header.js"></script>
+
+  <!-- Search Area Start -->
+  <div class="search-wrap">
+    <div class="search-inner">
+      <i class="fas fa-times search-close" id="search-close"></i>
+      <div class="search-cell m-xl-5 p-xl-5 w-50 ">
+        <form action="" id="" method="POST" class="contact-form-items">
+          <div class="row g-xl-4">
+            <h2 class="title mb-xl-1 mb-3">Quick Enquiry</h2>
+            <div class="col-lg-6">
+              <div class="form-clt">
+                <input type="text" class="main-search-input" name="name" id="name" placeholder="Your Name" />
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="form-clt">
+                <input type="text" class="main-search-input" name="email2" id="email2" placeholder="Your Email" />
+              </div>
+            </div>
+            <div class="col-lg-12">
+              <div class="form-clt">
+                <input type="text" class="main-search-input" name="phone" id="phone" placeholder="Your Number" />
+              </div>
+            </div>
+            <div class="col-lg-12">
+              <div class="form-clt"><textarea name="message" class="main-search-input" id="message"
+                  placeholder="Write Message"></textarea></div>
+            </div>
+            <div class="col-lg-7 py-xl-1 py-3">
+              <button type="submit" class="theme-btn ">Send Message <i
+                  class="fa-solid fa-arrow-right-long ms-1"></i></button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breadcumb Section S T A R T -->
+  <div class="breadcumb-section fix">
+    <div class="breadcumb-container-wrapper" data-bg-src="assets/images/bg/breadcumgBg.png">
+      <div class="container">
+        <div class="shape1"><img src="assets/images/shape/breadCumbShape1_1.png" alt="shape" /></div>
+        <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape" /></div>
+        <div class="breadcumb-wrapper">
+          <div class="page-heading">
+            <h1>Street Food Pricing</h1>
+            <div class="links">
+              <a href="index.html">Home<span class="slash">/</span></a>Street Food Pricing
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pricing Section S T A R T -->
+  <section class="pricing-section section-padding  fix">
+    <div class="container-fluid px-4 px-xl-5">
+      <div class="section-title text-center mxw-685 mx-auto">
+        <h2 class="title">Simple POS plans for Street Food counters.</h2>
+        <p class="text">No hidden setups, transparent annual billing built for street vendors.</p>
+      </div>
+      <div class="pricing-wrapper style1">
+        <div class="tab-content mt-4" id="pills-tabContent">
+          <div class="tab-pane fade active show" role="tabpanel" aria-labelledby="pills-monthly-tab">
+            
+        <style>
+          .pricing-tab-buttons button.active {
+            background: #1ea8e7 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 10px rgba(30, 168, 231, 0.3);
+          }
+          .pricing-tab-buttons button:hover:not(.active) {
+            color: #1ea8e7 !important;
+          }
+        </style>
+        <div class="pricing-tab-button-wrapper text-center mb-5">
+          <div class="pricing-tab-buttons d-inline-flex align-items-center p-1" style="background: rgba(30, 168, 231, 0.08); border-radius: 30px;">
+            <button id="btn-monthly" class="btn px-4 py-2 border-0" style="font-weight: 600; font-size: 15px; border-radius: 20px; transition: all 0.3s; background: transparent; color: #555;">Monthly</button>
+            <button id="btn-yearly" class="btn px-4 py-2 border-0 active" style="font-weight: 600; font-size: 15px; border-radius: 20px; transition: all 0.3s; background: transparent; color: #555;">Yearly</button>
+          </div>
+        </div>
+        <div class="tab-content mt-4" id="pills-tabContent">
+          <div class="tab-pane fade active show" role="tabpanel" aria-labelledby="pills-monthly-tab">
+            <div id="pricing-plans-container" class="row gy-5 gx-3">
+              <!-- Dynamic pricing cards will be injected here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Centralized Footer Area -->
+  <script src="assets/js/footer.js"></script>
+
+
+
+  <!--<< All JS Plugins >>-->
+  <script src="assets/js/jquery-3.7.1.min.js"></script>
+  <!--<< Bootstrap Js >>-->
+  <script src="assets/js/bootstrap.bundle.min.js"></script>
+  <!--<< Waypoints Js >>-->
+  <script src="assets/js/jquery.waypoints.js"></script>
+  <!--<< Counterup Js >>-->
+  <script src="assets/js/jquery.counterup.min.js"></script>
+  <!--<< Viewport Js >>-->
+  <script src="assets/js/viewport.jquery.js"></script>
+  <!--<< Tilt Js >>-->
+  <script src="assets/js/tilt.min.js"></script>
+  <!--<< Swiper Slider Js >>-->
+  <script src="assets/js/swiper-bundle.min.js"></script>
+  <!--<< MeanMenu Js >>-->
+  <script src="assets/js/jquery.meanmenu.min.js"></script>
+  <!--<< Magnific popup Js >>-->
+  <script src="assets/js/magnific-popup.min.js"></script>
+  <!--<< Wow Animation Js >>-->
+  <script src="assets/js/wow.min.js"></script>
+  <!--<< NIce Select Js >>-->
+  <script src="assets/js/nice-select.min.js"></script>
+  <!--<< Main.js >>-->
+  <script src="assets/js/main.js"></script>
+
+  <script>
+  </script>
+  
+  <script>
+    // Configuration Data for Pricing Plans
+    const plansData = [
+  {
+    "name": "STREET FOOD BASIC",
+    "prices": {
+      "monthly": {
+        "price": "₹199",
+        "period": "month",
+        "actualPrice": "₹249"
+      },
+      "yearly": {
+        "price": "₹1,999",
+        "period": "year",
+        "actualPrice": "₹2,499"
+      }
+    },
+    "tagline": "Essential features for street stalls and quick food counters.",
+    "isPopular": false,
+    "features": [
+      {
+        "category": "BILLING & CORE",
+        "items": [
+          {
+            "name": "Billing Operations",
+            "checked": true
+          },
+          {
+            "name": "Dish & Menu Setup",
+            "checked": true
+          },
+          {
+            "name": "Scan and Menu",
+            "checked": true
+          },
+          {
+            "name": "WhatsApp Invoices",
+            "checked": true
+          },
+          {
+            "name": "Inventory Management",
+            "checked": true
+          },
+          {
+            "name": "USB/Bluetooth Printing",
+            "checked": true
+          },
+          {
+            "name": "Cash Registry Log",
+            "checked": true
+          },
+          {
+            "name": "Basic Sales Reports",
+            "checked": true
+          }
+        ]
+      },
+      {
+        "category": "ADD-ONS & INTEGRATIONS",
+        "items": [
+          {
+            "name": "Scan & Order",
+            "checked": false
+          }
+        ]
+      },
+      {
+        "category": "LOYALTY & CRM ENGINE",
+        "items": [
+          {
+            "name": "Customer Database Profiles",
+            "checked": false
+          },
+          {
+            "name": "Custom WhatsApp Campaigns",
+            "checked": false
+          },
+          {
+            "name": "Loyalty Points Engine",
+            "checked": false
+          }
+        ]
+      },
+      {
+        "category": "SUPPORT",
+        "items": [
+          {
+            "name": "Free Staff Training",
+            "checked": true
+          },
+          {
+            "name": "24/7 Email Support",
+            "checked": true
+          },
+          {
+            "name": "Dedicated Account Manager",
+            "checked": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "STREET FOOD GROWTH",
+    "prices": {
+      "monthly": {
+        "price": "₹399",
+        "period": "month",
+        "actualPrice": "₹799"
+      },
+      "yearly": {
+        "price": "₹3,999",
+        "period": "year",
+        "actualPrice": "₹7,999"
+      }
+    },
+    "tagline": "Advanced CRM and operations for multiple stalls and premium trucks.",
+    "isPopular": true,
+    "features": [
+      {
+        "category": "BILLING & CORE",
+        "items": [
+          {
+            "name": "Billing Operations",
+            "checked": true
+          },
+          {
+            "name": "Dish & Menu Setup",
+            "checked": true
+          },
+          {
+            "name": "Scan and Menu",
+            "checked": true
+          },
+          {
+            "name": "WhatsApp Invoices",
+            "checked": true
+          },
+          {
+            "name": "Inventory Management",
+            "checked": true
+          },
+          {
+            "name": "USB/Bluetooth Printing",
+            "checked": true
+          },
+          {
+            "name": "Cash Registry Log",
+            "checked": true
+          },
+          {
+            "name": "Advanced Sales Reports",
+            "checked": true
+          }
+        ]
+      },
+      {
+        "category": "ADD-ONS & INTEGRATIONS",
+        "items": [
+          {
+            "name": "Scan & Order",
+            "checked": true
+          }
+        ]
+      },
+      {
+        "category": "LOYALTY & CRM ENGINE",
+        "items": [
+          {
+            "name": "Customer Database Profiles",
+            "checked": true
+          },
+          {
+            "name": "Custom WhatsApp Campaigns",
+            "checked": true
+          },
+          {
+            "name": "Loyalty Points Engine",
+            "checked": true
+          }
+        ]
+      },
+      {
+        "category": "SUPPORT",
+        "items": [
+          {
+            "name": "Free Staff Training",
+            "checked": true
+          },
+          {
+            "name": "24/7 Email Support",
+            "checked": true
+          },
+          {
+            "name": "Dedicated Account Manager",
+            "checked": true
+          }
+        ]
+      }
+    ]
+  }
+];
+
+    const checkSvg = `<div style="flex-shrink:0; display:flex; align-items:center; margin-top:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 15 15" fill="none"><path opacity="0.992" fill-rule="evenodd" clip-rule="evenodd" d="M7.22393 0C10.1444 0.0048682 12.3871 1.22628 13.952 3.66423C15.1321 5.76513 15.3168 7.95136 14.5062 10.2229C13.3721 12.8859 11.3758 14.4614 8.51719 14.9495C5.62984 15.2424 3.28454 14.2622 1.48125 12.0088C-0.0776275 9.77987 -0.406074 7.37811 0.495906 4.80353C1.26674 2.9139 2.5754 1.53341 4.42187 0.662026C5.31983 0.270692 6.25384 0.0500183 7.22393 0ZM11.2269 4.43403C11.6225 4.43526 11.7508 4.62002 11.6118 4.98829C9.90797 6.93843 8.20413 8.8886 6.50032 10.8387C6.34295 10.9814 6.17359 10.9968 5.99226 10.8849C5.24811 9.89445 4.50399 8.904 3.75985 7.91352C3.63052 7.68883 3.67671 7.50922 3.89841 7.37466C3.99079 7.35412 4.08316 7.35412 4.17554 7.37466C4.74004 7.75441 5.30458 8.1342 5.86909 8.51396C6.02234 8.62678 6.18659 8.64729 6.36176 8.57554C7.97994 7.1872 9.60165 5.80667 11.2269 4.43403Z" fill="#54daff" /></svg></div>`;
+    const crossSvg = `<div style="flex-shrink:0; display:flex; align-items:center; margin-top:3px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 15 15" fill="none"><path opacity="0.992" fill-rule="evenodd" clip-rule="evenodd" d="M7.5 0C11.6421 0 15 3.35786 15 7.5C15 11.6421 11.6421 15 7.5 15C3.35786 15 0 11.6421 0 7.5C0 3.35786 3.35786 0 7.5 0ZM10.5303 4.46967C10.8232 4.17678 11.2981 4.17678 11.591 4.46967C11.8839 4.76256 11.8839 5.23744 11.591 5.53033L9.12132 8L11.591 10.4697C11.8839 10.7626 11.8839 11.2374 11.591 11.5303C11.2981 11.8232 10.8232 11.8232 10.5303 11.5303L8.06066 9.06066L5.53033 11.591C5.23744 11.8839 4.76256 11.8839 4.46967 11.591C4.17678 11.2981 4.17678 10.8232 4.46967 10.5303L6.93934 8L4.46967 5.53033C4.17678 5.23744 4.17678 4.76256 4.46967 4.46967C4.76256 4.17678 5.23744 4.17678 5.53033 4.46967L8 6.93934L10.5303 4.46967Z" fill="#dc3545" /></svg></div>`;
+
+    let currentBillingPeriod = 'yearly';
+
+    function renderPricingPlans() {
+      const container = document.getElementById('pricing-plans-container');
+      if (!container) return;
+
+      container.innerHTML = plansData.map(plan => {
+        const popularBadge = plan.isPopular
+          ? `<span class="badge" style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); background-color:#28a745; color:white; padding:8px 14px; font-size:12px; font-weight:bold; border-radius:15px; letter-spacing:0.5px;">MOST POPULAR</span>`
+          : '';
+
+        const priceInfo = plan.prices[currentBillingPeriod];
+
+        const featuresHtml = plan.features.map(cat => {
+          const itemsHtml = cat.items.map(item => {
+            const icon = item.checked ? checkSvg : crossSvg;
+            return `
+              <li style="font-size:15px; margin-bottom:10px; display:flex; align-items:flex-start; gap:10px; line-height:1.5;">
+                ${icon}
+                <div>${item.name}</div>
+              </li>`;
+          }).join('');
+
+          return `
+            <li>
+              <h4 style="font-size:15px; margin-top:20px; margin-bottom:12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #111;">
+                ${cat.category}
+              </h4>
+            </li>
+            ${itemsHtml}`;
+        }).join('');
+
+        return `
+          <div class="col-xl px-2 col-md-6 mb-4">
+            <div class="pricing-card style1 position-relative" style="padding: 40px 25px;">
+              ${popularBadge}
+              <div class="pricing-card-header" style="margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid rgba(0,0,0,0.05);">
+                <h6 style="font-size: 22px; margin-bottom: 8px; text-transform: uppercase; font-weight: 800;">${plan.name}</h6>
+                <div class="price-wrapper" style="margin-bottom:10px;">
+                  <span class="price" style="font-size: 32px; font-weight: 800;">${priceInfo.price}</span>
+                  <span class="period" style="font-size: 14px; color: #777;">/ ${priceInfo.period}</span>
+                  <span class="actualprice text-decoration-line-through text-muted" style="font-size: 15px; margin-left:8px;">${priceInfo.actualPrice}</span>
+                </div>
+                <p class="text" style="font-size: 14px; line-height:1.5;">${plan.tagline}</p>
+              </div>
+              <div class="pricing-card-body">
+                <ul class="checklist" style="list-style: none; padding: 0; margin: 0;">
+                  ${featuresHtml}
+                </ul>
+              </div>
+              <div style="margin-top:30px;">
+                <a class="theme-btn style5 search-trigger w-100 text-center" style="padding:15px 15px; font-size:16px;" href="#search-wrap"> Send Enquiry </a>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      renderPricingPlans();
+
+      // Switch billing period event listeners
+      document.getElementById('btn-monthly').addEventListener('click', function () {
+        currentBillingPeriod = 'monthly';
+        this.classList.add('active');
+        document.getElementById('btn-yearly').classList.remove('active');
+        renderPricingPlans();
+        attachSearchTriggers();
+      });
+
+      document.getElementById('btn-yearly').addEventListener('click', function () {
+        currentBillingPeriod = 'yearly';
+        this.classList.add('active');
+        document.getElementById('btn-monthly').classList.remove('active');
+        renderPricingPlans();
+        attachSearchTriggers();
+      });
+
+      const enquiryForm = document.querySelector('.search-wrap form');
+      if (!enquiryForm) return;
+
+      let selectedPlan = '';
+      function attachSearchTriggers() {
+        document.querySelectorAll('.search-trigger').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const card = btn.closest('.pricing-card');
+            selectedPlan = card ? card.querySelector('h6').textContent.trim() : '';
+          });
+        });
+      }
+      attachSearchTriggers();
+
+      // ── Validation helpers ──────────────────────────────
+      function isValidEmail(email) {
+        return /^[^s@]+@[^s@]+.[^s@]+$/.test(email);
+      }
+      function isValidPhone(phone) {
+        return /^\+?[1-9][0-9]{7,14}$/.test(phone.replace(/\s+/g, ''));
+      }
+      function setError(input, msg) {
+        input.style.borderColor = '#dc3545';
+        const id = 'enq-err-' + input.name;
+        let err = document.getElementById(id);
+        if (!err) {
+          err = document.createElement('small');
+          err.id = id;
+          err.style.cssText = 'color:#dc3545;display:block;margin-top:4px;font-size:12px;';
+          input.parentNode.appendChild(err);
+        }
+        err.textContent = msg;
+      }
+      function clearError(input) {
+        input.style.borderColor = '';
+        const err = document.getElementById('enq-err-' + input.name);
+        if (err) err.remove();
+      }
+      function clearAllErrors() {
+        enquiryForm.querySelectorAll('input, textarea').forEach(clearError);
+      }
+
+      // Clear on input
+      enquiryForm.querySelectorAll('input, textarea').forEach(function (el) {
+        el.addEventListener('input', function () { clearError(el); });
+      });
+
+      enquiryForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearAllErrors();
+
+        const nameEl = enquiryForm.querySelector('input[name="name"]');
+        const emailEl = enquiryForm.querySelector('input[name="email2"]');
+        const phoneEl = enquiryForm.querySelector('input[name="phone"]');
+        const messageEl = enquiryForm.querySelector('textarea[name="message"]');
+
+        const name = nameEl.value.trim();
+        const email2 = emailEl.value.trim();
+        const phone = phoneEl.value.trim();
+        const message = messageEl.value.trim();
+
+        // ── Validate ────────────────────────────────────────
+        let hasError = false;
+        if (!name) {
+          setError(nameEl, 'Name is required.'); hasError = true;
+        } else if (name.length < 2) {
+          setError(nameEl, 'Name must be at least 2 characters.'); hasError = true;
+        }
+        if (!email2) {
+          setError(emailEl, 'Email is required.'); hasError = true;
+        } else if (!isValidEmail(email2)) {
+          setError(emailEl, 'Please enter a valid email address.'); hasError = true;
+        }
+        if (!phone) {
+          setError(phoneEl, 'Phone number is required.'); hasError = true;
+        } else if (!isValidPhone(phone)) {
+          setError(phoneEl, 'Enter a valid mobile number.'); hasError = true;
+        }
+        if (!message) {
+          setError(messageEl, 'Message is required.'); hasError = true;
+        } else if (message.length < 10) {
+          setError(messageEl, 'Message must be at least 10 characters.'); hasError = true;
+        }
+        if (hasError) return;
+
+        // ── Submit ──────────────────────────────────────────
+        const submitBtn = enquiryForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Sending... <i class="fa-solid fa-spinner fa-spin ms-1"></i>';
+
+        try {
+          const response = await fetch('https://api.theboxsync.com/api/user/enquiry', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email2, phone, plan: selectedPlan, message }),
+          });
+          const data = await response.json();
+
+          const existing = document.getElementById('enquiry-alert');
+          if (existing) existing.remove();
+          const alertDiv = document.createElement('div');
+          alertDiv.id = 'enquiry-alert';
+          alertDiv.style.cssText = `
+          padding:14px 18px;border-radius:6px;margin-top:16px;
+          font-size:15px;font-weight:500;
+          ${data.success
+              ? 'background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;'
+              : 'background:#ffebee;color:#c62828;border:1px solid #ef9a9a;'}
+        `;
+          alertDiv.textContent = data.success
+            ? "✅ Enquiry sent! We'll get back to you soon."
+            : '❌ ' + (data.message || 'Something went wrong.');
+
+          const submitRow = enquiryForm.querySelector('.col-lg-7');
+          submitRow.parentNode.insertBefore(alertDiv, submitRow.nextSibling);
+
+          if (data.success) {
+            enquiryForm.reset();
+            setTimeout(function () {
+              alertDiv.remove();
+              const closeBtn = document.getElementById('search-close');
+              if (closeBtn) closeBtn.click();
+            }, 2500);
+          } else {
+            setTimeout(function () { alertDiv.remove(); }, 6000);
+          }
+        } catch (err) {
+          console.error(err);
+          alert('❌ Network error. Please check your connection.');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

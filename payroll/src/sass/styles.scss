@@ -163,6 +163,7 @@ Table of Contents
 @import 'layout/footer';
 @import 'layout/print';
 @import 'layout/settings';
+@import 'layout/loader';
 
 html,
 body {
@@ -938,3 +939,4 @@ html[data-placement="vertical"] .nav-container .nav-content .menu-container .men
   transform: scale(1.15);
   color: var(--bs-white, #ffffff) !important;
 }
+
