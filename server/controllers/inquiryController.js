@@ -78,7 +78,7 @@ const replyToInquiry = async (req, res) => {
             </div>
 
             <div style="background: #ebf8ff; border: 1px solid #90cdf4; padding: 15px; border-radius: 6px; margin: 20px 0;">
-              <p style="margin: 0 0 12px 0; color: #2b6cb0; font-size: 14px; border-bottom: 1px solid #bee3f8; padding-bottom: 8px;"><strong>Our Reply:</strong></p>
+              <p style="margin: 0 0 12px 0; color: #2b6cb0; font-size: 14px; border-bottom: 1px solid #bee3f8; padding-bottom: 8px;"><strong>Reply:</strong></p>
               <p style="color: #2c5282; margin: 0; white-space: pre-wrap;">${replyText}</p>
             </div>
 

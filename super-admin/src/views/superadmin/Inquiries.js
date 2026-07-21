@@ -197,8 +197,9 @@ const Inquiries = () => {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Sender</th>
+                  <th>Sender (Email & Contact)</th>
                   <th>Restaurant / City</th>
+                  <th>Purpose / Addon Name</th>
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
@@ -210,10 +211,15 @@ const Inquiries = () => {
                       <td>{new Date(inq.date).toLocaleDateString("en-IN")}</td>
                       <td>
                         <div className="fw-bold">{inq.name}</div>
+                        <div className="text-muted small">{inq.email}</div>
+                        <div className="text-muted small">{inq.phone}</div>
                       </td>
                       <td>
                         <div className="fw-bold">{inq.restaurant_name}</div>
                         <div className="text-muted small">{inq.city}</div>
+                      </td>
+                      <td>
+                        <div className="fw-bold text-primary">{inq.purpose}</div>
                       </td>
                       <td>
                         {inq.status === "Pending" && <span className="border border-warning text-warning rounded-pill d-flex align-items-center justify-content-center fw-bold text-uppercase" style={uniformStyle}>Pending</span>}
@@ -256,8 +262,10 @@ const Inquiries = () => {
                       <div className="d-flex justify-content-between align-items-start mb-2">
                         <div>
                           <h6 className="fw-bold mb-0">{inq.name}</h6>
-                          <div className="fw-bold text-dark mt-1">{inq.restaurant_name}</div>
+                          <div className="text-muted small">{inq.email} | {inq.phone}</div>
+                          <div className="fw-bold text-dark mt-2">{inq.restaurant_name}</div>
                           <div className="text-muted small">{inq.city}</div>
+                          <div className="fw-bold text-primary mt-1 small">{inq.purpose}</div>
                         </div>
                         <div className="text-end">
                           <Badge
@@ -332,24 +340,7 @@ const Inquiries = () => {
                     <div className="small text-muted fw-bold text-uppercase">Location / City</div>
                     <div className="fw-bold text-dark">{selectedInquiry.city}</div>
                   </div>
-                  <div>
-                    <div className="small text-muted fw-bold text-uppercase">Current Status</div>
-                    <div className="mt-1 d-flex gap-2 align-items-center">
-                      <Form.Select
-                        size="sm"
-                        style={{ borderRadius: "8px", width: "120px" }}
-                        value={selectedInquiry.status}
-                        onChange={(e) => {
-                          updateStatus(selectedInquiry._id, e.target.value);
-                          setSelectedInquiry({...selectedInquiry, status: e.target.value});
-                        }}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                      </Form.Select>
-                    </div>
-                  </div>
+                  {/* Current Status removed as per user request */}
                 </div>
               </Col>
               
@@ -367,7 +358,7 @@ const Inquiries = () => {
               <Col xs={12}>
                 {selectedInquiry.reply ? (
                   <>
-                    <div className="small text-muted fw-bold text-uppercase mb-2 text-success">Our Reply</div>
+                    <div className="small text-muted fw-bold text-uppercase mb-2 text-success">Reply</div>
                     <div className="p-3 rounded-3 border" style={{ backgroundColor: "#ebf8ff", borderColor: "#90cdf4" }}>
                       <pre className="mb-0" style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", color: "#2c5282" }}>
                         {selectedInquiry.reply}
@@ -376,11 +367,11 @@ const Inquiries = () => {
                   </>
                 ) : (
                   <>
-                    <div className="small text-muted fw-bold text-uppercase mb-2 text-primary">Draft a Reply</div>
+                    <div className="small text-muted fw-bold text-uppercase mb-2 text-primary">Send Reply / Pricing Details</div>
                     <Form.Control
                       as="textarea"
-                      rows={4}
-                      placeholder="Type your reply here... (An email will be sent automatically)"
+                      rows={6}
+                      placeholder="Type your reply, include pricing details, features, and next steps... (An email will be sent automatically)"
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
                     />

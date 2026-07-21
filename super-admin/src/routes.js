@@ -4,6 +4,7 @@ import { DEFAULT_PATHS } from 'config.js';
 
 const superAdmin = {
   dashboard: lazy(() => import('views/superadmin/Dashboard')),
+  customers: lazy(() => import('views/superadmin/Customers')),
   inquiries: lazy(() => import('views/superadmin/Inquiries')),
   admins: lazy(() => import('views/superadmin/AdminManagement')),
   timeline: lazy(() => import('views/superadmin/ActivityTimeline')),
@@ -26,6 +27,12 @@ const allRoutes = {
       label: 'Dashboard',
       icon: 'dashboard-1',
       component: superAdmin.dashboard,
+    },
+    {
+      path: `${appRoot}/customers`,
+      label: 'Customers',
+      icon: 'user',
+      component: superAdmin.customers,
     },
     {
       path: `${appRoot}/inquiries`,

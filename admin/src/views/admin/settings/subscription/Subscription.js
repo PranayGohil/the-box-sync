@@ -327,13 +327,17 @@ const Subscription = () => {
       setActionLoading((prev) => ({ ...prev, [featureName]: true }));
       const payload = {
         name: userDetails?.name || 'Admin',
-        email2: userDetails?.email || 'Unknown',
+        email: userDetails?.email || 'Unknown',
         phone: userDetails?.mobile || 'Unknown',
-        message: `I am interested in upgrading my plan to include the "${featureName}" feature. Please contact me with pricing and details.`,
-        plan: featureName,
+        city: userDetails?.city || '',
+        restaurant_name: userDetails?.restaurant_name || userDetails?.name || 'Unknown',
+        purpose: `Excluded Addon: ${featureName}`,
+        message: `I am interested in the "${featureName}" add-on. Please contact me with pricing and details.`,
       };
 
-      await axios.post(`${process.env.REACT_APP_API}/user/enquiry`, payload);
+      await axios.post(`${process.env.REACT_APP_API}/inquiry/create`, payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       toast.success(`Inquiry sent for ${featureName}. Our team will contact you soon for Upgrades & Add-ons and pricing.`);
     } catch (err) {
       console.error(err);

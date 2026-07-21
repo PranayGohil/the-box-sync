@@ -26,6 +26,8 @@ const Subscription = () => {
   const [existingQueries, setExistingQueries] = useState({});
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [inquirySubName, setInquirySubName] = useState(null);
+  const [isAddonInquiry, setIsAddonInquiry] = useState(false);
+  const [customAddonName, setCustomAddonName] = useState('');
 
   const fetchSubscriptions = async () => {
     try {
@@ -241,6 +243,7 @@ const Subscription = () => {
                       className="profile-custom-btn-outline px-4 rounded-pill"
                       onClick={() => {
                         setInquirySubName('Basic CRM');
+                        setIsAddonInquiry(false);
                         setShowInquiryModal(true);
                       }}
                     >
@@ -254,12 +257,58 @@ const Subscription = () => {
         </Card>
       )}
 
+      {/* Excluded Addons Request */}
+      <Card className="profile-glass-card border-0 mb-4">
+        <Card.Body className="p-4 p-md-5">
+          <h4 className="fw-bold mb-4">Request Excluded Add-ons</h4>
+          <div className="p-4 rounded-3 bg-light border">
+            <Row className="align-items-center">
+              <Col xs={12} md={6}>
+                <h5 className="fw-bold text-primary mb-1">Looking for another Add-on?</h5>
+                <p className="text-muted small mb-0">
+                  If there is an add-on or feature that is currently excluded from your plan, you can request it here.
+                </p>
+              </Col>
+              <Col xs={12} md={6} className="mt-3 mt-md-0">
+                <div className="d-flex flex-column flex-sm-row gap-2 justify-content-md-end align-items-center">
+                  <input
+                    type="text"
+                    className="form-control rounded-pill shadow-sm"
+                    placeholder="E.g. Inventory Pro, Analytics..."
+                    value={customAddonName}
+                    onChange={(e) => setCustomAddonName(e.target.value)}
+                    style={{ maxWidth: "250px", fontSize: "0.9rem" }}
+                  />
+                  <Button
+                    variant="none"
+                    className="profile-custom-btn-outline px-4 rounded-pill text-nowrap"
+                    disabled={!customAddonName.trim()}
+                    onClick={() => {
+                      setInquirySubName(customAddonName.trim());
+                      setIsAddonInquiry(true);
+                      setShowInquiryModal(true);
+                    }}
+                  >
+                    <CsLineIcons icon="email" size="14" className="me-2" /> Request
+                  </Button>
+                </div>
+              </Col>
+            </Row>
+          </div>
+        </Card.Body>
+      </Card>
+
       {showInquiryModal && (
         <RaiseInquiryModal
           show={showInquiryModal}
-          handleClose={() => setShowInquiryModal(false)}
+          handleClose={() => {
+            setShowInquiryModal(false);
+            setCustomAddonName('');
+          }}
           subscriptionName={inquirySubName}
           fetchData={fetchSubscriptions}
+          isAddonInquiry={isAddonInquiry}
+          currentUser={currentUser}
         />
       )}
     </div>
