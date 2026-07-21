@@ -332,6 +332,24 @@ export const openPrintWindow = async (order_id, setPrinting) => {
       printFrame.style.top = '0px';
       printFrame.style.left = '0px';
       document.body.appendChild(printFrame);
+
+      const style = document.createElement('style');
+      style.innerHTML = `
+        @media print {
+          body > *:not(#print-frame) {
+            display: none !important;
+          }
+          #print-frame {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: block !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
     }
     const printWindow = printFrame.contentWindow;
 
