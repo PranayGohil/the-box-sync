@@ -58,18 +58,23 @@ export const {
 export const fetchNotifications = () => async (dispatch) => {
   dispatch(notificationsLoading());
   try {
-    const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/superadmin/inquiries`, getHeaders());
-    if (response.data && response.data.data) {
-      const inquiries = response.data.data;
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/inquiry/get-all`, getHeaders());
+    if (response.data) {
+      const inquiries = Array.isArray(response.data) ? response.data : (response.data.data || []);
       const unreadInquiries = inquiries.filter(inq => inq.status === "Pending");
       
-      const notifications = unreadInquiries.slice(0, 5).map(inq => ({
-        _id: inq._id,
-        detail: `New inquiry from ${inq.name || 'User'}`,
-        link: '/inquiries',
-        icon: 'message',
-        read: false
-      }));
+      const notifications = unreadInquiries.slice(0, 5).map(inq => {
+        const isAddon = inq.purpose && inq.purpose.toLowerCase().includes('addon');
+        return {
+          _id: inq._id,
+          detail: isAddon 
+            ? `New add ons inquiry by ${inq.restaurant_name || inq.name || 'Restaurant'}`
+            : `New inquiry from ${inq.name || 'User'}`,
+          link: '/inquiries',
+          icon: 'message',
+          read: false
+        };
+      });
 
       dispatch(notificationsLoaded(notifications));
     } else {

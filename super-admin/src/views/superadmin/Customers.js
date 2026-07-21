@@ -8,12 +8,12 @@ import CsLineIcons from "cs-line-icons/CsLineIcons";
 import { toast } from "react-toastify";
 import { DEFAULT_PATHS } from "config.js";
 
-const Dashboard = () => {
-  const title = "Dashboard";
-  const description = "Monitor system performance and user subscriptions.";
+const Customers = () => {
+  const title = "All Customers";
+  const description = "View and manage all restaurant customers.";
   const breadcrumbs = [
     { to: "", text: "Home" },
-    { to: "dashboard", text: "Dashboard" },
+    { to: "customers", text: "Customers" },
   ];
 
   const [users, setUsers] = useState([]);
@@ -69,9 +69,6 @@ const Dashboard = () => {
   };
 
   const filteredUsers = users.filter((user) => {
-    // ONLY display unapproved restaurants
-    if (user.isApproved === true) return false;
-
     const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.restaurant_code?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -92,7 +89,6 @@ const Dashboard = () => {
 
   const totalActive = users.reduce((acc, user) => acc + user.subscriptions.filter((s) => s.status === "active").length, 0);
   const totalExpired = users.reduce((acc, user) => acc + user.subscriptions.filter((s) => s.status === "expired").length, 0);
-  const totalPending = users.filter((user) => user.isApproved !== true).length;
 
   if (loading && users.length === 0) {
     return (
@@ -118,7 +114,7 @@ const Dashboard = () => {
         {error && <Alert variant="danger">{error}</Alert>}
 
         <Row className="g-4 mb-4">
-          <Col lg="3" md="6" sm="6">
+          <Col md="4" sm="6">
             <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: "4px solid #3b82f6" }}>
               <Card.Body className="p-4 dashboard-stat-card-inner">
                 <div className="d-flex justify-content-between align-items-start">
@@ -133,22 +129,7 @@ const Dashboard = () => {
               </Card.Body>
             </Card>
           </Col>
-          <Col lg="3" md="6" sm="6">
-            <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: "4px solid #f59e0b" }}>
-              <Card.Body className="p-4 dashboard-stat-card-inner">
-                <div className="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div className="dashboard-stat-label mb-2">Pending Requests</div>
-                    <div className="dashboard-stat-value" style={{ color: "#f59e0b" }}>{totalPending}</div>
-                  </div>
-                  <div className="sw-6 sh-6 rounded-circle d-flex justify-content-center align-items-center" style={{ backgroundColor: "rgba(245, 158, 11, 0.1)" }}>
-                    <CsLineIcons icon="clock" size="24" style={{ color: "#f59e0b" }} />
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col lg="3" md="6" sm="6">
+          <Col md="4" sm="6">
             <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: "4px solid #10b981" }}>
               <Card.Body className="p-4 dashboard-stat-card-inner">
                 <div className="d-flex justify-content-between align-items-start">
@@ -163,7 +144,7 @@ const Dashboard = () => {
               </Card.Body>
             </Card>
           </Col>
-          <Col lg="3" md="6" sm="6">
+          <Col md="4" sm="6">
             <Card className="dashboard-interactive-card border-0 h-100 shadow-sm" style={{ borderTop: "4px solid #ef4444" }}>
               <Card.Body className="p-4 dashboard-stat-card-inner">
                 <div className="d-flex justify-content-between align-items-start">
@@ -183,7 +164,7 @@ const Dashboard = () => {
         <Card className="mb-5 shadow-sm border-0">
           <Card.Body className="p-4">
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
-              <h4 className="fw-bold mb-0">Pending Approvals</h4>
+              <h4 className="fw-bold mb-0">Customer Directory</h4>
               <style>{`
                 .search-bar-directory {
                   width: 100%;
@@ -453,4 +434,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Customers;

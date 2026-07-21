@@ -6,7 +6,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
-function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData }) {
+function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData, isAddonInquiry, currentUser }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,14 +24,30 @@ function RaiseInquiryModal({ show, handleClose, subscriptionName, fetchData }) {
       setIsLoading(true);
       setError('');
       try {
-        await axios.post(
-          `${process.env.REACT_APP_API}/customerquery/addquery`,
-          {
-            message: formValues.message,
-            purpose: `Against Blocked Subscription: ${subscriptionName}`,
-          },
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        if (isAddonInquiry && currentUser) {
+          await axios.post(
+            `${process.env.REACT_APP_API}/inquiry/create`,
+            {
+              name: currentUser.name || currentUser.first_name || '',
+              email: currentUser.email || '',
+              phone: currentUser.phone || currentUser.mobile || '',
+              city: currentUser.city || '',
+              restaurant_name: currentUser.restaurant_name || currentUser.name || '',
+              purpose: `Excluded Addon: ${subscriptionName}`,
+              message: formValues.message,
+            },
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+        } else {
+          await axios.post(
+            `${process.env.REACT_APP_API}/customerquery/addquery`,
+            {
+              message: formValues.message,
+              purpose: `Against Blocked Subscription: ${subscriptionName}`,
+            },
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+        }
 
         toast.success('Inquiry raised successfully!');
         fetchData?.();
