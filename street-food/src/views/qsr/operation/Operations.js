@@ -1,5 +1,5 @@
-import React, { useContext } from 'react';
-import { Row, Col, Nav, Dropdown } from 'react-bootstrap';
+import React from 'react';
+import { Row, Col, Nav } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { LAYOUT } from 'constants.js';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -8,7 +8,6 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Switch, Route, Redirect, NavLink, useLocation } from 'react-router-dom';
 
-import { AuthContext } from 'contexts/AuthContext';
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
 
@@ -17,10 +16,9 @@ import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
 
 import FinancialReport from './FinancialReport';
-
+import MenuPerformanceReport from './MenuPerformanceReport';
 
 const NavContent = () => {
-  const { activePlans } = useContext(AuthContext);
   return (
     <>
       <style>{`
@@ -72,9 +70,14 @@ const NavContent = () => {
             <span className="align-middle">Order</span>
           </div>
           <div className="sub-menu-container">
-            <Nav.Link as={NavLink} to="/operations/order-history" className="px-0" isActive={(match, location) => {
-              return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
-            }}>
+            <Nav.Link
+              as={NavLink}
+              to="/operations/order-history"
+              className="px-0"
+              isActive={(match, location) => {
+                return location.pathname.startsWith('/operations/order-history') || location.pathname.startsWith('/operations/order-details');
+              }}
+            >
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Order History</span>
             </Nav.Link>
@@ -102,8 +105,6 @@ const NavContent = () => {
           </div>
         </div>
 
-
-
         <div className="mb-1">
           <div className="section-header">
             <CsLineIcons icon="file-text" size="17" />
@@ -113,6 +114,10 @@ const NavContent = () => {
             <Nav.Link as={NavLink} to="/operations/financial-report" className="px-0">
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Expense-Income</span>
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/operations/menu-performance" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">Menu Performance</span>
             </Nav.Link>
           </div>
         </div>
@@ -201,18 +206,20 @@ const MobileBottomNav = () => {
         {navItems.map((item) => {
           let isActive = false;
           if (item.label === 'Order') {
-            isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details') || pathname.startsWith('/operations/web-orders');
+            isActive =
+              pathname.startsWith('/operations/order-history') ||
+              pathname.startsWith('/operations/order-details') ||
+              pathname.startsWith('/operations/web-orders');
           } else if (item.label === 'Menu') {
-            isActive = pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
+            isActive =
+              pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
+          } else if (item.label === 'Report') {
+            isActive = pathname.startsWith('/operations/financial-report') || pathname.startsWith('/operations/menu-performance');
           } else {
             isActive = pathname.startsWith(item.to);
           }
           return (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
-            >
+            <NavLink key={item.label} to={item.to} className={`bottom-nav-item ${isActive ? 'active' : ''}`}>
               <CsLineIcons icon={item.icon} size="20" />
             </NavLink>
           );
@@ -229,13 +236,11 @@ const Operations = () => {
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10) || 1200;
 
-  const { activePlans } = useContext(AuthContext);
-
   return (
     <div className="position-relative pb-7 pb-lg-0">
       {width && width < lgBreakpoint && <MobileBottomNav />}
       <Row>
-        {(width && width >= lgBreakpoint) ? (
+        {width && width >= lgBreakpoint ? (
           <Col xs="auto" className="d-none d-lg-flex">
             <div className="nav flex-column sw-25">
               <NavContent />
@@ -252,8 +257,8 @@ const Operations = () => {
             <Route exact path="/operations/add-dish" render={() => <AddDishes />} />
             <Route exact path="/operations/qr-for-menu" render={() => <QRforMenu />} />
 
-
             <Route exact path="/operations/financial-report" render={() => <FinancialReport />} />
+            <Route exact path="/operations/menu-performance" render={() => <MenuPerformanceReport />} />
           </Switch>
         </Col>
       </Row>

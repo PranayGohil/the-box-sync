@@ -1757,9 +1757,12 @@ const orderHistory = async (req, res) => {
 
     // Search Filter
     if (search) {
-      const regex = new RegExp("^" + search, "i");
+      const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(escapedSearch, "i");
       filter.$or = [
+        { order_no: regex },
         { customer_name: regex },
+        { customer_phone: regex },
         { table_no: regex }
       ];
     }
