@@ -15,7 +15,7 @@ export default function RosterManagement() {
   const breadcrumbs = [
     { to: '', text: 'Home' },
     { to: 'payroll/settings', text: 'Settings' },
-    { to: 'payroll/roster', text: 'Shifts' },
+    { to: 'payroll/shift', text: 'Shifts' },
   ];
 
   // Helper to get Monday of the current week

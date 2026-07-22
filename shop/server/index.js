@@ -31,6 +31,7 @@ const otpRouter = require("./router/otpRoutes.js");
 const dailyStockRouter = require("./router/dailyStockRoutes.js");
 const loyaltyRouter = require("./router/loyaltyRoutes.js");
 const notificationRouter = require("./router/notificationRoutes");
+const accountingRouter = require("./router/accountingRoutes");
 
 const PORT = process.env.PORT;
 // const ORIGINS = process.env.ORIGINS ? process.env.ORIGINS.split(",") : [];
@@ -191,6 +192,7 @@ app.use("/api/otp", otpRouter)
 app.use("/api/daily-stock", dailyStockRouter);
 app.use("/api/loyalty", loyaltyRouter);
 app.use("/api/notifications", notificationRouter);
+app.use("/api/accounting", accountingRouter);
 
 
 const errorHandler = require("./middlewares/errorHandler");

@@ -37,6 +37,10 @@ const LeavePolicy = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [indexToDelete, setIndexToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   const [form, setForm] = useState({
     leave_type_id: '',
     name: '',
@@ -186,13 +190,18 @@ const LeavePolicy = () => {
     }
   };
 
-  const handleDelete = async (index) => {
-    if (!window.confirm('Delete this leave type? Active leave requests may be affected.')) return;
+  const confirmDeleteLeaveType = (index) => {
+    setIndexToDelete(index);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (indexToDelete === null) return;
+    setDeleting(true);
     const updated = [...leaveTypes];
-    updated.splice(index, 1);
+    updated.splice(indexToDelete, 1);
     
     try {
-      setSaving(true);
       const token = localStorage.getItem('token');
       const branchId = selectedBranch?.value || '';
       const url = branchId 
@@ -203,13 +212,15 @@ const LeavePolicy = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data && res.data.success) {
-        toast.success('Leave type deleted');
+        toast.success('Leave type deleted successfully');
         setLeaveTypes(res.data.data.leave_types || []);
+        setShowDeleteModal(false);
+        setIndexToDelete(null);
       }
     } catch (err) {
       toast.error('Failed to delete leave type');
     } finally {
-      setSaving(false);
+      setDeleting(false);
     }
   };
 
@@ -245,12 +256,12 @@ const LeavePolicy = () => {
               </div>
             )}
             <Button
-              variant="none"
+              variant="primary"
               onClick={() => handleShowModal()}
-              className="px-4 py-2 rounded-pill d-flex align-items-center justify-content-center leave-policy-custom-btn-outline shadow-sm w-100 w-sm-auto"
+              className="px-4 py-2 rounded-pill d-flex align-items-center justify-content-center shadow-sm w-100 w-sm-auto"
               style={{ height: '38px' }}
             >
-              <CsLineIcons icon="plus" className="me-2" size="18" stroke="currentColor" />
+              <CsLineIcons icon="plus" className="me-2" size="18" />
               <span>Add Leave Type</span>
             </Button>
           </Col>
@@ -281,12 +292,24 @@ const LeavePolicy = () => {
                       </Badge>
                       <span className="text-dark leave-policy-title">{lt.name}</span>
                     </div>
-                    <div className="d-flex align-items-center">
-                      <Button variant="none" className="leave-policy-card-icon-btn edit-btn me-1.5" onClick={() => handleShowModal(idx)} title="Edit">
-                        <CsLineIcons icon="edit" size="15" />
+                    <div className="d-flex align-items-center gap-1">
+                      <Button 
+                        variant="outline-primary" 
+                        size="sm" 
+                        className="btn-icon btn-icon-only rounded-circle shadow-sm me-1" 
+                        onClick={() => handleShowModal(idx)} 
+                        title="Edit Leave Type"
+                      >
+                        <CsLineIcons icon="edit" size="14" />
                       </Button>
-                      <Button variant="none" className="leave-policy-card-icon-btn delete-btn" onClick={() => handleDelete(idx)} title="Delete">
-                        <CsLineIcons icon="bin" size="15" />
+                      <Button 
+                        variant="outline-danger" 
+                        size="sm" 
+                        className="btn-icon btn-icon-only rounded-circle shadow-sm" 
+                        onClick={() => confirmDeleteLeaveType(idx)} 
+                        title="Delete Leave Type"
+                      >
+                        <CsLineIcons icon="bin" size="14" />
                       </Button>
                     </div>
                   </div>
@@ -508,14 +531,48 @@ const LeavePolicy = () => {
             </Row>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="none" className="leave-policy-custom-btn-outline" onClick={() => setShowModal(false)}>
+            <Button variant="outline-secondary" className="rounded-pill px-4" onClick={() => setShowModal(false)}>
               Cancel
             </Button>
-            <Button variant="none" className="leave-policy-custom-btn-outline" type="submit">
-              Update List
+            <Button variant="primary" className="rounded-pill px-4" type="submit">
+              {editingIndex !== null ? 'Save Changes' : 'Add Leave Type'}
             </Button>
           </Modal.Footer>
         </Form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => !deleting && setShowDeleteModal(false)} centered size="sm">
+        <Modal.Body className="p-4 text-center">
+          <div 
+            className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+            style={{ width: '56px', height: '56px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
+          >
+            <CsLineIcons icon="bin" size="24" />
+          </div>
+          <h5 className="fw-bold mb-2">Delete Leave Type?</h5>
+          <p className="text-muted small mb-4">
+            Are you sure you want to delete <strong className="text-dark">{indexToDelete !== null && leaveTypes[indexToDelete]?.name}</strong>? Active leave requests may be affected.
+          </p>
+          <div className="d-flex justify-content-center gap-2">
+            <Button 
+              variant="light" 
+              className="rounded-pill px-4 fw-bold border" 
+              onClick={() => setShowDeleteModal(false)} 
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="danger" 
+              className="rounded-pill px-4 fw-bold shadow-sm" 
+              onClick={handleConfirmDelete} 
+              disabled={deleting}
+            >
+              {deleting ? <Spinner size="sm" animation="border" /> : 'Delete'}
+            </Button>
+          </div>
+        </Modal.Body>
       </Modal>
     </div>
   );

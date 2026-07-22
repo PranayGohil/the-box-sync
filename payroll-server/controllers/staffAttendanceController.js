@@ -182,6 +182,102 @@ const generateWeekOffs = (staff, globalOffs, existingRecords) => {
     return weekOffRecords;
 };
 
+const generateHolidays = async (userId, staffId, existingRecords) => {
+    try {
+        const Holiday = require("../models/holidayModel");
+        const existingDates = new Set(existingRecords.map(r => r.date));
+        const holidayRecords = [];
+
+        const currentYear = new Date().getFullYear();
+        const yearsToCheck = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
+
+        for (const yr of yearsToCheck) {
+            const count = await Holiday.countDocuments({ user_id: String(userId), year: yr });
+            if (count === 0) {
+                const defaultHolidays = {
+                    2026: [
+                        { name: "New Year's Day", date: "2026-01-01", holiday_type: "public", is_paid: true },
+                        { name: "Republic Day", date: "2026-01-26", holiday_type: "national", is_paid: true },
+                        { name: "Holi", date: "2026-03-04", holiday_type: "public", is_paid: true },
+                        { name: "Id-ul-Fitr", date: "2026-03-21", holiday_type: "public", is_paid: true },
+                        { name: "Good Friday", date: "2026-04-03", holiday_type: "public", is_paid: true },
+                        { name: "May Day / Labour Day", date: "2026-05-01", holiday_type: "public", is_paid: true },
+                        { name: "Id-ul-Zuha (Bakrid)", date: "2026-05-27", holiday_type: "public", is_paid: true },
+                        { name: "Muharram", date: "2026-06-26", holiday_type: "public", is_paid: true },
+                        { name: "Independence Day", date: "2026-08-15", holiday_type: "national", is_paid: true },
+                        { name: "Milad-un-Nabi", date: "2026-08-26", holiday_type: "public", is_paid: true },
+                        { name: "Janmashtami", date: "2026-09-04", holiday_type: "public", is_paid: true },
+                        { name: "Mahatma Gandhi's Birthday", date: "2026-10-02", holiday_type: "national", is_paid: true },
+                        { name: "Dussehra", date: "2026-10-20", holiday_type: "public", is_paid: true },
+                        { name: "Diwali (Deepavali)", date: "2026-11-08", holiday_type: "public", is_paid: true },
+                        { name: "Guru Nanak's Birthday", date: "2026-11-24", holiday_type: "public", is_paid: true },
+                        { name: "Christmas Day", date: "2026-12-25", holiday_type: "public", is_paid: true }
+                    ],
+                    2027: [
+                        { name: "New Year's Day", date: "2027-01-01", holiday_type: "public", is_paid: true },
+                        { name: "Republic Day", date: "2027-01-26", holiday_type: "national", is_paid: true },
+                        { name: "Holi", date: "2027-03-22", holiday_type: "public", is_paid: true },
+                        { name: "Good Friday", date: "2027-03-26", holiday_type: "public", is_paid: true },
+                        { name: "May Day / Labour Day", date: "2027-05-01", holiday_type: "public", is_paid: true },
+                        { name: "Independence Day", date: "2027-08-15", holiday_type: "national", is_paid: true },
+                        { name: "Mahatma Gandhi's Birthday", date: "2027-10-02", holiday_type: "national", is_paid: true },
+                        { name: "Diwali (Deepavali)", date: "2027-10-29", holiday_type: "public", is_paid: true },
+                        { name: "Christmas Day", date: "2027-12-25", holiday_type: "public", is_paid: true }
+                    ]
+                };
+
+                let list = defaultHolidays[yr] || [
+                    { name: "New Year's Day", date: `${yr}-01-01`, holiday_type: "public", is_paid: true },
+                    { name: "Republic Day", date: `${yr}-01-26`, holiday_type: "national", is_paid: true },
+                    { name: "May Day / Labour Day", date: `${yr}-05-01`, holiday_type: "public", is_paid: true },
+                    { name: "Independence Day", date: `${yr}-08-15`, holiday_type: "national", is_paid: true },
+                    { name: "Mahatma Gandhi's Birthday", date: `${yr}-10-02`, holiday_type: "national", is_paid: true },
+                    { name: "Christmas Day", date: `${yr}-12-25`, holiday_type: "public", is_paid: true }
+                ];
+
+                const docs = list.map(item => ({
+                    user_id: String(userId),
+                    name: item.name,
+                    date: new Date(item.date),
+                    holiday_type: item.holiday_type,
+                    is_paid: item.is_paid,
+                    year: yr,
+                    notes: item.notes || ""
+                }));
+
+                if (docs.length > 0) {
+                    await Holiday.insertMany(docs);
+                }
+            }
+        }
+
+        const dbHolidays = await Holiday.find({
+            user_id: String(userId),
+            year: { $in: yearsToCheck }
+        }).lean();
+
+        dbHolidays.forEach(h => {
+            const dateStr = new Date(h.date).toISOString().split('T')[0];
+            if (!existingDates.has(dateStr)) {
+                holidayRecords.push({
+                    _id: 'hol_' + h._id,
+                    date: dateStr,
+                    status: 'holiday',
+                    holiday_name: h.name,
+                    holiday_type: h.holiday_type,
+                    is_paid: h.is_paid,
+                    staff_id: staffId
+                });
+            }
+        });
+
+        return holidayRecords;
+    } catch (err) {
+        console.error("Error generating holidays for attendance:", err);
+        return [];
+    }
+};
+
 // ── GET /attendance/today ─────────────────────────────────────────────────────
 // Returns all staff with today's attendance record merged in.
 // Used by ManageAttendance.jsx
@@ -214,13 +310,22 @@ const getTodayAttendance = async (req, res) => {
             attendanceMap[record.staff_id.toString()] = record;
         });
 
+        const Holiday = require("../models/holidayModel");
+        const todayHoliday = await Holiday.findOne({
+            user_id: String(userId),
+            date: {
+                $gte: new Date(`${today}T00:00:00.000Z`),
+                $lte: new Date(`${today}T23:59:59.999Z`)
+            }
+        }).lean();
+
         // Merge into staff list
         const result = staffList.map((staff) => ({
             ...staff,
             todayAttendance: attendanceMap[staff._id.toString()] || null,
         }));
 
-        res.json({ success: true, data: result });
+        res.json({ success: true, data: result, todayHoliday: todayHoliday || null });
     } catch (error) {
         console.error("Error fetching today's attendance:", error);
         res.status(500).json({ success: false, message: "Server error" });
@@ -269,7 +374,8 @@ const getAttendanceByStaff = async (req, res) => {
         const globalOffs = payrollConfig?.global_weekly_offs || [];
         
         const weekOffs = generateWeekOffs(staff, globalOffs, attendance);
-        const mergedAttendance = [...attendance, ...weekOffs].sort((a, b) => b.date.localeCompare(a.date));
+        const holidays = await generateHolidays(adminUserId, staffId, [...attendance, ...weekOffs]);
+        const mergedAttendance = [...attendance, ...weekOffs, ...holidays].sort((a, b) => b.date.localeCompare(a.date));
 
         res.json({
             success: true,

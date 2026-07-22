@@ -314,6 +314,7 @@ const getStaffData = async (req, res) => {
       department: 1,
       department_node_id: 1,
       branch_id: 1,
+      paying_entity_id: 1,
       resignation: 1,
     };
 

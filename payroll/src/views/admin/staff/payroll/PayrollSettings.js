@@ -12,6 +12,7 @@ import { getPayrollConfig, updatePayrollConfig, getWordTemplateHtml } from 'api/
 import ReactQuill from 'react-quill';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import 'react-quill/dist/quill.snow.css';
+import PayingEntitiesSettings from './PayingEntitiesSettings';
 
 const WEEK_DAYS = [
     { value: 0, label: 'Sunday' },
@@ -677,6 +678,12 @@ const PayrollSettings = () => {
                     </Col>
                 </Row>
             </div>
+
+            <Row className="g-4 mb-4">
+                <Col xs="12">
+                    <PayingEntitiesSettings />
+                </Col>
+            </Row>
 
             <Row className="g-4 mb-5">
                 <Col xs="12">

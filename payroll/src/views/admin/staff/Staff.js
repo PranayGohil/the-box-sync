@@ -53,9 +53,9 @@ const NavContent = ({ path }) => {
             <i className="me-2 sw-3 d-inline-block" />
             <span className="align-middle">Manage Attendance</span>
           </Nav.Link>
-          <Nav.Link as={NavLink} to={`${path}/roster`} className="px-0">
+          <Nav.Link as={NavLink} to={`${path}/shift`} className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Roster</span>
+            <span className="align-middle">Manage Shift</span>
           </Nav.Link>
         </div>
       </div>
@@ -256,6 +256,7 @@ const Staff = () => {
             {/* Attendance */}
             <Route exact path={`${path}/attendance`} component={ManageAttendance} />
             <Route exact path={`${path}/attendance/view/:id`} component={ViewAttendance} />
+            <Route exact path={`${path}/shift`} component={RosterManagement} />
             <Route exact path={`${path}/roster`} component={RosterManagement} />
 
             {/* Payroll */}

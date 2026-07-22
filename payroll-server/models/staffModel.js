@@ -53,6 +53,11 @@ const addStaff = new Schema({
     type: Schema.Types.ObjectId,
     ref: "branch",
   },
+  paying_entity_id: {
+    type: Schema.Types.ObjectId,
+    ref: "payingEntity",
+    default: null,
+  },
   department_node_id: {
     type: String,
     default: null,

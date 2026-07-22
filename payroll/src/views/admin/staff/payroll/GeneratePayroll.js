@@ -50,6 +50,7 @@ export default function GeneratePayroll() {
 
     const [staffList, setStaffList] = useState([]);
     const [staffLoading, setStaffLoading] = useState(false);
+    const [payingEntities, setPayingEntities] = useState([]);
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -75,6 +76,9 @@ export default function GeneratePayroll() {
         if (urlStaffId) {
             fetchStaffListOnMount();
         }
+        axios.get(`${process.env.REACT_APP_API}/paying-entity/all`, authHeader())
+            .then(res => setPayingEntities(res.data?.data || []))
+            .catch(err => console.error("Failed to load paying entities", err));
     }, []);
 
 
@@ -149,6 +153,7 @@ export default function GeneratePayroll() {
                     deductions: 0,
                     deduction_reason: '',
                     notes: '',
+                    paying_entity_id: p.paying_entity_id || '',
                 };
             });
             setAdjustments(initAdj);
@@ -186,6 +191,7 @@ export default function GeneratePayroll() {
                 const deductions_map = {};
                 const deduction_reason_map = {};
                 const notes_map = {};
+                const paying_entity_map = {};
 
                 previews.forEach((p) => {
                     const adj = adjustments[p.staff_id] || {};
@@ -194,6 +200,7 @@ export default function GeneratePayroll() {
                     deductions_map[p.staff_id] = adj.deductions || 0;
                     deduction_reason_map[p.staff_id] = adj.deduction_reason || '';
                     notes_map[p.staff_id] = adj.notes || '';
+                    paying_entity_map[p.staff_id] = adj.paying_entity_id || p.paying_entity_id || '';
                 });
 
                 body = {
@@ -205,6 +212,7 @@ export default function GeneratePayroll() {
                     deductions_map,
                     deduction_reason_map,
                     notes_map,
+                    paying_entity_map,
                 };
             }
 
@@ -404,6 +412,7 @@ export default function GeneratePayroll() {
                                         <th className="text-center">Days (P/A)</th>
                                         <th className="text-end">Base Rate</th>
                                         <th className="text-end">Gross Earned</th>
+                                        <th className="text-center">Paying Account</th>
                                         <th className="text-center" style={{ width: '120px' }}>OT Hours</th>
                                         <th className="text-end">OT Pay</th>
                                         <th className="text-center" style={{ width: '130px' }}>Bonus (₹)</th>
@@ -439,6 +448,20 @@ export default function GeneratePayroll() {
                                                 </td>
                                                 <td className="text-end text-muted fw-medium">₹{(p.staff?.salary || p.base_salary || 0).toLocaleString('en-IN')}</td>
                                                 <td className="text-end text-success fw-bold">₹{(p.earned_breakdown?.total_gross || earned || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</td>
+                                                <td>
+                                                    <Form.Select
+                                                        size="sm"
+                                                        className="input-adjustment mx-auto"
+                                                        value={adj.paying_entity_id || p.paying_entity_id || ''}
+                                                        onChange={(e) => updateAdjustment(p.staff_id, 'paying_entity_id', e.target.value)}
+                                                        style={{ width: '130px', fontSize: '0.78rem' }}
+                                                    >
+                                                        <option value="">Default Account</option>
+                                                        {payingEntities.map(pe => (
+                                                            <option key={pe._id} value={pe._id}>{pe.company_name}</option>
+                                                        ))}
+                                                    </Form.Select>
+                                                </td>
                                                 <td>
                                                     <Form.Control className="input-adjustment mx-auto" type="number" step={0.5} value={adj.overtime_hours ?? 0} onChange={(e) => updateAdjustment(p.staff_id, 'overtime_hours', e.target.value)} />
                                                 </td>

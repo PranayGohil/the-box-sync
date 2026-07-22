@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Quotation</title>
+    <style>
+        body { font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif; padding: 30px; font-size: 14px; }
+        .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, .15); }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #333; }
+        .company-details, .customer-details { margin-bottom: 20px; }
+        table { width: 100%; text-align: left; border-collapse: collapse; }
+        table th, table td { padding: 8px; border-bottom: 1px solid #ddd; }
+        table th { background: #eee; font-weight: bold; }
+        .totals { text-align: right; margin-top: 20px; }
+        .totals p { margin: 5px 0; }
+        .totals p.grand-total { font-size: 18px; font-weight: bold; border-top: 2px solid #333; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <div class="header">
+            <div>
+                <h1>QUOTATION</h1>
+                <p>Quote #: <%= quotation.quotationNumber %><br>Date: <%= new Date(quotation.date).toLocaleDateString() %><br>Valid Until: <%= quotation.validUntil ? new Date(quotation.validUntil).toLocaleDateString() : 'N/A' %></p>
+            </div>
+            <div>
+                <h2><%= shop.name || 'Your Company' %></h2>
+                <p>GSTIN: <%= shop.gstin || 'N/A' %><br>Address: <%= shop.address %></p>
+            </div>
+        </div>
+
+        <div class="customer-details">
+            <strong>Quotation For:</strong><br>
+            <%= quotation.customerDetails.name %><br>
+            Address: <%= quotation.customerDetails.address %>, <%= quotation.customerDetails.state %><br>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total (incl. Tax)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% quotation.items.forEach(function(item) { %>
+                <tr>
+                    <td><%= item.name %></td>
+                    <td><%= item.quantity %></td>
+                    <td><%= item.unitPrice %></td>
+                    <td><%= item.totalAmount %></td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <p>Subtotal: <%= quotation.summary.subTotal %></p>
+            <p>Tax Amount: <%= (quotation.summary.totalCGST + quotation.summary.totalSGST + quotation.summary.totalIGST).toFixed(2) %></p>
+            <p class="grand-total">Grand Total: <%= quotation.summary.grandTotal %></p>
+        </div>
+        
+        <div style="margin-top: 50px;">
+            <p><strong>Notes:</strong><br><%= quotation.notes %></p>
+        </div>
+    </div>
+</body>
+</html>

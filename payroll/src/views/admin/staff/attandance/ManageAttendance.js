@@ -88,6 +88,7 @@ export default function ManageAttendance() {
   const [isHalfDay, setIsHalfDay] = useState(false);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
   const [payrollConfig, setPayrollConfig] = useState(null);
+  const [todayHoliday, setTodayHoliday] = useState(null);
 
   const [showActionModal, setShowActionModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -315,6 +316,7 @@ export default function ManageAttendance() {
         getPayrollConfig().catch(() => null)
       ]);
       setStaffList(attRes.data.data);
+      setTodayHoliday(attRes.data.todayHoliday || null);
       if (polRes.success && polRes.data) {
         setLeaveTypes(polRes.data.leave_types || []);
       }
@@ -934,6 +936,18 @@ export default function ManageAttendance() {
           </Col>
         </Row>
       </div>
+
+      {todayHoliday && (
+        <Alert variant="info" className="glass-card border-0 mb-4 p-3 shadow-sm d-flex align-items-center gap-3" style={{ background: 'rgba(30, 168, 231, 0.08)', borderLeft: '4px solid #1ea8e7' }}>
+          <div className="sw-5 sh-5 rounded-circle d-flex align-items-center justify-content-center text-info fs-4 fw-bold" style={{ backgroundColor: 'rgba(30, 168, 231, 0.15)' }}>
+            🎉
+          </div>
+          <div>
+            <h5 className="fw-bold mb-0 text-info">{todayHoliday.name} ({todayHoliday.holiday_type === 'national' ? 'National Holiday' : 'Public Holiday'})</h5>
+            <small className="text-muted">Official company holiday. Attendance & payroll calculations automatically apply holiday benefits.</small>
+          </div>
+        </Alert>
+      )}
           {error && (
             <Alert variant="danger" className="glass-card border-0 mb-4 d-flex align-items-center justify-content-between p-4 shadow-sm">
               <div className="d-flex align-items-center gap-2 text-danger fw-bold">

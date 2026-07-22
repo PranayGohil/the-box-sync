@@ -94,6 +94,7 @@ app.use("/api/expenses", require("./router/expenseRouter"));
 app.use("/api/feedback", require("./router/feedbackRouter"));
 app.use("/api/shift", require("./router/shiftRouter"));
 app.use("/api/roster", require("./router/rosterRouter"));
+app.use("/api/paying-entity", require("./router/payingEntityRouter"));
 
 const errorHandler = require("./middlewares/errorHandler");
 app.use(errorHandler);

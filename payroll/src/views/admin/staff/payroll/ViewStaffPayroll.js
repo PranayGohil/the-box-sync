@@ -771,7 +771,19 @@ export default function ViewStaffPayroll() {
             <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered size="lg" className="rounded-4">
                 <Modal.Header closeButton className="border-0 pb-0" style={{ borderBottom: '1px solid #e0e0e0' }}>
                     <div className="w-100">
-                        {companyData && (
+                        {selectedPayroll?.paying_entity?.company_name ? (
+                            <div className="text-center pb-2 mb-2" style={{ borderBottom: '1px solid #eee' }}>
+                                <div className="fw-bold text-dark" style={{ fontSize: '1rem', textTransform: 'uppercase' }}>{selectedPayroll.paying_entity.company_name}</div>
+                                {selectedPayroll.paying_entity.address && (
+                                    <div className="text-muted small">{selectedPayroll.paying_entity.address}</div>
+                                )}
+                                {(selectedPayroll.paying_entity.bank_name || selectedPayroll.paying_entity.account_number) && (
+                                    <div className="text-muted small">
+                                        Salary Disbursed From: {selectedPayroll.paying_entity.bank_name} {selectedPayroll.paying_entity.account_number ? `(A/C: ${selectedPayroll.paying_entity.account_number})` : ''}
+                                    </div>
+                                )}
+                            </div>
+                        ) : companyData && (
                             <div className="text-center pb-2 mb-2" style={{ borderBottom: '1px solid #eee' }}>
                                 <div className="fw-bold text-dark" style={{ fontSize: '1rem', textTransform: 'uppercase' }}>{companyData.name}</div>
                                 {(companyData.address || companyData.city) && (

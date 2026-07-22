@@ -303,7 +303,14 @@ const LeaveRequests = () => {
                                                                         </div>
                                                                         <div>
                                                                             <span className="fw-bold text-dark d-block" style={{ fontSize: '0.95rem' }}>{req.staff_id?.f_name} {req.staff_id?.l_name}</span>
-                                                                            <span className="text-muted d-block" style={{ fontSize: '0.8rem' }}>{req.staff_id?.position || 'Staff Member'}</span>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.8rem' }}>
+                                                                                {req.staff_id?.position || 'Staff Member'}
+                                                                                {req.staff_id?.branch_id?.name && (
+                                                                                    <span className="ms-2 badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-2 py-0.5" style={{ fontSize: '0.7rem', fontWeight: 600 }}>
+                                                                                        🏢 {req.staff_id.branch_id.name}
+                                                                                    </span>
+                                                                                )}
+                                                                            </span>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -418,6 +425,11 @@ const LeaveRequests = () => {
                                                                     </span>
                                                                     <span className="text-muted small fw-medium mt-1 d-block">
                                                                         {req.staff_id?.position || 'Staff Member'}
+                                                                        {req.staff_id?.branch_id?.name && (
+                                                                            <span className="ms-2 badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-2 py-0.5" style={{ fontSize: '0.7rem', fontWeight: 600 }}>
+                                                                                🏢 {req.staff_id.branch_id.name}
+                                                                            </span>
+                                                                        )}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -597,7 +609,14 @@ const LeaveRequests = () => {
                                                                         </div>
                                                                         <div>
                                                                             <span className="fw-bold text-dark d-block" style={{ fontSize: '0.95rem' }}>{b.staff_id?.f_name} {b.staff_id?.l_name}</span>
-                                                                            <span className="text-muted d-block" style={{ fontSize: '0.8rem' }}>{b.staff_id?.position || 'Staff Member'}</span>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.8rem' }}>
+                                                                                {b.staff_id?.position || 'Staff Member'}
+                                                                                {b.staff_id?.branch_id?.name && (
+                                                                                    <span className="ms-2 badge bg-soft-info text-info border border-info border-opacity-25 rounded-pill px-2 py-0.5" style={{ fontSize: '0.7rem', fontWeight: 600 }}>
+                                                                                        🏢 {b.staff_id.branch_id.name}
+                                                                                    </span>
+                                                                                )}
+                                                                            </span>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -865,7 +884,10 @@ const LeaveRequests = () => {
                                     <h4 className="fw-bold text-dark mb-0">
                                         {historyStaff.staff_id?.f_name} {historyStaff.staff_id?.l_name}
                                     </h4>
-                                    <span className="text-muted small fw-bold text-uppercase">{historyStaff.staff_id?.position}</span>
+                                    <span className="text-muted small fw-bold text-uppercase">
+                                        {historyStaff.staff_id?.position}
+                                        {historyStaff.staff_id?.branch_id?.name && ` • 🏢 ${historyStaff.staff_id.branch_id.name}`}
+                                    </span>
                                 </div>
                                 <div className="text-end">
                                     <span className="d-block text-muted small fw-bold text-uppercase">Year</span>

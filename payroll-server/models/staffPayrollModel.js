@@ -22,6 +22,15 @@ const staffPayrollSchema = new Schema(
       type: Number,
       required: true,
     },
+    // ── Disbursing Entity Snapshot ────────────────────────────────────────────
+    paying_entity: {
+      entity_id: { type: Schema.Types.ObjectId, ref: "payingEntity", default: null },
+      company_name: { type: String, default: "" },
+      bank_name: { type: String, default: "" },
+      account_number: { type: String, default: "" },
+      ifsc_code: { type: String, default: "" },
+      address: { type: String, default: "" }
+    },
 
     // ── Salary Inputs ─────────────────────────────────────────────────────────
     // ── Salary Breakdowns ─────────────────────────────────────────────────────

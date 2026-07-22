@@ -121,21 +121,43 @@ const getAttendanceCounts = async (staff_id, month, year) => {
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${monthStr}-${String(lastDay).padStart(2, "0")}`;
 
+    const staff = await Staff.findById(staff_id).select("user_id").lean();
+
     const records = await StaffAttendance.find({
         staff_id,
         date: { $gte: startDate, $lte: endDate },
     }).lean();
 
+    const Holiday = require("../models/holidayModel");
+    let dbHolidays = [];
+    if (staff && staff.user_id) {
+        dbHolidays = await Holiday.find({
+            user_id: String(staff.user_id),
+            date: {
+                $gte: new Date(`${startDate}T00:00:00.000Z`),
+                $lte: new Date(`${endDate}T23:59:59.999Z`)
+            }
+        }).lean();
+    }
+
+    const recordedDates = new Set(records.map(r => r.date));
+    let extraHolidayCount = 0;
+
+    dbHolidays.forEach(h => {
+        const hDateStr = new Date(h.date).toISOString().split('T')[0];
+        if (!recordedDates.has(hDateStr)) {
+            extraHolidayCount += 1;
+        }
+    });
+
     let present_days = 0;
     let absent_days = 0;
     let paid_leave_days = 0;
-    let holiday_days = 0;
+    let holiday_days = extraHolidayCount;
     let week_off_days = 0;
     let comp_off_days = 0;
     let total_ot = 0;
-    
-    // Also track unpaid leaves (lwp) explicitly if we added logic for it, otherwise absent is lwp
-    let lwp_leave_days = 0; 
+    let lwp_leave_days = 0;
 
     records.forEach(r => {
         if (r.status === "present") present_days += 1;
@@ -145,9 +167,6 @@ const getAttendanceCounts = async (staff_id, month, year) => {
         else if (r.status === "week_off") week_off_days += 1;
         else if (r.status === "comp_off") comp_off_days += 1;
         else if (r.status === "leave") {
-            // Need to know if this leave was paid or unpaid. We assume paid for now unless we look up LeavePolicy.
-            // A more robust system would log is_paid inside StaffAttendance when marking leave.
-            // For now, assume all marked 'leave' are approved paid leaves. Unpaid leaves usually marked 'absent' or need specific LWP flag.
             paid_leave_days += 1;
         }
 
@@ -168,7 +187,7 @@ const getAttendanceCounts = async (staff_id, month, year) => {
         },
         present_days,
         absent_days,
-        total_records: records.length,
+        total_records: records.length + extraHolidayCount,
         total_ot
     };
 };
@@ -194,7 +213,8 @@ const previewPayroll = async (req, res) => {
                 filter.branch_id = branch_id;
             }
             staffList = await Staff.find(filter)
-                .select("_id staff_id f_name l_name salary salary_structure overtime_rate position photo branch_id bank_account uan_number pan_number")
+                .select("_id staff_id f_name l_name salary salary_structure overtime_rate position photo branch_id paying_entity_id bank_account uan_number pan_number")
+                .populate("paying_entity_id")
                 .lean();
         }
 
@@ -255,6 +275,8 @@ const previewPayroll = async (req, res) => {
                     deduction_reason: "",
                     net_salary,
                     notes: "",
+                    paying_entity_id: staff.paying_entity_id?._id || staff.paying_entity_id || null,
+                    paying_entity: staff.paying_entity_id || null,
                     already_exists: !!existing,
                     existing_status: existing?.status || null,
                 };
@@ -288,7 +310,7 @@ const generatePayroll = async (req, res) => {
             if (!staff) return res.status(404).json({ success: false, message: "Staff not found" });
             staffList = [staff];
         } else {
-            staffList = await Staff.find({ user_id }).select("_id staff_id f_name l_name salary salary_structure overtime_rate position bank_account uan_number pan_number branch_id").lean();
+            staffList = await Staff.find({ user_id }).select("_id staff_id f_name l_name salary salary_structure overtime_rate position bank_account uan_number pan_number branch_id paying_entity_id").lean();
         }
 
         if (staffList.length === 0) return res.status(404).json({ success: false, message: "No staff found" });
@@ -330,12 +352,31 @@ const generatePayroll = async (req, res) => {
                     advance_deduction
                 });
 
+                const PayingEntity = require("../models/payingEntityModel");
+                const paying_entity_map = req.body.paying_entity_map || {};
+                const payingEntityIdToUse = paying_entity_map[sid] || staff.paying_entity_id;
+                let paying_entity = null;
+                if (payingEntityIdToUse) {
+                    const pe = await PayingEntity.findById(payingEntityIdToUse).lean();
+                    if (pe) {
+                        paying_entity = {
+                            entity_id: pe._id,
+                            company_name: pe.company_name,
+                            bank_name: pe.bank_name,
+                            account_number: pe.account_number,
+                            ifsc_code: pe.ifsc_code,
+                            address: pe.address
+                        };
+                    }
+                }
+
                 const payrollData = {
                     staff_id: staff._id, user_id, month, year, working_days_in_month,
                     present_days, absent_days, leave_summary,
                     overtime_hours, overtime_rate, overtime_pay,
                     bonus, expense_claims, deductions, deduction_reason,
                     earned_breakdown, deduction_breakdown, advance_deduction, lwp_deduction,
+                    paying_entity,
                     net_salary, notes, status: "unpaid", paid_date: null,
                 };
 

@@ -36,6 +36,9 @@ const EditStaff = () => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [payingEntities, setPayingEntities] = useState([]);
+  const [shifts, setShifts] = useState([]);
   const [payrollConfig, setPayrollConfig] = useState(null);
   const [globalLeavePolicies, setGlobalLeavePolicies] = useState([]);
   const [uploadingFiles, setUploadingFiles] = useState({
@@ -60,8 +63,6 @@ const EditStaff = () => {
   const [showAddEarningModal, setShowAddEarningModal] = useState(false);
   const [showAddDeductionModal, setShowAddDeductionModal] = useState(false);
   const [newFieldName, setNewFieldName] = useState('');
-  const [branches, setBranches] = useState([]);
-  const [shifts, setShifts] = useState([]);
   // Common restaurant staff positions
   const commonPositions = [
     'Manager',
@@ -294,6 +295,7 @@ const EditStaff = () => {
       shift_id: '',
       position: '',
       branch_id: '',
+      paying_entity_id: '',
       photo: '',
       document_type: '',
       id_number: '',
@@ -668,7 +670,7 @@ const EditStaff = () => {
       try {
         setLoading((prev) => ({ ...prev, initial: true }));
 
-        const [positionsRes, staffRes, branchesRes, shiftsRes] = await Promise.all([
+        const [positionsRes, staffRes, branchesRes, shiftsRes, payingEntitiesRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
@@ -679,6 +681,9 @@ const EditStaff = () => {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
           axios.get(`${process.env.REACT_APP_API}/shift/all`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/paying-entity/all`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
@@ -719,12 +724,17 @@ const EditStaff = () => {
           setShifts(shiftsRes.data.data);
         }
 
+        if (payingEntitiesRes.data?.success) {
+          setPayingEntities(payingEntitiesRes.data.data || []);
+        }
+
         setPositions(positionsRes.data.data);
 
         setFieldValue('staff_id', staff.staff_id);
         setFieldValue('f_name', staff.f_name);
         setFieldValue('l_name', staff.l_name);
         setFieldValue('branch_id', staff.branch_id || '');
+        setFieldValue('paying_entity_id', staff.paying_entity_id || '');
         savedBranchIdRef.current = staff.branch_id || '';
         setFieldValue('birth_date', staff.birth_date);
         setFieldValue('joining_date', staff.joining_date);
@@ -1253,7 +1263,7 @@ const EditStaff = () => {
                 </div>
 
                 <Row className="g-3 mb-3">
-                  <Col md={4}>
+                  <Col md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Job Position</Form.Label>
                       <CreatableSelect
@@ -1273,7 +1283,7 @@ const EditStaff = () => {
                       )}
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Branch</Form.Label>
                       <Form.Select
@@ -1292,7 +1302,10 @@ const EditStaff = () => {
                       {touched.branch_id && errors.branch_id && <div className="text-danger mt-1 small fw-bold">{errors.branch_id}</div>}
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                </Row>
+
+                <Row className="g-3 mb-3">
+                  <Col md={6}>
                     <Form.Group>
                       <Form.Label className="small fw-bold">Shift Timing</Form.Label>
                       <Form.Select
@@ -1306,6 +1319,23 @@ const EditStaff = () => {
                         <option value="">Select Shift</option>
                         {shifts.map(shift => (
                           <option key={shift._id} value={shift._id}>{shift.name} ({shift.start_time} - {shift.end_time})</option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="small fw-bold">Paying Company Account</Form.Label>
+                      <Form.Select
+                        name="paying_entity_id"
+                        value={values.paying_entity_id}
+                        onChange={handleChange}
+                        disabled={loading.submitting}
+                        style={{ height: '38px', borderRadius: '8px' }}
+                      >
+                        <option value="">Default Company Account</option>
+                        {payingEntities.map(pe => (
+                          <option key={pe._id} value={pe._id}>{pe.company_name} {pe.bank_name ? `(${pe.bank_name})` : ''}</option>
                         ))}
                       </Form.Select>
                     </Form.Group>

@@ -21,7 +21,11 @@ router.get('/balances', authMiddleware, async (req, res) => {
       query.staff_id = req.query.staff_id;
     }
 
-    let balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration branch_id');
+    let balances = await LeaveBalance.find(query).populate({
+      path: 'staff_id',
+      select: 'f_name l_name staff_id position leave_policy_configuration branch_id',
+      populate: { path: 'branch_id', select: 'name' }
+    });
 
     // Auto-initialize if no balances found for staff member accessing their own account
     if (balances.length === 0 && req.user && req.user.Role === 'Staff' && req.user.staff_id) {
@@ -46,7 +50,11 @@ router.get('/balances', authMiddleware, async (req, res) => {
           { staff_id, user_id: userId, year },
           { balances: initialBalances },
           { new: true, upsert: true }
-        ).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration branch_id');
+        ).populate({
+          path: 'staff_id',
+          select: 'f_name l_name staff_id position leave_policy_configuration branch_id',
+          populate: { path: 'branch_id', select: 'name' }
+        });
 
         balances = [newBalance];
       }
@@ -95,7 +103,11 @@ router.get('/balances', authMiddleware, async (req, res) => {
         }
       }
       if (anyUpdated) {
-        balances = await LeaveBalance.find(query).populate('staff_id', 'f_name l_name staff_id position leave_policy_configuration branch_id');
+        balances = await LeaveBalance.find(query).populate({
+          path: 'staff_id',
+          select: 'f_name l_name staff_id position leave_policy_configuration branch_id',
+          populate: { path: 'branch_id', select: 'name' }
+        });
       }
     }
     // If accessed by staff, filter out disabled leaves from the response
@@ -175,7 +187,11 @@ router.get('/requests', authMiddleware, async (req, res) => {
     if (status && status !== 'all') query.status = status;
 
     const requests = await LeaveRequest.find(query)
-      .populate('staff_id', 'f_name l_name staff_id position photo')
+      .populate({
+        path: 'staff_id',
+        select: 'f_name l_name staff_id position photo branch_id',
+        populate: { path: 'branch_id', select: 'name' }
+      })
       .sort({ applied_on: -1 });
 
     res.json({ success: true, data: requests });

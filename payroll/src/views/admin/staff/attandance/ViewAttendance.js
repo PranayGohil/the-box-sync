@@ -349,8 +349,8 @@ const ViewAttendance = () => {
         title = '🏖 Week Off';
         backgroundColor = '#94a3b8';
       } else if (att.status === 'holiday') {
-        title = '🎉 Holiday';
-        backgroundColor = '#ec4899';
+        title = att.holiday_name ? `🎉 ${att.holiday_name}` : '🎉 Holiday';
+        backgroundColor = '#1ea8e7';
       }
 
       return {

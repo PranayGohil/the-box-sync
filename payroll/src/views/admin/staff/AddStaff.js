@@ -44,6 +44,7 @@ const AddStaff = () => {
   const [cities, setCities] = useState([]);
   const [positions, setPositions] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [payingEntities, setPayingEntities] = useState([]);
   const [payrollConfig, setPayrollConfig] = useState(null);
   const [globalLeavePolicies, setGlobalLeavePolicies] = useState([]);
   const [shifts, setShifts] = useState([]);
@@ -286,6 +287,7 @@ const AddStaff = () => {
       shift_id: '',
       position: '',
       branch_id: '',
+      paying_entity_id: '',
       photo: '',
       document_type: '',
       id_number: '',
@@ -655,7 +657,7 @@ const AddStaff = () => {
         setLoading((prev) => ({ ...prev, initial: true }));
         setCountries(Country.getAllCountries());
 
-        const [positionsRes, configRes, leavePolicyRes, nextIdRes, branchesRes, shiftsRes] = await Promise.all([
+        const [positionsRes, configRes, leavePolicyRes, nextIdRes, branchesRes, shiftsRes, payingEntitiesRes] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API}/staff/get-positions`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }),
@@ -673,10 +675,21 @@ const AddStaff = () => {
           }),
           axios.get(`${process.env.REACT_APP_API}/shift/all`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          }),
+          axios.get(`${process.env.REACT_APP_API}/paying-entity/all`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           })
         ]);
 
         setPositions(positionsRes.data.data);
+        if (payingEntitiesRes.data?.success) {
+          const pEntities = payingEntitiesRes.data.data || [];
+          setPayingEntities(pEntities);
+          const defaultPe = pEntities.find(p => p.is_default);
+          if (defaultPe) {
+            setFieldValue('paying_entity_id', defaultPe._id);
+          }
+        }
         if (branchesRes.data?.success) {
           setBranches(branchesRes.data.data);
         }
@@ -1166,7 +1179,7 @@ const AddStaff = () => {
                   </div>
 
                   <Row className="g-3 mb-3">
-                    <Col md={4}>
+                    <Col md={6}>
                       <Form.Group>
                         <Form.Label>Job Position</Form.Label>
                         <CreatableSelect
@@ -1184,7 +1197,7 @@ const AddStaff = () => {
                         {touched.position && errors.position && <div className="text-danger mt-1 small fw-bold">{errors.position}</div>}
                       </Form.Group>
                     </Col>
-                    <Col md={4}>
+                    <Col md={6}>
                       <Form.Group>
                         <Form.Label>Branch</Form.Label>
                         <Form.Select
@@ -1203,7 +1216,10 @@ const AddStaff = () => {
                         {touched.branch_id && errors.branch_id && <div className="text-danger mt-1 small fw-bold">{errors.branch_id}</div>}
                       </Form.Group>
                     </Col>
-                    <Col md={4}>
+                  </Row>
+
+                  <Row className="g-3 mb-3">
+                    <Col md={6}>
                       <Form.Group>
                         <Form.Label>Shift Timing</Form.Label>
                         <Form.Select
@@ -1217,6 +1233,23 @@ const AddStaff = () => {
                           <option value="">Select Shift</option>
                           {shifts.map(shift => (
                             <option key={shift._id} value={shift._id}>{shift.name} ({shift.start_time} - {shift.end_time})</option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label>Paying Company Account</Form.Label>
+                        <Form.Select
+                          name="paying_entity_id"
+                          value={values.paying_entity_id}
+                          onChange={handleChange}
+                          disabled={loading.submitting}
+                          style={{ height: '38px', borderRadius: '8px' }}
+                        >
+                          <option value="">Default Company Account</option>
+                          {payingEntities.map(pe => (
+                            <option key={pe._id} value={pe._id}>{pe.company_name} {pe.bank_name ? `(${pe.bank_name})` : ''}</option>
                           ))}
                         </Form.Select>
                       </Form.Group>

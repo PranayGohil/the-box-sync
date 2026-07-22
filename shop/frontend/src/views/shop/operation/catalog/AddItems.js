@@ -1,4 +1,4 @@
-﻿/* eslint-disable react/no-this-in-sfc, func-names, no-unused-vars */
+/* eslint-disable react/no-this-in-sfc, func-names, no-unused-vars */
 import React, { useEffect, useState, useMemo } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Card, Col, Row, Button, Form as BForm, Spinner, Alert, Table } from 'react-bootstrap';
@@ -157,7 +157,7 @@ const AddItems = () => {
   const [storePreferences, setStorePreferences] = useState('optional');
   const [shopType, setShopType] = useState('Other');
   const [submitAction, setSubmitAction] = useState('close'); // 'close' or 'add_another'
-  
+
   const categoryOptions = (suggestions.categories || []).map((c) => ({ label: c.category || c, value: c.category || c }));
   const dishOptions = (suggestions.items || []).map((d) => ({ label: d, value: d }));
   const [counterOptions, setCounterOptions] = useState([]);
@@ -513,6 +513,7 @@ const AddItems = () => {
       height: '38px',
       '&:hover': { border: '1px solid #23b3f4' },
     }),
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
   };
 
   return (
@@ -553,7 +554,8 @@ const AddItems = () => {
                             isClearable
                             menuPlacement="auto"
                             menuPortalTarget={document.body}
-                            isDisabled={isSubmitting || loadingCategories || isFromManageCatalog}
+                            isDisabled={isSubmitting}
+                            isLoading={loadingCategories}
                             options={categoryOptions}
                             value={values.category ? { label: values.category, value: values.category } : null}
                             onChange={(selected) => {
@@ -570,377 +572,377 @@ const AddItems = () => {
                   </Row>
 
                   <div className="mt-5 pt-4 border-top">
-                      <h5 className="fw-bold mb-4">Item Configuration</h5>
-                      
-                      <div className="d-flex flex-column gap-3">
-                        <div
-                          className="p-3 p-md-4 rounded-xl border-0 shadow-sm mb-3"
-                          style={{ background: '#f8fafc', borderRadius: '1.25rem' }}
-                        >
-                          <Row className="g-2 g-md-3 align-items-start">
-                            <Col xs={12} md={6}>
-                              <BForm.Group>
-                                <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
-                                  Item Name
-                                </BForm.Label>
-                                <div className="position-relative">
-                                  <Field
-                                    as={CreatableSelect}
-                                    name="items[0].item_name"
-                                    styles={{
-                                      ...selectStyles,
-                                      control: (base, state) => ({
-                                        ...selectStyles.control(base, state),
-                                        borderColor: values.items[0].item_name === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
-                                        minHeight: '38px',
-                                        borderRadius: '10px'
-                                      })
-                                    }}
-                                    options={dishOptions}
-                                    value={values.items[0].item_name ? { label: values.items[0].item_name, value: values.items[0].item_name } : null}
-                                    onChange={(selected) => handleDishNameChange(selected, 0, values, setFieldValue)}
-                                    placeholder="Select or create item name"
-                                  />
-                                  <ErrorMessage name="items[0].item_name" component="div" className="text-danger small mt-1" />
-                                </div>
-                              </BForm.Group>
-                            </Col>
-                            
-                            {(() => {
-                              const selectedCatObj = (suggestions.categories || []).find(c => c.category === values.category);
-                              const isFoodCategory = selectedCatObj ? selectedCatObj.is_food_category : false;
-                              const shouldShowDietary = storePreferences === 'mandatory' || (storePreferences === 'optional' && isFoodCategory);
-                              
-                              if (!shouldShowDietary) return null;
+                    <h5 className="fw-bold mb-4">Item Configuration</h5>
 
-                              return (
-                                <Col xs={12} md={6}>
-                                  <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
-                                    Dietary Preference
-                                  </BForm.Label>
-                                  <div className="d-flex flex-wrap gap-2" style={{ height: '38px', alignItems: 'center' }}>
-                                    {['veg', 'egg', 'non-veg'].map((type) => (
-                                      <div
-                                        key={type}
-                                        className={`type-type-radio ${type} ${values.items[0].type === type ? 'active' : ''}`}
-                                        onClick={() => setFieldValue('items[0].type', type)}
-                                        style={{ flexGrow: 1, height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                      >
-                                        <div
-                                          className="rounded-circle"
-                                          style={{
-                                            width: '10px',
-                                            height: '10px',
-                                            background: type === 'veg' ? '#10b981' : type === 'egg' ? '#f59e0b' : '#ef4444',
-                                          }}
-                                        />
-                                        {type === 'veg' ? 'Veg' : type === 'egg' ? 'Egg' : 'Non-Veg'}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </Col>
-                              );
-                            })()}
-
-                            <Col xs={12} md={4} className="pt-md-2 mt-3">
-                              <div className="d-flex align-items-center h-100">
-                                <input
-                                  type="file"
-                                  id="file-0"
-                                  className="d-none"
-                                  accept="image/*"
-                                  onChange={(e) => handleImageChange(e, 0, setFieldValue)}
+                    <div className="d-flex flex-column gap-3">
+                      <div
+                        className="p-3 p-md-4 rounded-xl border-0 shadow-sm mb-3"
+                        style={{ background: '#f8fafc', borderRadius: '1.25rem' }}
+                      >
+                        <Row className="g-2 g-md-3 align-items-start">
+                          <Col xs={12} md={6}>
+                            <BForm.Group>
+                              <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
+                                Item Name
+                              </BForm.Label>
+                              <div className="position-relative">
+                                <Field
+                                  as={CreatableSelect}
+                                  name="items[0].item_name"
+                                  styles={{
+                                    ...selectStyles,
+                                    control: (base, state) => ({
+                                      ...selectStyles.control(base, state),
+                                      borderColor: values.items[0].item_name === '' && isSubmitting ? '#ef4444' : state.isFocused ? '#23b3f4' : '#e5e7eb',
+                                      minHeight: '38px',
+                                      borderRadius: '10px'
+                                    })
+                                  }}
+                                  options={dishOptions}
+                                  value={values.items[0].item_name ? { label: values.items[0].item_name, value: values.items[0].item_name } : null}
+                                  onChange={(selected) => handleDishNameChange(selected, 0, values, setFieldValue)}
+                                  placeholder="Select or create item name"
                                 />
-                                <label
-                                  htmlFor="file-0"
-                                  className="custom-btn-outline px-4 py-2 rounded-pill small fw-bold cursor-pointer mb-0 d-inline-flex align-items-center justify-content-center"
-                                  style={{ height: '38px' }}
-                                >
-                                  <CsLineIcons icon="upload" size="14" className="me-2" />
-                                  {values.items[0].item_img ? 'Change Image' : 'Add Image'}
-                                </label>
-                                {imagePreviews[0] && (
-                                  <img
-                                    src={imagePreviews[0]}
-                                    alt="Preview"
-                                    className="ms-2 rounded shadow-sm"
-                                    style={{ width: '45px', height: '45px', objectFit: 'cover' }}
-                                  />
+                                <ErrorMessage name="items[0].item_name" component="div" className="text-danger small mt-1" />
+                              </div>
+                            </BForm.Group>
+                          </Col>
+
+                          {(() => {
+                            const selectedCatObj = (suggestions.categories || []).find(c => c.category === values.category);
+                            const isFoodCategory = selectedCatObj ? selectedCatObj.is_food_category : false;
+                            const shouldShowDietary = storePreferences === 'mandatory' || (storePreferences === 'optional' && isFoodCategory);
+
+                            if (!shouldShowDietary) return null;
+
+                            return (
+                              <Col xs={12} md={6}>
+                                <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
+                                  Dietary Preference
+                                </BForm.Label>
+                                <div className="d-flex flex-wrap gap-2" style={{ height: '38px', alignItems: 'center' }}>
+                                  {['veg', 'egg', 'non-veg'].map((type) => (
+                                    <div
+                                      key={type}
+                                      className={`type-type-radio ${type} ${values.items[0].type === type ? 'active' : ''}`}
+                                      onClick={() => setFieldValue('items[0].type', type)}
+                                      style={{ flexGrow: 1, height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    >
+                                      <div
+                                        className="rounded-circle"
+                                        style={{
+                                          width: '10px',
+                                          height: '10px',
+                                          background: type === 'veg' ? '#10b981' : type === 'egg' ? '#f59e0b' : '#ef4444',
+                                        }}
+                                      />
+                                      {type === 'veg' ? 'Veg' : type === 'egg' ? 'Egg' : 'Non-Veg'}
+                                    </div>
+                                  ))}
+                                </div>
+                              </Col>
+                            );
+                          })()}
+
+                          <Col xs={12} md={4} className="pt-md-2 mt-3">
+                            <div className="d-flex align-items-center h-100">
+                              <input
+                                type="file"
+                                id="file-0"
+                                className="d-none"
+                                accept="image/*"
+                                onChange={(e) => handleImageChange(e, 0, setFieldValue)}
+                              />
+                              <label
+                                htmlFor="file-0"
+                                className="custom-btn-outline px-4 py-2 rounded-pill small fw-bold cursor-pointer mb-0 d-inline-flex align-items-center justify-content-center"
+                                style={{ height: '38px' }}
+                              >
+                                <CsLineIcons icon="upload" size="14" className="me-2" />
+                                {values.items[0].item_img ? 'Change Image' : 'Add Image'}
+                              </label>
+                              {imagePreviews[0] && (
+                                <img
+                                  src={imagePreviews[0]}
+                                  alt="Preview"
+                                  className="ms-2 rounded shadow-sm"
+                                  style={{ width: '45px', height: '45px', objectFit: 'cover' }}
+                                />
+                              )}
+                            </div>
+                          </Col>
+                          <Col xs={12} md={8} className="pt-md-2 mt-3">
+                            <Field
+                              as="textarea"
+                              rows={3}
+                              style={{ resize: 'none' }}
+                              name="items[0].description"
+                              className="form-control pill-input bg-white"
+                              placeholder="Add description (optional)..."
+                            />
+                          </Col>
+
+                          <Col xs={12} className="mt-4">
+                            <div className="p-3 p-md-4 rounded-xl border bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
+                              <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '1rem' }}>
+                                  Inventory & Pricing
+                                </h6>
+                                {typeof errors?.items?.[0]?.variants === 'string' && (
+                                  <div className="text-danger small fw-bold">{errors.items[0].variants}</div>
                                 )}
                               </div>
-                            </Col>
-                            <Col xs={12} md={8} className="pt-md-2 mt-3">
-                              <Field
-                                as="textarea"
-                                rows={3}
-                                style={{ resize: 'none' }}
-                                name="items[0].description"
-                                className="form-control pill-input bg-white"
-                                placeholder="Add description (optional)..."
-                              />
-                            </Col>
-
-                            <Col xs={12} className="mt-4">
-                              <div className="p-3 p-md-4 rounded-xl border bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
-                                <div className="d-flex justify-content-between align-items-center mb-3">
-                                  <h6 className="fw-bold text-primary mb-0" style={{ fontSize: '1rem' }}>
-                                    Inventory & Pricing
-                                  </h6>
-                                  {typeof errors?.items?.[0]?.variants === 'string' && (
-                                    <div className="text-danger small fw-bold">{errors.items[0].variants}</div>
-                                  )}
-                                </div>
-                                <FieldArray name="items[0].variants">
-                                  {({ push: pushVariant, remove: removeVariant }) => (
-                                    <>
-                                      {/* Desktop Table Layout */}
-                                      <div className="table-responsive d-none d-md-block">
-                                        <Table borderless hover className="align-middle mb-0">
-                                          <thead>
-                                            <tr className="border-bottom" style={{ color: '#64748b', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
-                                              <th className="pb-2 text-uppercase">{variantLabel}</th>
-                                              <th className="pb-2 text-uppercase" width="140">Price (â‚¹)</th>
-                                              <th className="pb-2 text-uppercase" width="200">Extra Details</th>
-                                              <th className="pb-2 text-uppercase" width="280">Barcode</th>
-                                              <th className="pb-2 text-uppercase text-center" width="60" />
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {(values.items[0].variants || []).map((variant, vIdx) => (
-                                              <tr key={vIdx} className="border-bottom border-light">
-                                                <td className="py-3">
-                                                  <CreatableSelect
-                                                    styles={selectStyles}
-                                                    isClearable
-                                                    menuPlacement="auto"
-                                                    menuPortalTarget={document.body}
-                                                    options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                                                    value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
-                                                    onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].size_name`, selected ? selected.value : '')}
-                                                    placeholder="e.g. 1kg"
-                                                  />
-                                                  <ErrorMessage name={`items[0].variants[${vIdx}].size_name`} component="div" className="text-danger small mt-1" />
-                                                </td>
-                                                <td className="py-3">
-                                                  <BForm.Control
-                                                    type="text"
-                                                    name={`items[0].variants[${vIdx}].price`}
-                                                    value={variant.price || ''}
-                                                    onChange={handleChange}
-                                                    placeholder="Price"
-                                                    className="pill-input"
-                                                    style={{ height: '38px', borderRadius: '10px' }}
-                                                  />
-                                                  <ErrorMessage name={`items[0].variants[${vIdx}].price`} component="div" className="text-danger small mt-1" />
-                                                </td>
-                                                <td className="py-3">
-                                                  <CreatableSelect
-                                                    styles={selectStyles}
-                                                    isClearable
-                                                    menuPlacement="auto"
-                                                    menuPortalTarget={document.body}
-                                                    options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                                                    value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
-                                                    onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].extra`, selected ? selected.value : '')}
-                                                    placeholder="Optional"
-                                                  />
-                                                </td>
-                                                <td className="py-3">
-                                                  <div className="d-flex align-items-center gap-1">
-                                                    <BForm.Control
-                                                      type="text"
-                                                      name={`items[0].variants[${vIdx}].barcode`}
-                                                      value={variant.barcode || ''}
-                                                      onChange={handleChange}
-                                                      placeholder="Barcode"
-                                                      className="pill-input"
-                                                      style={{ height: '38px', borderRadius: '10px' }}
-                                                    />
-                                                    <Button
-                                                      variant="outline-primary"
-                                                      className="flex-shrink-0 d-flex align-items-center justify-content-center px-3"
-                                                      style={{ height: '38px', borderRadius: '10px' }}
-                                                      onClick={() => setFieldValue(`items[0].variants[${vIdx}].barcode`, Math.floor(100000000000 + Math.random() * 900000000000).toString())}
-                                                    >
-                                                      <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Gen</span>
-                                                    </Button>
-                                                  </div>
-                                                </td>
-                                                <td className="py-3 text-center">
-                                                  <Button
-                                                    variant="outline-danger"
-                                                    onClick={() => removeVariant(vIdx)}
-                                                    disabled={values.items[0].variants.length === 1}
-                                                    style={{ height: '34px', width: '34px', minWidth: '34px', borderRadius: '50%', padding: 0 }}
-                                                    className="d-flex align-items-center justify-content-center btn btn-outline-danger mx-auto"
-                                                  >
-                                                    <CsLineIcons icon="bin" size="14" />
-                                                  </Button>
-                                                </td>
-                                              </tr>
-                                            ))}
-                                            <tr>
-                                              <td colSpan="5" className="pt-3 pb-0 border-0">
-                                                <Button
-                                                  type="button"
-                                                  variant="outline-primary"
-                                                  className="custom-btn-outline py-1 px-3 d-flex align-items-center gap-1 btn btn-outline-primary"
-                                                  style={{ height: '34px', fontSize: '0.85rem', borderRadius: '8px' }}
-                                                  onClick={() => pushVariant({ size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true })}
-                                                >
-                                                  <CsLineIcons icon="plus" size="12" />
-                                                  Add Row
-                                                </Button>
+                              <FieldArray name="items[0].variants">
+                                {({ push: pushVariant, remove: removeVariant }) => (
+                                  <>
+                                    {/* Desktop Table Layout */}
+                                    <div className="table-responsive d-none d-md-block">
+                                      <Table borderless hover className="align-middle mb-0">
+                                        <thead>
+                                          <tr className="border-bottom" style={{ color: '#64748b', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
+                                            <th className="pb-2 text-uppercase">{variantLabel}</th>
+                                            <th className="pb-2 text-uppercase" width="140">Price</th>
+                                            <th className="pb-2 text-uppercase" width="200">Extra Details</th>
+                                            <th className="pb-2 text-uppercase" width="280">Barcode</th>
+                                            <th className="pb-2 text-uppercase text-center" width="60" />
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {(values.items[0].variants || []).map((variant, vIdx) => (
+                                            <tr key={vIdx} className="border-bottom border-light">
+                                              <td className="py-3">
+                                                <CreatableSelect
+                                                  styles={selectStyles}
+                                                  isClearable
+                                                  menuPlacement="auto"
+                                                  menuPortalTarget={document.body}
+                                                  options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                                                  value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
+                                                  onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].size_name`, selected ? selected.value : '')}
+                                                  placeholder="e.g. 1kg"
+                                                />
+                                                <ErrorMessage name={`items[0].variants[${vIdx}].size_name`} component="div" className="text-danger small mt-1" />
                                               </td>
-                                            </tr>
-                                          </tbody>
-                                        </Table>
-                                      </div>
-
-                                      {/* Mobile Stacked Layout (Hidden on Desktop) */}
-                                      <div className="d-flex d-md-none flex-column gap-2">
-                                        {(values.items[0].variants || []).map((variant, vIdx) => (
-                                          <React.Fragment key={vIdx}>
-                                            {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
-                                            <Row className="g-2 align-items-start mb-3 pb-3 border-bottom border-light">
-                                              <Col xs={10} className="order-1">
-                                                <BForm.Group>
-                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    {variantLabel}
-                                                  </BForm.Label>
-                                                  <CreatableSelect
-                                                    styles={selectStyles}
-                                                    isClearable
-                                                    menuPlacement="auto"
-                                                    menuPortalTarget={document.body}
-                                                    options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                                                    value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
-                                                    onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].size_name`, selected ? selected.value : '')}
-                                                    placeholder="e.g. 1kg"
-                                                  />
-                                                  <ErrorMessage name={`items[0].variants[${vIdx}].size_name`} component="div" className="text-danger small mt-1" />
-                                                </BForm.Group>
-                                              </Col>
-                                              <Col xs={6} className="order-3">
-                                                <BForm.Group>
-                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    Price (â‚¹)
-                                                  </BForm.Label>
+                                              <td className="py-3">
+                                                <BForm.Control
+                                                  type="text"
+                                                  name={`items[0].variants[${vIdx}].price`}
+                                                  value={variant.price || ''}
+                                                  onChange={handleChange}
+                                                  placeholder="Price"
+                                                  className="pill-input"
+                                                  style={{ height: '38px', borderRadius: '10px' }}
+                                                />
+                                                <ErrorMessage name={`items[0].variants[${vIdx}].price`} component="div" className="text-danger small mt-1" />
+                                              </td>
+                                              <td className="py-3">
+                                                <CreatableSelect
+                                                  styles={selectStyles}
+                                                  isClearable
+                                                  menuPlacement="auto"
+                                                  menuPortalTarget={document.body}
+                                                  options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                                                  value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
+                                                  onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].extra`, selected ? selected.value : '')}
+                                                  placeholder="Optional"
+                                                />
+                                              </td>
+                                              <td className="py-3">
+                                                <div className="d-flex align-items-center gap-1">
                                                   <BForm.Control
                                                     type="text"
-                                                    name={`items[0].variants[${vIdx}].price`}
-                                                    value={variant.price || ''}
+                                                    name={`items[0].variants[${vIdx}].barcode`}
+                                                    value={variant.barcode || ''}
                                                     onChange={handleChange}
-                                                    placeholder="Price"
+                                                    placeholder="Barcode"
                                                     className="pill-input"
                                                     style={{ height: '38px', borderRadius: '10px' }}
                                                   />
-                                                  <ErrorMessage name={`items[0].variants[${vIdx}].price`} component="div" className="text-danger small mt-1" />
-                                                </BForm.Group>
-                                              </Col>
-                                              <Col xs={6} className="order-4">
-                                                <BForm.Group>
-                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    Extra Details
-                                                  </BForm.Label>
-                                                  <CreatableSelect
-                                                    styles={selectStyles}
-                                                    isClearable
-                                                    menuPlacement="auto"
-                                                    menuPortalTarget={document.body}
-                                                    options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                                                    value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
-                                                    onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].extra`, selected ? selected.value : '')}
-                                                    placeholder="Optional"
-                                                  />
-                                                </BForm.Group>
-                                              </Col>
-                                              <Col xs={12} className="order-5">
-                                                <BForm.Group>
-                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                    Barcode
-                                                  </BForm.Label>
-                                                  <div className="d-flex align-items-center gap-1">
-                                                    <BForm.Control
-                                                      type="text"
-                                                      name={`items[0].variants[${vIdx}].barcode`}
-                                                      value={variant.barcode || ''}
-                                                      onChange={handleChange}
-                                                      placeholder="Barcode"
-                                                      className="pill-input"
-                                                      style={{ height: '38px', borderRadius: '10px' }}
-                                                    />
-                                                    <Button
-                                                      variant="outline-primary"
-                                                      className="flex-shrink-0 d-flex align-items-center justify-content-center px-3"
-                                                      style={{ height: '38px', borderRadius: '10px' }}
-                                                      onClick={() => setFieldValue(`items[0].variants[${vIdx}].barcode`, Math.floor(100000000000 + Math.random() * 900000000000).toString())}
-                                                    >
-                                                      <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Gen</span>
-                                                    </Button>
-                                                  </div>
-                                                </BForm.Group>
-                                              </Col>
-                                              <Col xs={2} className="order-2 d-flex flex-column justify-content-end pb-1 px-1">
-                                                <BForm.Label className="d-none d-sm-block mb-1" style={{ fontSize: '0.75rem', visibility: 'hidden' }}>
-                                                  Delete
-                                                </BForm.Label>
+                                                  <Button
+                                                    variant="outline-primary"
+                                                    className="flex-shrink-0 d-flex align-items-center justify-content-center px-3"
+                                                    style={{ height: '38px', borderRadius: '10px' }}
+                                                    onClick={() => setFieldValue(`items[0].variants[${vIdx}].barcode`, Math.floor(100000000000 + Math.random() * 900000000000).toString())}
+                                                  >
+                                                    <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Gen</span>
+                                                  </Button>
+                                                </div>
+                                              </td>
+                                              <td className="py-3 text-center">
                                                 <Button
                                                   variant="outline-danger"
                                                   onClick={() => removeVariant(vIdx)}
                                                   disabled={values.items[0].variants.length === 1}
-                                                  style={{ height: '36px', width: '36px', minWidth: '36px', borderRadius: '50%', padding: 0 }}
-                                                  className="flex-shrink-0 d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                                  style={{ height: '34px', width: '34px', minWidth: '34px', borderRadius: '50%', padding: 0 }}
+                                                  className="d-flex align-items-center justify-content-center btn btn-outline-danger mx-auto"
                                                 >
                                                   <CsLineIcons icon="bin" size="14" />
                                                 </Button>
-                                              </Col>
-                                            </Row>
-                                          </React.Fragment>
-                                        ))}
-                                        <Button
-                                          type="button"
-                                          variant="outline-primary"
-                                          className="custom-btn-outline py-1 px-3 mt-2 d-flex align-items-center gap-1 align-self-start btn btn-outline-primary"
-                                          style={{ height: '34px', fontSize: '0.8rem', borderRadius: '8px' }}
-                                          onClick={() => pushVariant({ size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true })}
-                                        >
-                                          <CsLineIcons icon="plus" size="12" />
-                                          Add Row
-                                        </Button>
-                                      </div>
-                                    </>
-                                  )}
-                                </FieldArray>
-                              </div>
-                            </Col>
-                          </Row>
-                        </div>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                          <tr>
+                                            <td colSpan="5" className="pt-3 pb-0 border-0">
+                                              <Button
+                                                type="button"
+                                                variant="outline-primary"
+                                                className="custom-btn-outline py-1 px-3 d-flex align-items-center gap-1 btn btn-outline-primary"
+                                                style={{ height: '34px', fontSize: '0.85rem', borderRadius: '8px' }}
+                                                onClick={() => pushVariant({ size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true })}
+                                              >
+                                                <CsLineIcons icon="plus" size="12" />
+                                                Add Row
+                                              </Button>
+                                            </td>
+                                          </tr>
+                                        </tbody>
+                                      </Table>
+                                    </div>
 
-                        <div className="d-flex flex-column flex-sm-row justify-content-end align-items-stretch align-items-sm-center gap-3 mt-2">
-                          <Button
-                            type="submit"
-                            variant="primary"
-                            className="px-4 py-2 fw-bold shadow-sm d-flex justify-content-center align-items-center gap-2"
-                            disabled={isSubmitting}
-                            onClick={() => setSubmitAction('close')}
-                          >
-                            {isSubmitting && submitAction === 'close' ? <Spinner size="sm" /> : <CsLineIcons icon="save" size="18" />}
-                            Save & Close
-                          </Button>
-                          <Button
-                            type="submit"
-                            variant="success"
-                            className="px-4 py-2 fw-bold shadow-sm d-flex justify-content-center align-items-center gap-2 text-white"
-                            disabled={isSubmitting}
-                            onClick={() => setSubmitAction('add_another')}
-                          >
-                            {isSubmitting && submitAction === 'add_another' ? <Spinner size="sm" /> : <CsLineIcons icon="plus" size="18" />}
-                            Save & Add Another
-                          </Button>
-                        </div>
+                                    {/* Mobile Stacked Layout (Hidden on Desktop) */}
+                                    <div className="d-flex d-md-none flex-column gap-2">
+                                      {(values.items[0].variants || []).map((variant, vIdx) => (
+                                        <React.Fragment key={vIdx}>
+                                          {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
+                                          <Row className="g-2 align-items-start mb-3 pb-3 border-bottom border-light">
+                                            <Col xs={10} className="order-1">
+                                              <BForm.Group>
+                                                <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                  {variantLabel}
+                                                </BForm.Label>
+                                                <CreatableSelect
+                                                  styles={selectStyles}
+                                                  isClearable
+                                                  menuPlacement="auto"
+                                                  menuPortalTarget={document.body}
+                                                  options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                                                  value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
+                                                  onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].size_name`, selected ? selected.value : '')}
+                                                  placeholder="e.g. 1kg"
+                                                />
+                                                <ErrorMessage name={`items[0].variants[${vIdx}].size_name`} component="div" className="text-danger small mt-1" />
+                                              </BForm.Group>
+                                            </Col>
+                                            <Col xs={6} className="order-3">
+                                              <BForm.Group>
+                                                <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                  Price
+                                                </BForm.Label>
+                                                <BForm.Control
+                                                  type="text"
+                                                  name={`items[0].variants[${vIdx}].price`}
+                                                  value={variant.price || ''}
+                                                  onChange={handleChange}
+                                                  placeholder="Price"
+                                                  className="pill-input"
+                                                  style={{ height: '38px', borderRadius: '10px' }}
+                                                />
+                                                <ErrorMessage name={`items[0].variants[${vIdx}].price`} component="div" className="text-danger small mt-1" />
+                                              </BForm.Group>
+                                            </Col>
+                                            <Col xs={6} className="order-4">
+                                              <BForm.Group>
+                                                <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                  Extra Details
+                                                </BForm.Label>
+                                                <CreatableSelect
+                                                  styles={selectStyles}
+                                                  isClearable
+                                                  menuPlacement="auto"
+                                                  menuPortalTarget={document.body}
+                                                  options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                                                  value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
+                                                  onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].extra`, selected ? selected.value : '')}
+                                                  placeholder="Optional"
+                                                />
+                                              </BForm.Group>
+                                            </Col>
+                                            <Col xs={12} className="order-5">
+                                              <BForm.Group>
+                                                <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                  Barcode
+                                                </BForm.Label>
+                                                <div className="d-flex align-items-center gap-1">
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`items[0].variants[${vIdx}].barcode`}
+                                                    value={variant.barcode || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="Barcode"
+                                                    className="pill-input"
+                                                    style={{ height: '38px', borderRadius: '10px' }}
+                                                  />
+                                                  <Button
+                                                    variant="outline-primary"
+                                                    className="flex-shrink-0 d-flex align-items-center justify-content-center px-3"
+                                                    style={{ height: '38px', borderRadius: '10px' }}
+                                                    onClick={() => setFieldValue(`items[0].variants[${vIdx}].barcode`, Math.floor(100000000000 + Math.random() * 900000000000).toString())}
+                                                  >
+                                                    <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Gen</span>
+                                                  </Button>
+                                                </div>
+                                              </BForm.Group>
+                                            </Col>
+                                            <Col xs={2} className="order-2 d-flex flex-column justify-content-end pb-1 px-1">
+                                              <BForm.Label className="d-none d-sm-block mb-1" style={{ fontSize: '0.75rem', visibility: 'hidden' }}>
+                                                Delete
+                                              </BForm.Label>
+                                              <Button
+                                                variant="outline-danger"
+                                                onClick={() => removeVariant(vIdx)}
+                                                disabled={values.items[0].variants.length === 1}
+                                                style={{ height: '36px', width: '36px', minWidth: '36px', borderRadius: '50%', padding: 0 }}
+                                                className="flex-shrink-0 d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                              >
+                                                <CsLineIcons icon="bin" size="14" />
+                                              </Button>
+                                            </Col>
+                                          </Row>
+                                        </React.Fragment>
+                                      ))}
+                                      <Button
+                                        type="button"
+                                        variant="outline-primary"
+                                        className="custom-btn-outline py-1 px-3 mt-2 d-flex align-items-center gap-1 align-self-start btn btn-outline-primary"
+                                        style={{ height: '34px', fontSize: '0.8rem', borderRadius: '8px' }}
+                                        onClick={() => pushVariant({ size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true })}
+                                      >
+                                        <CsLineIcons icon="plus" size="12" />
+                                        Add Row
+                                      </Button>
+                                    </div>
+                                  </>
+                                )}
+                              </FieldArray>
+                            </div>
+                          </Col>
+                        </Row>
+                      </div>
+
+                      <div className="d-flex flex-column flex-sm-row justify-content-end align-items-stretch align-items-sm-center gap-3 mt-2">
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          className="px-4 py-2 fw-bold shadow-sm d-flex justify-content-center align-items-center gap-2"
+                          disabled={isSubmitting}
+                          onClick={() => setSubmitAction('close')}
+                        >
+                          {isSubmitting && submitAction === 'close' ? <Spinner size="sm" /> : <CsLineIcons icon="save" size="18" />}
+                          Save & Close
+                        </Button>
+                        <Button
+                          type="submit"
+                          variant="success"
+                          className="px-4 py-2 fw-bold shadow-sm d-flex justify-content-center align-items-center gap-2 text-white"
+                          disabled={isSubmitting}
+                          onClick={() => setSubmitAction('add_another')}
+                        >
+                          {isSubmitting && submitAction === 'add_another' ? <Spinner size="sm" /> : <CsLineIcons icon="plus" size="18" />}
+                          Save & Add Another
+                        </Button>
                       </div>
                     </div>
+                  </div>
                 </Card.Body>
               </Card>
             </Form>

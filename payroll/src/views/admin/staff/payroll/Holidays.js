@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Button, Modal, Form, Spinner, Badge } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -26,6 +27,11 @@ const Holidays = () => {
     const [submitting, setSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [editingGroupIds, setEditingGroupIds] = useState([]);
+
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [holidayToDelete, setHolidayToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+    const [syncingDefaults, setSyncingDefaults] = useState(false);
 
     const payTypeOptions = [
         { value: 'true', label: 'Paid Holiday' },
@@ -58,6 +64,24 @@ const Holidays = () => {
             toast.error("Failed to fetch holidays");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSyncDefaults = async () => {
+        setSyncingDefaults(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`${process.env.REACT_APP_API}/holidays/sync-defaults`, { year }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data.success) {
+                toast.success(res.data.message || 'Synced default holidays successfully!');
+                fetchHolidays();
+            }
+        } catch (err) {
+            toast.error('Failed to sync default holidays');
+        } finally {
+            setSyncingDefaults(false);
         }
     };
 
@@ -210,15 +234,25 @@ const Holidays = () => {
         }
     };
 
-    const handleDelete = async (ids) => {
-        if (!window.confirm("Are you sure you want to delete this holiday?")) return;
+    const confirmDeleteHoliday = (group) => {
+        setHolidayToDelete(group);
+        setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!holidayToDelete || !holidayToDelete.ids) return;
+        setDeleting(true);
         try {
-            const promises = ids.map(id => deleteHoliday(id));
+            const promises = holidayToDelete.ids.map(id => deleteHoliday(id));
             await Promise.all(promises);
             toast.success('Holiday deleted successfully');
+            setShowDeleteModal(false);
+            setHolidayToDelete(null);
             fetchHolidays();
         } catch (err) {
             toast.error('Failed to delete holiday');
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -250,20 +284,38 @@ const Holidays = () => {
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
                     <Col xs="12" md="5" className="d-flex justify-content-md-end align-items-center gap-2">
-                        <Select 
-                            options={yearOptionsList}
-                            value={yearOptionsList.find(opt => opt.value === year)}
-                            onChange={selected => setYear(selected ? Number(selected.value) : currentYear)}
-                            isSearchable={false}
-                            classNamePrefix="react-select"
-                            className="holiday-year-select-container react-select-premium shadow-sm"
-                        />
+                        <div style={{ minWidth: '110px' }}>
+                            <Select 
+                                options={yearOptionsList}
+                                value={yearOptionsList.find(opt => opt.value === year)}
+                                onChange={selected => setYear(selected ? Number(selected.value) : currentYear)}
+                                isSearchable={false}
+                                classNamePrefix="react-select"
+                                className="react-select-premium shadow-sm"
+                                menuPortalTarget={document.body}
+                                styles={{
+                                    container: (base) => ({ ...base, minWidth: '110px' }),
+                                    control: (base) => ({ ...base, borderRadius: '20px', minHeight: '38px' }),
+                                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                                }}
+                            />
+                        </div>
                         <Button 
-                            variant="none" 
-                            onClick={() => handleShowModal()} 
-                            className="px-4 py-2 rounded-pill d-flex align-items-center holiday-custom-btn-outline shadow-sm"
+                            variant="outline-primary" 
+                            onClick={handleSyncDefaults} 
+                            disabled={syncingDefaults}
+                            className="px-3 py-2 rounded-pill d-flex align-items-center shadow-sm ms-2"
+                            title="Sync Makar Sankranti & missing default holidays for this year"
                         >
-                            <CsLineIcons icon="plus" className="me-2" size="18" stroke="currentColor" />
+                            {syncingDefaults ? <Spinner size="sm" animation="border" className="me-2" /> : <CsLineIcons icon="refresh-horizontal" className="me-2" size="18" />}
+                            <span>Sync Default Holidays</span>
+                        </Button>
+                        <Button 
+                            variant="primary" 
+                            onClick={() => handleShowModal()} 
+                            className="px-4 py-2 rounded-pill d-flex align-items-center shadow-sm ms-1"
+                        >
+                            <CsLineIcons icon="plus" className="me-2" size="18" />
                             <span>Add Holiday</span>
                         </Button>
                     </Col>
@@ -309,12 +361,24 @@ const Holidays = () => {
                                                     <span className="text-muted small fw-medium mt-1 d-block">{dateSubtitle}</span>
                                                 </div>
                                             </div>
-                                            <div className="d-flex align-items-center">
-                                                <Button variant="none" className="holiday-card-icon-btn edit-btn me-1.5" onClick={() => handleShowModal(g)} title="Edit">
-                                                    <CsLineIcons icon="edit" size="15" />
+                                            <div className="d-flex align-items-center gap-1">
+                                                <Button 
+                                                    variant="outline-primary" 
+                                                    size="sm" 
+                                                    className="btn-icon btn-icon-only rounded-circle shadow-sm me-1" 
+                                                    onClick={() => handleShowModal(g)} 
+                                                    title="Edit Holiday"
+                                                >
+                                                    <CsLineIcons icon="edit" size="14" />
                                                 </Button>
-                                                <Button variant="none" className="holiday-card-icon-btn delete-btn" onClick={() => handleDelete(g.ids)} title="Delete">
-                                                    <CsLineIcons icon="bin" size="15" />
+                                                <Button 
+                                                    variant="outline-danger" 
+                                                    size="sm" 
+                                                    className="btn-icon btn-icon-only rounded-circle shadow-sm" 
+                                                    onClick={() => confirmDeleteHoliday(g)} 
+                                                    title="Delete Holiday"
+                                                >
+                                                    <CsLineIcons icon="bin" size="14" />
                                                 </Button>
                                             </div>
                                         </div>
@@ -412,6 +476,8 @@ const Holidays = () => {
                                         isSearchable={false}
                                         classNamePrefix="react-select"
                                         className="react-select-premium shadow-sm"
+                                        menuPortalTarget={document.body}
+                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                     />
                                 </Form.Group>
                             </Col>
@@ -425,6 +491,8 @@ const Holidays = () => {
                                         isSearchable={false}
                                         classNamePrefix="react-select"
                                         className="react-select-premium shadow-sm"
+                                        menuPortalTarget={document.body}
+                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                                     />
                                 </Form.Group>
                             </Col>
@@ -437,12 +505,46 @@ const Holidays = () => {
                         </Row>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="none" className="holiday-custom-btn-outline" onClick={() => setShowModal(false)} disabled={submitting}>Cancel</Button>
-                        <Button variant="none" className="holiday-custom-btn-outline" type="submit" disabled={submitting}>
+                        <Button variant="outline-secondary" className="rounded-pill px-4" onClick={() => setShowModal(false)} disabled={submitting}>Cancel</Button>
+                        <Button variant="primary" className="rounded-pill px-4" type="submit" disabled={submitting}>
                             {submitting ? <Spinner size="sm" animation="border" /> : 'Save Holiday'}
                         </Button>
                     </Modal.Footer>
                 </Form>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={() => !deleting && setShowDeleteModal(false)} centered size="sm">
+                <Modal.Body className="p-4 text-center">
+                    <div 
+                        className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style={{ width: '56px', height: '56px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
+                    >
+                        <CsLineIcons icon="bin" size="24" />
+                    </div>
+                    <h5 className="fw-bold mb-2">Delete Holiday?</h5>
+                    <p className="text-muted small mb-4">
+                        Are you sure you want to delete <strong className="text-dark">{holidayToDelete?.name}</strong>? This action cannot be undone.
+                    </p>
+                    <div className="d-flex justify-content-center gap-2">
+                        <Button 
+                            variant="light" 
+                            className="rounded-pill px-4 fw-bold border" 
+                            onClick={() => setShowDeleteModal(false)} 
+                            disabled={deleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            variant="danger" 
+                            className="rounded-pill px-4 fw-bold shadow-sm" 
+                            onClick={handleConfirmDelete} 
+                            disabled={deleting}
+                        >
+                            {deleting ? <Spinner size="sm" animation="border" /> : 'Delete'}
+                        </Button>
+                    </div>
+                </Modal.Body>
             </Modal>
         </div>
     );

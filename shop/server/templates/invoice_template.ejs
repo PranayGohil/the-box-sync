@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= document.document_type %> - <%= document.document_number %></title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        .shop-info h1 { margin: 0; font-size: 24px; color: #2c3e50; }
+        .shop-info p { margin: 2px 0; }
+        .doc-info { text-align: right; }
+        .doc-info h2 { margin: 0; font-size: 20px; text-transform: uppercase; color: #34495e; }
+        .party-info { margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .party-info div { width: 48%; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
+        th { background-color: #f2f2f2; color: #333; }
+        .text-right { text-align: right; }
+        .totals { width: 50%; float: right; margin-bottom: 20px;}
+        .totals table th { background: none; border: none; text-align: right; }
+        .totals table td { text-align: right; }
+        .clearfix::after { content: ""; clear: both; display: table; }
+        .footer { text-align: center; font-size: 12px; color: #777; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="shop-info">
+            <h1><%= shop.name || 'Your Shop Name' %></h1>
+            <p><%= shop.address || 'Shop Address here' %></p>
+            <p><strong>GSTIN:</strong> <%= shop.gstin || 'N/A' %></p>
+            <p><strong>Email:</strong> <%= shop.email || 'N/A' %> | <strong>Phone:</strong> <%= shop.phone || 'N/A' %></p>
+        </div>
+        <div class="doc-info">
+            <h2><%= document.document_type %></h2>
+            <p><strong>No:</strong> <%= document.document_number %></p>
+            <p><strong>Date:</strong> <%= new Date(document.date).toLocaleDateString() %></p>
+        </div>
+    </div>
+
+    <div class="party-info">
+        <div>
+            <strong>Billed To:</strong><br>
+            <%= party.name %><br>
+            <%= party.billing_address?.street || '' %>, <%= party.billing_address?.city || '' %><br>
+            <%= party.billing_address?.state || '' %> - <%= party.billing_address?.pincode || '' %><br>
+            <strong>GSTIN:</strong> <%= party.gstin || 'N/A' %>
+        </div>
+        <div>
+            <strong>Shipped To:</strong><br>
+            <%= party.name %><br>
+            <%= party.shipping_address?.street || party.billing_address?.street || '' %>, <%= party.shipping_address?.city || party.billing_address?.city || '' %><br>
+            <%= party.shipping_address?.state || party.billing_address?.state || '' %> - <%= party.shipping_address?.pincode || party.billing_address?.pincode || '' %>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Item Details</th>
+                <th>HSN/SAC</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Rate</th>
+                <th class="text-right">Taxable Val</th>
+                <th class="text-right">CGST</th>
+                <th class="text-right">SGST</th>
+                <th class="text-right">IGST</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% document.items.forEach(function(item, index) { %>
+            <tr>
+                <td><%= index + 1 %></td>
+                <td>
+                    <strong><%= item.product_name %></strong>
+                    <% if (item.item_specific_attributes && Object.keys(item.item_specific_attributes).length > 0) { %>
+                        <br>
+                        <span style="font-size: 11px; color: #555;">
+                            <% for (const [key, value] of Object.entries(item.item_specific_attributes)) { %>
+                                <%= key %>: <%= value %><br>
+                            <% } %>
+                        </span>
+                    <% } %>
+                </td>
+                <td><%= item.product_id?.hsn_sac_code || '' %></td>
+                <td class="text-right"><%= item.quantity %></td>
+                <td class="text-right">₹<%= item.rate.toFixed(2) %></td>
+                <td class="text-right">₹<%= item.taxable_value.toFixed(2) %></td>
+                <td class="text-right">₹<%= item.cgst_amount.toFixed(2) %></td>
+                <td class="text-right">₹<%= item.sgst_amount.toFixed(2) %></td>
+                <td class="text-right">₹<%= item.igst_amount.toFixed(2) %></td>
+                <td class="text-right">₹<%= (item.taxable_value + item.cgst_amount + item.sgst_amount + item.igst_amount).toFixed(2) %></td>
+            </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <div class="clearfix">
+        <div class="totals">
+            <table>
+                <tr>
+                    <th>Total Taxable Value:</th>
+                    <td>₹<%= document.total_taxable_value.toFixed(2) %></td>
+                </tr>
+                <tr>
+                    <th>Total Tax Amount:</th>
+                    <td>₹<%= document.total_tax_amount.toFixed(2) %></td>
+                </tr>
+                <% if (document.tds_amount > 0) { %>
+                <tr>
+                    <th>TDS Deducted:</th>
+                    <td>- ₹<%= document.tds_amount.toFixed(2) %></td>
+                </tr>
+                <% } %>
+                <tr>
+                    <th><h3>Grand Total:</h3></th>
+                    <td><h3>₹<%= (document.grand_total - document.tds_amount).toFixed(2) %></h3></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>This is a computer-generated document. No signature is required.</p>
+    </div>
+</body>
+</html>
