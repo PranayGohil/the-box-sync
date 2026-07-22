@@ -139,7 +139,7 @@ const Subscription = () => {
       <Card className="profile-glass-card border-0 mb-4">
         <Card.Body className="p-4 p-md-5">
           <h4 className="fw-bold mb-4">Current Active Plans</h4>
-          
+
           {/* Base Plan */}
           <div className="p-4 rounded-3 bg-light border mb-4">
             <Row className="align-items-center">
@@ -276,7 +276,7 @@ const Subscription = () => {
         <Card className="profile-glass-card border-0 mb-4">
           <Card.Body className="p-4 p-md-5">
             <h4 className="fw-bold mb-4">Available Upgrades & Add-ons</h4>
-            
+
             {/* CRM Addon */}
             {!activeCrmSub && (
               <div className="p-4 rounded-3 bg-light border mb-4">
@@ -291,7 +291,7 @@ const Subscription = () => {
                       <span><strong>Yearly:</strong> ₹599 / year</span>
                     </div>
                   </Col>
-                  <Col xs={12} md={4} className="text-md-end mt-3 mt-md-0">
+                  <Col xs={12} md={4} className="d-flex justify-content-endtext-md-end mt-3 mt-md-0">
                     {existingQueries['Basic CRM'] ? (
                       <Button
                         variant="outline-secondary"
@@ -311,6 +311,7 @@ const Subscription = () => {
                         }}
                       >
                         <CsLineIcons icon="email" size="14" className="me-2" /> Send Inquiry
+
                       </Button>
                     )}
                   </Col>
@@ -332,7 +333,7 @@ const Subscription = () => {
                       <span><strong>Yearly:</strong> ₹999 / year</span>
                     </div>
                   </Col>
-                  <Col xs={12} md={4} className="text-md-end mt-3 mt-md-0">
+                  <Col xs={12} md={4} className="d-flex justify-content-end text-md-end mt-3 mt-md-0">
                     {existingQueries['Scan and Order'] ? (
                       <Button
                         variant="outline-secondary"
