@@ -913,3 +913,12 @@
     width: 450px !important;
   }
 }
+
+.pos-datepicker-container {
+  width: 155px;
+}
+@media (min-width: 576px) {
+  .pos-datepicker-container {
+    width: 200px;
+  }
+}
