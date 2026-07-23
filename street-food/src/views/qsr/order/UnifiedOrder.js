@@ -989,10 +989,7 @@ const UnifiedOrder = () => {
       {/* POS Wrapper */}
       <div className="pos-wrapper" style={{ height: '100vh', margin: 0 }}>
         {/* Top Bar */}
-        <div
-          className="pos-topbar d-flex align-items-center px-3 py-2 border-bottom flex-nowrap"
-          style={{ gap: '15px', background: '#fff', flexWrap: 'nowrap' }}
-        >
+        <div className="pos-topbar d-flex align-items-center px-3 py-2 border-bottom flex-nowrap" style={{ background: '#fff', flexWrap: 'nowrap' }}>
           <Button
             variant="outline-info"
             className="rounded-pill d-flex align-items-center px-2 px-sm-3 py-1 text-decoration-none"
@@ -1003,7 +1000,7 @@ const UnifiedOrder = () => {
             <span className="d-none d-sm-inline">Back</span>
           </Button>
 
-          <div className="fs-5 fs-sm-4 fw-bold text-nowrap" style={{ color: '#23b3f4' }}>
+          <div className="fs-6 fs-sm-4 fw-bold text-nowrap" style={{ color: '#23b3f4' }}>
             {orderId ? 'Edit' : 'New'} Order
           </div>
 
