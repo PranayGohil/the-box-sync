@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Button, Row, Col, Card, Table, Form, Spinner, Alert, Badge, ProgressBar, Modal, Toast, ToastContainer } from 'react-bootstrap';
 import axios from 'axios';
 import { format } from 'date-fns';
+import { useHistory } from 'react-router-dom';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -70,6 +71,7 @@ const MenuPerformanceReport = () => {
   const brandBg = 'rgba(35, 179, 244, 0.08)';
   const title = 'Menu Performance Report';
   const description = 'Comprehensive Menu and Dish Performance Analysis';
+  const history = useHistory();
 
   const breadcrumbs = [
     { to: '', text: 'Home' },
@@ -470,6 +472,12 @@ const MenuPerformanceReport = () => {
             <Col xs="auto" className="me-auto">
               <h1 className="qsr-page-title">{title}</h1>
               <BreadcrumbList items={breadcrumbs} />
+            </Col>
+            <Col xs="12" md="auto" className="d-flex flex-column flex-sm-row justify-content-md-end gap-2 mt-3 mt-md-0">
+              <Button onClick={() => history.push('/operations/financial-report')} className="manage-menu-custom-btn-outline shadow-sm border-0 px-4 py-2">
+                <CsLineIcons icon="wallet" className="me-2" size="18" />
+                Expense-Income
+              </Button>
             </Col>
           </Row>
         </div>

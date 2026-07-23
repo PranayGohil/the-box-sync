@@ -1,12 +1,8 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
 const MobileCartBar = ({ orderItems, paymentData, setShowCartSheet }) => {
-  const { navClasses } = useSelector((state) => state.menu);
-  const isSidebarOpen = !!(navClasses && navClasses['mobile-side-in']);
-
-  if (orderItems.length === 0 || isSidebarOpen) return null;
+  if (orderItems.length === 0) return null;
 
   const totalQty = orderItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = parseFloat(paymentData.total) || 0;
@@ -53,10 +49,16 @@ const MobileCartBar = ({ orderItems, paymentData, setShowCartSheet }) => {
         <div className="d-flex align-items-center gap-3">
           <div
             style={{
-              width: '40px', height: '40px', borderRadius: '12px',
-              background: '#23b3f4', color: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 800, fontSize: '16px',
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: '#23b3f4',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: '16px',
             }}
           >
             {totalQty}
