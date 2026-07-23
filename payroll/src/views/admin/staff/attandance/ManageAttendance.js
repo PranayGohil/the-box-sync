@@ -10,7 +10,9 @@ import ControlsPageSize from 'components/table/ControlsPageSize';
 import Table from 'components/table/Table';
 import TablePagination from 'components/table/TablePagination';
 import { toast } from 'react-toastify';
+import Select from 'react-select';
 import { getLeavePolicy, getPayrollConfig } from 'api/payrollConfig';
+import RosterManagement from './RosterManagement';
 
 
 
@@ -38,8 +40,8 @@ const LocalControlsPageSize = ({ tableInstance }) => {
             ref={ref}
             {...triggerHandler}
             variant="outline-primary"
-            className="rounded-pill shadow-sm px-3 fw-bold border-2 d-flex align-items-center justify-content-center w-100"
-            style={{ height: '42px', color: '#1ea8e7', borderColor: '#1ea8e7' }}
+            className="rounded-pill shadow-sm px-3 fw-bold d-flex align-items-center justify-content-center w-100"
+            style={{ height: '38px', fontSize: '0.875rem', color: '#1ea8e7', borderColor: '#1ea8e7' }}
           >
             <span className="me-2">{pageSize} Items</span>
           </Dropdown.Toggle>
@@ -65,14 +67,15 @@ const LocalControlsPageSize = ({ tableInstance }) => {
 };
 
 export default function ManageAttendance() {
+  const history = useHistory();
+
   const title = 'Manage Attendance';
   const description = 'Manage staff attendance and track check-ins/check-outs';
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'attendance', text: 'Attendance Management' },
+    { to: 'staff/view', text: 'Staff' },
+    { to: 'staff/attendance', text: 'Manage Attendance' },
   ];
-
-  const history = useHistory();
   const [loading, setLoading] = useState({
     initial: true,
     actions: {
@@ -107,9 +110,9 @@ export default function ManageAttendance() {
 
   // Attendance Settings panel state
   const [showAttSettings, setShowAttSettings] = useState(false);
-  const [attSettings, setAttSettings] = useState({ 
-    shift_start_time: '09:00 AM', 
-    late_threshold_minutes: 0, 
+  const [attSettings, setAttSettings] = useState({
+    shift_start_time: '09:00 AM',
+    late_threshold_minutes: 0,
     shift_end_time: '06:00 PM',
     network_restrictions: { is_enabled: false, allowed_ips: '' },
     wfh_config: { min_interval: 3, max_interval: 15, idle_threshold: 5 }
@@ -189,12 +192,12 @@ export default function ManageAttendance() {
     if (!attendance) return '—';
     const lunchStartStr = (config && config.org_rules && config.org_rules.lunch_start_time) || "01:00 PM";
     const lunchEndStr = (config && config.org_rules && config.org_rules.lunch_end_time) || "02:00 PM";
-    
+
     const lunchStart = parseTimeToMinutes(lunchStartStr);
     const lunchEnd = parseTimeToMinutes(lunchEndStr);
-    
+
     let totalMins = 0;
-    
+
     if (attendance.sessions && attendance.sessions.length > 0) {
       attendance.sessions.forEach(session => {
         if (session.in_time && session.out_time) {
@@ -203,16 +206,16 @@ export default function ManageAttendance() {
           totalMins += diff;
         }
       });
-      
+
       for (let i = 0; i < attendance.sessions.length - 1; i++) {
         const currentOut = attendance.sessions[i].out_time;
-        const nextIn = attendance.sessions[i+1].in_time;
-        
+        const nextIn = attendance.sessions[i + 1].in_time;
+
         if (currentOut && nextIn) {
           let gapStart = parseTimeToMinutes(currentOut);
           let gapEnd = parseTimeToMinutes(nextIn);
           if (gapEnd < gapStart) gapEnd += 24 * 60;
-          
+
           const overlapStart = Math.max(gapStart, lunchStart);
           const overlapEnd = Math.min(gapEnd, lunchEnd);
           const overlap = Math.max(0, overlapEnd - overlapStart);
@@ -226,7 +229,7 @@ export default function ManageAttendance() {
     } else {
       return '—';
     }
-    
+
     const h = Math.floor(totalMins / 60);
     const m = totalMins % 60;
     return `${h}h ${m}m`;
@@ -238,13 +241,13 @@ export default function ManageAttendance() {
     const shiftEnd = parseTimeToMinutes(config.org_rules.shift_end_time || "06:00 PM");
     const lunchStart = parseTimeToMinutes(config.org_rules.lunch_start_time || "01:00 PM");
     const lunchEnd = parseTimeToMinutes(config.org_rules.lunch_end_time || "02:00 PM");
-    
+
     let shiftDuration = shiftEnd - shiftStart;
     if (shiftDuration < 0) shiftDuration += 24 * 60;
-    
+
     let lunchDuration = lunchEnd - lunchStart;
     if (lunchDuration < 0) lunchDuration += 24 * 60;
-    
+
     return shiftDuration - lunchDuration;
   };
 
@@ -252,12 +255,12 @@ export default function ManageAttendance() {
     if (!attendance) return 0;
     const lunchStartStr = (config && config.org_rules && config.org_rules.lunch_start_time) || "01:00 PM";
     const lunchEndStr = (config && config.org_rules && config.org_rules.lunch_end_time) || "02:00 PM";
-    
+
     const lunchStart = parseTimeToMinutes(lunchStartStr);
     const lunchEnd = parseTimeToMinutes(lunchEndStr);
-    
+
     let totalMins = 0;
-    
+
     if (attendance.sessions && attendance.sessions.length > 0) {
       attendance.sessions.forEach(session => {
         if (session.in_time && session.out_time) {
@@ -266,16 +269,16 @@ export default function ManageAttendance() {
           totalMins += diff;
         }
       });
-      
+
       for (let i = 0; i < attendance.sessions.length - 1; i++) {
         const currentOut = attendance.sessions[i].out_time;
-        const nextIn = attendance.sessions[i+1].in_time;
-        
+        const nextIn = attendance.sessions[i + 1].in_time;
+
         if (currentOut && nextIn) {
           let gapStart = parseTimeToMinutes(currentOut);
           let gapEnd = parseTimeToMinutes(nextIn);
           if (gapEnd < gapStart) gapEnd += 24 * 60;
-          
+
           const overlapStart = Math.max(gapStart, lunchStart);
           const overlapEnd = Math.min(gapEnd, lunchEnd);
           const overlap = Math.max(0, overlapEnd - overlapStart);
@@ -287,7 +290,7 @@ export default function ManageAttendance() {
       if (diff < 0) diff += 24 * 60;
       totalMins = diff;
     }
-    
+
     return totalMins;
   };
 
@@ -911,68 +914,79 @@ export default function ManageAttendance() {
     <div className="container-fluid px-lg-4 px-xl-5 pb-5">
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 mt-3 mt-lg-0">
+      <div className="page-title-container mb-4">
         <Row className="g-3 align-items-center">
-          <Col md={6}>
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+          <Col xs="12" lg="4" xl="4">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7', whiteSpace: 'nowrap' }}>
               {title}
             </h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col md={6} className="d-flex justify-content-md-end align-items-center mt-md-0 mt-3">
-            <Badge
-              bg="soft-primary"
-              className="px-4 py-2 fs-6 border border-primary border-opacity-25"
-              style={{
-                borderRadius: '50px',
-                fontSize: '0.9rem',
-                fontWeight: '700',
-                backgroundColor: 'rgba(30, 168, 231, 0.08)',
-                color: '#1ea8e7'
-              }}
+          <Col xs="12" lg="8" xl="8" className="d-flex flex-wrap flex-lg-nowrap justify-content-lg-end align-items-center gap-2">
+            <Button
+              variant="outline-primary"
+              onClick={() => history.push('/staff/shift')}
+              className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
             >
-              📅 Date: {formatDateDDMMYYYY(targetDate)}
-            </Badge>
+              <CsLineIcons icon="clock" size="16" />
+              <span>Manage Shift</span>
+            </Button>
+
+            <Button
+              variant="outline-primary"
+              className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+              onClick={() => setShowRegularizationRequests(v => !v)}
+            >
+              <CsLineIcons icon="edit" size="16" />
+              <span>Regularization Requests</span>
+              <CsLineIcons icon={showRegularizationRequests ? 'chevron-up' : 'chevron-down'} size={14} />
+            </Button>
+
+            <div
+              className="px-3 py-2 rounded-pill bg-white border border-primary border-opacity-25 shadow-sm d-flex align-items-center gap-2 flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px' }}
+            >
+              <span className="fw-bold text-dark small flex-shrink-0">Date:</span>
+              <Form.Control
+                type="date"
+                value={targetDate}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setTargetDate(e.target.value);
+                  }
+                }}
+                className="border-0 p-0 shadow-none bg-transparent fw-bold text-primary"
+                style={{ fontSize: '0.875rem', cursor: 'pointer', outline: 'none', width: '155px' }}
+              />
+            </div>
           </Col>
         </Row>
       </div>
-
-      {todayHoliday && (
-        <Alert variant="info" className="glass-card border-0 mb-4 p-3 shadow-sm d-flex align-items-center gap-3" style={{ background: 'rgba(30, 168, 231, 0.08)', borderLeft: '4px solid #1ea8e7' }}>
-          <div className="sw-5 sh-5 rounded-circle d-flex align-items-center justify-content-center text-info fs-4 fw-bold" style={{ backgroundColor: 'rgba(30, 168, 231, 0.15)' }}>
-            🎉
-          </div>
-          <div>
-            <h5 className="fw-bold mb-0 text-info">{todayHoliday.name} ({todayHoliday.holiday_type === 'national' ? 'National Holiday' : 'Public Holiday'})</h5>
-            <small className="text-muted">Official company holiday. Attendance & payroll calculations automatically apply holiday benefits.</small>
-          </div>
-        </Alert>
-      )}
-          {error && (
-            <Alert variant="danger" className="glass-card border-0 mb-4 d-flex align-items-center justify-content-between p-4 shadow-sm">
-              <div className="d-flex align-items-center gap-2 text-danger fw-bold">
-                <CsLineIcons icon="error" size="24" />
-                <span>{error}</span>
-              </div>
-              <Button variant="none" className="custom-btn-danger-outline px-4" onClick={() => fetchTodayAttendance(targetDate)}>
-                Retry
-              </Button>
-            </Alert>
-          )}
-
-      <div className="mb-4 d-flex gap-3 flex-wrap">
-        <Button
-          variant="none"
-          className="custom-btn-info-outline d-flex align-items-center gap-2 px-4 py-2"
-          onClick={() => { setShowRegularizationRequests(v => !v); }}
-        >
-          <CsLineIcons icon="edit" size={16} />
-          Regularization Requests
-          <CsLineIcons icon={showRegularizationRequests ? 'chevron-up' : 'chevron-down'} size={14} className="ms-1" />
-        </Button>
-      </div>
-
-
+      <>
+        {todayHoliday && (
+          <Alert variant="info" className="glass-card border-0 mb-4 p-3 shadow-sm d-flex align-items-center gap-3" style={{ background: 'rgba(30, 168, 231, 0.08)', borderLeft: '4px solid #1ea8e7' }}>
+            <div className="sw-5 sh-5 rounded-circle d-flex align-items-center justify-content-center text-info fs-4 fw-bold" style={{ backgroundColor: 'rgba(30, 168, 231, 0.15)' }}>
+              🎉
+            </div>
+            <div>
+              <h5 className="fw-bold mb-0 text-info">{todayHoliday.name} ({todayHoliday.holiday_type === 'national' ? 'National Holiday' : 'Public Holiday'})</h5>
+              <small className="text-muted">Official company holiday. Attendance & payroll calculations automatically apply holiday benefits.</small>
+            </div>
+          </Alert>
+        )}
+        {error && (
+          <Alert variant="danger" className="glass-card border-0 mb-4 d-flex align-items-center justify-content-between p-4 shadow-sm">
+            <div className="d-flex align-items-center gap-2 text-danger fw-bold">
+              <CsLineIcons icon="error" size="24" />
+              <span>{error}</span>
+            </div>
+            <Button variant="none" className="custom-btn-danger-outline px-4" onClick={() => fetchTodayAttendance(targetDate)}>
+              Retry
+            </Button>
+          </Alert>
+        )}
 
         {showRegularizationRequests && (
           <Card className="glass-card border-0 shadow-sm mt-3 mb-4">
@@ -984,7 +998,7 @@ export default function ManageAttendance() {
               <p className="text-muted small mb-4">
                 Review and approve/reject staff requests to correct missed punches.
               </p>
-              
+
               <div className="table-responsive">
                 <table className="table table-hover align-middle border">
                   <thead className="bg-light">
@@ -1036,300 +1050,292 @@ export default function ManageAttendance() {
             </Card.Body>
           </Card>
         )}
-      <div>
-        <Row className="mb-3 g-3 align-items-center">
-          <Col xs="12" md="4" lg="5">
-            <div className="order-history-custom-search-container shadow-sm d-flex align-items-center px-2">
-              <CsLineIcons icon="search" size="18" className="text-primary opacity-75 ms-1 me-2" />
-              <Form.Control
-                type="text"
-                className="border-0 bg-transparent shadow-none"
-                placeholder="Search staff..."
-                value={localSearchTerm}
-                onChange={(e) => setLocalSearchTerm(e.target.value)}
-                style={{ height: '40px', fontSize: '14px' }}
+
+        <div>
+          <Row className="mb-3 g-3 align-items-center">
+            <Col xs="12" md="6" lg="5">
+              <div className="position-relative d-flex align-items-center">
+                <CsLineIcons
+                  icon="search"
+                  size="16"
+                  className="position-absolute text-muted ms-3"
+                  style={{ left: '0', top: '50%', transform: 'translateY(-50%)', zIndex: 5, pointerEvents: 'none' }}
+                />
+                <Form.Control
+                  type="text"
+                  placeholder="Search staff..."
+                  value={localSearchTerm}
+                  onChange={(e) => setLocalSearchTerm(e.target.value)}
+                  className="shadow-sm"
+                  style={{ borderRadius: '20px', height: '38px', paddingLeft: '38px', paddingRight: localSearchTerm ? '32px' : '12px', fontSize: '0.875rem' }}
+                />
+                {localSearchTerm && (
+                  <div
+                    className="position-absolute text-muted cursor-pointer me-3"
+                    style={{ right: '0', top: '50%', transform: 'translateY(-50%)', zIndex: 5 }}
+                    onClick={() => setLocalSearchTerm('')}
+                  >
+                    <CsLineIcons icon="close" size="14" />
+                  </div>
+                )}
+              </div>
+            </Col>
+
+            <Col xs="6" md="3" lg="3">
+              <Select
+                classNamePrefix="react-select"
+                options={[
+                  { value: 'all', label: 'All Positions' },
+                  ...uniquePositions.filter(p => p !== 'all').map(pos => ({ value: pos, label: pos }))
+                ]}
+                value={
+                  positionFilter === 'all'
+                    ? { value: 'all', label: 'All Positions' }
+                    : { value: positionFilter, label: positionFilter }
+                }
+                onChange={(selected) => setPositionFilter(selected ? selected.value : 'all')}
+                isSearchable={false}
+                className="react-select-premium shadow-sm"
+                menuPortalTarget={document.body}
+                styles={{
+                  container: (base) => ({ ...base, minWidth: '140px' }),
+                  control: (base) => ({ ...base, borderRadius: '20px', minHeight: '38px', height: '38px' }),
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                }}
               />
-              {localSearchTerm && (
-                <div className="cursor-pointer text-muted px-1" onClick={() => setLocalSearchTerm('')}>
-                  <CsLineIcons icon="close" size="14" />
-                </div>
-              )}
-            </div>
-          </Col>
+            </Col>
 
-          <Col xs="6" md="3" lg="3">
-            <Form.Select
-              value={positionFilter}
-              onChange={(e) => setPositionFilter(e.target.value)}
-              className="filter-pill-input shadow-sm"
-              style={{
-                borderRadius: '10px',
-                height: '42px',
-                border: '1px solid #eee',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#475569',
-                backgroundColor: '#fff',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="all">All Positions</option>
-              {uniquePositions.filter(p => p !== 'all').map((pos) => (
-                <option key={pos} value={pos}>{pos}</option>
-              ))}
-            </Form.Select>
-          </Col>
+            <Col xs="6" md="3" lg="4" className="d-flex align-items-center justify-content-end gap-3 ms-auto">
+              <div className="text-muted small fw-bold d-none d-xl-block" style={{ whiteSpace: 'nowrap' }}>
+                Showing {totalFiltered > 0 ? pageIndex * pageSize + 1 : 0}&ndash;{Math.min((pageIndex + 1) * pageSize, totalFiltered)} of {totalFiltered}
+              </div>
+              <div className="w-100-mobile">
+                <LocalControlsPageSize tableInstance={tableInstance} />
+              </div>
+            </Col>
+          </Row>
 
-          <Col xs="6" md="3" lg="2">
-            <Form.Control
-              type="date"
-              value={targetDate}
-              onChange={(e) => setTargetDate(e.target.value)}
-              className="filter-pill-input shadow-sm"
-              style={{
-                borderRadius: '10px',
-                height: '42px',
-                border: '1px solid #eee',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#475569',
-                backgroundColor: '#fff',
-                cursor: 'pointer'
-              }}
-            />
-          </Col>
+          <Row className="d-none d-lg-flex">
+            <Col xs="12" style={{ overflow: 'auto' }}>
+              <Table className="react-table rows" tableInstance={tableInstance} />
+            </Col>
+          </Row>
 
-          <Col xs="12" md="2" lg="2" className="d-flex align-items-center justify-content-between justify-content-md-end gap-3 ms-md-auto w-100-mobile">
-            <div className="text-muted small fw-bold d-none d-xl-block">
-              Showing {totalFiltered > 0 ? pageIndex * pageSize + 1 : 0}&ndash;{Math.min((pageIndex + 1) * pageSize, totalFiltered)} of {totalFiltered}
-            </div>
-            <div className="w-100-mobile">
-              <LocalControlsPageSize tableInstance={tableInstance} />
-            </div>
-          </Col>
-        </Row>
+          <Row className="d-lg-none g-3">
+            {page.map((row) => {
+              prepareRow(row);
+              const staff = row.original;
+              const { todayAttendance } = staff;
 
-        <Row className="d-none d-lg-flex">
-          <Col xs="12" style={{ overflow: 'auto' }}>
-            <Table className="react-table rows" tableInstance={tableInstance} />
-          </Col>
-        </Row>
-
-        <Row className="d-lg-none g-3">
-          {page.map((row) => {
-            prepareRow(row);
-            const staff = row.original;
-            const { todayAttendance } = staff;
-
-            let status = 'Pending';
-            let statusVariant = 'warning';
-            if (todayAttendance) {
-              if (todayAttendance.status === 'absent') {
-                status = 'Absent';
-                statusVariant = 'danger';
-              } else if (todayAttendance.status === 'leave') {
-                status = 'On Leave';
-                statusVariant = 'info';
-              } else if (todayAttendance.status === 'half_day') {
-                status = 'Half Day';
-                statusVariant = 'warning';
-              } else {
-                const lastSession = todayAttendance.sessions && todayAttendance.sessions.length > 0
-                  ? todayAttendance.sessions[todayAttendance.sessions.length - 1]
-                  : null;
-                if (lastSession) {
-                  if (lastSession.out_time === null) {
+              let status = 'Pending';
+              let statusVariant = 'warning';
+              if (todayAttendance) {
+                if (todayAttendance.status === 'absent') {
+                  status = 'Absent';
+                  statusVariant = 'danger';
+                } else if (todayAttendance.status === 'leave') {
+                  status = 'On Leave';
+                  statusVariant = 'info';
+                } else if (todayAttendance.status === 'half_day') {
+                  status = 'Half Day';
+                  statusVariant = 'warning';
+                } else {
+                  const lastSession = todayAttendance.sessions && todayAttendance.sessions.length > 0
+                    ? todayAttendance.sessions[todayAttendance.sessions.length - 1]
+                    : null;
+                  if (lastSession) {
+                    if (lastSession.out_time === null) {
+                      status = 'Checked In';
+                      statusVariant = 'success';
+                    } else {
+                      status = 'Completed';
+                      statusVariant = 'primary';
+                    }
+                  } else if (todayAttendance.in_time && !todayAttendance.out_time) {
                     status = 'Checked In';
                     statusVariant = 'success';
-                  } else {
+                  } else if (todayAttendance.in_time && todayAttendance.out_time) {
                     status = 'Completed';
                     statusVariant = 'primary';
                   }
-                } else if (todayAttendance.in_time && !todayAttendance.out_time) {
-                  status = 'Checked In';
-                  statusVariant = 'success';
-                } else if (todayAttendance.in_time && todayAttendance.out_time) {
-                  status = 'Completed';
-                  statusVariant = 'primary';
                 }
               }
-            }
 
-            const actionsDisabled = loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave;
+              const actionsDisabled = loading.actions.checkin || loading.actions.checkout || loading.actions.absent || loading.actions.leave;
 
-            return (
-              <Col key={staff._id} xs="12" sm="6" md="6">
-                <Card className="border-0 shadow-sm hover-scale-up h-100" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
-                  <Card.Body className="p-3 position-relative d-flex flex-column justify-content-between h-100">
-                    <div
-                      className="position-absolute"
-                      style={{
-                        top: '-10px',
-                        right: '-10px',
-                        width: '60px',
-                        height: '60px',
-                        borderRadius: '50%',
-                        background: 'rgba(30, 168, 231, 0.1)',
-                        filter: 'blur(10px)',
-                      }}
-                    />
-                    <div>
-                      <div className="d-flex align-items-center justify-content-between mb-3 position-relative">
-                        <div className="d-flex align-items-center gap-2">
-                          <div className="mobile-avatar rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold bg-soft-primary" style={{ width: '40px', height: '40px', fontSize: '14px' }}>
-                            {staff.f_name?.[0]}
-                            {staff.l_name?.[0]}
+              return (
+                <Col key={staff._id} xs="12" sm="6" md="6">
+                  <Card className="border-0 shadow-sm hover-scale-up h-100" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
+                    <Card.Body className="p-3 position-relative d-flex flex-column justify-content-between h-100">
+                      <div
+                        className="position-absolute"
+                        style={{
+                          top: '-10px',
+                          right: '-10px',
+                          width: '60px',
+                          height: '60px',
+                          borderRadius: '50%',
+                          background: 'rgba(30, 168, 231, 0.1)',
+                          filter: 'blur(10px)',
+                        }}
+                      />
+                      <div>
+                        <div className="d-flex align-items-center justify-content-between mb-3 position-relative">
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="mobile-avatar rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold bg-soft-primary" style={{ width: '40px', height: '40px', fontSize: '14px' }}>
+                              {staff.f_name?.[0]}
+                              {staff.l_name?.[0]}
+                            </div>
+                            <div>
+                              <div className="fw-bold text-dark text-truncate" style={{ maxWidth: '140px' }}>
+                                {staff.f_name} {staff.l_name}
+                              </div>
+                              <div className="small-role text-muted small text-truncate" style={{ maxWidth: '140px' }}>
+                                {staff.position} • #{staff.staff_id}
+                              </div>
+                              <div className="text-primary fw-bold mt-1" style={{ fontSize: '0.7rem' }}>
+                                📅 {formatDateDisplay(targetDate)}
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="fw-bold text-dark text-truncate" style={{ maxWidth: '140px' }}>
-                              {staff.f_name} {staff.l_name}
-                            </div>
-                            <div className="small-role text-muted small text-truncate" style={{ maxWidth: '140px' }}>
-                              {staff.position} • #{staff.staff_id}
-                            </div>
-                            <div className="text-primary fw-bold mt-1" style={{ fontSize: '0.7rem' }}>
-                              📅 {formatDateDisplay(targetDate)}
-                            </div>
-                          </div>
+                          <Badge bg={statusVariant} className="rounded-pill px-3 py-1">{status}</Badge>
                         </div>
-                        <Badge bg={statusVariant} className="rounded-pill px-3 py-1">{status}</Badge>
+
+                        <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
+                          <Col xs="4">
+                            <div className="text-muted small" style={{ fontSize: '10px' }}>CHECK-IN</div>
+                            {todayAttendance?.sessions && todayAttendance.sessions.length > 0 ? (
+                              todayAttendance.sessions.map((s, i) => (
+                                <div key={i} className="fw-bold mt-1" style={{ fontSize: '11px' }}>{s.in_time}</div>
+                              ))
+                            ) : (
+                              <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>{todayAttendance?.in_time || '—'}</div>
+                            )}
+                          </Col>
+                          <Col xs="4" className="text-center">
+                            <div className="text-muted small" style={{ fontSize: '10px' }}>CHECK-OUT</div>
+                            {todayAttendance?.sessions && todayAttendance.sessions.length > 0 ? (
+                              todayAttendance.sessions.map((s, i) => (
+                                <div key={i} className="fw-bold mt-1" style={{ fontSize: '11px' }}>{s.out_time || 'Active'}</div>
+                              ))
+                            ) : (
+                              <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>{todayAttendance?.out_time || '—'}</div>
+                            )}
+                          </Col>
+                          <Col xs="4" className="text-end">
+                            <div className="text-muted small" style={{ fontSize: '10px' }}>HOURS</div>
+                            <div className="fw-bold mt-1 text-primary" style={{ fontSize: '11px' }}>
+                              {calculateTotalWorkingHours(todayAttendance, payrollConfig)}
+                            </div>
+                          </Col>
+                        </Row>
                       </div>
 
-                      <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
-                        <Col xs="4">
-                          <div className="text-muted small" style={{ fontSize: '10px' }}>CHECK-IN</div>
-                          {todayAttendance?.sessions && todayAttendance.sessions.length > 0 ? (
-                            todayAttendance.sessions.map((s, i) => (
-                              <div key={i} className="fw-bold mt-1" style={{ fontSize: '11px' }}>{s.in_time}</div>
-                            ))
-                          ) : (
-                            <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>{todayAttendance?.in_time || '—'}</div>
-                          )}
-                        </Col>
-                        <Col xs="4" className="text-center">
-                          <div className="text-muted small" style={{ fontSize: '10px' }}>CHECK-OUT</div>
-                          {todayAttendance?.sessions && todayAttendance.sessions.length > 0 ? (
-                            todayAttendance.sessions.map((s, i) => (
-                              <div key={i} className="fw-bold mt-1" style={{ fontSize: '11px' }}>{s.out_time || 'Active'}</div>
-                            ))
-                          ) : (
-                            <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>{todayAttendance?.out_time || '—'}</div>
-                          )}
-                        </Col>
-                        <Col xs="4" className="text-end">
-                          <div className="text-muted small" style={{ fontSize: '10px' }}>HOURS</div>
-                          <div className="fw-bold mt-1 text-primary" style={{ fontSize: '11px' }}>
-                            {calculateTotalWorkingHours(todayAttendance, payrollConfig)}
-                          </div>
-                        </Col>
-                      </Row>
-                    </div>
-
-                    <div className="d-flex align-items-center justify-content-end gap-2 pt-2 border-top mt-auto" style={{ borderColor: '#f3f4f6' }}>
-                      {!todayAttendance ? (
-                        <>
+                      <div className="d-flex align-items-center justify-content-end gap-2 pt-2 border-top mt-auto" style={{ borderColor: '#f3f4f6' }}>
+                        {!todayAttendance ? (
+                          <>
+                            <Button
+                              variant="none"
+                              size="sm"
+                              className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline"
+                              onClick={() => handleAction(staff, 'checkin')}
+                              disabled={actionsDisabled}
+                              title="Check-In"
+                            >
+                              <CsLineIcons icon="login" size="14" />
+                            </Button>
+                            <Button
+                              variant="none"
+                              size="sm"
+                              className="btn-icon btn-icon-only rounded-circle custom-btn-danger-outline"
+                              onClick={() => handleAction(staff, 'absent')}
+                              disabled={actionsDisabled}
+                              title="Absent"
+                            >
+                              <CsLineIcons icon="close-circle" size="14" />
+                            </Button>
+                            <Button
+                              variant="none"
+                              size="sm"
+                              className="btn-icon btn-icon-only rounded-circle custom-btn-info-outline"
+                              onClick={() => handleAction(staff, 'leave')}
+                              disabled={actionsDisabled}
+                              title="Leave"
+                            >
+                              <CsLineIcons icon="calendar" size="14" />
+                            </Button>
+                          </>
+                        ) : isCurrentlyCheckedIn(todayAttendance) ? (
+                          <Button
+                            variant="none"
+                            size="sm"
+                            className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline me-auto"
+                            onClick={() => handleAction(staff, 'checkout')}
+                            disabled={actionsDisabled}
+                            title="Check-Out"
+                          >
+                            <CsLineIcons icon="logout" size="14" />
+                          </Button>
+                        ) : todayAttendance.status === 'present' ? (
+                          <Button
+                            variant="none"
+                            size="sm"
+                            className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline me-auto"
+                            onClick={() => handleAction(staff, 'checkin')}
+                            disabled={actionsDisabled}
+                            title="Check-In Again"
+                          >
+                            <CsLineIcons icon="login" size="14" />
+                          </Button>
+                        ) : (
+                          <span
+                            className={`small fw-bold d-flex align-items-center gap-1 me-auto ${todayAttendance.status === 'absent' ? 'text-danger' : todayAttendance.status === 'leave' ? 'text-info' : 'text-success'
+                              }`}
+                          >
+                            <CsLineIcons
+                              icon={todayAttendance.status === 'absent' ? 'close-circle' : todayAttendance.status === 'leave' ? 'calendar' : 'check'}
+                              size="14"
+                            />
+                            {todayAttendance.status === 'absent' ? 'Absent' : todayAttendance.status === 'leave' ? 'On Leave' : 'Marked'}
+                          </span>
+                        )}
+                        {todayAttendance && (
                           <Button
                             variant="none"
                             size="sm"
                             className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline"
-                            onClick={() => handleAction(staff, 'checkin')}
-                            disabled={actionsDisabled}
-                            title="Check-In"
+                            onClick={() => handleOpenDetailModal(todayAttendance, staff._id)}
+                            title="Edit Attendance"
                           >
-                            <CsLineIcons icon="login" size="14" />
+                            <CsLineIcons icon="edit" size="14" />
                           </Button>
-                          <Button
-                            variant="none"
-                            size="sm"
-                            className="btn-icon btn-icon-only rounded-circle custom-btn-danger-outline"
-                            onClick={() => handleAction(staff, 'absent')}
-                            disabled={actionsDisabled}
-                            title="Absent"
-                          >
-                            <CsLineIcons icon="close-circle" size="14" />
-                          </Button>
-                          <Button
-                            variant="none"
-                            size="sm"
-                            className="btn-icon btn-icon-only rounded-circle custom-btn-info-outline"
-                            onClick={() => handleAction(staff, 'leave')}
-                            disabled={actionsDisabled}
-                            title="Leave"
-                          >
-                            <CsLineIcons icon="calendar" size="14" />
-                          </Button>
-                        </>
-                      ) : isCurrentlyCheckedIn(todayAttendance) ? (
-                        <Button
-                          variant="none"
-                          size="sm"
-                          className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline me-auto"
-                          onClick={() => handleAction(staff, 'checkout')}
-                          disabled={actionsDisabled}
-                          title="Check-Out"
-                        >
-                          <CsLineIcons icon="logout" size="14" />
-                        </Button>
-                      ) : todayAttendance.status === 'present' ? (
-                        <Button
-                          variant="none"
-                          size="sm"
-                          className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline me-auto"
-                          onClick={() => handleAction(staff, 'checkin')}
-                          disabled={actionsDisabled}
-                          title="Check-In Again"
-                        >
-                          <CsLineIcons icon="login" size="14" />
-                        </Button>
-                      ) : (
-                        <span
-                          className={`small fw-bold d-flex align-items-center gap-1 me-auto ${
-                            todayAttendance.status === 'absent' ? 'text-danger' : todayAttendance.status === 'leave' ? 'text-info' : 'text-success'
-                          }`}
-                        >
-                          <CsLineIcons
-                            icon={todayAttendance.status === 'absent' ? 'close-circle' : todayAttendance.status === 'leave' ? 'calendar' : 'check'}
-                            size="14"
-                          />
-                          {todayAttendance.status === 'absent' ? 'Absent' : todayAttendance.status === 'leave' ? 'On Leave' : 'Marked'}
-                        </span>
-                      )}
-                      {todayAttendance && (
+                        )}
                         <Button
                           variant="none"
                           size="sm"
                           className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline"
-                          onClick={() => handleOpenDetailModal(todayAttendance, staff._id)}
-                          title="Edit Attendance"
+                          onClick={() => history.push(`/staff/attendance/view/${staff._id}`)}
+                          title="View History"
                         >
-                          <CsLineIcons icon="edit" size="14" />
+                          <CsLineIcons icon="eye" size="14" />
                         </Button>
-                      )}
-                      <Button
-                        variant="none"
-                        size="sm"
-                        className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline"
-                        onClick={() => history.push(`/staff/attendance/view/${staff._id}`)}
-                        title="View History"
-                      >
-                        <CsLineIcons icon="eye" size="14" />
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            );
-          })}
-          {page.length === 0 && <div className="text-center py-5 w-100 text-muted fw-bold">No staff members found matching the search.</div>}
-        </Row>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              );
+            })}
+            {page.length === 0 && <div className="text-center py-5 w-100 text-muted fw-bold">No staff members found matching the search.</div>}
+          </Row>
 
-        <Row className="mt-4">
-          <Col xs="12">
-            <TablePagination tableInstance={tableInstance} />
-          </Col>
-        </Row>
-      </div>
-      
+          <Row className="mt-4">
+            <Col xs="12">
+              <TablePagination tableInstance={tableInstance} />
+            </Col>
+          </Row>
+        </div>
+      </>
+
       <Modal show={showActionModal} onHide={() => setShowActionModal(false)} centered className="rounded-4">
         <Modal.Header closeButton className="border-0">
           <Modal.Title className="fw-bold">
@@ -1428,7 +1434,7 @@ export default function ManageAttendance() {
                 <p className="text-muted text-center fw-medium mb-4">
                   {new Date(selectedAttendance.date || targetDate).toLocaleDateString('en-IN', { weekday: 'long' })}
                 </p>
-                
+
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Attendance Status</Form.Label>
                   <Form.Select className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark" value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
@@ -1447,22 +1453,22 @@ export default function ManageAttendance() {
                     <Col xs={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Check-In Time</Form.Label>
-                        <Form.Control 
-                          type="time" 
+                        <Form.Control
+                          type="time"
                           className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark"
-                          value={editInTime} 
-                          onChange={(e) => setEditInTime(e.target.value)} 
+                          value={editInTime}
+                          onChange={(e) => setEditInTime(e.target.value)}
                         />
                       </Form.Group>
                     </Col>
                     <Col xs={6}>
                       <Form.Group>
                         <Form.Label className="small fw-bold text-uppercase letter-spacing-1 text-muted">Check-Out Time</Form.Label>
-                        <Form.Control 
-                          type="time" 
+                        <Form.Control
+                          type="time"
                           className="rounded-3 border-0 shadow-sm py-2 px-3 fw-bold text-dark"
-                          value={editOutTime} 
-                          onChange={(e) => setEditOutTime(e.target.value)} 
+                          value={editOutTime}
+                          onChange={(e) => setEditOutTime(e.target.value)}
                         />
                       </Form.Group>
                     </Col>
@@ -1502,7 +1508,7 @@ export default function ManageAttendance() {
                 </div>
                 <h4 className="fw-bold mb-1">{formatDateDisplay(selectedAttendance.date || targetDate)}</h4>
                 <p className="text-muted fw-medium">{new Date(selectedAttendance.date || targetDate).toLocaleDateString('en-IN', { weekday: 'long' })}</p>
-                
+
                 <div className="glass-card bg-light border-0 p-4 mt-4 text-start">
                   <Row className="g-4">
                     <Col xs={6}>

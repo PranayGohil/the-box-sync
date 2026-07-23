@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Row, Col, Nav, Dropdown } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
-import { LAYOUT } from 'constants.js';
+import { LAYOUT, isStorePreferencesNeeded } from 'constants.js';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import useCustomLayout from 'hooks/useCustomLayout';
 import { useWindowSize } from 'hooks/useWindowSize';
@@ -15,7 +15,8 @@ import ForgotPassword from './ForgotPassword';
 import PrintConfig from './PrintConfig';
 import StorePreferences from './StorePreferences';
 
-const NavContent = ({ activePlans }) => {
+const NavContent = ({ activePlans, currentUser }) => {
+  const showPreferences = isStorePreferencesNeeded(currentUser?.shop_type);
   return (
     <>
       <Nav className="flex-column operations-operations-sidebar">
@@ -59,23 +60,12 @@ const NavContent = ({ activePlans }) => {
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Print Settings</span>
             </Nav.Link>
-            <Nav.Link as={NavLink} to="/settings/preferences" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Store Preferences</span>
-            </Nav.Link>
-          </div>
-        </div>
-
-        <div className="mb-1">
-          <div className="operations-section-header">
-            <CsLineIcons icon="key" size="17" />
-            <span className="align-middle ms-2">Security</span>
-          </div>
-          <div className="operations-sub-catalog-container">
-            <Nav.Link as={NavLink} to="/settings/forgot-password" className="px-0">
-              <i className="me-2 sw-3 d-inline-block" />
-              <span className="align-middle">Forgot Password</span>
-            </Nav.Link>
+            {showPreferences && (
+              <Nav.Link as={NavLink} to="/settings/preferences" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">Store Preferences</span>
+              </Nav.Link>
+            )}
           </div>
         </div>
       </Nav>
@@ -83,17 +73,17 @@ const NavContent = ({ activePlans }) => {
   );
 };
 
-const MobileNavbar = () => {
+const MobileNavbar = ({ currentUser }) => {
   const { navClasses } = useSelector((state) => state.catalog);
   const isSidebarOpen = navClasses && navClasses['mobile-side-in'];
+  const showPreferences = isStorePreferencesNeeded(currentUser?.shop_type);
 
   const items = [
     { to: '/settings/profile', icon: 'user', title: 'Profile' },
     { to: '/settings/tax-charges', icon: 'dollar', title: 'Tax & Charges' },
     { to: '/settings/subscription', icon: 'star', title: 'Subscription' },
     { to: '/settings/print-config', icon: 'print', title: 'Print Settings' },
-    { to: '/settings/preferences', icon: 'gear', title: 'Store Preferences' },
-    { to: '/settings/forgot-password', icon: 'key', title: 'Forgot Password' },
+    ...(showPreferences ? [{ to: '/settings/preferences', icon: 'gear', title: 'Store Preferences' }] : []),
   ];
 
   return (
@@ -161,7 +151,8 @@ const Settings = () => {
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10) || 1200;
 
-  const { activePlans } = useContext(AuthContext);
+  const { activePlans, currentUser } = useContext(AuthContext);
+  const showPreferences = isStorePreferencesNeeded(currentUser?.shop_type);
 
   return (
     <div className="position-relative container-fluid">
@@ -169,12 +160,12 @@ const Settings = () => {
         {width && width >= lgBreakpoint ? (
           <Col xs="auto" className="d-none d-lg-flex">
             <div className="nav flex-column sw-25 mt-2">
-              <NavContent activePlans={activePlans} />
+              <NavContent activePlans={activePlans} currentUser={currentUser} />
             </div>
           </Col>
         ) : (
           <Col xs={12} className="d-lg-none">
-            <MobileNavbar />
+            <MobileNavbar currentUser={currentUser} />
           </Col>
         )}
         <Col xs={12} lg className="settings-content-col">
@@ -183,9 +174,8 @@ const Settings = () => {
             <Route exact path="/settings/profile" render={() => <Profile />} />
             <Route exact path="/settings/tax-charges" render={() => <TaxAndCharges />} />
             <Route exact path="/settings/subscription" render={() => <Subscription />} />
-            <Route exact path="/settings/forgot-password" render={() => <ForgotPassword />} />
             <Route exact path="/settings/print-config" render={() => <PrintConfig />} />
-            <Route exact path="/settings/preferences" render={() => <StorePreferences />} />
+            {showPreferences && <Route exact path="/settings/preferences" render={() => <StorePreferences />} />}
           </Switch>
         </Col>
       </Row>

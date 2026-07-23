@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
+import { ALLOWED_ACCOUNTING_SHOP_TYPES, isAccountingShopType } from 'constants.js';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Button, Row, Col, Card, Form, Badge } from 'react-bootstrap';
 import axios from 'axios';
@@ -16,7 +17,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { useSocket } from 'contexts/SocketContext';
 import { AuthContext } from 'contexts/AuthContext';
 import { toast } from 'react-toastify';
-import { openPrintWindow, printKOTSlip, printModalBill } from 'utils/printUtils';
+import { openPrintWindow, printKOTSlip, printModalBill, printModalA4Invoice, printModalA4Quotation } from 'utils/printUtils';
 import DatePicker from 'react-datepicker';
 import CatalogGrid from './components/CatalogGrid';
 import OrderCartTable from './components/OrderCartTable';
@@ -120,7 +121,10 @@ const UnifiedOrder = () => {
   const tableId = urlParams.get('tableId');
   const mode = urlParams.get('mode'); // 'new' | 'edit'
 
-  const { activePlans } = useContext(AuthContext);
+  const { activePlans, currentUser } = useContext(AuthContext);
+  const shopType = currentUser?.shop_type;
+  const canSeeAccounting = isAccountingShopType(shopType);
+
   const canKOT = false;
 
   // Default type from URL path
@@ -754,6 +758,10 @@ const UnifiedOrder = () => {
     );
   };
 
+  const handleQuotation = () => {
+    printModalA4Quotation({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
+  };
+
   // ── Save / Cancel / Pay ───────────────────────────────────────────────────
   const handleSaveOrder = async (status = 'Save', redirectPath = null) => {
     if (!validateOrder()) return false;
@@ -969,6 +977,20 @@ const UnifiedOrder = () => {
                     #{tokenNumber}
                   </div>
                 )}
+                {canSeeAccounting && (
+                  <Button 
+                    variant="outline-primary" 
+                    size="sm" 
+                    className="ms-2 d-none d-sm-inline-flex align-items-center"
+                    onClick={() => {
+                      allowNavigationRef.current = true;
+                      history.push('/accounting/create-invoice', { items: orderItems, customer: customerInfo });
+                    }}
+                    style={{ fontSize: '11px', fontWeight: 600, padding: '4px 10px' }}
+                  >
+                    <CsLineIcons icon="file-text" size="13" className="me-1" /> GST Invoice
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -1001,6 +1023,8 @@ const UnifiedOrder = () => {
                 handleOpenPaymentModal={handleOpenPaymentModal}
                 setShowCancelModal={setShowCancelModal}
                 handlePrint={handlePrint}
+                handleQuotation={handleQuotation}
+                canSeeAccounting={canSeeAccounting}
                 history={history}
                 setShowCartSheet={setShowCartSheet}
                 onKotAndPrint={undefined}
@@ -1035,6 +1059,8 @@ const UnifiedOrder = () => {
         orderNo={orderNo}
         alreadyPaid={parseFloat(initialStateRef.current.paid_amount) || 0}
         handlePrint={handlePrint}
+        canSeeAccounting={canSeeAccounting}
+        history={history}
       />
 
       <CancelOrderModal showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal} handleCancelOrder={handleCancelOrder} isLoading={isLoading} />

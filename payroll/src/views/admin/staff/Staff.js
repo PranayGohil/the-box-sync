@@ -22,76 +22,42 @@ import GeneratePayroll from './payroll/GeneratePayroll';
 import ViewStaffPayroll from './payroll/ViewStaffPayroll';
 import Holidays from './payroll/Holidays';
 import LeavePolicy from './payroll/LeavePolicy';
+import WeekOff from './payroll/WeekOff';
 import LeaveRequests from './payroll/LeaveRequests';
 import SalaryAdvances from './payroll/SalaryAdvances';
+import BranchBoard from './branch/BranchBoard';
 
 const NavContent = ({ path }) => {
   return (
     <Nav className="flex-column operations-operations-sidebar">
-      {/* Staff Management */}
-      <div className="mb-1">
-        <div className="operations-section-header">
-          <CsLineIcons icon="user" size="17" />
-          <span className="align-middle">Staff Management</span>
-        </div>
-        <div className="operations-sub-menu-container">
-          <Nav.Link as={NavLink} to={`${path}/view`} className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Staff</span>
-          </Nav.Link>
-        </div>
-      </div>
+      {/* Manage Staff */}
+      <Nav.Link as={NavLink} to={`${path}/view`} className="operations-single-header-link">
+        <CsLineIcons icon="user" size="17" />
+        <span className="align-middle">Manage Staff</span>
+      </Nav.Link>
 
-      {/* Attendance */}
-      <div className="mb-1">
-        <div className="operations-section-header">
-          <CsLineIcons icon="check-square" size="17" />
-          <span className="align-middle">Attendance</span>
-        </div>
-        <div className="operations-sub-menu-container">
-          <Nav.Link as={NavLink} to={`${path}/attendance`} className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Attendance</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to={`${path}/shift`} className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Shift</span>
-          </Nav.Link>
-        </div>
-      </div>
+      {/* Manage Attendance */}
+      <Nav.Link as={NavLink} to={`${path}/attendance`} className="operations-single-header-link">
+        <CsLineIcons icon="check-square" size="17" />
+        <span className="align-middle">Manage Attendance</span>
+      </Nav.Link>
 
-      {/* Payroll */}
-      <div className="mb-1">
-        <div className="operations-section-header">
-          <CsLineIcons icon="credit-card" size="17" />
-          <span className="align-middle">Payroll</span>
-        </div>
-        <div className="operations-sub-menu-container">
-          <Nav.Link as={NavLink} to={`${path}/payroll`} exact className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Manage Payroll</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to={`${path}/payroll/generate`} className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Generate Payroll</span>
-          </Nav.Link>
-          <Nav.Link as={NavLink} to={`${path}/holidays`} className="px-0">
-            <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Holidays</span>
-          </Nav.Link>
-        </div>
-      </div>
+      {/* Manage Payroll */}
+      <Nav.Link as={NavLink} to={`${path}/payroll`} className="operations-single-header-link">
+        <CsLineIcons icon="credit-card" size="17" />
+        <span className="align-middle">Manage Payroll</span>
+      </Nav.Link>
 
-      {/* Leave & HR */}
+      {/* Manage Leave */}
       <div className="mb-1">
         <div className="operations-section-header">
           <CsLineIcons icon="book-open" size="17" />
-          <span className="align-middle">Leave &amp; HR</span>
+          <span className="align-middle">Manage Leave</span>
         </div>
         <div className="operations-sub-menu-container">
           <Nav.Link as={NavLink} to={`${path}/leave-policy`} className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
-            <span className="align-middle">Leave Policies</span>
+            <span className="align-middle">Leave Policy</span>
           </Nav.Link>
           <Nav.Link as={NavLink} to={`${path}/leave-requests`} className="px-0">
             <i className="me-2 sw-3 d-inline-block" />
@@ -99,12 +65,6 @@ const NavContent = ({ path }) => {
           </Nav.Link>
         </div>
       </div>
-
-      {/* Settings - flat item */}
-      <Nav.Link as={NavLink} to={`${path}/payroll/settings`} className="px-3 py-2 my-1 d-flex align-items-center">
-        <CsLineIcons icon="gear" size="17" className="me-2" />
-        <span className="align-middle">Payroll Configuration</span>
-      </Nav.Link>
     </Nav>
   );
 };
@@ -210,24 +170,36 @@ const Staff = () => {
           color: #23b3f4 !important;
           font-weight: 700 !important;
         }
-        .operations-operations-sidebar .operations-section-header {
+        .operations-operations-sidebar .operations-section-header,
+        .operations-operations-sidebar .operations-single-header-link {
           display: flex !important;
           align-items: center !important;
-          padding: 1.25rem 1.25rem 0.5rem 1.25rem !important;
+          padding: 0.85rem 0.75rem 0.4rem 0.75rem !important;
           color: #1e293b !important;
           font-weight: 700 !important;
-          font-size: 0.95rem !important;
+          font-size: 0.875rem !important;
           letter-spacing: -0.01em !important;
+          white-space: nowrap !important;
         }
-        .operations-operations-sidebar .operations-section-header svg {
+        .operations-operations-sidebar .operations-section-header svg,
+        .operations-operations-sidebar .operations-single-header-link svg {
           color: #94a3b8 !important;
-          margin-right: 12px !important;
+          margin-right: 10px !important;
+          flex-shrink: 0 !important;
+        }
+        .operations-operations-sidebar .operations-single-header-link.active,
+        .operations-operations-sidebar .operations-single-header-link.active span,
+        .operations-operations-sidebar .operations-single-header-link.active svg {
+          color: #23b3f4 !important;
+          font-weight: 700 !important;
         }
         .operations-operations-sidebar .operations-sub-menu-container {
-          padding-left: 0.5rem !important;
+          padding-left: 0.25rem !important;
         }
         .operations-operations-sidebar .operations-sub-menu-container .nav-link {
-          padding-left: 2rem !important;
+          padding-left: 1.25rem !important;
+          font-size: 0.825rem !important;
+          white-space: nowrap !important;
         }
       `}</style>
 
@@ -235,14 +207,15 @@ const Staff = () => {
       {width && width < lgBreakpoint && !hideSidebar && <MobileBottomNav path={path} />}
 
       <Row>
-        {width && width >= lgBreakpoint && !hideSidebar ? (
+        {width && width >= lgBreakpoint && !hideSidebar && (
           <Col xs="auto" className="d-flex pe-lg-3">
             <div className="nav flex-column sw-25 mt-2">
               <NavContent path={path} />
             </div>
           </Col>
-        ) : (
-          !hideSidebar && <div className="pt-4" />
+        )}
+        {width && width < lgBreakpoint && (
+          <Col xs={12} className="pt-4" />
         )}
         <Col>
           <Switch>
@@ -267,8 +240,10 @@ const Staff = () => {
             <Route path={`${path}/payroll/:month?/:year?`} component={ManagePayroll} />
 
             {/* Leave & HR */}
-            <Route exact path={`${path}/holidays`} component={Holidays} />
+            <Route exact path={`${path}/organization`} component={BranchBoard} />
             <Route exact path={`${path}/leave-policy`} component={LeavePolicy} />
+            <Route exact path={`${path}/holidays`} component={Holidays} />
+            <Route exact path={`${path}/week-off`} component={WeekOff} />
             <Route exact path={`${path}/leave-requests`} component={LeaveRequests} />
             <Route exact path={`${path}/salary-advances`} component={SalaryAdvances} />
           </Switch>

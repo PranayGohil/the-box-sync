@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const accountingController = require('../controllers/accountingController');
+const authMiddleware = require('../middlewares/auth-middlewares');
+const requireAccountingShopType = require('../middlewares/requireAccountingShopType');
+
+// Apply middlewares to all routes in this router
+router.use(authMiddleware);
+router.use(requireAccountingShopType);
+
 
 // Quotation Routes
 router.post('/quotations', accountingController.createQuotation);

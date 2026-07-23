@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory, useParams, Link } from 'react-router-dom';
+import { useHistory, useParams, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
     Row, Col, Card, Button, Badge, Alert, Modal,
@@ -19,15 +19,16 @@ const MONTH_NAMES = [
 const currentDate = new Date();
 
 export default function ManagePayroll() {
+    const { month: paramMonth, year: paramYear } = useParams();
+    const history = useHistory();
+
     const title = 'Manage Payroll';
     const description = 'View and manage monthly payroll for all staff';
-    const { month: paramMonth, year: paramYear } = useParams();
     const breadcrumbs = [
         { to: '', text: 'Home' },
-        { to: 'payroll', text: 'Payroll' },
+        { to: 'staff/view', text: 'Staff' },
+        { to: 'staff/payroll', text: 'Manage Payroll' },
     ];
-
-    const history = useHistory();
 
     const [month, setMonth] = useState(Number(paramMonth) || currentDate.getMonth() + 1);
     const [year, setYear] = useState(Number(paramYear) || currentDate.getFullYear());
@@ -135,16 +136,16 @@ export default function ManagePayroll() {
     const handleMarkPaid = async (ids) => {
         setIsMarkingPaid(true);
         try {
-            const res = await axios.put(
+            await axios.put(
                 `${process.env.REACT_APP_API}/payroll/mark-paid`,
                 { ids: Array.from(ids) },
                 authHeader()
             );
-            toast.success(res.data.message);
+            toast.success('Payroll marked as paid.');
             setSelectedIds(new Set());
             fetchSummary();
         } catch {
-            toast.error('Failed to mark as paid.');
+            toast.error('Failed to update status.');
         } finally {
             setIsMarkingPaid(false);
         }
@@ -153,16 +154,16 @@ export default function ManagePayroll() {
     const handleMarkUnpaid = async (ids) => {
         setIsMarkingPaid(true);
         try {
-            const res = await axios.put(
+            await axios.put(
                 `${process.env.REACT_APP_API}/payroll/mark-unpaid`,
                 { ids: Array.from(ids) },
                 authHeader()
             );
-            toast.success(res.data.message);
+            toast.success('Payroll marked as unpaid.');
             setSelectedIds(new Set());
             fetchSummary();
         } catch {
-            toast.error('Failed to mark as unpaid.');
+            toast.error('Failed to update status.');
         } finally {
             setIsMarkingPaid(false);
         }
@@ -192,41 +193,23 @@ export default function ManagePayroll() {
     };
 
     const openEditModal = (payroll, staff) => {
-        setEditingPayroll({ ...payroll, staff });
+        setEditingPayroll(payroll);
+        const activeE = Object.keys(payroll.earned_breakdown || {}).filter(k => k !== 'total_gross' && payroll.earned_breakdown[k] > 0);
+        const activeD = Object.keys(payroll.deduction_breakdown || {}).filter(k => k !== 'total_statutory' && payroll.deduction_breakdown[k] > 0);
         
-        const activeE = ['basic', 'hra', 'conveyance', 'medical', 'special', 'other'].filter(
-            key => (payroll.earned_breakdown?.[key] || 0) > 0
-        );
-        if (activeE.length === 0) activeE.push('basic');
-
-        const activeD = ['pf', 'esi', 'pt', 'advance_deduction', 'tds', 'deductions'].filter(
-            key => {
-                if (key === 'pf' || key === 'esi' || key === 'pt') {
-                    return (payroll.deduction_breakdown?.[key] || 0) > 0;
-                }
-                return (payroll[key] || 0) > 0;
-            }
-        );
-
-        const baseSalary = staff?.salary || payroll.base_salary || 0;
-        const workingDays = payroll.working_days_in_month || 26;
-        const defaultOtRate = Math.round((baseSalary / workingDays) / 8 * 2);
-        
-        // If the DB has an explicit overtime_rate of 0, and we want to fallback to Indian OT rate,
-        // we can just use the calculated defaultOtRate if the existing one is falsy (0).
-        const finalOtRate = payroll.overtime_rate || staff?.overtime_rate || defaultOtRate || 0;
+        if (payroll.advance_deduction > 0 && !activeD.includes('advance_deduction')) activeD.push('advance_deduction');
+        if (payroll.tds > 0 && !activeD.includes('tds')) activeD.push('tds');
+        if (payroll.deductions > 0 && !activeD.includes('deductions')) activeD.push('deductions');
 
         setEditForm({
             overtime_hours: payroll.overtime_hours || 0,
-            overtime_rate: finalOtRate,
+            overtime_rate: payroll.overtime_rate || staff.overtime_rate || 0,
             bonus: payroll.bonus || 0,
             deductions: payroll.deductions || 0,
-            deduction_reason: payroll.deduction_reason || '',
-            notes: payroll.notes || '',
-            working_days_in_month: payroll.working_days_in_month || 26,
             earned_breakdown: {
                 basic: payroll.earned_breakdown?.basic || 0,
                 hra: payroll.earned_breakdown?.hra || 0,
+                da: payroll.earned_breakdown?.da || 0,
                 conveyance: payroll.earned_breakdown?.conveyance || 0,
                 medical: payroll.earned_breakdown?.medical || 0,
                 special: payroll.earned_breakdown?.special || 0,
@@ -395,21 +378,34 @@ export default function ManagePayroll() {
         <div className="container-fluid px-lg-4 px-xl-5 pb-5">
             <HtmlHead title={title} description={description} />
 
-            <div className="page-title-container mb-4 mt-3 mt-lg-0">
+            <div className="page-title-container mb-4">
                 <Row className="g-3 align-items-center">
-                    <Col xs="12" md="6">
-                        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
+                    <Col xs="12" lg="4" xl="4">
+                        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7', whiteSpace: 'nowrap' }}>{title}</h1>
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
-                    <Col xs="12" md="6" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
-                        <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} as={Link} to="/staff/payroll/generate">
-                            <CsLineIcons icon="plus" className="me-2" size="18" />
-                            <span>Generate New</span>
+                    <Col xs="12" lg="8" xl="8" className="d-flex flex-wrap flex-lg-nowrap justify-content-lg-end align-items-center gap-2">
+                        <Button 
+                            variant="outline-primary" 
+                            onClick={() => history.push('/staff/payroll/generate')}
+                            className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                            style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                        >
+                            <CsLineIcons icon="plus" size="16" />
+                            <span>Generate Payroll</span>
+                        </Button>
+                        <Button 
+                            variant="outline-primary" 
+                            onClick={() => history.push('/staff/payroll/settings')}
+                            className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                            style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                        >
+                            <CsLineIcons icon="gear" size="16" />
+                            <span>Configuration</span>
                         </Button>
                     </Col>
                 </Row>
             </div>
-
 
             <Card className="glass-card border-0 mb-4">
                 <Card.Body className="p-4">
@@ -655,8 +651,14 @@ export default function ManagePayroll() {
                                                         <div className="text-muted fw-bold small text-uppercase letter-spacing-1">Payroll Not Generated</div>
                                                     </td>
                                                     <td className="text-center bg-light bg-opacity-10">
-                                                        <Button className="custom-btn-solid rounded-pill shadow-sm px-4" style={{ height: '40px' }} onClick={() => history.push(`/staff/payroll/generate?staff_id=${staff._id}&month=${month}&year=${year}`)}>
-                                                            <CsLineIcons icon="plus" size="18" className="me-2" /> Generate
+                                                        <Button
+                                                            variant="outline-primary"
+                                                            className="px-3 py-2 rounded-pill fw-bold d-inline-flex align-items-center justify-content-center gap-2 shadow-sm"
+                                                            style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                                                            onClick={() => history.push(`/staff/payroll/generate?staff_id=${staff._id}&month=${month}&year=${year}`)}
+                                                        >
+                                                            <CsLineIcons icon="plus" size="16" />
+                                                            <span>Generate</span>
                                                         </Button>
                                                     </td>
                                                 </>

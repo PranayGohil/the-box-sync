@@ -12,6 +12,7 @@ const {
   updateCatalogCategoryAndType,
   updateCatalog,
   deleteCatalog,
+  getStockSalesStatement,
 } = require("../controllers/catalogController");
 const upload = require("../middlewares/upload");
 
@@ -25,6 +26,7 @@ catalogRouter
     addCatalog
   );
 catalogRouter.route("/get").get(authMiddleware, getCatalogData);
+catalogRouter.route("/stock-sales-statement").get(authMiddleware, getStockSalesStatement);
 catalogRouter.route("/get/:id").get(authMiddleware, getCatalogDataById);
 catalogRouter.route("/get/rescode/:res_code").get(getCatalogDataByResCode);
 catalogRouter.route("/get/token/:token").get(getCatalogDataByToken);

@@ -459,6 +459,8 @@ const getUserData = async (req, res) => {
       _id: 1,
       restaurant_code: 1,
       name: 1,
+      shop_type: 1,
+      item_type_setting: 1,
       logo: 1,
       gst_no: 1,
       fssai_no: 1,

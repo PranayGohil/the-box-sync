@@ -22,16 +22,10 @@ const NavContent = () => {
         <span className="align-middle">Manage Payroll</span>
       </Nav.Link>
 
-      {/* Generate Payroll */}
-      <Nav.Link as={NavLink} to="/staff/payroll/generate" className="px-3 py-2 my-1 d-flex align-items-center">
-        <CsLineIcons icon="plus" size="17" className="me-2" />
-        <span className="align-middle">Generate Payroll</span>
-      </Nav.Link>
-
-      {/* Holidays */}
+      {/* Holidays & Week-off */}
       <Nav.Link as={NavLink} to="/staff/payroll/holidays" className="px-3 py-2 my-1 d-flex align-items-center">
         <CsLineIcons icon="calendar" size="17" className="me-2" />
-        <span className="align-middle">Holidays</span>
+        <span className="align-middle">Holidays &amp; Week-off</span>
       </Nav.Link>
 
       {/* Feedbacks & Complaints */}
@@ -48,8 +42,7 @@ const MobileBottomNav = () => {
 
   const navItems = [
     { label: 'Manage', icon: 'layout', to: '/staff/payroll/manage' },
-    { label: 'Generate', icon: 'plus', to: '/staff/payroll/generate' },
-    { label: 'Holidays', icon: 'calendar', to: '/staff/payroll/holidays' },
+    { label: 'Holidays & Week-off', icon: 'calendar', to: '/staff/payroll/holidays' },
     { label: 'Feedback', icon: 'message', to: '/staff/payroll/feedbacks' },
   ];
 

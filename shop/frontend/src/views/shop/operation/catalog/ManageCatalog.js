@@ -425,6 +425,23 @@ const ManageCatalog = () => {
                                 Customizable
                               </div>
                             )}
+
+                            {/* Stock Badge */}
+                            <div className="mt-2">
+                              {item.has_variants && Array.isArray(item.variants) && item.variants.length > 0 ? (
+                                <div className="d-flex flex-wrap gap-1">
+                                  {item.variants.map((v, vIdx) => (
+                                    <span key={vIdx} className={`badge ${v.stock_quantity === 0 ? 'bg-danger text-white' : v.stock_quantity != null ? 'bg-info text-white' : 'bg-light text-secondary border'}`} style={{ fontSize: '9px' }}>
+                                      {v.size_name ? `${v.size_name}: ` : ''}{v.stock_quantity != null ? `${v.stock_quantity} in stock` : 'Unlimited'}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className={`badge ${item.stock_quantity === 0 ? 'bg-danger text-white' : item.stock_quantity != null ? 'bg-info text-white' : 'bg-light text-secondary border'}`} style={{ fontSize: '9px' }}>
+                                  Stock: {item.stock_quantity != null ? `${item.stock_quantity} in stock` : 'Unlimited'}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </Col>

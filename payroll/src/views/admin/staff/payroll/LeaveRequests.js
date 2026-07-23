@@ -10,12 +10,12 @@ import { format } from 'date-fns';
 import Select from 'react-select';
 
 const LeaveRequests = () => {
-    const title = 'Leave Management';
+    const title = 'Leave Requests';
     const description = 'Manage staff leave requests and track real-time leave balances.';
     const breadcrumbs = [
         { to: '', text: 'Home' },
         { to: 'staff/view', text: 'Staff' },
-        { to: 'staff/leave-requests', text: 'Leave Management' }
+        { to: 'staff/leave-requests', text: 'Leave Requests' }
     ];
 
     const currentYear = new Date().getFullYear();
@@ -195,42 +195,55 @@ const LeaveRequests = () => {
         <div className="container-fluid px-lg-4 px-xl-5 pb-5">
             <HtmlHead title={title} description={description} />
 
-            <div className="page-title-container mb-4 mt-3 mt-lg-0">
+            <div className="page-title-container mb-4">
                 <Row className="g-3 align-items-center">
-                    <Col xs="12" md="5">
+                    <Col xs="12" md="4">
                         <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
                             {title}
                         </h1>
                         <BreadcrumbList items={breadcrumbs} />
                     </Col>
 
-                    <Col xs="12" md="7" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
+                    <Col xs="12" md="8" className="d-flex flex-wrap justify-content-md-end align-items-center gap-2">
                         <Form.Control
                             type="text"
                             placeholder="Search staff..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="leave-search-input shadow-sm"
+                            className="shadow-sm"
+                            style={{ borderRadius: '20px', height: '38px', width: '180px' }}
                         />
                         {activeTab === 'requests' && (
                             <>
                                 <Select
                                     classNamePrefix="react-select"
-                                    className="leave-filter-select-container shadow-sm"
                                     options={monthOptions}
                                     value={monthOptions.find(opt => opt.value === monthFilter)}
                                     onChange={(selected) => setMonthFilter(selected ? selected.value : 'all')}
                                     placeholder="Select Month"
                                     isSearchable={false}
+                                    className="react-select-premium shadow-sm"
+                                    menuPortalTarget={document.body}
+                                    styles={{
+                                        container: (base) => ({ ...base, minWidth: '140px' }),
+                                        control: (base) => ({ ...base, borderRadius: '20px', minHeight: '38px' }),
+                                        menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                                    }}
                                 />
                                 <Select
                                     classNamePrefix="react-select"
-                                    className="leave-filter-select-container shadow-sm"
                                     options={statusOptions}
                                     value={statusOptions.find(opt => opt.value === statusFilter)}
                                     onChange={(selected) => setStatusFilter(selected ? selected.value : 'all')}
                                     placeholder="Select Status"
                                     isSearchable={false}
+                                    className="react-select-premium shadow-sm"
+                                    menuPortalTarget={document.body}
+                                    styles={{
+                                        container: (base) => ({ ...base, minWidth: '140px' }),
+                                        control: (base) => ({ ...base, borderRadius: '20px', minHeight: '38px' }),
+                                        menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                                    }}
                                 />
                             </>
                         )}

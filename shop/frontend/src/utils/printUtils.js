@@ -1,5 +1,421 @@
 import { toast } from 'react-toastify';
 import { getUserTaxInfo, getOrderById } from 'api/orderService';
+import { isAccountingShopType } from 'constants.js';
+
+/**
+ * Generates an A4 GST Invoice HTML format mimicking a professional template.
+ */
+export function printA4InvoiceHTML(ord, userData, items, subTotal) {
+  const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads';
+  const logoUrl = userData.logo ? `${uploadDir}${userData.logo.startsWith('/') ? '' : '/'}${userData.logo}` : '';
+  const printDate = new Date(ord.order_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+  const invoiceNo = ord.order_no || ord._id;
+
+  return `
+    <div class="a4-invoice-container">
+      <!-- Header -->
+      <table style="width: 100%; margin-bottom: 20px;">
+        <tr>
+          <td style="width: 50%; vertical-align: top;">
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-width: 150px; max-height: 80px; object-fit: contain; margin-bottom: 10px;" />` : `<h1 style="color: #23b3f4; margin: 0; font-size: 28px;">${userData.name}</h1>`}
+          </td>
+          <td style="width: 50%; text-align: right; vertical-align: top; font-size: 11px; color: #555;">
+            <p style="margin: 0 0 4px 0;">${userData.address || ''}</p>
+            <p style="margin: 0 0 4px 0;">${userData.city || ''}, ${userData.state || ''} - ${userData.pincode || ''}</p>
+            <p style="margin: 0 0 4px 0;"><strong>Phone:</strong> ${userData.mobile || ''}</p>
+            <p style="margin: 0 0 4px 0;"><strong>Email:</strong> ${userData.email || ''}</p>
+            ${userData.gst_no ? `<p style="margin: 0 0 4px 0;"><strong>GST NO:</strong> ${userData.gst_no}</p>` : ''}
+          </td>
+        </tr>
+      </table>
+
+      <!-- Client & Invoice Details -->
+      <table style="width: 100%; margin-bottom: 20px;">
+        <tr>
+          <td style="width: 50%; vertical-align: top;">
+            <table style="font-size: 12px;">
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Client :</td>
+                <td style="padding-bottom: 4px;">${ord.customer_name || '-'}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Phone No :</td>
+                <td style="padding-bottom: 4px;">${ord.customer_phone || '-'}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Address :</td>
+                <td style="padding-bottom: 4px;">${ord.customer_address || '-'}</td>
+              </tr>
+              ${ord.customer_gst ? `<tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Gst no :</td>
+                <td style="padding-bottom: 4px;">${ord.customer_gst}</td>
+              </tr>` : ''}
+            </table>
+          </td>
+          <td style="width: 50%; vertical-align: top; text-align: right;">
+             <table style="font-size: 12px; float: right;">
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Date :</td>
+                <td style="padding-bottom: 4px;">${printDate}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Invoice no :</td>
+                <td style="padding-bottom: 4px;">${invoiceNo}</td>
+              </tr>
+             </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Title -->
+      <h2 style="text-align: center; margin: 10px 0 15px 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">INVOICE</h2>
+
+      <!-- Items Table -->
+      <table class="a4-items-table">
+        <thead>
+          <tr>
+            <th style="width: 8%; text-align: center;">Sr no</th>
+            <th style="width: 52%; text-align: left;">Description</th>
+            <th style="width: 10%; text-align: center;">Qty</th>
+            <th style="width: 15%; text-align: right;">Per</th>
+            <th style="width: 15%; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map((item, index) => `
+            <tr>
+              <td style="text-align: center; border-right: 1px solid #000;">${index + 1}</td>
+              <td style="border-right: 1px solid #000;">
+                ${item.item_name}
+                ${item.hsn_code ? `<br><small>HSN: ${item.hsn_code}</small>` : ''}
+              </td>
+              <td style="text-align: center; border-right: 1px solid #000;">${item.quantity}</td>
+              <td style="text-align: right; border-right: 1px solid #000;">${parseFloat(item.item_price).toFixed(2)}</td>
+              <td style="text-align: right;">${(item.item_price * item.quantity).toFixed(2)}</td>
+            </tr>
+          `).join('')}
+          <!-- Empty rows for spacing -->
+          <tr><td style="border-right: 1px solid #000;">&nbsp;</td><td style="border-right: 1px solid #000;"></td><td style="border-right: 1px solid #000;"></td><td style="border-right: 1px solid #000;"></td><td></td></tr>
+          <tr><td style="border-right: 1px solid #000;">&nbsp;</td><td style="border-right: 1px solid #000;"></td><td style="border-right: 1px solid #000;"></td><td style="border-right: 1px solid #000;"></td><td></td></tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" rowspan="5" style="border-right: 1px solid #000; vertical-align: top; padding: 0; border-top: 1px solid #000;">
+              <!-- Account Details -->
+              <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+                <tr><th colspan="2" style="background-color: #5bc0de; color: #fff; padding: 4px; text-align: center; border-bottom: 1px solid #000;">Account Details</th></tr>
+                <tr><td style="padding: 4px; border-bottom: 1px solid #000;"><strong>Account Name:</strong></td><td style="padding: 4px; border-bottom: 1px solid #000; border-left: 1px solid #000;">${userData.name || '-'}</td></tr>
+                <tr><td style="padding: 4px; border-bottom: 1px solid #000;"><strong>Account Number:</strong></td><td style="padding: 4px; border-bottom: 1px solid #000; border-left: 1px solid #000;">-</td></tr>
+                <tr><td style="padding: 4px; border-bottom: 1px solid #000;"><strong>Bank Name:</strong></td><td style="padding: 4px; border-bottom: 1px solid #000; border-left: 1px solid #000;">-</td></tr>
+                <tr><td style="padding: 4px; border-bottom: 1px solid #000;"><strong>IFSC Code:</strong></td><td style="padding: 4px; border-bottom: 1px solid #000; border-left: 1px solid #000;">-</td></tr>
+                <tr><td style="padding: 4px;"><strong>PAN NO:</strong></td><td style="padding: 4px; border-left: 1px solid #000;">${userData.pan_no || '-'}</td></tr>
+              </table>
+            </td>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; padding: 4px 6px;">Sub Total</td>
+            <td style="text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; padding: 4px 6px;">${parseFloat(subTotal).toFixed(2)}</td>
+          </tr>
+          ${ord.cgst_amount > 0 ? `
+          <tr>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; padding: 4px 6px;">CGST @ ${ord.cgst_percent}%</td>
+            <td style="text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; padding: 4px 6px;">${parseFloat(ord.cgst_amount).toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          ${ord.sgst_amount > 0 ? `
+          <tr>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; padding: 4px 6px;">SGST @ ${ord.sgst_percent}%</td>
+            <td style="text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; padding: 4px 6px;">${parseFloat(ord.sgst_amount).toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          ${ord.discount_amount > 0 ? `
+          <tr>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; padding: 4px 6px;">Discount</td>
+            <td style="text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; padding: 4px 6px;">-${parseFloat(ord.discount_amount).toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          <tr>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 6px;">Total</td>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; border-bottom: 1px solid #000; padding: 6px;">${parseFloat(ord.total_amount).toFixed(2)}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <!-- Signatures -->
+      <table style="width: 100%; margin-top: 20px;">
+        <tr>
+          <td style="width: 50%; vertical-align: bottom;">
+            <div style="width: 250px; border: 1px solid #000; height: 80px; padding: 5px; font-size: 11px;">
+              Receiver's Signature
+            </div>
+          </td>
+          <td style="width: 50%; text-align: right; vertical-align: bottom;">
+            <p style="margin: 0 0 40px 0; font-size: 12px; font-weight: bold;">For, ${userData.name}</p>
+            <p style="margin: 0; font-size: 12px; font-weight: bold; border-top: 1px solid #000; display: inline-block; padding-top: 4px;">(AUTHORIZED SIGNATORY)</p>
+          </td>
+        </tr>
+      </table>
+
+      <div style="margin-top: 30px; border-top: 2px solid #5bc0de; background-color: #d9edf7; padding: 8px; text-align: center; font-size: 10px;">
+        ${userData.address || ''}, ${userData.city || ''} | Phone: ${userData.mobile || ''}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Generates an A4 Quotation HTML format mimicking a professional template.
+ */
+export function printA4QuotationHTML(ord, userData, items, subTotal) {
+  const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads';
+  const logoUrl = userData.logo ? `${uploadDir}${userData.logo.startsWith('/') ? '' : '/'}${userData.logo}` : '';
+  const printDate = new Date(ord.order_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+  const quotationNo = ord.order_no ? ord.order_no.replace('ORD', 'QT') : `QT-${Date.now().toString().slice(-6)}`;
+
+  return `
+    <div class="a4-invoice-container">
+      <!-- Header -->
+      <table style="width: 100%; margin-bottom: 20px;">
+        <tr>
+          <td style="width: 50%; vertical-align: top;">
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-width: 150px; max-height: 80px; object-fit: contain; margin-bottom: 10px;" />` : `<h1 style="color: #23b3f4; margin: 0; font-size: 28px;">${userData.name}</h1>`}
+          </td>
+          <td style="width: 50%; text-align: right; vertical-align: top; font-size: 11px; color: #555;">
+            <p style="margin: 0 0 4px 0;">${userData.address || ''}</p>
+            <p style="margin: 0 0 4px 0;">${userData.city || ''}, ${userData.state || ''} - ${userData.pincode || ''}</p>
+            <p style="margin: 0 0 4px 0;"><strong>Phone:</strong> ${userData.mobile || ''}</p>
+            <p style="margin: 0 0 4px 0;"><strong>Email:</strong> ${userData.email || ''}</p>
+            ${userData.gst_no ? `<p style="margin: 0 0 4px 0;"><strong>GST NO:</strong> ${userData.gst_no}</p>` : ''}
+          </td>
+        </tr>
+      </table>
+
+      <!-- Client & Quotation Details -->
+      <table style="width: 100%; margin-bottom: 20px;">
+        <tr>
+          <td style="width: 50%; vertical-align: top;">
+            <table style="font-size: 12px;">
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Client :</td>
+                <td style="padding-bottom: 4px;">${ord.customer_name || '-'}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Phone No :</td>
+                <td style="padding-bottom: 4px;">${ord.customer_phone || '-'}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Address :</td>
+                <td style="padding-bottom: 4px;">${ord.customer_address || '-'}</td>
+              </tr>
+            </table>
+          </td>
+          <td style="width: 50%; vertical-align: top; text-align: right;">
+             <table style="font-size: 12px; float: right;">
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Date :</td>
+                <td style="padding-bottom: 4px;">${printDate}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding-right: 10px; padding-bottom: 4px; text-align: right;">Quotation No :</td>
+                <td style="padding-bottom: 4px;">${quotationNo}</td>
+              </tr>
+             </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Title -->
+      <h2 style="text-align: center; margin: 10px 0 15px 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">QUOTATION</h2>
+
+      <!-- Items Table -->
+      <table class="a4-items-table">
+        <thead>
+          <tr>
+            <th style="width: 8%; text-align: center;">Sr no</th>
+            <th style="width: 52%; text-align: left;">Description</th>
+            <th style="width: 10%; text-align: center;">Qty</th>
+            <th style="width: 15%; text-align: right;">Rate</th>
+            <th style="width: 15%; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map((item, index) => `
+            <tr>
+              <td style="text-align: center; border-right: 1px solid #000;">${index + 1}</td>
+              <td style="border-right: 1px solid #000;">
+                ${item.item_name}
+                ${item.hsn_code ? `<br><small>HSN: ${item.hsn_code}</small>` : ''}
+              </td>
+              <td style="text-align: center; border-right: 1px solid #000;">${item.quantity}</td>
+              <td style="text-align: right; border-right: 1px solid #000;">${parseFloat(item.item_price).toFixed(2)}</td>
+              <td style="text-align: right;">${(item.item_price * item.quantity).toFixed(2)}</td>
+            </tr>
+          `).join('')}
+          <tr><td style="border-right: 1px solid #000;">&nbsp;</td><td style="border-right: 1px solid #000;"></td><td style="border-right: 1px solid #000;"></td><td style="border-right: 1px solid #000;"></td><td></td></tr>
+          <tr><td style="border-right: 1px solid #000;">&nbsp;</td><td style="border-right: 1px solid #000;"></td><td style="border-right: 1px solid #000;"></td><td style="border-right: 1px solid #000;"></td><td></td></tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" rowspan="5" style="border-right: 1px solid #000; vertical-align: top; padding: 10px; border-top: 1px solid #000; font-size: 11px;">
+              <strong>Terms & Conditions:</strong>
+              <ul style="margin: 4px 0 0 15px; padding: 0;">
+                <li>This quotation is valid for 15 days from the date of issue.</li>
+                <li>Prices are subject to change without prior notice.</li>
+                <li>Delivery time depends on stock availability.</li>
+              </ul>
+            </td>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; padding: 4px 6px;">Sub Total</td>
+            <td style="text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; padding: 4px 6px;">${parseFloat(subTotal).toFixed(2)}</td>
+          </tr>
+          ${ord.cgst_amount > 0 ? `
+          <tr>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; padding: 4px 6px;">CGST @ ${ord.cgst_percent}%</td>
+            <td style="text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; padding: 4px 6px;">${parseFloat(ord.cgst_amount).toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          ${ord.sgst_amount > 0 ? `
+          <tr>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; padding: 4px 6px;">SGST @ ${ord.sgst_percent}%</td>
+            <td style="text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; padding: 4px 6px;">${parseFloat(ord.sgst_amount).toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          ${ord.discount_amount > 0 ? `
+          <tr>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; padding: 4px 6px;">Discount</td>
+            <td style="text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; padding: 4px 6px;">-${parseFloat(ord.discount_amount).toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          <tr>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 6px;">Estimated Total</td>
+            <td style="font-weight: bold; text-align: right; border-top: 1px solid #000; border-left: 1px solid #000; border-bottom: 1px solid #000; padding: 6px;">${parseFloat(ord.total_amount).toFixed(2)}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <!-- Signatures -->
+      <table style="width: 100%; margin-top: 20px;">
+        <tr>
+          <td style="width: 50%; vertical-align: bottom;">
+            <div style="width: 250px; border: 1px solid #000; height: 80px; padding: 5px; font-size: 11px;">
+              Client Acceptance Signature
+            </div>
+          </td>
+          <td style="width: 50%; text-align: right; vertical-align: bottom;">
+            <p style="margin: 0 0 40px 0; font-size: 12px; font-weight: bold;">For, ${userData.name}</p>
+            <p style="margin: 0; font-size: 12px; font-weight: bold; border-top: 1px solid #000; display: inline-block; padding-top: 4px;">(AUTHORIZED SIGNATORY)</p>
+          </td>
+        </tr>
+      </table>
+
+      <div style="margin-top: 30px; border-top: 2px solid #5bc0de; background-color: #d9edf7; padding: 8px; text-align: center; font-size: 10px;">
+        ${userData.address || ''}, ${userData.city || ''} | Phone: ${userData.mobile || ''}
+      </div>
+    </div>
+  `;
+}
+
+export const printModalA4Quotation = async (liveData, setPrinting) => {
+  const { paymentData, orderItems, customerInfo, orderType, orderId, orderNo } = liveData;
+  try {
+    setPrinting(true);
+
+    const token = localStorage.getItem('token');
+    const userRes = await getUserTaxInfo(token);
+    const userData = userRes.data;
+
+    const ord = {
+      _id: orderId || null,
+      order_no: orderNo || (orderId ? `#${orderId.slice(-6).toUpperCase()}` : 'Preview'),
+      order_type: orderType || 'Order',
+      order_date: new Date().toISOString(),
+      customer_name: customerInfo?.name || '',
+      customer_phone: customerInfo?.phone || '',
+      customer_address: customerInfo?.address || '',
+      customer_gst: customerInfo?.gst_no || '',
+      cgst_percent: parseFloat(paymentData?.cgstPercent) || 0,
+      sgst_percent: parseFloat(paymentData?.sgstPercent) || 0,
+      vat_percent: parseFloat(paymentData?.vatPercent) || 0,
+      cgst_amount: parseFloat(paymentData?.cgstAmount) || 0,
+      sgst_amount: parseFloat(paymentData?.sgstAmount) || 0,
+      vat_amount: parseFloat(paymentData?.vatAmount) || 0,
+      discount_amount: parseFloat(paymentData?.discountAmount) || 0,
+      sub_total: parseFloat(paymentData?.subTotal) || 0,
+      total_amount: parseFloat(paymentData?.total) || 0,
+    };
+
+    let printFrame = document.getElementById('print-frame');
+    if (!printFrame) {
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'print-frame';
+      printFrame.style.position = 'absolute';
+      printFrame.style.width = '0px';
+      printFrame.style.height = '0px';
+      printFrame.style.border = '0px';
+      printFrame.style.top = '0px';
+      printFrame.style.left = '0px';
+      document.body.appendChild(printFrame);
+    }
+    const printWindow = printFrame.contentWindow;
+
+    const quotationHTML = printA4QuotationHTML(ord, userData, orderItems, ord.sub_total);
+
+    printWindow.document.write(`
+      <html>
+      <head>
+        <title>Quotation</title>
+        <style>
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
+          body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            background: #fff;
+            margin: 0;
+            padding: 0;
+          }
+          .a4-invoice-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+          }
+          .a4-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border: 1px solid #000;
+          }
+          .a4-items-table th {
+            background-color: #5bc0de;
+            color: #fff;
+            padding: 8px 6px;
+            border: 1px solid #000;
+            font-size: 13px;
+          }
+          .a4-items-table td {
+            padding: 6px;
+            font-size: 12px;
+          }
+        </style>
+        <script>
+          window.onload = function() {
+            window.focus();
+            window.print();
+            setTimeout(function() { window.close(); }, 100);
+          };
+        </script>
+      </head>
+      <body>${quotationHTML}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+  } catch (err) {
+    console.error('Print error:', err);
+    toast.error('Failed to print Quotation');
+  } finally {
+    setPrinting(false);
+  }
+};
 
 /**
  * Generates HTML for a single counter's KOT slip optimized for thermal printing.
@@ -630,121 +1046,181 @@ export const openPrintWindow = async (order_id, setPrinting) => {
       const paperWidth = printSettings.paperWidth || '58mm';
       const maxContainerWidth = paperWidth === '80mm' ? '390px' : '290px';
 
-      let allBillsHTML = printFullBill(order, userData, order.order_items, order.sub_total);
-      Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-        allBillsHTML += printCounterBill(order, userData, counterName, items);
-      });
+      const isAccounting = isAccountingShopType(userData?.shop_type);
 
-      printWindow.document.write(`
-        <html>
-        <head>
-          <title>Print Bills</title>
-          <style>
-            @page {
-              margin: 0;
-            }
-            body {
-              margin: 0;
-              padding: 0;
-              font-family: Arial, sans-serif;
-              font-size: 11px;
-              color: #000;
-              background: #fff;
-            }
-            .receipt-container {
-              width: 100%;
-              max-width: ${maxContainerWidth};
-              margin: 0;
-              padding: 6px;
-              box-sizing: border-box;
-            }
-            .receipt-header {
-              text-align: center;
-              margin-bottom: 6px;
-            }
-            .receipt-header h2 {
-              margin: 0 0 2px 0;
-              font-size: 13px;
-              font-weight: bold;
-            }
-            .receipt-header h3 {
-              margin: 0 0 2px 0;
-              font-size: 12px;
-              font-weight: bold;
-            }
-            .receipt-header p {
-              margin: 1px 0;
-              font-size: 10px;
-            }
-            .dashed-line {
-              border: none;
-              border-top: 1px dashed #000;
-              margin: 6px 0;
-            }
-            .info-table {
-              width: 100%;
-              font-size: 10px;
-              margin-bottom: 6px;
-            }
-            .info-table td {
-              padding: 1px 0;
-            }
-            .items-table {
-              width: 100%;
-              font-size: 10px;
-              margin-bottom: 6px;
-              border-collapse: collapse;
-            }
-            .items-table th {
-              border-bottom: 1px dashed #000;
-              padding: 3px 1px;
-              font-weight: bold;
-            }
-            .items-table td {
-              padding: 3px 1px;
-              vertical-align: top;
-            }
-            .total-table {
-              width: 100%;
-              font-size: 10px;
-              margin-top: 2px;
-              border-collapse: collapse;
-            }
-            .total-table td {
-              padding: 2px 1px;
-            }
-            .text-center {
-              text-align: center;
-            }
-            .text-right {
-              text-align: right;
-            }
-            .text-left {
-              text-align: left;
-            }
-            @media print {
+      let allBillsHTML = '';
+      if (isAccounting) {
+        allBillsHTML = printA4InvoiceHTML(order, userData, order.order_items, order.sub_total);
+      } else {
+        allBillsHTML = printFullBill(order, userData, order.order_items, order.sub_total);
+        Object.entries(groupedByCounter).forEach(([counterName, items]) => {
+          allBillsHTML += printCounterBill(order, userData, counterName, items);
+        });
+      }
+
+      if (isAccounting) {
+        printWindow.document.write(`
+          <html>
+          <head>
+            <title>GST Invoice</title>
+            <style>
+              @page {
+                size: A4;
+                margin: 10mm;
+              }
               body {
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                color: #333;
+                background: #fff;
+                margin: 0;
+                padding: 0;
+              }
+              .a4-invoice-container {
                 width: 100%;
+                max-width: 800px;
+                margin: 0 auto;
+              }
+              .a4-items-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+                border: 1px solid #000;
+              }
+              .a4-items-table th {
+                background-color: #5bc0de;
+                color: #fff;
+                padding: 8px 6px;
+                border: 1px solid #000;
+                font-size: 13px;
+              }
+              .a4-items-table td {
+                padding: 6px;
+                font-size: 12px;
+              }
+            </style>
+            <script>
+              window.onload = function() {
+                window.focus();
+                window.print();
+                setTimeout(function() { window.close(); }, 100);
+              };
+            </script>
+          </head>
+          <body>${allBillsHTML}</body>
+          </html>
+        `);
+      } else {
+        printWindow.document.write(`
+          <html>
+          <head>
+            <title>Print Bills</title>
+            <style>
+              @page {
+                margin: 0;
+              }
+              body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+                font-size: 11px;
+                color: #000;
+                background: #fff;
               }
               .receipt-container {
-                max-width: 100% !important;
-                padding: 0 6px 0 6px !important;
-                margin: 0 0 70px 0 !important;
-                border: none !important;
+                width: 100%;
+                max-width: ${maxContainerWidth};
+                margin: 0;
+                padding: 6px;
+                box-sizing: border-box;
               }
-            }
-          </style>
-          <script>
-            window.onload = function() {
-              window.focus();
-              window.print();
-              setTimeout(function() { window.close(); }, 100);
-            };
-          </script>
-        </head>
-        <body>${allBillsHTML}</body>
-        </html>
-      `);
+              .receipt-header {
+                text-align: center;
+                margin-bottom: 6px;
+              }
+              .receipt-header h2 {
+                margin: 0 0 2px 0;
+                font-size: 13px;
+                font-weight: bold;
+              }
+              .receipt-header h3 {
+                margin: 0 0 2px 0;
+                font-size: 12px;
+                font-weight: bold;
+              }
+              .receipt-header p {
+                margin: 1px 0;
+                font-size: 10px;
+              }
+              .dashed-line {
+                border: none;
+                border-top: 1px dashed #000;
+                margin: 6px 0;
+              }
+              .info-table {
+                width: 100%;
+                font-size: 10px;
+                margin-bottom: 6px;
+              }
+              .info-table td {
+                padding: 1px 0;
+              }
+              .items-table {
+                width: 100%;
+                font-size: 10px;
+                margin-bottom: 6px;
+                border-collapse: collapse;
+              }
+              .items-table th {
+                border-bottom: 1px dashed #000;
+                padding: 3px 1px;
+                font-weight: bold;
+              }
+              .items-table td {
+                padding: 3px 1px;
+                vertical-align: top;
+              }
+              .total-table {
+                width: 100%;
+                font-size: 10px;
+                margin-top: 2px;
+                border-collapse: collapse;
+              }
+              .total-table td {
+                padding: 2px 1px;
+              }
+              .text-center {
+                text-align: center;
+              }
+              .text-right {
+                text-align: right;
+              }
+              .text-left {
+                text-align: left;
+              }
+              @media print {
+                body {
+                  width: 100%;
+                }
+                .receipt-container {
+                  max-width: 100% !important;
+                  padding: 0 6px 0 6px !important;
+                  margin: 0 0 70px 0 !important;
+                  border: none !important;
+                }
+              }
+            </style>
+            <script>
+              window.onload = function() {
+                window.focus();
+                window.print();
+                setTimeout(function() { window.close(); }, 100);
+              };
+            </script>
+          </head>
+          <body>${allBillsHTML}</body>
+          </html>
+        `);
+      }
       printWindow.document.close();
       printWindow.focus();
     } catch (err) {
@@ -783,6 +1259,119 @@ export const openPrintWindow = async (order_id, setPrinting) => {
     );
   } else {
     await executeStandardPrint();
+  }
+};
+
+;
+
+/**
+ * Prints a full bill in A4 GST Invoice format directly from the live PaymentModal state.
+ */
+export const printModalA4Invoice = async (liveData, setPrinting) => {
+  const { paymentData, orderItems, customerInfo, orderType, orderId, orderNo } = liveData;
+  try {
+    setPrinting(true);
+
+    const token = localStorage.getItem('token');
+    const userRes = await getUserTaxInfo(token);
+    const userData = userRes.data;
+
+    const ord = {
+      _id: orderId || null,
+      order_no: orderNo || (orderId ? `#${orderId.slice(-6).toUpperCase()}` : 'Preview'),
+      order_type: orderType || 'Order',
+      order_date: new Date().toISOString(),
+      customer_name: customerInfo?.name || '',
+      customer_phone: customerInfo?.phone || '',
+      customer_address: customerInfo?.address || '',
+      customer_gst: customerInfo?.gst_no || '',
+      table_no: customerInfo?.tableNo || null,
+      token: customerInfo?.token || null,
+      cgst_percent: parseFloat(paymentData.cgstPercent) || 0,
+      sgst_percent: parseFloat(paymentData.sgstPercent) || 0,
+      vat_percent: parseFloat(paymentData.vatPercent) || 0,
+      cgst_amount: parseFloat(paymentData.cgstAmount) || 0,
+      sgst_amount: parseFloat(paymentData.sgstAmount) || 0,
+      vat_amount: parseFloat(paymentData.vatAmount) || 0,
+      discount_amount: parseFloat(paymentData.discountAmount) || 0,
+      sub_total: parseFloat(paymentData.subTotal) || 0,
+      total_amount: parseFloat(paymentData.total) || 0,
+      paid_amount: parseFloat(paymentData.paidAmount) || 0,
+    };
+
+    let printFrame = document.getElementById('print-frame');
+    if (!printFrame) {
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'print-frame';
+      printFrame.style.position = 'absolute';
+      printFrame.style.width = '0px';
+      printFrame.style.height = '0px';
+      printFrame.style.border = '0px';
+      printFrame.style.top = '0px';
+      printFrame.style.left = '0px';
+      document.body.appendChild(printFrame);
+    }
+    const printWindow = printFrame.contentWindow;
+
+    const invoiceHTML = printA4InvoiceHTML(ord, userData, orderItems, ord.sub_total);
+
+    printWindow.document.write(`
+      <html>
+      <head>
+        <title>GST Invoice</title>
+        <style>
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
+          body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            background: #fff;
+            margin: 0;
+            padding: 0;
+          }
+          .a4-invoice-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+          }
+          .a4-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border: 1px solid #000;
+          }
+          .a4-items-table th {
+            background-color: #5bc0de;
+            color: #fff;
+            padding: 8px 6px;
+            border: 1px solid #000;
+            font-size: 13px;
+          }
+          .a4-items-table td {
+            padding: 6px;
+            font-size: 12px;
+          }
+        </style>
+        <script>
+          window.onload = function() {
+            window.focus();
+            window.print();
+            setTimeout(function() { window.close(); }, 100);
+          };
+        </script>
+      </head>
+      <body>${invoiceHTML}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+  } catch (err) {
+    console.error('Print error:', err);
+    toast.error('Failed to print GST invoice');
+  } finally {
+    setPrinting(false);
   }
 };
 

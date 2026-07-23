@@ -20,7 +20,7 @@ const currentDate = new Date();
 
 
 
-export default function GeneratePayroll() {
+export default function GeneratePayroll({ hideHeader = false }) {
     const title = 'Generate Payroll';
     const description = 'Generate monthly payroll for staff';
     const breadcrumbs = [
@@ -50,7 +50,10 @@ export default function GeneratePayroll() {
 
     const [staffList, setStaffList] = useState([]);
     const [staffLoading, setStaffLoading] = useState(false);
+    const [branches, setBranches] = useState([]);
+    const [selectedBranch, setSelectedBranch] = useState('all');
     const [payingEntities, setPayingEntities] = useState([]);
+    const [selectedPayingEntity, setSelectedPayingEntity] = useState('all');
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -130,48 +133,49 @@ export default function GeneratePayroll() {
         setPreviews([]);
 
         try {
-            const params = new URLSearchParams({
+            const body = {
                 month,
                 year,
                 working_days_in_month: workingDays,
-                ...(generateMode === 'single' && selectedStaffId ? { staff_id: selectedStaffId } : {}),
-            });
-
-            const res = await axios.get(
-                `${process.env.REACT_APP_API}/payroll/preview?${params}`,
+                generate_mode: generateMode,
+                staff_id: generateMode === 'single' ? selectedStaffId : undefined,
+                branch_id: selectedBranch !== 'all' ? selectedBranch : undefined,
+                paying_entity_id: selectedPayingEntity !== 'all' ? selectedPayingEntity : undefined,
+            };
+            const res = await axios.post(
+                `${process.env.REACT_APP_API}/payroll/preview`,
+                body,
                 authHeader()
             );
+            if (res.data.success) {
+                setPreviews(res.data.data || []);
+                setPreviewFetched(true);
 
-            const data = res.data.data || [];
-            setPreviews(data);
-
-            const initAdj = {};
-            data.forEach((p) => {
-                initAdj[p.staff_id] = {
-                    overtime_hours: 0,
-                    bonus: 0,
-                    deductions: 0,
-                    deduction_reason: '',
-                    notes: '',
-                    paying_entity_id: p.paying_entity_id || '',
-                };
-            });
-            setAdjustments(initAdj);
-            setPreviewFetched(true);
+                const initAdj = {};
+                (res.data.data || []).forEach((p) => {
+                    initAdj[p.staff_id] = {
+                        overtime_hours: p.overtime_hours || 0,
+                        bonus: 0,
+                        deductions: 0,
+                        deduction_reason: '',
+                        notes: '',
+                        paying_entity_id: p.paying_entity_id || '',
+                    };
+                });
+                setAdjustments(initAdj);
+                toast.success(`Loaded preview for ${res.data.data?.length || 0} staff members.`);
+            }
         } catch (err) {
-            toast.error('Failed to load payroll preview.');
+            toast.error(err.response?.data?.message || 'Failed to generate preview.');
         } finally {
             setIsPreviewing(false);
         }
     };
 
-    const handleGenerate = async () => {
-        setShowConfirmModal(false);
+    const handleConfirmGenerate = async () => {
         setIsGenerating(true);
-
         try {
-            let body;
-
+            let body = {};
             if (generateMode === 'single') {
                 const adj = adjustments[selectedStaffId] || {};
                 body = {
@@ -251,23 +255,39 @@ export default function GeneratePayroll() {
     );
 
     return (
-        <div className="container-fluid px-lg-4 px-xl-5 pb-5">
-            <HtmlHead title={title} description={description} />
+        <div className={hideHeader ? "w-100" : "container-fluid px-lg-4 px-xl-5 pb-5"}>
+            {!hideHeader && <HtmlHead title={title} description={description} />}
 
-            <div className="page-title-container mb-4 mt-3 mt-lg-0">
-                <Row className="g-3 align-items-center">
-                    <Col xs="12" md="6">
-                        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-                        <BreadcrumbList items={breadcrumbs} />
-                    </Col>
-                    <Col xs="12" md="6" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
-                        <Button className="custom-btn-primary-outline px-4 rounded-pill shadow-sm d-flex align-items-center" style={{ height: '40px' }} as={Link} to="/staff/payroll">
-                            <CsLineIcons icon="wallet" className="me-2" size="18" />
-                            <span>Manage Payroll</span>
-                        </Button>
-                    </Col>
-                </Row>
-            </div>
+            {!hideHeader && (
+                <div className="page-title-container mb-4">
+                    <Row className="g-3 align-items-center">
+                        <Col xs="12" lg="4" xl="4">
+                            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7', whiteSpace: 'nowrap' }}>{title}</h1>
+                            <BreadcrumbList items={breadcrumbs} />
+                        </Col>
+                        <Col xs="12" lg="8" xl="8" className="d-flex flex-wrap flex-lg-nowrap justify-content-lg-end align-items-center gap-2">
+                            <Button
+                                variant="outline-primary"
+                                onClick={() => history.push('/staff/payroll')}
+                                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                            >
+                                <CsLineIcons icon="credit-card" size="16" />
+                                <span>Manage Payroll</span>
+                            </Button>
+                            <Button
+                                variant="outline-primary"
+                                onClick={() => history.push('/staff/payroll/settings')}
+                                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                            >
+                                <CsLineIcons icon="gear" size="16" />
+                                <span>Configuration</span>
+                            </Button>
+                        </Col>
+                    </Row>
+                </div>
+            )}
 
             <Card className="glass-card border-0 mb-5">
                 <Card.Header className="bg-transparent border-0 p-4 pb-0">
@@ -623,7 +643,7 @@ export default function GeneratePayroll() {
                 </Modal.Body>
                 <Modal.Footer className="border-0 p-4 pt-0 d-flex gap-3">
                     <Button className="custom-btn-primary-outline flex-grow-1 rounded-pill shadow-sm" style={{ height: '40px' }} onClick={() => setShowConfirmModal(false)}>Back to Review</Button>
-                    <Button className="custom-btn-primary-outline flex-grow-1 rounded-pill shadow-sm" style={{ height: '40px' }} onClick={handleGenerate}>{isGenerating ? <Spinner size="sm" /> : 'Execute Run'}</Button>
+                    <Button className="custom-btn-primary-outline flex-grow-1 rounded-pill shadow-sm" style={{ height: '40px' }} onClick={handleConfirmGenerate}>{isGenerating ? <Spinner size="sm" /> : 'Execute Run'}</Button>
                 </Modal.Footer>
             </Modal>
         </div>

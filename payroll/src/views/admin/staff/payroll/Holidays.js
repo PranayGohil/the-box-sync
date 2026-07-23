@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Modal, Form, Spinner, Badge } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -6,22 +7,40 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import Select from 'react-select';
-import { getHolidays, addHoliday, updateHoliday, deleteHoliday } from 'api/payrollConfig';
+import { getHolidays, addHoliday, updateHoliday, deleteHoliday, getPayrollConfig, updatePayrollConfig } from 'api/payrollConfig';
 import { format } from 'date-fns';
 
-const Holidays = () => {
-    const title = 'Holiday Calendar';
-    const description = 'Manage public and company holidays for payroll calculation.';
+const WEEK_DAYS = [
+    { value: 0, label: 'Sunday' },
+    { value: 1, label: 'Monday' },
+    { value: 2, label: 'Tuesday' },
+    { value: 3, label: 'Wednesday' },
+    { value: 4, label: 'Thursday' },
+    { value: 5, label: 'Friday' },
+    { value: 6, label: 'Saturday' },
+];
+
+const Holidays = ({ hideHeader = false, initialTab = 'holidays' }) => {
+    const title = 'Holidays';
+    const description = 'Manage public and company holidays.';
     const breadcrumbs = [
         { to: '', text: 'Home' },
         { to: 'staff/view', text: 'Staff' },
         { to: 'staff/holidays', text: 'Holidays' }
     ];
+    const history = useHistory();
 
     const currentYear = new Date().getFullYear();
     const [year, setYear] = useState(currentYear);
     const [holidays, setHolidays] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState(initialTab);
+
+    useEffect(() => {
+        if (initialTab) {
+            setActiveTab(initialTab);
+        }
+    }, [initialTab]);
 
     const [showModal, setShowModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -32,6 +51,17 @@ const Holidays = () => {
     const [holidayToDelete, setHolidayToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [syncingDefaults, setSyncingDefaults] = useState(false);
+
+    // States for Organizational Rules & Weekly Offs
+    const [branches, setBranches] = useState([]);
+    const [selectedBranch, setSelectedBranch] = useState(null);
+    const [allConfigs, setAllConfigs] = useState([]);
+    const [savingRules, setSavingRules] = useState(false);
+    const [fullConfig, setFullConfig] = useState(null);
+    const [orgRules, setOrgRules] = useState({
+        leave_year_start: 'january',
+        weekly_off_days: [0]
+    });
 
     const payTypeOptions = [
         { value: 'true', label: 'Paid Holiday' },
@@ -52,6 +82,87 @@ const Holidays = () => {
         is_paid: true,
         notes: ''
     });
+
+    const fetchBranches = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${process.env.REACT_APP_API}/branch/all`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data && res.data.success) {
+                setBranches(res.data.data || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch branches', err);
+        }
+    };
+
+    const fetchAllConfigs = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${process.env.REACT_APP_API}/payroll-config?all=true`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data && res.data.success) {
+                setAllConfigs(res.data.data || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch all configurations', err);
+        }
+    };
+
+    const fetchPayrollConfig = async (branchId = null) => {
+        try {
+            const res = await getPayrollConfig(branchId);
+            if (res.success && res.data) {
+                setFullConfig(res.data);
+                if (res.data.org_rules) {
+                    setOrgRules(res.data.org_rules);
+                }
+            }
+        } catch (err) {
+            console.error("Failed to load payroll configuration", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchBranches();
+        fetchAllConfigs();
+        fetchPayrollConfig();
+    }, []);
+
+    const toggleWeekDay = (dayValue) => {
+        const current = [...(orgRules.weekly_off_days || [])];
+        const idx = current.indexOf(dayValue);
+        if (idx >= 0) current.splice(idx, 1);
+        else current.push(dayValue);
+        setOrgRules({ ...orgRules, weekly_off_days: current });
+    };
+
+    const updateOrg = (key, value) => {
+        setOrgRules({ ...orgRules, [key]: value });
+    };
+
+    const handleSaveOrgRules = async () => {
+        try {
+            setSavingRules(true);
+            const updatedConfig = {
+                ...fullConfig,
+                org_rules: orgRules
+            };
+            const res = await updatePayrollConfig(updatedConfig, selectedBranch?.value || null);
+            if (res.success) {
+                toast.success('Organizational rules & weekly offs updated successfully');
+                fetchAllConfigs();
+            } else {
+                toast.error(res.message || 'Failed to update organizational rules');
+            }
+        } catch (err) {
+            toast.error('Server error updating organizational rules');
+        } finally {
+            setSavingRules(false);
+        }
+    };
 
     const fetchHolidays = async () => {
         try {
@@ -257,7 +368,7 @@ const Holidays = () => {
     };
 
     const yearOptions = [];
-    for (let i = currentYear - 2; i <= currentYear + 2; i++) yearOptions.push(i);
+    for (let i = currentYear - 2; i <= currentYear + 1; i++) yearOptions.push(i);
     const yearOptionsList = yearOptions.map(y => ({ value: y, label: String(y) }));
 
     const getHolidayTypeTheme = (type) => {
@@ -272,174 +383,186 @@ const Holidays = () => {
         }
     };
     return (
-        <div className="container-fluid px-lg-4 px-xl-5 pb-5">
-            <HtmlHead title={title} description={description} />
+        <div className={hideHeader ? "w-100" : "container-fluid px-lg-4 px-xl-5 pb-5"}>
+            {!hideHeader && <HtmlHead title={title} description={description} />}
             
-            <div className="page-title-container mb-4 mt-3 mt-lg-0">
-                <Row className="g-3 align-items-center">
-                    <Col xs="12" md="7">
-                        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
-                            {title}
-                        </h1>
-                        <BreadcrumbList items={breadcrumbs} />
-                    </Col>
-                    <Col xs="12" md="5" className="d-flex justify-content-md-end align-items-center gap-2">
-                        <div style={{ minWidth: '110px' }}>
-                            <Select 
-                                options={yearOptionsList}
-                                value={yearOptionsList.find(opt => opt.value === year)}
-                                onChange={selected => setYear(selected ? Number(selected.value) : currentYear)}
-                                isSearchable={false}
-                                classNamePrefix="react-select"
-                                className="react-select-premium shadow-sm"
-                                menuPortalTarget={document.body}
-                                styles={{
-                                    container: (base) => ({ ...base, minWidth: '110px' }),
-                                    control: (base) => ({ ...base, borderRadius: '20px', minHeight: '38px' }),
-                                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
-                                }}
-                            />
-                        </div>
-                        <Button 
-                            variant="outline-primary" 
-                            onClick={handleSyncDefaults} 
-                            disabled={syncingDefaults}
-                            className="px-3 py-2 rounded-pill d-flex align-items-center shadow-sm ms-2"
-                            title="Sync Makar Sankranti & missing default holidays for this year"
-                        >
-                            {syncingDefaults ? <Spinner size="sm" animation="border" className="me-2" /> : <CsLineIcons icon="refresh-horizontal" className="me-2" size="18" />}
-                            <span>Sync Default Holidays</span>
-                        </Button>
-                        <Button 
-                            variant="primary" 
-                            onClick={() => handleShowModal()} 
-                            className="px-4 py-2 rounded-pill d-flex align-items-center shadow-sm ms-1"
-                        >
-                            <CsLineIcons icon="plus" className="me-2" size="18" />
-                            <span>Add Holiday</span>
-                        </Button>
-                    </Col>
-                </Row>
-            </div>
+            {!hideHeader && (
+                <div className="page-title-container mb-4">
+                    <Row className="g-3 align-items-center">
+                        <Col xs="12" lg="4" xl="4">
+                            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7', whiteSpace: 'nowrap' }}>
+                                {title}
+                            </h1>
+                            <BreadcrumbList items={breadcrumbs} />
+                        </Col>
+                        <Col xs="12" lg="8" xl="8" className="d-flex flex-wrap flex-lg-nowrap justify-content-lg-end align-items-center gap-2">
+                            <Button
+                                variant="outline-primary"
+                                onClick={() => history.push('/staff/leave-policy')}
+                                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                            >
+                                <CsLineIcons icon="book-open" size="16" />
+                                <span>Leave Policy</span>
+                            </Button>
+                            <Button
+                                variant="outline-primary"
+                                onClick={() => history.push('/staff/week-off')}
+                                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                            >
+                                <CsLineIcons icon="clock" size="16" />
+                                <span>Week Off</span>
+                            </Button>
+                            <Button
+                                variant="outline-primary"
+                                onClick={() => handleShowModal()}
+                                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                            >
+                                <CsLineIcons icon="plus" size="16" />
+                                <span>Add Holiday</span>
+                            </Button>
+                            <div style={{ minWidth: '110px' }} className="flex-grow-1 flex-sm-grow-0 flex-shrink-0">
+                                <Select 
+                                    options={yearOptionsList}
+                                    value={yearOptionsList.find(opt => opt.value === year)}
+                                    onChange={selected => setYear(selected ? Number(selected.value) : currentYear)}
+                                    isSearchable={false}
+                                    classNamePrefix="react-select"
+                                    className="react-select-premium shadow-sm"
+                                    menuPortalTarget={document.body}
+                                    styles={{
+                                        container: (base) => ({ ...base, minWidth: '110px' }),
+                                        control: (base) => ({ ...base, borderRadius: '20px', minHeight: '38px' }),
+                                        menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                                    }}
+                                />
+                            </div>
+                        </Col>
+                    </Row>
+                </div>
+            )}
 
             {loading ? (
                 <div className="text-center py-5">
                     <Spinner animation="border" style={{ color: '#1ea8e7' }} />
                 </div>
             ) : (
-                <Row className="g-4">
-                    {groupHolidays(holidays).map((g, idx) => {
-                        const startDate = new Date(g.dates[0]);
-                        const endDate = new Date(g.dates[g.dates.length - 1]);
-                        const day = format(startDate, 'dd');
-                        const month = format(startDate, 'MMM');
-                        const yearStr = format(startDate, 'yyyy');
-                        
-                        let dateSubtitle = format(startDate, 'EEEE');
-                        if (g.dates.length > 1) {
-                            dateSubtitle = `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')} (${g.dates.length} Days)`;
-                        }
-                        
-                        const theme = getHolidayTypeTheme(g.holiday_type);
+                    <Row className="g-4">
+                        {groupHolidays(holidays).map((g, idx) => {
+                            const startDate = new Date(g.dates[0]);
+                            const endDate = new Date(g.dates[g.dates.length - 1]);
+                            const day = format(startDate, 'dd');
+                            const month = format(startDate, 'MMM');
+                            const yearStr = format(startDate, 'yyyy');
+                            
+                            let dateSubtitle = format(startDate, 'EEEE');
+                            if (g.dates.length > 1) {
+                                dateSubtitle = `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')} (${g.dates.length} Days)`;
+                            }
+                            
+                            const theme = getHolidayTypeTheme(g.holiday_type);
 
-                        return (
-                            <Col lg="4" md="6" key={g.ids[0] || idx}>
-                                <Card className="holiday-glass-card border-0 h-100 shadow-sm">
-                                    <Card.Body className="p-4">
-                                        <div className="d-flex justify-content-between align-items-start mb-4">
-                                            <div className="d-flex align-items-center">
-                                                {/* Tear-off calendar block */}
-                                                <div className="holiday-calendar-block me-4">
-                                                    <div className="holiday-calendar-header" style={{ backgroundColor: theme.color }}>
-                                                        {month}
+                            return (
+                                <Col lg="4" md="6" key={g.ids[0] || idx}>
+                                    <Card className="holiday-glass-card border-0 h-100 shadow-sm">
+                                        <Card.Body className="p-4">
+                                            <div className="d-flex justify-content-between align-items-start mb-4">
+                                                <div className="d-flex align-items-center">
+                                                    {/* Tear-off calendar block */}
+                                                    <div className="holiday-calendar-block me-4">
+                                                        <div className="holiday-calendar-header" style={{ backgroundColor: theme.color }}>
+                                                            {month}
+                                                        </div>
+                                                        <span className="holiday-calendar-day">{day}</span>
+                                                        <span className="holiday-calendar-year">{yearStr}</span>
                                                     </div>
-                                                    <span className="holiday-calendar-day">{day}</span>
-                                                    <span className="holiday-calendar-year">{yearStr}</span>
+                                                    <div>
+                                                        <span className="fw-bold text-dark fs-5 d-block leading-tight">{g.name}</span>
+                                                        <span className="text-muted small fw-medium mt-1 d-block">{dateSubtitle}</span>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <span className="fw-bold text-dark fs-5 d-block leading-tight">{g.name}</span>
-                                                    <span className="text-muted small fw-medium mt-1 d-block">{dateSubtitle}</span>
+                                                <div className="d-flex align-items-center gap-1">
+                                                    <Button 
+                                                        variant="outline-primary" 
+                                                        size="sm" 
+                                                        className="btn-icon btn-icon-only rounded-circle shadow-sm me-1" 
+                                                        onClick={() => handleShowModal(g)} 
+                                                        title="Edit Holiday"
+                                                    >
+                                                        <CsLineIcons icon="edit" size="14" />
+                                                    </Button>
+                                                    <Button 
+                                                        variant="outline-danger" 
+                                                        size="sm" 
+                                                        className="btn-icon btn-icon-only rounded-circle shadow-sm" 
+                                                        onClick={() => confirmDeleteHoliday(g)} 
+                                                        title="Delete Holiday"
+                                                    >
+                                                        <CsLineIcons icon="bin" size="14" />
+                                                    </Button>
                                                 </div>
                                             </div>
-                                            <div className="d-flex align-items-center gap-1">
-                                                <Button 
-                                                    variant="outline-primary" 
-                                                    size="sm" 
-                                                    className="btn-icon btn-icon-only rounded-circle shadow-sm me-1" 
-                                                    onClick={() => handleShowModal(g)} 
-                                                    title="Edit Holiday"
-                                                >
-                                                    <CsLineIcons icon="edit" size="14" />
-                                                </Button>
-                                                <Button 
-                                                    variant="outline-danger" 
-                                                    size="sm" 
-                                                    className="btn-icon btn-icon-only rounded-circle shadow-sm" 
-                                                    onClick={() => confirmDeleteHoliday(g)} 
-                                                    title="Delete Holiday"
-                                                >
-                                                    <CsLineIcons icon="bin" size="14" />
-                                                </Button>
+                                            
+                                            <div className="holiday-data-row align-items-center">
+                                                <span className="text-muted fw-bold small">Holiday Type:</span>
+                                                <span>
+                                                    <Badge 
+                                                        bg="none" 
+                                                        style={{ 
+                                                            backgroundColor: theme.bg, 
+                                                            color: theme.color, 
+                                                            border: `1px solid ${theme.border}`,
+                                                            borderRadius: '50px', 
+                                                            padding: '0.35rem 0.75rem', 
+                                                            fontWeight: '700' 
+                                                        }}
+                                                        className="text-capitalize"
+                                                    >
+                                                        {g.holiday_type}
+                                                    </Badge>
+                                                </span>
                                             </div>
-                                        </div>
-                                        
-                                        <div className="holiday-data-row align-items-center">
-                                            <span className="text-muted fw-bold small">Holiday Type:</span>
-                                            <span>
-                                                <Badge 
-                                                    bg="none" 
-                                                    style={{ 
-                                                        backgroundColor: theme.bg, 
-                                                        color: theme.color, 
-                                                        border: `1px solid ${theme.border}`,
-                                                        borderRadius: '50px', 
-                                                        padding: '0.35rem 0.75rem', 
-                                                        fontWeight: '700' 
-                                                    }}
-                                                    className="text-capitalize"
-                                                >
-                                                    {g.holiday_type}
-                                                </Badge>
-                                            </span>
-                                        </div>
-                                        
-                                        <div className="holiday-data-row align-items-center">
-                                            <span className="text-muted fw-bold small">Paid Status:</span>
-                                            <span>
-                                                {g.is_paid ? (
-                                                    <Badge bg="none" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: '50px', padding: '0.35rem 0.75rem', fontWeight: '700' }}>Paid Holiday</Badge>
-                                                ) : (
-                                                    <Badge bg="none" style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.15)', borderRadius: '50px', padding: '0.35rem 0.75rem', fontWeight: '700' }}>Unpaid</Badge>
-                                                )}
-                                            </span>
-                                        </div>
-                                        
-                                        {g.notes && (
-                                            <div className="holiday-data-row flex-column align-items-start mt-2 border-0 pb-0">
-                                                <span className="text-muted fw-bold small mb-1">Notes:</span>
-                                                <p className="text-muted small mb-0 fw-medium bg-light p-2.5 w-100 rounded-3">
-                                                    {g.notes}
-                                                </p>
+                                            
+                                            <div className="holiday-data-row align-items-center">
+                                                <span className="text-muted fw-bold small">Paid Status:</span>
+                                                <span>
+                                                    {g.is_paid ? (
+                                                        <Badge bg="none" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: '50px', padding: '0.35rem 0.75rem', fontWeight: '700' }}>Paid Holiday</Badge>
+                                                    ) : (
+                                                        <Badge bg="none" style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.15)', borderRadius: '50px', padding: '0.35rem 0.75rem', fontWeight: '700' }}>Unpaid</Badge>
+                                                    )}
+                                                </span>
                                             </div>
-                                        )}
+                                            
+                                            {g.notes && (
+                                                <div className="holiday-data-row flex-column align-items-start mt-2 border-0 pb-0">
+                                                    <span className="text-muted fw-bold small mb-1">Notes:</span>
+                                                    <p className="text-muted small mb-0 fw-medium bg-light p-2.5 w-100 rounded-3">
+                                                        {g.notes}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            );
+                        })}
+                        {holidays.length === 0 && (
+                            <Col xs="12">
+                                <Card className="holiday-glass-card text-center py-5 border-0 shadow-sm">
+                                    <Card.Body className="text-muted py-5">
+                                        <CsLineIcons icon="calendar" size="48" className="text-muted opacity-50 mb-3" />
+                                        <h5 className="fw-bold mt-2">No Holidays Configured</h5>
+                                        <p className="small mb-0">Select another year or click 'Add Holiday' to define holiday schedules.</p>
                                     </Card.Body>
                                 </Card>
                             </Col>
-                        );
-                    })}
-                    {holidays.length === 0 && (
-                        <Col xs="12">
-                            <Card className="holiday-glass-card text-center py-5 border-0 shadow-sm">
-                                <Card.Body className="text-muted py-5">
-                                    <CsLineIcons icon="calendar" size="48" className="text-muted opacity-50 mb-3" />
-                                    <h5 className="fw-bold mt-2">No Holidays Configured</h5>
-                                    <p className="small mb-0">Select another year or click 'Add Holiday' to define holiday schedules.</p>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    )}
-                </Row>
-            )}
+                        )}
+                    </Row>
+                )
+            }
 
             <Modal show={showModal} onHide={() => !submitting && setShowModal(false)} centered size="lg" className="holiday-modal">
                 <Form onSubmit={handleSubmit}>

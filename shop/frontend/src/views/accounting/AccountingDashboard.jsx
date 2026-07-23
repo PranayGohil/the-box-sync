@@ -7,15 +7,15 @@ const AccountingDashboard = () => {
   const [invoices, setInvoices] = useState([]);
   const [quotations, setQuotations] = useState([]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
-      const shopId = localStorage.getItem('shopId'); // Assuming shopId is in localStorage
-      const invRes = await axios.get(`http://localhost:5000/api/accounting/invoices?shopId=${shopId}`);
-      const quotRes = await axios.get(`http://localhost:5000/api/accounting/quotations?shopId=${shopId}`);
+      const shopId = localStorage.getItem('shopId'); 
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      const invRes = await axios.get(`http://localhost:5000/api/accounting/invoices?shopId=${shopId}`, config);
+      const quotRes = await axios.get(`http://localhost:5000/api/accounting/quotations?shopId=${shopId}`, config);
+
       
       setInvoices(invRes.data.data);
       setQuotations(quotRes.data.data);
@@ -23,6 +23,11 @@ const AccountingDashboard = () => {
       console.error('Error fetching accounting data:', error);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
 
   const handleDownloadPDF = (type, id) => {
     window.open(`http://localhost:5000/api/accounting/${type}/${id}/pdf`, '_blank');

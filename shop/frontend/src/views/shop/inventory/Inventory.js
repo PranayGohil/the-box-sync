@@ -73,6 +73,29 @@ const Inventory = () => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [showFilters, setShowFilters] = useState(false);
   const [filePreviews, setFilePreviews] = useState([]);
+  const [activeTab, setActiveTab] = useState('purchases'); // 'purchases' or 'statement'
+  const [stockStatement, setStockStatement] = useState([]);
+  const [statementLogs, setStatementLogs] = useState([]);
+  const [loadingStatement, setLoadingStatement] = useState(false);
+  const [statementSearch, setStatementSearch] = useState('');
+
+  const fetchStockStatement = useCallback(async () => {
+    try {
+      setLoadingStatement(true);
+      const res = await axios.get(`${process.env.REACT_APP_API}/catalog/stock-sales-statement`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.data.success) {
+        setStockStatement(res.data.data);
+        setStatementLogs(res.data.logs || []);
+      }
+    } catch (err) {
+      console.error('Error fetching stock sales statement:', err);
+    } finally {
+      setLoadingStatement(false);
+    }
+  }, []);
+
   const [filters, setFilters] = useState({
     status: '',
     fromDate: '',
@@ -432,30 +455,108 @@ const Inventory = () => {
         <Row className="align-items-center g-3">
           <Col xs="12" md="auto" className="me-auto">
             <h1 className="qsr-page-title">Inventory Management</h1>
-            <p className="text-muted mb-0">Record raw materials, update stock quantities, and log usage.</p>
-          </Col>
-          <Col xs="12" md="auto">
-            <div className="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto justify-content-md-end">
-              <Button
-                variant="outline-primary"
-                className="rounded-pill px-4 shadow-sm w-100 w-sm-auto fw-bold"
-                style={{ borderColor: '#23b3f4', color: '#23b3f4' }}
-                onClick={() => setShowUseModal(true)}
-              >
-                <CsLineIcons icon="bin" className="me-2" /> Log Usage (Use Stock)
-              </Button>
-              <Button
-                variant="outline-primary"
-                className="rounded-pill px-4 shadow-sm w-100 w-sm-auto fw-bold"
-                style={{ borderColor: '#23b3f4', color: '#23b3f4' }}
-                onClick={() => { setFilePreviews([]); setShowAddModal(true); }}
-              >
-                <CsLineIcons icon="plus" className="me-2" /> Add Purchase (Add Stock)
-              </Button>
-            </div>
+            <p className="text-muted mb-0">Track item stock levels, sales deductions, and view stock statements.</p>
           </Col>
         </Row>
       </div>
+
+      {/* Navigation Tabs */}
+      <div className="d-flex flex-wrap align-items-center gap-2 mb-4">
+        <Button
+          variant={activeTab === 'purchases' ? 'primary' : 'outline-secondary'}
+          className="rounded-pill px-4 fw-bold shadow-sm"
+          onClick={() => setActiveTab('purchases')}
+        >
+          <CsLineIcons icon="boxes" className="me-2" /> Purchase & Raw Material Logs
+        </Button>
+        <Button
+          variant={activeTab === 'statement' ? 'primary' : 'outline-secondary'}
+          className="rounded-pill px-4 fw-bold shadow-sm"
+          onClick={() => {
+            setActiveTab('statement');
+            fetchStockStatement();
+          }}
+        >
+          <CsLineIcons icon="file-text" className="me-2" /> Item Stock & Sales Statement
+        </Button>
+      </div>
+
+      {activeTab === 'statement' ? (
+        <Card className="border-0 shadow-sm mb-4">
+          <Card.Body className="p-4">
+            <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
+              <div>
+                <h4 className="fw-bold mb-1 text-primary">Item Stock & Sales Statement</h4>
+                <p className="text-muted small mb-0">Overview of initial stock, total sold quantity, and current available stock.</p>
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                <Form.Control
+                  type="text"
+                  placeholder="Search item or category..."
+                  className="pill-input"
+                  style={{ width: '240px' }}
+                  value={statementSearch}
+                  onChange={(e) => setStatementSearch(e.target.value)}
+                />
+                <Button variant="outline-primary" className="rounded-circle btn-icon p-2" onClick={fetchStockStatement} title="Refresh">
+                  <CsLineIcons icon="refresh" size="16" />
+                </Button>
+              </div>
+            </div>
+
+            {loadingStatement ? (
+              <div className="text-center py-5"><Spinner animation="border" variant="primary" /></div>
+            ) : stockStatement.length === 0 ? (
+              <Alert variant="light" className="text-center py-4 border-dashed">No catalog items with stock tracking found. Set stock quantity on items in Add/Edit Catalog to start tracking.</Alert>
+            ) : (
+              <div className="table-responsive">
+                <Table hover className="align-middle border-bottom">
+                  <thead>
+                    <tr style={{ color: '#64748b', fontSize: '0.8rem', letterSpacing: '0.05em' }} className="border-bottom">
+                      <th className="pb-3 text-uppercase">Item Name</th>
+                      <th className="pb-3 text-uppercase">Category</th>
+                      <th className="pb-3 text-uppercase text-center">Initial Stock</th>
+                      <th className="pb-3 text-uppercase text-center">Total Sold</th>
+                      <th className="pb-3 text-uppercase text-center">Current Stock</th>
+                      <th className="pb-3 text-uppercase text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stockStatement
+                      .filter((row) => 
+                        !statementSearch || 
+                        row.item_name.toLowerCase().includes(statementSearch.toLowerCase()) || 
+                        (row.category && row.category.toLowerCase().includes(statementSearch.toLowerCase()))
+                      )
+                      .map((row) => (
+                        <tr key={row._id} className="border-bottom border-light">
+                          <td className="py-3">
+                            <div className="fw-bold text-dark">{row.item_name}</div>
+                            {row.variant_name && <div className="text-muted small">Variant: {row.variant_name}</div>}
+                          </td>
+                          <td className="py-3 text-muted">{row.category || 'General'}</td>
+                          <td className="py-3 text-center fw-semibold text-secondary">{row.initial_stock}</td>
+                          <td className="py-3 text-center fw-bold text-primary">{row.total_sold}</td>
+                          <td className="py-3 text-center">
+                            <span className={`fw-extrabold fs-6 ${row.current_stock === 0 ? 'text-danger' : row.current_stock <= 5 && row.current_stock !== 'Unlimited' ? 'text-warning' : 'text-success'}`}>
+                              {row.current_stock}
+                            </span>
+                          </td>
+                          <td className="py-3 text-center">
+                            <Badge bg={row.status === 'Out of Stock' ? 'danger' : row.status === 'Low Stock' ? 'warning' : 'success'} className="px-3 py-2 rounded-pill">
+                              {row.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </Table>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      ) : (
+        <>
 
       {/* Stock Summary Strip */}
       <Card className="border-0 shadow-sm mb-4">
@@ -919,6 +1020,8 @@ const Inventory = () => {
           </>
         )}
       </div>
+      </>
+      )}
 
       {/* Add Purchase (Add Stock) Modal */}
       <Modal show={showAddModal} onHide={() => { setFilePreviews([]); setShowAddModal(false); }} size="lg" centered>

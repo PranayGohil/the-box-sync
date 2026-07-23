@@ -1,12 +1,14 @@
-// src/context/AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setCurrentUser as setReduxUser } from 'auth/authSlice';
 import axios from 'axios';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const history = useHistory();
+  const dispatch = useDispatch();
   const [currentUser, setCurrentUser] = useState(null);
   const [activePlans, setActivePlans] = useState([]);
   const [isLogin, setIsLogin] = useState(false);
@@ -49,7 +51,9 @@ export const AuthProvider = ({ children }) => {
             setCurrentUser(null);
             setIsLogin(false);
           }
-          setCurrentUser(res.data);
+          const userObj = res.data?.user || res.data;
+          setCurrentUser(userObj);
+          dispatch(setReduxUser(userObj));
           setIsLogin(true);
         })
         .catch(() => {
@@ -69,6 +73,7 @@ export const AuthProvider = ({ children }) => {
     try {
       localStorage.setItem('token', token);
       setCurrentUser(userData);
+      dispatch(setReduxUser(userData));
       setIsLogin(true);
       return { success: true };
     } catch (err) {

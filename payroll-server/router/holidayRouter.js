@@ -137,7 +137,7 @@ const defaultHolidays = {
   ]
 };
 
-// Get all holidays for a user & year
+// Get all holidays for a user & year (Dynamic without auto-saving defaults to DB)
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const userId = String(req.user._id || req.user);
@@ -149,7 +149,11 @@ router.get('/', authMiddleware, async (req, res) => {
 
     const targetYear = Number(year);
 
-    // Auto-sync default list if zero exist OR if missing default holidays
+    // Fetch user custom holidays explicitly saved in DB
+    const dbHolidays = await Holiday.find({ user_id: userId, year: targetYear }).lean();
+    const dbHolidayNames = new Set(dbHolidays.map(h => h.name.toLowerCase().trim()));
+
+    // Get default list for target year or generate dynamically for any year beyond pre-defined range
     let list = defaultHolidays[targetYear] || [
       { name: "New Year's Day", date: `${targetYear}-01-01`, holiday_type: "public", is_paid: true },
       { name: "Makar Sankranti / Pongal", date: `${targetYear}-01-14`, holiday_type: "public", is_paid: true },
@@ -160,30 +164,26 @@ router.get('/', authMiddleware, async (req, res) => {
       { name: "Christmas Day", date: `${targetYear}-12-25`, holiday_type: "public", is_paid: true }
     ];
 
-    const existingHolidays = await Holiday.find({ user_id: userId, year: targetYear }).lean();
-    const existingNames = new Set(existingHolidays.map(h => h.name.toLowerCase().trim()));
-
-    const toInsert = [];
-    list.forEach(item => {
-      if (!existingNames.has(item.name.toLowerCase().trim())) {
-        toInsert.push({
+    // Combine custom DB holidays with non-overlapping default holidays dynamically (WITHOUT saving to DB on GET)
+    const combined = [...dbHolidays];
+    list.forEach((item, index) => {
+      if (!dbHolidayNames.has(item.name.toLowerCase().trim())) {
+        combined.push({
+          _id: `default-${targetYear}-${index}`,
           user_id: userId,
           name: item.name,
-          date: new Date(item.date),
+          date: item.date,
           holiday_type: item.holiday_type,
           is_paid: item.is_paid,
           year: targetYear,
-          notes: item.notes || ""
+          notes: item.notes || "Official Holiday",
+          is_default: true
         });
       }
     });
 
-    if (toInsert.length > 0) {
-      await Holiday.insertMany(toInsert);
-    }
-
-    const holidays = await Holiday.find({ user_id: userId, year: targetYear }).sort({ date: 1 });
-    res.json({ success: true, data: holidays });
+    combined.sort((a, b) => new Date(a.date) - new Date(b.date));
+    res.json({ success: true, data: combined });
   } catch (error) {
     console.error("Error fetching holidays:", error);
     res.status(500).json({ success: false, message: "Server error" });

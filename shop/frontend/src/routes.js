@@ -23,6 +23,14 @@ const settings = {
   main: lazy(() => import('views/shop/settings/Settings')),
 };
 
+const accounting = {
+  dashboard: lazy(() => import('views/accounting/AccountingDashboard')),
+  createInvoice: lazy(() => import('views/accounting/CreateInvoice')),
+  createQuotation: lazy(() => import('views/accounting/CreateQuotation')),
+};
+
+
+
 const appRoot = DEFAULT_PATHS.APP.endsWith('/') ? DEFAULT_PATHS.APP.slice(1, DEFAULT_PATHS.APP.length) : DEFAULT_PATHS.APP;
 
 const allRoutes = {
@@ -61,6 +69,25 @@ const allRoutes = {
     {
       path: `${appRoot}/inventory/edit/:id`,
       component: inventory.edit,
+      hideInMenu: true,
+      exact: true,
+    },
+    {
+      path: `${appRoot}/accounting`,
+      label: 'Accounting',
+      icon: 'calculator',
+      component: accounting.dashboard,
+      exact: true,
+    },
+    {
+      path: `${appRoot}/accounting/create-invoice`,
+      component: accounting.createInvoice,
+      hideInMenu: true,
+      exact: true,
+    },
+    {
+      path: `${appRoot}/accounting/create-quotation`,
+      component: accounting.createQuotation,
       hideInMenu: true,
       exact: true,
     },

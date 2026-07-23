@@ -35,7 +35,9 @@ const allRoutes = {
     // --- REAL ROUTES (HIDDEN FROM MENU) ---
     {
       path: `${appRoot}/organization`,
-      component: payroll.organization,
+      exact: true,
+      redirect: true,
+      to: `${appRoot}/staff/organization`,
       hideInMenu: true,
     },
     {

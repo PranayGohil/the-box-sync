@@ -46,3 +46,77 @@ export const USER_ROLE = {
   Admin: 'admin',
   Editor: 'editor',
 };
+
+export const isAccountingShopType = (shopType) => {
+  if (!shopType) return false;
+  const st = String(shopType).toLowerCase();
+  const allowedKeywords = [
+    'electronic',
+    'mobile',
+    'laptop',
+    'computer',
+    'hardware',
+    'garment',
+    'clothing',
+    'jewellery',
+    'stationery',
+    'retail',
+    'gift',
+    'cosmetics',
+    'beauty',
+    'sports',
+    'flower',
+    'bouquet',
+    'liquor',
+    'wine',
+    'medical',
+    'pharmacy',
+    'general store',
+    'super market',
+  ];
+  return allowedKeywords.some((keyword) => st.includes(keyword));
+};
+
+export const isStorePreferencesNeeded = (shopType) => {
+  if (!shopType) return false;
+  const st = String(shopType).toLowerCase();
+  const foodKeywords = [
+    'general store',
+    'super market',
+    'grocery',
+    'sweet',
+    'mithai',
+    'farshan',
+    'bakery',
+    'ice cream',
+    'dairy',
+    'milk',
+    'juice',
+    'snack',
+    'vegetable',
+    'fruit',
+    'meat',
+    'poultry',
+    'restaurant',
+    'cafe',
+    'food',
+    'dining',
+  ];
+  return foodKeywords.some((keyword) => st.includes(keyword));
+};
+
+export const ALLOWED_ACCOUNTING_SHOP_TYPES = [
+  'electronic',
+  'electronics',
+  'electronics & mobile',
+  'mobile',
+  'laptop',
+  'computer',
+  'hardware shop',
+  'hardware',
+  'clothing / garment',
+  'jewellery shop',
+  'gift shop',
+  'stationery shop',
+];
+

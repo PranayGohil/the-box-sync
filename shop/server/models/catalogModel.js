@@ -41,6 +41,14 @@ const catalog = new Schema({
         type: Boolean,
         default: true,
       },
+      stock_quantity: {
+        type: Number,
+        default: null, // null means unlimited stock
+      },
+      initial_stock: {
+        type: Number,
+        default: 0,
+      },
       has_variants: {
         type: Boolean,
         default: false,
@@ -52,6 +60,8 @@ const catalog = new Schema({
           extra: { type: String },
           barcode: { type: String, default: null },
           is_available: { type: Boolean, default: true },
+          stock_quantity: { type: Number, default: null },
+          initial_stock: { type: Number, default: 0 },
         },
       ],
       addons: [

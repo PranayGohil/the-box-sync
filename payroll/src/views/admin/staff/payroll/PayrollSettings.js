@@ -168,13 +168,13 @@ const PREDEFINED_PT_SLABS = {
     ]
 };
 
-const PayrollSettings = () => {
-    const title = 'Payroll Global Settings';
+const PayrollSettings = ({ hideHeader = false }) => {
+    const title = 'Configuration';
     const description = 'Configure statutory deductions, active earnings, and organizational rules.';
     const breadcrumbs = [
         { to: '', text: 'Home' },
         { to: 'staff/view', text: 'Staff' },
-        { to: 'payroll/settings', title: 'Settings' }
+        { to: 'staff/payroll/settings', text: 'Configuration' }
     ];
 
     const history = useHistory();
@@ -658,26 +658,59 @@ const PayrollSettings = () => {
     if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
 
     return (
-        <div className="container-fluid px-lg-4 px-xl-5 pb-5">
-            <HtmlHead title={title} description={description} />
-            <div className="page-title-container mb-4 mt-3 mt-lg-0">
-                <Row className="g-3 align-items-center">
-                    <Col xs="12" md="6">
-                        <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
-                            {title}
-                        </h1>
-                        <BreadcrumbList items={breadcrumbs} />
-                    </Col>
-                    <Col xs="12" md="6" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
-                        <Button variant="none" onClick={() => history.go(-1)} className="btn-icon btn-icon-start custom-btn-primary-outline rounded-pill shadow-sm" style={{ height: '40px' }}>
-                            <CsLineIcons icon="arrow-left" size="18" /> <span>Back</span>
-                        </Button>
-                        <Button variant="none" onClick={handleSave} disabled={saving} className="btn-icon btn-icon-start custom-btn-primary-outline rounded-pill shadow-sm" style={{ height: '40px' }}>
-                            {saving ? <Spinner size="sm" animation="border" /> : <CsLineIcons icon="save" size="18" />} <span>Save Settings</span>
-                        </Button>
-                    </Col>
-                </Row>
-            </div>
+        <div className={hideHeader ? "w-100" : "container-fluid px-lg-4 px-xl-5 pb-5"}>
+            {!hideHeader && <HtmlHead title={title} description={description} />}
+            {!hideHeader && (
+                <div className="page-title-container mb-4">
+                    <Row className="g-3 align-items-center">
+                        <Col xs="12" lg="4" xl="4">
+                            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7', whiteSpace: 'nowrap' }}>
+                                {title}
+                            </h1>
+                            <BreadcrumbList items={breadcrumbs} />
+                        </Col>
+                        <Col xs="12" lg="8" xl="8" className="d-flex flex-wrap flex-lg-nowrap justify-content-lg-end align-items-center gap-2">
+                            <Button
+                                variant="outline-primary"
+                                onClick={() => history.push('/staff/payroll')}
+                                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                            >
+                                <CsLineIcons icon="credit-card" size="16" />
+                                <span>Manage Payroll</span>
+                            </Button>
+                            <Button
+                                variant="outline-primary"
+                                onClick={() => history.push('/staff/payroll/generate')}
+                                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                            >
+                                <CsLineIcons icon="plus" size="16" />
+                                <span>Generate Payroll</span>
+                            </Button>
+                            <Button
+                                variant="outline-primary"
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                            >
+                                {saving ? <Spinner size="sm" animation="border" /> : <CsLineIcons icon="save" size="16" />}
+                                <span>Save</span>
+                            </Button>
+                        </Col>
+                    </Row>
+                </div>
+            )}
+
+            {hideHeader && (
+                <div className="d-flex justify-content-end mb-4">
+                    <Button variant="primary" onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-pill shadow-sm d-flex align-items-center">
+                        {saving ? <Spinner size="sm" animation="border" className="me-2" /> : <CsLineIcons icon="save" className="me-2" size="18" />}
+                        <span>Save</span>
+                    </Button>
+                </div>
+            )}
 
             <Row className="g-4 mb-4">
                 <Col xs="12">
@@ -686,104 +719,6 @@ const PayrollSettings = () => {
             </Row>
 
             <Row className="g-4 mb-5">
-                <Col xs="12">
-                    <Card className="h-100 glass-card">
-                        <Card.Body className="p-4">
-                            <h5 className="fw-bold mb-4 text-primary">Organizational Rules</h5>
-                            <Row className="g-4">
-                                {branches.length > 0 && (
-                                    <Col md="4">
-                                        <Form.Group>
-                                            <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Select Branch</Form.Label>
-                                            <Select
-                                                classNamePrefix="react-select"
-                                                options={[
-                                                    { value: null, label: 'Global / All Branches' },
-                                                    ...branches.map(b => ({ value: b._id, label: `${b.name} Branch` }))
-                                                ]}
-                                                value={selectedBranch || { value: null, label: 'Global / All Branches' }}
-                                                onChange={(selected) => {
-                                                    if (isDirty && !window.confirm('You have unsaved changes. Switching branches will discard them. Proceed?')) {
-                                                        return;
-                                                    }
-                                                    setSelectedBranch(selected);
-                                                    fetchConfig(selected ? selected.value : null);
-                                                }}
-                                                placeholder="Select Branch"
-                                                className="react-select-premium shadow-sm"
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                )}
-                                <Col md={branches.length > 0 ? "4" : "6"}>
-                                    <Form.Group>
-                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Leave Cycle Start Month</Form.Label>
-                                        <Select
-                                            options={[
-                                                { value: 'january', label: 'January (Jan - Dec)' },
-                                                { value: 'april', label: 'April (Apr - Mar)' }
-                                            ]}
-                                            value={[{ value: 'january', label: 'January (Jan - Dec)' }, { value: 'april', label: 'April (Apr - Mar)' }].find(opt => opt.value === config.org_rules.leave_year_start)}
-                                            onChange={(selected) => updateOrg('leave_year_start', selected ? selected.value : 'january')}
-                                            classNamePrefix="react-select"
-                                            className="react-select-premium shadow-sm"
-                                            isSearchable={false}
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={branches.length > 0 ? "4" : "6"}>
-                                    <Form.Group>
-                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Weekly Off Days</Form.Label>
-                                        <div className="d-flex flex-wrap gap-2 mt-1">
-                                            {WEEK_DAYS.map(day => (
-                                                <Badge
-                                                    key={day.value}
-                                                    bg={config.org_rules.weekly_off_days.includes(day.value) ? 'primary' : 'light'}
-                                                    text={config.org_rules.weekly_off_days.includes(day.value) ? 'white' : 'dark'}
-                                                    className="cursor-pointer border py-2 px-3 shadow-sm"
-                                                    style={{ borderRadius: '8px', transition: 'all 0.2s' }}
-                                                    onClick={() => toggleWeekDay(day.value)}
-                                                >
-                                                    {day.label}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    </Form.Group>
-                                </Col>
-                                {allConfigs.length > 0 && (
-                                    <Col xs="12" className="mt-4">
-                                        <hr className="my-3 opacity-50" />
-                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-3">Branch Weekly Off Overview</Form.Label>
-                                        <Row className="g-3">
-                                            {allConfigs.map(c => {
-                                                const branch = branches.find(b => b._id === c.branch_id);
-                                                const branchName = branch ? `${branch.name} Branch` : 'Global / All Branches';
-                                                
-                                                let weekOffsStr = '';
-                                                if (c.global_weekly_offs && c.global_weekly_offs.length > 0) {
-                                                    weekOffsStr = c.global_weekly_offs.map(wo => wo.day).join(', ');
-                                                } else if (c.org_rules?.weekly_off_days) {
-                                                    weekOffsStr = c.org_rules.weekly_off_days.map(d => WEEK_DAYS.find(wd => wd.value === d)?.label).filter(Boolean).join(', ');
-                                                }
-                                                if (!weekOffsStr) weekOffsStr = 'None';
-
-                                                return (
-                                                    <Col key={c._id} xs="12" sm="6" md="4">
-                                                        <div className="d-flex justify-content-between align-items-center p-3 border rounded bg-white shadow-sm" style={{ borderRadius: '12px' }}>
-                                                            <span className="fw-bold text-dark small">{branchName}</span>
-                                                            <Badge bg="info" className="py-1.5 px-2.5 rounded-pill text-white fw-bold">{weekOffsStr}</Badge>
-                                                        </div>
-                                                    </Col>
-                                                );
-                                            })}
-                                        </Row>
-                                    </Col>
-                                )}
-                            </Row>
-                        </Card.Body>
-                    </Card>
-                </Col>
-
                 <Col xs="12" xl="6">
                     <Card className="h-100 glass-card">
                         <Card.Body className="p-4">
@@ -857,7 +792,7 @@ const PayrollSettings = () => {
                         <Button variant="light" onClick={discardChanges} className="rounded-pill px-4" style={{ fontWeight: 'bold' }}>Discard</Button>
                         <Button variant="primary" onClick={handleSave} disabled={saving} className="rounded-pill px-4" style={{ fontWeight: 'bold' }}>
                             {saving ? <Spinner size="sm" animation="border" className="me-1" /> : <CsLineIcons icon="save" size="14" className="me-1" />}
-                            Save Settings
+                            Save
                         </Button>
                     </div>
                 </div>

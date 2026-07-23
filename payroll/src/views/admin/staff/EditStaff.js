@@ -16,14 +16,14 @@ import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
 const EditStaff = () => {
+  const { id } = useParams();
   const title = 'Edit Staff';
   const description = 'Edit staff details.';
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: '/staff', text: 'Staff Management' },
-    { to: '/staff/view', title: 'Edit Staff' },
+    { to: 'staff/view', text: 'Staff' },
+    { to: `staff/edit/${id}`, text: 'Edit Staff' },
   ];
-  const { id } = useParams();
   const history = useHistory();
   const [loading, setLoading] = useState({ initial: true, submitting: false, faceModels: false });
   const [fileUploadError, setFileUploadError] = useState(null);
@@ -977,21 +977,28 @@ const EditStaff = () => {
     <div className="container-fluid px-lg-4 px-xl-5 pb-5">
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 mt-3 mt-lg-0">
+      <div className="page-title-container mb-4">
         <Row className="g-3 align-items-center">
-          <Col md={7}>
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+          <Col xs="12" lg="4" xl="4">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7', whiteSpace: 'nowrap' }}>
               {title}
             </h1>
             <BreadcrumbList items={breadcrumbs} />
-            </Col>
-            <Col xs="12" md="5" className="d-flex edit-staff-button-group-responsive justify-content-md-end gap-2 mt-3 mt-md-0">
-              <Button className="custom-btn-outline" onClick={() => history.push('/staff/view')} disabled={loading.submitting}>
-                <CsLineIcons icon="arrow-left" size="18" /> Back to List
-              </Button>
-            </Col>
-          </Row>
-        </div>
+          </Col>
+          <Col xs="12" lg="8" xl="8" className="d-flex flex-wrap flex-lg-nowrap justify-content-lg-end align-items-center gap-2">
+            <Button
+              variant="outline-primary"
+              onClick={() => history.push('/staff/view')}
+              disabled={loading.submitting}
+              className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+            >
+              <CsLineIcons icon="arrow-left" size="16" />
+              <span>Back</span>
+            </Button>
+          </Col>
+        </Row>
+      </div>
 
       {fileUploadError && (
         <Alert variant="danger" className="mb-4 glass-card border-0">

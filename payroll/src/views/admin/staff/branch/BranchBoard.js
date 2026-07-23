@@ -4,11 +4,19 @@ import { Row, Col, Card, Button, Modal, Form, Spinner, Alert } from 'react-boots
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import HtmlHead from 'components/html-head/HtmlHead';
+import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { ReactSortable } from 'react-sortablejs';
 import DeleteConfirmModal from 'components/DeleteConfirmModal';
 
 const BranchBoard = () => {
+  const title = 'Organization';
+  const description = 'Organization structure, department hierarchy, and branch management.';
+  const breadcrumbs = [
+    { to: '', text: 'Home' },
+    { to: 'staff/view', text: 'Staff' },
+    { to: 'staff/organization', text: 'Organization' },
+  ];
   const history = useHistory();
   const [branches, setBranches] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -20,7 +28,7 @@ const BranchBoard = () => {
   const [showBranchModal, setShowBranchModal] = useState(false);
   const [newBranchName, setNewBranchName] = useState('');
   const [newBranchAddress, setNewBranchAddress] = useState('');
-  
+
   const [showDeleteBranchModal, setShowDeleteBranchModal] = useState(false);
   const [branchToDelete, setBranchToDelete] = useState(null);
 
@@ -62,7 +70,7 @@ const BranchBoard = () => {
       const fetchedBranches = branchRes.data.data || [];
       const fetchedDepts = deptRes.data.departments || [];
       const fetchedStaff = staffRes.data.data || [];
-      
+
       const staffWithId = fetchedStaff.map(s => ({ ...s, id: s._id }));
       setBranches(fetchedBranches);
       setDepartments(fetchedDepts);
@@ -87,8 +95,8 @@ const BranchBoard = () => {
 
     try {
       setIsCreating(true);
-      const res = await axios.post(`${process.env.REACT_APP_API}/branch/create`, 
-        { name: newBranchName, address: newBranchAddress }, 
+      const res = await axios.post(`${process.env.REACT_APP_API}/branch/create`,
+        { name: newBranchName, address: newBranchAddress },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       toast.success("Branch created!");
@@ -140,16 +148,16 @@ const BranchBoard = () => {
 
     try {
       setIsCreating(true);
-      const payload = { 
-        name: newDeptName, 
-        branch_id: activeBranchForDept, 
-        is_global: isDeptGlobal 
+      const payload = {
+        name: newDeptName,
+        branch_id: activeBranchForDept,
+        is_global: isDeptGlobal
       };
       const res = await axios.post(`${process.env.REACT_APP_API}/department/create`, payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       toast.success("Department created!");
-      
+
       const newDept = res.data.department;
       newDept.structure = [];
       setDepartments([...departments, newDept]);
@@ -214,7 +222,7 @@ const BranchBoard = () => {
       await axios.post(`${process.env.REACT_APP_API}/department/update-structure/${dept._id}`, { structure: newStructure }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      
+
       const newDepts = [...departments];
       newDepts[deptIndex] = { ...dept, structure: newStructure };
       setDepartments(newDepts);
@@ -242,7 +250,7 @@ const BranchBoard = () => {
     const dept = departments[deptIndex];
     const nodesToDelete = new Set([nodeId]);
     let added = true;
-    while(added) {
+    while (added) {
       added = false;
       for (let i = 0; i < dept.structure.length; i++) {
         const n = dept.structure[i];
@@ -285,7 +293,7 @@ const BranchBoard = () => {
   // --- DRAG AND DROP ---
   const handleEndDragStaff = async (evt) => {
     const { from, to, item } = evt;
-    const fromId = from.id; 
+    const fromId = from.id;
     const toId = to.id;
 
     if (fromId === toId) return;
@@ -313,15 +321,15 @@ const BranchBoard = () => {
         if (s._id === staffId) return { ...s, department: actualDeptId, department_node_id: finalNodeId };
         return s;
       }));
-      
+
       if (actualDeptId === null) {
-         setUnassignedStaff(prev => {
-            const s = staffList.find(st => st._id === staffId);
-            if (s && !prev.some(x => x._id === staffId)) {
-               return [...prev, { ...s, department: null, department_node_id: null }];
-            }
-            return prev;
-         });
+        setUnassignedStaff(prev => {
+          const s = staffList.find(st => st._id === staffId);
+          if (s && !prev.some(x => x._id === staffId)) {
+            return [...prev, { ...s, department: null, department_node_id: null }];
+          }
+          return prev;
+        });
       }
 
       try {
@@ -333,7 +341,7 @@ const BranchBoard = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         toast.success("Staff reassigned!");
-        fetchInitialData(); 
+        fetchInitialData();
       } catch (error) {
         toast.error("Failed to reassign staff.");
         fetchInitialData();
@@ -341,7 +349,7 @@ const BranchBoard = () => {
     }, 10);
   };
 
-  const updateSortableList = () => {};
+  const updateSortableList = () => { };
 
   const renderStaffCard = (staff) => (
     <div key={staff._id} id={staff._id}>
@@ -430,8 +438,8 @@ const BranchBoard = () => {
             onEnd={handleEndDragStaff}
             forceFallback={true}
             className="w-100"
-            style={{ 
-              minHeight: departmentStaff.length === 0 && rootNodes.length > 0 ? '10px' : '60px', 
+            style={{
+              minHeight: departmentStaff.length === 0 && rootNodes.length > 0 ? '10px' : '60px',
               paddingBottom: '10px'
             }}
             id={`dept_${dept._id}`}
@@ -462,23 +470,43 @@ const BranchBoard = () => {
 
   return (
     <div className="container-fluid px-lg-4 px-xl-5 pb-5">
-      <HtmlHead title="Organization Structure" description="Manage Organization Branches, Departments, and Global Roles" />
-      
-      <div className="page-title-container mb-4 mt-3 mt-lg-0">
-        <Row className="g-0 align-items-sm-center">
-          <Col xs={12} lg="auto" className="me-auto mb-3 mb-lg-0">
-            <h1 className="mb-0 pb-0 display-6 display-lg-4 fw-bold" style={{ color: '#1ea8e7' }}>Organization Structure</h1>
-            <div className="text-muted mt-1 small">Manage branches, nested departments, and global oversight roles.</div>
+      <HtmlHead title={title} description={description} />
+
+      <div className="page-title-container mb-4">
+        <Row className="g-3 align-items-center">
+          <Col xs="12" lg="4" xl="4">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7', whiteSpace: 'nowrap' }}>
+              {title}
+            </h1>
+            <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col xs={12} lg="auto" className="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-2 mt-lg-0">
-            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 w-sm-auto" onClick={() => history.push('/staff')}>
-              <CsLineIcons icon="arrow-left" size="18" className="me-2" /> Back
+          <Col xs="12" lg="8" xl="8" className="d-flex flex-wrap flex-lg-nowrap justify-content-lg-end align-items-center gap-2">
+            <Button
+              variant="outline-primary"
+              onClick={() => history.push('/staff/view')}
+              className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+            >
+              <CsLineIcons icon="arrow-left" size="16" />
+              <span>Back</span>
             </Button>
-            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 w-sm-auto" onClick={() => handleOpenAddDept(null, true)}>
-              <CsLineIcons icon="globe" size="18" className="me-2" /> Add Global Dept
+            <Button
+              variant="outline-primary"
+              onClick={() => handleOpenAddDept(null, true)}
+              className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+            >
+              <CsLineIcons icon="plus" size="16" />
+              <span>Add Global Dept</span>
             </Button>
-            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 w-sm-auto" onClick={() => setShowBranchModal(true)}>
-              <CsLineIcons icon="plus" size="18" className="me-2" /> Add Branch
+            <Button
+              variant="outline-primary"
+              onClick={() => setShowBranchModal(true)}
+              className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+            >
+              <CsLineIcons icon="plus" size="16" />
+              <span>Add Branch</span>
             </Button>
           </Col>
         </Row>
@@ -516,12 +544,12 @@ const BranchBoard = () => {
 
         {/* Organization Layout Column */}
         <Col xs={12} lg={8} xl={9}>
-          
+
           {/* Global Roles / Departments */}
           {globalDepts.length > 0 && (
             <div className="mb-5">
               <h4 className="fw-bold text-dark mb-3 d-flex align-items-center">
-                <CsLineIcons icon="globe" size="20" className="me-2 text-primary" /> 
+                <CsLineIcons icon="globe" size="20" className="me-2 text-primary" />
                 Global Departments & Roles
               </h4>
               <Row className="g-3">
@@ -546,7 +574,7 @@ const BranchBoard = () => {
           {/* Branches */}
           <div>
             <h4 className="fw-bold text-dark mb-3 d-flex align-items-center">
-              <CsLineIcons icon="building" size="20" className="me-2 text-primary" /> 
+              <CsLineIcons icon="building" size="20" className="me-2 text-primary" />
               Branches
             </h4>
             <Row className="g-4">
@@ -614,7 +642,7 @@ const BranchBoard = () => {
       </Row>
 
       {/* --- Modals --- */}
-      
+
       {/* Branch Modal */}
       <Modal show={showBranchModal} onHide={() => setShowBranchModal(false)} centered>
         <Modal.Header closeButton>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Row, Col, Form, Button, InputGroup } from 'react-bootstrap';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
-import { printModalBill } from '../../../../utils/printUtils';
+import { printModalBill, printModalA4Invoice } from '../../../../utils/printUtils';
 
 const PaymentModal = ({
   showPaymentModal,
@@ -19,10 +19,14 @@ const PaymentModal = ({
   orderId,
   orderNo,
   handlePrint,
+  canSeeAccounting,
+  history,
 }) => {
   const [printing, setPrinting] = useState(false);
   const handlePrintBill = () => {
-    if (handlePrint) {
+    if (canSeeAccounting) {
+      printModalA4Invoice({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
+    } else if (handlePrint) {
       handlePrint(orderId);
     } else {
       printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
@@ -126,6 +130,23 @@ const PaymentModal = ({
           border-color: #94a3b8 !important;
           color: #475569 !important;
         }
+        .payment-gst-btn {
+          border-radius: 12px !important;
+          padding: 10px 20px !important;
+          font-weight: 700 !important;
+          border: 1.5px solid #23b3f4 !important;
+          background: transparent !important;
+          color: #23b3f4 !important;
+          transition: all 0.2s ease !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 6px !important;
+          text-decoration: none !important;
+        }
+        .payment-gst-btn:hover:not(:disabled) {
+          background: rgba(35, 179, 244, 0.05) !important;
+        }
         .payment-submit-btn {
           border-radius: 12px !important;
           padding: 10px 30px !important;
@@ -217,7 +238,8 @@ const PaymentModal = ({
             grid-template-columns: 1fr 1fr !important;
             grid-template-areas: 
               "submit submit"
-              "cancel print" !important;
+              "cancel print" 
+              "gst gst" !important;
             gap: 6px !important;
             padding: 10px 12px !important;
           }
@@ -231,6 +253,13 @@ const PaymentModal = ({
           }
           .payment-print-btn {
             grid-area: print !important;
+            width: 100% !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            border-radius: 8px !important;
+          }
+          .payment-gst-btn {
+            grid-area: gst !important;
             width: 100% !important;
             padding: 8px 12px !important;
             font-size: 13px !important;
@@ -280,7 +309,73 @@ const PaymentModal = ({
                 <span className="fw-bold">₹{paymentData.subTotal}</span>
               </div>
 
-              {(parseFloat(paymentData.cgstAmount) > 0 || parseFloat(paymentData.sgstAmount) > 0 || parseFloat(paymentData.vatAmount) > 0) && (
+              {canSeeAccounting ? (
+                <div className="pt-2 mt-2 border-top">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="text-muted small fw-semibold">CGST (%)</span>
+                    <Form.Control
+                      type="number"
+                      size="sm"
+                      style={{ maxWidth: '80px', textAlign: 'right', borderRadius: '8px' }}
+                      value={paymentData.cgstPercent || 0}
+                      onChange={(e) => {
+                        const cgst = e.target.value;
+                        const sub = parseFloat(paymentData.subTotal) || 0;
+                        const cgstAmt = (sub * (parseFloat(cgst) || 0)) / 100;
+                        const sgstAmt = parseFloat(paymentData.sgstAmount) || 0;
+                        const disc = parseFloat(paymentData.discountAmount) || 0;
+                        const newTotal = Math.max(0, sub + cgstAmt + sgstAmt - disc);
+                        setPaymentData(prev => ({
+                          ...prev,
+                          cgstPercent: cgst,
+                          cgstAmount: cgstAmt.toFixed(2),
+                          total: newTotal.toFixed(2),
+                          waveoffAmount: (newTotal - (parseFloat(prev.paidAmount) || 0)).toFixed(2)
+                        }));
+                      }}
+                    />
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="text-muted small fw-semibold">SGST (%)</span>
+                    <Form.Control
+                      type="number"
+                      size="sm"
+                      style={{ maxWidth: '80px', textAlign: 'right', borderRadius: '8px' }}
+                      value={paymentData.sgstPercent || 0}
+                      onChange={(e) => {
+                        const sgst = e.target.value;
+                        const sub = parseFloat(paymentData.subTotal) || 0;
+                        const cgstAmt = parseFloat(paymentData.cgstAmount) || 0;
+                        const sgstAmt = (sub * (parseFloat(sgst) || 0)) / 100;
+                        const disc = parseFloat(paymentData.discountAmount) || 0;
+                        const newTotal = Math.max(0, sub + cgstAmt + sgstAmt - disc);
+                        setPaymentData(prev => ({
+                          ...prev,
+                          sgstPercent: sgst,
+                          sgstAmount: sgstAmt.toFixed(2),
+                          total: newTotal.toFixed(2),
+                          waveoffAmount: (newTotal - (parseFloat(prev.paidAmount) || 0)).toFixed(2)
+                        }));
+                      }}
+                    />
+                  </div>
+                  {customerInfo && (
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <span className="text-muted small fw-semibold">Customer GSTIN</span>
+                      <Form.Control
+                        type="text"
+                        size="sm"
+                        placeholder="GSTIN No"
+                        style={{ maxWidth: '140px', borderRadius: '8px', fontSize: '11px' }}
+                        value={customerInfo.gst_no || ''}
+                        onChange={(e) => {
+                          customerInfo.gst_no = e.target.value;
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (parseFloat(paymentData.cgstAmount) > 0 || parseFloat(paymentData.sgstAmount) > 0 || parseFloat(paymentData.vatAmount) > 0) && (
                 <div className="pt-2 mt-2 border-top">
                   {parseFloat(paymentData.cgstAmount) > 0 && (
                     <div className="d-flex justify-content-between mb-1">
@@ -409,8 +504,9 @@ const PaymentModal = ({
           <CsLineIcons icon="close" size="14" />
           Cancel
         </Button>
-        <Button variant="none" className="payment-print-btn" onClick={handlePrintBill} disabled={printing || isLoading}>
-          {printing ? 'Printing...' : 'Print Bill'}
+        <Button variant="none" className={canSeeAccounting ? 'payment-gst-btn' : 'payment-print-btn'} onClick={handlePrintBill} disabled={printing || isLoading}>
+          <CsLineIcons icon={canSeeAccounting ? 'file-text' : 'print'} size="14" />
+          {printing ? 'Printing...' : canSeeAccounting ? 'Print GST Invoice' : 'Print Bill'}
         </Button>
         <Button variant="none" className="payment-submit-btn" onClick={handlePayment} disabled={isLoading}>
           {isLoading ? 'Processing...' : 'Complete Payment'}

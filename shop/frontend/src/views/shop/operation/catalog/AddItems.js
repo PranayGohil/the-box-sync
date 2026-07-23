@@ -176,7 +176,7 @@ const AddItems = () => {
     variantLabel = "Model / Spec";
   }
 
-  const initialValues = {
+  const initialValues = useMemo(() => ({
     category: prefilledCategory,
     counter: prefilledCounter,
     hideOnKot: prefilledHideOnKot,
@@ -192,7 +192,7 @@ const AddItems = () => {
         addons: [],
       },
     ],
-  };
+  }), [prefilledCategory, prefilledCounter, prefilledHideOnKot]);
 
   const getCatalogCategories = async () => {
     try {
@@ -558,6 +558,16 @@ const AddItems = () => {
                             isLoading={loadingCategories}
                             options={categoryOptions}
                             value={values.category ? { label: values.category, value: values.category } : null}
+                            onCreateOption={(inputValue) => {
+                              const newCat = inputValue.trim();
+                              if (!newCat) return;
+                              setSuggestions((prev) => ({
+                                ...prev,
+                                categories: [...(prev.categories || []), { category: newCat }],
+                              }));
+                              setFieldValue('category', newCat);
+                              getItemsByCategory(newCat);
+                            }}
                             onChange={(selected) => {
                               const cat = selected ? selected.value : '';
                               setFieldValue('category', cat);
@@ -701,9 +711,10 @@ const AddItems = () => {
                                         <thead>
                                           <tr className="border-bottom" style={{ color: '#64748b', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
                                             <th className="pb-2 text-uppercase">{variantLabel}</th>
-                                            <th className="pb-2 text-uppercase" width="140">Price</th>
-                                            <th className="pb-2 text-uppercase" width="200">Extra Details</th>
-                                            <th className="pb-2 text-uppercase" width="280">Barcode</th>
+                                            <th className="pb-2 text-uppercase" width="130">Price</th>
+                                            <th className="pb-2 text-uppercase" width="130">Stock Qty</th>
+                                            <th className="pb-2 text-uppercase" width="180">Extra Details</th>
+                                            <th className="pb-2 text-uppercase" width="240">Barcode</th>
                                             <th className="pb-2 text-uppercase text-center" width="60" />
                                           </tr>
                                         </thead>
@@ -734,6 +745,17 @@ const AddItems = () => {
                                                   style={{ height: '38px', borderRadius: '10px' }}
                                                 />
                                                 <ErrorMessage name={`items[0].variants[${vIdx}].price`} component="div" className="text-danger small mt-1" />
+                                              </td>
+                                              <td className="py-3">
+                                                <BForm.Control
+                                                  type="number"
+                                                  name={`items[0].variants[${vIdx}].stock_quantity`}
+                                                  value={variant.stock_quantity ?? ''}
+                                                  onChange={handleChange}
+                                                  placeholder="Qty (Optional)"
+                                                  className="pill-input"
+                                                  style={{ height: '38px', borderRadius: '10px' }}
+                                                />
                                               </td>
                                               <td className="py-3">
                                                 <CreatableSelect

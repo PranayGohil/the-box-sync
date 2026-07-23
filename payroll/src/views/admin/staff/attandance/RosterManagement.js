@@ -8,14 +8,14 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 
 
-export default function RosterManagement() {
+export default function RosterManagement({ hideHeader = false }) {
   const history = useHistory();
-  const title = 'Shift Management';
-  const description = 'Assign shifts and weekly offs to staff members';
+  const title = 'Manage Shift';
+  const description = 'Assign shifts and weekly offs to staff members.';
   const breadcrumbs = [
     { to: '', text: 'Home' },
-    { to: 'payroll/settings', text: 'Settings' },
-    { to: 'payroll/shift', text: 'Shifts' },
+    { to: 'staff/view', text: 'Staff' },
+    { to: 'staff/shift', text: 'Manage Shift' },
   ];
 
   // Helper to get Monday of the current week
@@ -311,96 +311,162 @@ export default function RosterManagement() {
     );
   };
 
+  const mainControls = (
+    <div className="d-flex flex-wrap justify-content-start justify-content-md-end align-items-center gap-2 mb-4">
+      <Button
+        variant="outline-primary"
+        className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+        style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+        onClick={() => setShowShiftModal(true)}
+      >
+        <CsLineIcons icon="gear" size="16" />
+        <span>Manage Shifts</span>
+      </Button>
+
+      <div
+        className="d-flex align-items-center bg-white rounded-pill shadow-sm px-2 border flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+        style={{ height: '38px', borderColor: 'rgba(30, 168, 231, 0.25)' }}
+      >
+        <Button variant="link" className="p-1 text-primary me-1" onClick={() => navigateWeek(-1)}>
+          <CsLineIcons icon="chevron-left" size="16" />
+        </Button>
+        <Form.Control
+          type="date"
+          value={weekStartDate}
+          onChange={e => setWeekStartDate(getStartOfWeek(e.target.value))}
+          style={{ border: 'none', background: 'transparent', fontSize: '0.875rem', width: '135px' }}
+          className="px-1 fw-bold text-center text-primary shadow-none"
+        />
+        <Button variant="link" className="p-1 text-primary ms-1" onClick={() => navigateWeek(1)}>
+          <CsLineIcons icon="chevron-right" size="16" />
+        </Button>
+      </div>
+
+      <Button
+        variant="outline-primary"
+        className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+        style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+        onClick={handleSaveRoster}
+      >
+        <CsLineIcons icon="save" size="16" />
+        <span>Save Changes</span>
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="container-fluid px-lg-4 px-xl-5 pb-5">
-      <HtmlHead title={title} description={description} />
+    <div className={hideHeader ? "w-100" : "container-fluid px-lg-4 px-xl-5 pb-5"}>
+      {!hideHeader && <HtmlHead title={title} description={description} />}
 
-      <div className="page-title-container mb-4 mt-3 mt-lg-0">
-        <Row className="g-3 align-items-center mb-4">
-          <Col xs="12" md="4">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>{title}</h1>
-            <BreadcrumbList items={breadcrumbs} />
-          </Col>
-          <Col xs="12" md="8" className="d-flex flex-wrap justify-content-md-end align-items-center gap-3">
-            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm d-flex align-items-center" onClick={() => history.push('/payroll/settings')}>
-              <CsLineIcons icon="arrow-left" className="me-2" size="18" />
-              <span>Back</span>
-            </Button>
-
-            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm d-flex align-items-center" onClick={() => setShowShiftModal(true)}>
-              <CsLineIcons icon="gear" className="me-2" size="18" />
-              <span>Manage Shifts</span>
-            </Button>
-
-            <div className="d-flex align-items-center bg-white rounded-pill shadow-sm px-2 py-1">
-              <Button variant="link" className="p-1 text-muted" onClick={() => navigateWeek(-1)}>
-                <CsLineIcons icon="chevron-left" size="18" />
-              </Button>
-              <Form.Control
-                type="date"
-                value={weekStartDate}
-                onChange={e => setWeekStartDate(getStartOfWeek(e.target.value))}
-                style={{ width: 'auto', border: 'none', background: 'transparent' }}
-                className="px-2 fw-bold text-center"
-              />
-              <Button variant="link" className="p-1 text-muted" onClick={() => navigateWeek(1)}>
-                <CsLineIcons icon="chevron-right" size="18" />
-              </Button>
-            </div>
-
-            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm d-flex align-items-center" onClick={handleSaveRoster}>
-              <CsLineIcons icon="save" className="me-2" size="18" />
-              <span>Save Changes</span>
-            </Button>
-          </Col>
-        </Row>
-
-        {/* Bulk Action Bar */}
-        <Card className="glass-card border-0 shadow-sm p-3 mb-4 position-relative" style={{ background: '#f8fafc', zIndex: 10 }}>
-          <div className="fw-bold text-muted small text-uppercase mb-3">Bulk Assign Shift</div>
-          <Row className="g-3">
-            <Col xs={12} md={4}>
-              <Dropdown className="w-100 shadow-sm">
-                <Dropdown.Toggle variant="white" className="w-100 text-start d-flex justify-content-between align-items-center py-2 border rounded-3 bg-white">
-                  {bulkDay ? (() => {
-                    const found = weekDays.find(d => formatDateDDMMYYYY(d) === bulkDay);
-                    return found ? found.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Select Day...';
-                  })() : 'Select Day...'}
-                </Dropdown.Toggle>
-                <Dropdown.Menu className="w-100 shadow-sm border-0" style={{ borderRadius: '10px', maxHeight: '250px', overflowY: 'auto' }}>
-                  {weekDays.map(day => {
-                    const dateStr = formatDateDDMMYYYY(day);
-                    return (
-                      <Dropdown.Item key={dateStr} onClick={() => setBulkDay(dateStr)} active={bulkDay === dateStr} className="py-2">
-                        {day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                      </Dropdown.Item>
-                    );
-                  })}
-                </Dropdown.Menu>
-              </Dropdown>
+      {!hideHeader && (
+        <div className="page-title-container mb-4">
+          <Row className="g-3 align-items-center">
+            <Col xs="12" lg="4" xl="4">
+              <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7', whiteSpace: 'nowrap' }}>
+                {title}
+              </h1>
+              <BreadcrumbList items={breadcrumbs} />
             </Col>
-            <Col xs={12} md={4}>
-              <Dropdown className="w-100 shadow-sm">
-                <Dropdown.Toggle variant="white" className="w-100 text-start d-flex justify-content-between align-items-center py-2 border rounded-3 bg-white">
-                  {shifts.find(s => s.id === bulkShift)?.short || 'Select Shift...'}
-                </Dropdown.Toggle>
-                <Dropdown.Menu className="w-100 shadow-sm border-0" style={{ borderRadius: '10px', maxHeight: '250px', overflowY: 'auto' }}>
-                  {shifts.map(s => (
-                    <Dropdown.Item key={s.id} onClick={() => setBulkShift(s.id)} active={bulkShift === s.id} className="py-2">
-                      <Badge bg="transparent" className={`p-2 w-100 text-start ${s.className}`} style={{ borderRadius: '6px' }}>{s.short}</Badge>
-                    </Dropdown.Item>
-                  ))}
-                </Dropdown.Menu>
-              </Dropdown>
-            </Col>
-            <Col xs={12} md={4}>
-              <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 py-2 h-100" onClick={handleBulkApply}>
-                Apply to {selectedStaff.length} Selected
+            <Col xs="12" lg="8" xl="8" className="d-flex flex-wrap flex-lg-nowrap justify-content-lg-end align-items-center gap-2">
+              <Button
+                variant="outline-primary"
+                onClick={() => history.push('/staff/attendance')}
+                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+              >
+                <CsLineIcons icon="check-square" size="16" />
+                <span>Attendance</span>
+              </Button>
+              <Button
+                variant="outline-primary"
+                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                onClick={() => setShowShiftModal(true)}
+              >
+                <CsLineIcons icon="gear" size="16" />
+                <span>Manage Shifts</span>
+              </Button>
+
+              <div
+                className="d-flex align-items-center bg-white rounded-pill shadow-sm px-2 border flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                style={{ height: '38px', borderColor: 'rgba(30, 168, 231, 0.25)' }}
+              >
+                <Button variant="link" className="p-1 text-primary me-1" onClick={() => navigateWeek(-1)}>
+                  <CsLineIcons icon="chevron-left" size="16" />
+                </Button>
+                <Form.Control
+                  type="date"
+                  value={weekStartDate}
+                  onChange={e => setWeekStartDate(getStartOfWeek(e.target.value))}
+                  style={{ border: 'none', background: 'transparent', fontSize: '0.875rem', width: '135px' }}
+                  className="px-1 fw-bold text-center text-primary shadow-none"
+                />
+                <Button variant="link" className="p-1 text-primary ms-1" onClick={() => navigateWeek(1)}>
+                  <CsLineIcons icon="chevron-right" size="16" />
+                </Button>
+              </div>
+
+              <Button
+                variant="outline-primary"
+                className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+                style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                onClick={handleSaveRoster}
+              >
+                <CsLineIcons icon="save" size="16" />
+                <span>Save Changes</span>
               </Button>
             </Col>
           </Row>
-        </Card>
-      </div>
+        </div>
+      )}
+
+      {hideHeader && mainControls}
+
+      {/* Bulk Action Bar */}
+      <Card className="glass-card border-0 shadow-sm p-3 mb-4 position-relative" style={{ background: '#f8fafc', borderRadius: '1rem', zIndex: 10 }}>
+        <div className="fw-bold text-muted small text-uppercase mb-2">Bulk Assign Shift</div>
+        <Row className="g-2 g-md-3">
+          <Col xs={12} sm={6} md={4}>
+            <Dropdown className="w-100 shadow-sm">
+              <Dropdown.Toggle variant="white" className="w-100 text-start d-flex justify-content-between align-items-center px-3 py-2 border rounded-pill bg-white" style={{ height: '38px', fontSize: '0.875rem' }}>
+                {bulkDay ? (() => {
+                  const found = weekDays.find(d => formatDateDDMMYYYY(d) === bulkDay);
+                  return found ? found.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Select Day...';
+                })() : 'Select Day...'}
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="w-100 shadow-sm border-0" style={{ borderRadius: '15px', maxHeight: '250px', overflowY: 'auto' }}>
+                {weekDays.map(day => {
+                  const dateStr = formatDateDDMMYYYY(day);
+                  return (
+                    <Dropdown.Item key={dateStr} onClick={() => setBulkDay(dateStr)} active={bulkDay === dateStr} className="py-2">
+                      {day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </Dropdown.Item>
+                  );
+                })}
+              </Dropdown.Menu>
+            </Dropdown>
+          </Col>
+          <Col xs={12} sm={6} md={4}>
+            <Dropdown className="w-100 shadow-sm">
+              <Dropdown.Toggle variant="white" className="w-100 text-start d-flex justify-content-between align-items-center px-3 py-2 border rounded-pill bg-white" style={{ height: '38px', fontSize: '0.875rem' }}>
+                {shifts.find(s => s.id === bulkShift)?.short || 'Select Shift...'}
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="w-100 shadow-sm border-0" style={{ borderRadius: '15px', maxHeight: '250px', overflowY: 'auto' }}>
+                {shifts.map(s => (
+                  <Dropdown.Item key={s.id} onClick={() => setBulkShift(s.id)} active={bulkShift === s.id} className="py-2">
+                    <Badge bg="transparent" className={`p-2 w-100 text-start ${s.className}`} style={{ borderRadius: '6px' }}>{s.short}</Badge>
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+          </Col>
+          <Col xs={12} md={4}>
+            <Button variant="outline-primary" className="rounded-pill px-4 shadow-sm w-100 fw-bold d-flex align-items-center justify-content-center gap-2" style={{ height: '38px', fontSize: '0.875rem' }} onClick={handleBulkApply}>
+              Apply to {selectedStaff.length} Selected
+            </Button>
+          </Col>
+        </Row>
+      </Card>
 
       <Card className="glass-card border-0 shadow-sm">
         <Card.Body className="p-0">

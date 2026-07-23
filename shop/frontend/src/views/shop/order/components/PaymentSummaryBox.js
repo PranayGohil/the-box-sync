@@ -8,7 +8,7 @@ const PaymentSummaryBox = ({
   setShowCancelModal, handlePrint, history, setShowCartSheet,
   onKotAndPrint, kotPrinting, kotHistory = [], onReprintKOT,
   paymentHistory = [], alreadyPaid = 0, canKOT = false,
-  orderType,
+  orderType, canSeeAccounting = false, handleQuotation,
 }) => {
   const [showKotHistory, setShowKotHistory] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
@@ -97,7 +97,42 @@ const PaymentSummaryBox = ({
         {/* Action Buttons - Full Width Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
 
-          {isPaid && !isDirty && dueAmount <= 0.01 ? (
+          {canSeeAccounting ? (
+            <>
+              <button
+                type="button"
+                style={{
+                  ...btnBase,
+                  background: 'transparent',
+                  color: '#23b3f4',
+                  border: '1.5px solid #23b3f4',
+                  padding: '0.6rem',
+                  gridColumn: 'span 1',
+                }}
+                onClick={handleQuotation}
+                disabled={printing || orderItems.length === 0}
+              >
+                <CsLineIcons icon="file-text" size="14" />
+                Quotation
+              </button>
+              <button
+                type="button"
+                style={{
+                  ...btnBase,
+                  background: '#23b3f4',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 12px rgba(35, 179, 244, 0.3)',
+                  padding: '0.6rem',
+                  gridColumn: 'span 1',
+                }}
+                onClick={handleOpenPaymentModal}
+                disabled={orderItems.length === 0}
+              >
+                <CsLineIcons icon="credit-card" size="13" stroke="#fff" />
+                {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Bill'}
+              </button>
+            </>
+          ) : isPaid && !isDirty && dueAmount <= 0.01 ? (
             <button
               type="button"
               style={{ ...btnBase, background: '#23b3f4', color: '#fff', boxShadow: '0 4px 14px rgba(35,179,244,0.3)', padding: '0.6rem', gridColumn: 'span 2' }}

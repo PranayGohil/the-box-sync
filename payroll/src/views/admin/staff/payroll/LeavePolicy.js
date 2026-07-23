@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Row, Col, Card, Button, Modal, Form, Spinner, Badge } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
@@ -7,15 +8,20 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import { getLeavePolicy, updateLeavePolicy } from 'api/payrollConfig';
 import Select from 'react-select';
 import axios from 'axios';
+import Holidays from './Holidays';
 
 const LeavePolicy = () => {
-  const title = 'Leave Policy Configuration';
-  const description = 'Define leave types, accrual rules, and carry-forward logic for your organization.';
+  const title = 'Leave Policy';
+  const description = 'Define leave types, holiday rules, and weekly off logic for your organization.';
   const breadcrumbs = [
     { to: '', text: 'Home' },
     { to: 'staff/view', text: 'Staff' },
     { to: 'staff/leave-policy', text: 'Leave Policy' },
   ];
+
+  const history = useHistory();
+
+  const [activeTab, setActiveTab] = useState('policy');
 
   const payTypeOptions = [
     { value: 'true', label: 'Paid Leave' },
@@ -25,6 +31,11 @@ const LeavePolicy = () => {
   const accrualOptions = [
     { value: 'upfront', label: 'Upfront (All days credited at year start)' },
     { value: 'monthly', label: 'Monthly (Pro-rated per month)' }
+  ];
+
+  const leaveCycleOptions = [
+    { value: 'january', label: 'January (Jan - Dec)' },
+    { value: 'april', label: 'April (Apr - Mar)' }
   ];
 
   const [loading, setLoading] = useState(true);
@@ -48,9 +59,9 @@ const LeavePolicy = () => {
     days_per_year: 0,
     is_paid: true,
     accrual_type: 'monthly',
+    leave_cycle_start: 'january',
     carry_forward: false,
     max_carry_forward: 0,
-    color: '#1ea8e7',
   });
 
   const fetchBranches = async () => {
@@ -68,20 +79,16 @@ const LeavePolicy = () => {
   };
 
   const fetchPolicy = async (branchId = null) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const url = branchId 
-        ? `${process.env.REACT_APP_API}/leave-policy?branch_id=${branchId}`
-        : `${process.env.REACT_APP_API}/leave-policy`;
-      const res = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.data && res.data.success) {
+      const res = await getLeavePolicy(branchId);
+      if (res.data && res.data.success && res.data.data) {
         setLeaveTypes(res.data.data.leave_types || []);
+      } else {
+        setLeaveTypes([]);
       }
     } catch (err) {
-      toast.error('Failed to fetch leave policy');
+      toast.error('Failed to load leave policy');
     } finally {
       setLoading(false);
     }
@@ -93,22 +100,25 @@ const LeavePolicy = () => {
   }, []);
 
   const handleShowModal = (index = null) => {
-    setModalBranch(selectedBranch || { value: null, label: 'Global / All Branches' });
     if (index !== null) {
+      const lt = leaveTypes[index];
       setEditingIndex(index);
-      setForm({ ...leaveTypes[index] });
+      setForm({
+        leave_cycle_start: 'january',
+        ...lt,
+      });
     } else {
       setEditingIndex(null);
       setForm({
-        leave_type_id: `lt_${Date.now()}`,
+        leave_type_id: '',
         name: '',
         short_code: '',
-        days_per_year: 12,
+        days_per_year: 0,
         is_paid: true,
         accrual_type: 'monthly',
+        leave_cycle_start: 'january',
         carry_forward: false,
         max_carry_forward: 0,
-        color: '#1ea8e7',
       });
     }
     setShowModal(true);
@@ -116,70 +126,28 @@ const LeavePolicy = () => {
 
   const handleModalSubmit = async (e) => {
     e.preventDefault();
-    const targetBranchId = modalBranch?.value || null;
-    
+    setSaving(true);
+    const updated = [...leaveTypes];
+    if (editingIndex !== null) {
+      updated[editingIndex] = form;
+    } else {
+      const newId = form.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      updated.push({ ...form, leave_type_id: form.leave_type_id || newId });
+    }
+
     try {
-      setSaving(true);
       const token = localStorage.getItem('token');
-      
-      // 1. Fetch target branch's existing policy list
-      const getUrl = targetBranchId 
-        ? `${process.env.REACT_APP_API}/leave-policy?branch_id=${targetBranchId}`
+      const branchId = selectedBranch?.value || '';
+      const url = branchId
+        ? `${process.env.REACT_APP_API}/leave-policy?branch_id=${branchId}`
         : `${process.env.REACT_APP_API}/leave-policy`;
-      const getRes = await axios.get(getUrl, {
+
+      const res = await axios.put(url, { leave_types: updated }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      let targetLeaveTypes = [];
-      if (getRes.data && getRes.data.success && getRes.data.data) {
-        targetLeaveTypes = getRes.data.data.leave_types || [];
-      }
 
-      const isSameBranch = (selectedBranch?.value || null) === targetBranchId;
-
-      if (editingIndex !== null) {
-        if (isSameBranch) {
-          // Edit in place
-          targetLeaveTypes[editingIndex] = { ...form };
-        } else {
-          // Branch has changed:
-          // A. Remove from the current filtered branch policy
-          const updatedCurrent = [...leaveTypes];
-          updatedCurrent.splice(editingIndex, 1);
-          const currentBranchId = selectedBranch?.value || '';
-          const currentPutUrl = currentBranchId 
-            ? `${process.env.REACT_APP_API}/leave-policy?branch_id=${currentBranchId}`
-            : `${process.env.REACT_APP_API}/leave-policy`;
-          
-          await axios.put(currentPutUrl, { leave_types: updatedCurrent }, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-
-          // B. Add/Update in target branch policy
-          const existingIdx = targetLeaveTypes.findIndex(lt => lt.leave_type_id === form.leave_type_id);
-          if (existingIdx >= 0) {
-            targetLeaveTypes[existingIdx] = { ...form };
-          } else {
-            targetLeaveTypes.push({ ...form });
-          }
-        }
-      } else {
-        // Add new
-        targetLeaveTypes.push({ ...form });
-      }
-
-      // 2. Save the target branch's policy
-      const putUrl = targetBranchId 
-        ? `${process.env.REACT_APP_API}/leave-policy?branch_id=${targetBranchId}`
-        : `${process.env.REACT_APP_API}/leave-policy`;
-      
-      const res = await axios.put(putUrl, { leave_types: targetLeaveTypes }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
       if (res.data && res.data.success) {
         toast.success('Leave policy updated');
-        // Refresh the current filter view
         fetchPolicy(selectedBranch?.value || null);
         setShowModal(false);
       }
@@ -200,14 +168,14 @@ const LeavePolicy = () => {
     setDeleting(true);
     const updated = [...leaveTypes];
     updated.splice(indexToDelete, 1);
-    
+
     try {
       const token = localStorage.getItem('token');
       const branchId = selectedBranch?.value || '';
-      const url = branchId 
+      const url = branchId
         ? `${process.env.REACT_APP_API}/leave-policy?branch_id=${branchId}`
         : `${process.env.REACT_APP_API}/leave-policy`;
-      
+
       const res = await axios.put(url, { leave_types: updated }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -228,42 +196,65 @@ const LeavePolicy = () => {
     <div className="container-fluid px-lg-4 px-xl-5 pb-5">
       <HtmlHead title={title} description={description} />
 
-      <div className="page-title-container mb-4 mt-3 mt-lg-0">
+      <div className="page-title-container mb-4">
         <Row className="g-3 align-items-center">
-          <Col xs="12" md="5" lg="5">
-            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
+          <Col xs="12" lg="4" xl="4">
+            <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7', whiteSpace: 'nowrap' }}>
               {title}
             </h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col xs="12" md="7" lg="7" className="d-flex flex-wrap align-items-center justify-content-md-end gap-3 mt-3 mt-md-0">
-            {branches.length > 0 && (
-              <div style={{ minWidth: '220px', flex: '1 1 auto', maxWidth: '320px' }} className="w-100 w-sm-auto">
-                <Select
-                  classNamePrefix="react-select"
-                  options={[
-                    { value: null, label: 'Global / All Branches' },
-                    ...branches.map(b => ({ value: b._id, label: `${b.name} Branch` }))
-                  ]}
-                  value={selectedBranch || { value: null, label: 'Global / All Branches' }}
-                  onChange={(selected) => {
-                    setSelectedBranch(selected);
-                    fetchPolicy(selected ? selected.value : null);
-                  }}
-                  placeholder="Select Branch Policy"
-                  className="react-select-premium shadow-sm"
-                />
-              </div>
-            )}
+          <Col xs="12" lg="8" xl="8" className="d-flex flex-wrap flex-lg-nowrap justify-content-lg-end align-items-center gap-2">
             <Button
-              variant="primary"
-              onClick={() => handleShowModal()}
-              className="px-4 py-2 rounded-pill d-flex align-items-center justify-content-center shadow-sm w-100 w-sm-auto"
-              style={{ height: '38px' }}
+              variant="outline-primary"
+              onClick={() => history.push('/staff/holidays')}
+              className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
             >
-              <CsLineIcons icon="plus" className="me-2" size="18" />
+              <CsLineIcons icon="calendar" size="16" />
+              <span>Holidays</span>
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={() => history.push('/staff/week-off')}
+              className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+            >
+              <CsLineIcons icon="clock" size="16" />
+              <span>Week Off</span>
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={() => handleShowModal()}
+              className="px-3 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-sm-grow-0 flex-shrink-0"
+              style={{ height: '38px', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+            >
+              <CsLineIcons icon="plus" size="16" />
               <span>Add Leave Type</span>
             </Button>
+            <div style={{ minWidth: '170px' }} className="flex-grow-1 flex-sm-grow-0 flex-shrink-0">
+              <Select
+                classNamePrefix="react-select"
+                options={[
+                  { value: null, label: 'Global / All Branches' },
+                  ...branches.map(b => ({ value: b._id, label: `${b.name} Branch` }))
+                ]}
+                value={selectedBranch || { value: null, label: 'Global / All Branches' }}
+                onChange={(selected) => {
+                  setSelectedBranch(selected);
+                  fetchPolicy(selected ? selected.value : null);
+                }}
+                placeholder="Select Branch"
+                isSearchable={false}
+                className="react-select-premium shadow-sm"
+                menuPortalTarget={document.body}
+                styles={{
+                  container: (base) => ({ ...base, minWidth: '170px' }),
+                  control: (base) => ({ ...base, borderRadius: '20px', minHeight: '38px' }),
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                }}
+              />
+            </div>
           </Col>
         </Row>
       </div>
@@ -273,131 +264,138 @@ const LeavePolicy = () => {
           <Spinner animation="border" style={{ color: '#1ea8e7' }} />
         </div>
       ) : (
-        <Row className="g-4">
-          {leaveTypes.map((lt, idx) => (
-            <Col xs="12" md="6" lg="4" key={lt.leave_type_id || idx}>
-              <Card className="leave-policy-glass-card border-0 h-100 shadow-sm" style={{ borderTop: `4px solid ${lt.color || '#1ea8e7'}`, borderTopLeftRadius: '1.5rem', borderTopRightRadius: '1.5rem' }}>
-                <Card.Body className="p-4">
-                  <div className="d-flex justify-content-between align-items-start mb-4">
-                    <div className="d-flex align-items-center">
-                      <Badge
-                        bg="none"
-                        className="me-3 fw-bold border-0 leave-policy-badge-code"
-                        style={{
-                          backgroundColor: `${lt.color}15`,
-                          color: lt.color,
-                        }}
-                      >
-                        {lt.short_code}
-                      </Badge>
-                      <span className="text-dark leave-policy-title">{lt.name}</span>
-                    </div>
-                    <div className="d-flex align-items-center gap-1">
-                      <Button 
-                        variant="outline-primary" 
-                        size="sm" 
-                        className="btn-icon btn-icon-only rounded-circle shadow-sm me-1" 
-                        onClick={() => handleShowModal(idx)} 
-                        title="Edit Leave Type"
-                      >
-                        <CsLineIcons icon="edit" size="14" />
-                      </Button>
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm" 
-                        className="btn-icon btn-icon-only rounded-circle shadow-sm" 
-                        onClick={() => confirmDeleteLeaveType(idx)} 
-                        title="Delete Leave Type"
-                      >
-                        <CsLineIcons icon="bin" size="14" />
-                      </Button>
-                    </div>
-                  </div>
+            <Row className="g-4">
+              {leaveTypes.map((lt, idx) => (
+                <Col xs="12" md="6" lg="4" key={lt.leave_type_id || idx}>
+                  <Card className="leave-policy-glass-card border-0 h-100 shadow-sm" style={{ borderTop: '4px solid #1ea8e7', borderTopLeftRadius: '1.5rem', borderTopRightRadius: '1.5rem' }}>
+                    <Card.Body className="p-4">
+                      <div className="d-flex justify-content-between align-items-start mb-4">
+                        <div className="d-flex align-items-center">
+                          <Badge
+                            bg="none"
+                            className="me-3 fw-bold border-0 leave-policy-badge-code"
+                            style={{
+                              backgroundColor: 'rgba(30, 168, 231, 0.1)',
+                              color: '#1ea8e7',
+                            }}
+                          >
+                            {lt.short_code}
+                          </Badge>
+                          <span className="text-dark leave-policy-title">{lt.name}</span>
+                        </div>
+                        <div className="d-flex align-items-center gap-1">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            className="btn-icon btn-icon-only rounded-circle shadow-sm me-1"
+                            onClick={() => handleShowModal(idx)}
+                            title="Edit Leave Type"
+                          >
+                            <CsLineIcons icon="edit" size="14" />
+                          </Button>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            className="btn-icon btn-icon-only rounded-circle shadow-sm"
+                            onClick={() => confirmDeleteLeaveType(idx)}
+                            title="Delete Leave Type"
+                          >
+                            <CsLineIcons icon="bin" size="14" />
+                          </Button>
+                        </div>
+                      </div>
 
-                  <div className="leave-policy-data-row">
-                    <span className="text-muted fw-bold small">Total Days / Year:</span>
-                    <span className="fw-bold text-dark">{lt.days_per_year} Days</span>
-                  </div>
+                      <div className="leave-policy-data-row">
+                        <span className="text-muted fw-bold small">Total Days / Year:</span>
+                        <span className="fw-bold text-dark">{lt.days_per_year} Days</span>
+                      </div>
 
-                  <div className="leave-policy-data-row align-items-center">
-                    <span className="text-muted fw-bold small">Type:</span>
-                    <span>
-                      {lt.is_paid ? (
-                        <Badge
-                          bg="none"
-                          style={{
-                            backgroundColor: 'rgba(16, 185, 129, 0.08)',
-                            color: '#10b981',
-                            border: '1px solid rgba(16, 185, 129, 0.15)',
-                            borderRadius: '50px',
-                            padding: '0.35rem 0.75rem',
-                            fontWeight: '700',
-                          }}
-                        >
-                          Paid Leave
-                        </Badge>
-                      ) : (
-                        <Badge
-                          bg="none"
-                          style={{
-                            backgroundColor: 'rgba(245, 158, 11, 0.08)',
-                            color: '#d97706',
-                            border: '1px solid rgba(245, 158, 11, 0.15)',
-                            borderRadius: '50px',
-                            padding: '0.35rem 0.75rem',
-                            fontWeight: '700',
-                          }}
-                        >
-                          Unpaid
-                        </Badge>
-                      )}
-                    </span>
-                  </div>
+                      <div className="leave-policy-data-row align-items-center">
+                        <span className="text-muted fw-bold small">Type:</span>
+                        <span>
+                          {lt.is_paid ? (
+                            <Badge
+                              bg="none"
+                              style={{
+                                backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                                color: '#10b981',
+                                border: '1px solid rgba(16, 185, 129, 0.15)',
+                                borderRadius: '50px',
+                                padding: '0.35rem 0.75rem',
+                                fontWeight: '700',
+                              }}
+                            >
+                              Paid Leave
+                            </Badge>
+                          ) : (
+                            <Badge
+                              bg="none"
+                              style={{
+                                backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                                color: '#d97706',
+                                border: '1px solid rgba(245, 158, 11, 0.15)',
+                                borderRadius: '50px',
+                                padding: '0.35rem 0.75rem',
+                                fontWeight: '700',
+                              }}
+                            >
+                              Unpaid
+                            </Badge>
+                          )}
+                        </span>
+                      </div>
 
-                  <div className="leave-policy-data-row">
-                    <span className="text-muted fw-bold small">Accrual Method:</span>
-                    <span className="text-capitalize fw-bold text-dark">{lt.accrual_type}</span>
-                  </div>
+                      <div className="leave-policy-data-row">
+                        <span className="text-muted fw-bold small">Leave Cycle:</span>
+                        <span className="fw-bold text-dark">
+                          {lt.leave_cycle_start === 'april' ? 'April (Apr - Mar)' : 'January (Jan - Dec)'}
+                        </span>
+                      </div>
 
-                  <div className="leave-policy-data-row">
-                    <span className="text-muted fw-bold small">Carry Forward:</span>
-                    <span className="fw-bold text-dark">
-                      {lt.carry_forward ? (
-                        <Badge
-                          bg="none"
-                          style={{
-                            backgroundColor: 'rgba(30, 168, 231, 0.08)',
-                            color: '#1ea8e7',
-                            border: '1px solid rgba(30, 168, 231, 0.15)',
-                            borderRadius: '50px',
-                            padding: '0.35rem 0.75rem',
-                            fontWeight: '700',
-                          }}
-                        >
-                          Max: {lt.max_carry_forward}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted fw-medium">Disabled</span>
-                      )}
-                    </span>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-          {leaveTypes.length === 0 && (
-            <Col xs="12">
-              <Card className="leave-policy-glass-card text-center py-5 border-0 shadow-sm">
-                <Card.Body className="text-muted py-5">
-                  <CsLineIcons icon="book-open" size="48" className="text-muted opacity-50 mb-3" />
-                  <h5 className="fw-bold mt-2">No Leave Types Configured</h5>
-                  <p className="small mb-0">Click 'Add Leave Type' to configure leave structure for your team.</p>
-                </Card.Body>
-              </Card>
-            </Col>
+                      <div className="leave-policy-data-row">
+                        <span className="text-muted fw-bold small">Accrual Method:</span>
+                        <span className="text-capitalize fw-bold text-dark">{lt.accrual_type}</span>
+                      </div>
+
+                      <div className="leave-policy-data-row">
+                        <span className="text-muted fw-bold small">Carry Forward:</span>
+                        <span className="fw-bold text-dark">
+                          {lt.carry_forward ? (
+                            <Badge
+                              bg="none"
+                              style={{
+                                backgroundColor: 'rgba(30, 168, 231, 0.08)',
+                                color: '#1ea8e7',
+                                border: '1px solid rgba(30, 168, 231, 0.15)',
+                                borderRadius: '50px',
+                                padding: '0.35rem 0.75rem',
+                                fontWeight: '700',
+                              }}
+                            >
+                              Max: {lt.max_carry_forward}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted fw-medium">Disabled</span>
+                          )}
+                        </span>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+              {leaveTypes.length === 0 && (
+                <Col xs="12">
+                  <Card className="leave-policy-glass-card text-center py-5 border-0 shadow-sm">
+                    <Card.Body className="text-muted py-5">
+                      <CsLineIcons icon="book-open" size="48" className="text-muted opacity-50 mb-3" />
+                      <h5 className="fw-bold mt-2">No Leave Types Configured</h5>
+                      <p className="small mb-0">Click 'Add Leave Type' to configure leave structure for your team.</p>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              )}
+            </Row>
           )}
-        </Row>
-      )}
 
       <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg" className="leave-policy-modal">
         <Form onSubmit={handleModalSubmit}>
@@ -493,14 +491,13 @@ const LeavePolicy = () => {
               </Col>
               <Col md="6" className="mb-3">
                 <Form.Group>
-                  <Form.Label className="small fw-bold text-muted text-uppercase ms-1 mb-2">Color Code (UI)</Form.Label>
-                  <Form.Control
-                    type="color"
-                    value={form.color}
-                    onChange={(e) => setForm({ ...form, color: e.target.value })}
-                    title="Choose your color"
-                    className="leave-policy-input"
-                    style={{ height: '44px', cursor: 'pointer', padding: '0.35rem 0.75rem' }}
+                  <Form.Label className="small fw-bold text-muted text-uppercase ms-1 mb-2">Leave Cycle</Form.Label>
+                  <Select
+                    classNamePrefix="react-select"
+                    options={leaveCycleOptions}
+                    value={leaveCycleOptions.find(opt => opt.value === (form.leave_cycle_start || 'january'))}
+                    onChange={(selected) => setForm({ ...form, leave_cycle_start: selected ? selected.value : 'january' })}
+                    placeholder="Select Leave Cycle"
                   />
                 </Form.Group>
               </Col>
@@ -544,7 +541,7 @@ const LeavePolicy = () => {
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onHide={() => !deleting && setShowDeleteModal(false)} centered size="sm">
         <Modal.Body className="p-4 text-center">
-          <div 
+          <div
             className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
             style={{ width: '56px', height: '56px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
           >
@@ -555,18 +552,18 @@ const LeavePolicy = () => {
             Are you sure you want to delete <strong className="text-dark">{indexToDelete !== null && leaveTypes[indexToDelete]?.name}</strong>? Active leave requests may be affected.
           </p>
           <div className="d-flex justify-content-center gap-2">
-            <Button 
-              variant="light" 
-              className="rounded-pill px-4 fw-bold border" 
-              onClick={() => setShowDeleteModal(false)} 
+            <Button
+              variant="light"
+              className="rounded-pill px-4 fw-bold border"
+              onClick={() => setShowDeleteModal(false)}
               disabled={deleting}
             >
               Cancel
             </Button>
-            <Button 
-              variant="danger" 
-              className="rounded-pill px-4 fw-bold shadow-sm" 
-              onClick={handleConfirmDelete} 
+            <Button
+              variant="danger"
+              className="rounded-pill px-4 fw-bold shadow-sm"
+              onClick={handleConfirmDelete}
               disabled={deleting}
             >
               {deleting ? <Spinner size="sm" animation="border" /> : 'Delete'}

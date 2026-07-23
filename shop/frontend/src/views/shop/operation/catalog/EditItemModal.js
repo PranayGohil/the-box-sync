@@ -472,9 +472,10 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                     <thead>
                       <tr className="border-bottom" style={{ color: '#64748b', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
                         <th className="pb-2 text-uppercase">{variantLabel}</th>
-                        <th className="pb-2 text-uppercase" width="140">Price (₹)</th>
-                        <th className="pb-2 text-uppercase" width="200">Extra Details</th>
-                        <th className="pb-2 text-uppercase" width="280">Barcode</th>
+                        <th className="pb-2 text-uppercase" width="130">Price (₹)</th>
+                        <th className="pb-2 text-uppercase" width="130">Stock Qty</th>
+                        <th className="pb-2 text-uppercase" width="180">Extra Details</th>
+                        <th className="pb-2 text-uppercase" width="240">Barcode</th>
                         <th className="pb-2 text-uppercase text-center" width="60" />
                       </tr>
                     </thead>
@@ -510,6 +511,17 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                             {formik.errors.variants?.[vIdx]?.price && (
                               <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>
                             )}
+                          </td>
+                          <td className="py-3">
+                            <Form.Control
+                              type="number"
+                              name={`variants[${vIdx}].stock_quantity`}
+                              value={variant.stock_quantity ?? ''}
+                              onChange={formik.handleChange}
+                              placeholder="Qty"
+                              className="pill-input"
+                              style={{ height: '38px', borderRadius: '10px' }}
+                            />
                           </td>
                           <td className="py-3">
                             <CreatableSelect

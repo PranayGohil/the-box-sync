@@ -80,6 +80,8 @@ const addCatalog = async (req, res) => {
           Array.isArray(parsedVariants) && parsedVariants[0]
             ? Number(parsedVariants[0].price)
             : Number(item.item_price || 0),
+        stock_quantity: item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : null,
+        initial_stock: item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : 0,
         has_variants:
           Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
         variants: Array.isArray(parsedVariants)
@@ -89,6 +91,8 @@ const addCatalog = async (req, res) => {
             extra: v.extra,
             barcode: v.barcode || null,
             is_available: v.is_available !== false,
+            stock_quantity: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : null,
+            initial_stock: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : 0,
           }))
           : undefined,
         addons: Array.isArray(parsedAddons)
@@ -498,6 +502,10 @@ const updateCatalog = async (req, res) => {
         is_available !== undefined
           ? typeof is_available === "string" ? is_available === "true" : !!is_available
           : currentDishObj.is_available,
+      stock_quantity:
+        req.body.stock_quantity !== undefined && req.body.stock_quantity !== "" && req.body.stock_quantity !== null
+          ? Number(req.body.stock_quantity)
+          : currentDishObj.stock_quantity,
       has_variants:
         Array.isArray(parsedVariants) ? parsedVariants.length > 1 : currentDishObj.has_variants,
       variants: Array.isArray(parsedVariants)
@@ -507,6 +515,8 @@ const updateCatalog = async (req, res) => {
           extra: v.extra,
           barcode: v.barcode || null,
           is_available: v.is_available !== false,
+          stock_quantity: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : null,
+          initial_stock: v.initial_stock != null ? Number(v.initial_stock) : 0,
         }))
         : currentDishObj.variants,
       addons: Array.isArray(parsedAddons)
@@ -618,6 +628,145 @@ const deleteCatalog = async (req, res) => {
   }
 };
 
+const StockSalesLog = require("../models/stockSalesLogModel");
+
+const deductStockForOrderItems = async (userId, orderItems, orderId, orderType = "Sale") => {
+  if (!userId || !Array.isArray(orderItems) || orderItems.length === 0) return;
+
+  try {
+    const catalogs = await Catalog.find({ user_id: userId });
+
+    for (const orderItem of orderItems) {
+      const itemName = orderItem.item_name || orderItem.name;
+      const orderedQty = Number(orderItem.quantity || orderItem.qty || 1);
+      const selectedVariant = orderItem.selected_variant ? (orderItem.selected_variant.size_name || orderItem.selected_variant.name || orderItem.selected_variant) : null;
+
+      if (!itemName || orderedQty <= 0) continue;
+
+      for (const catalogDoc of catalogs) {
+        let modified = false;
+        for (const item of catalogDoc.items) {
+          if (item.item_name?.trim().toLowerCase() === itemName.trim().toLowerCase()) {
+            if (selectedVariant && Array.isArray(item.variants) && item.variants.length > 0) {
+              const variant = item.variants.find(
+                (v) => v.size_name?.trim().toLowerCase() === String(selectedVariant).trim().toLowerCase()
+              );
+              if (variant && variant.stock_quantity !== null && variant.stock_quantity !== undefined) {
+                variant.stock_quantity = Math.max(0, variant.stock_quantity - orderedQty);
+                if (variant.stock_quantity === 0) {
+                  variant.is_available = false;
+                }
+                modified = true;
+
+                await StockSalesLog.create({
+                  user_id: String(userId),
+                  item_id: String(item._id),
+                  item_name: item.item_name,
+                  variant_name: variant.size_name,
+                  category: catalogDoc.category,
+                  type: 'Sale',
+                  quantity_changed: -orderedQty,
+                  balance_stock: variant.stock_quantity,
+                  order_id: orderId || null,
+                  order_type: orderType,
+                  remarks: `Sold via ${orderType}`
+                });
+              }
+            } else if (item.stock_quantity !== null && item.stock_quantity !== undefined) {
+              item.stock_quantity = Math.max(0, item.stock_quantity - orderedQty);
+              if (item.stock_quantity === 0) {
+                item.is_available = false;
+              }
+              modified = true;
+
+              await StockSalesLog.create({
+                user_id: String(userId),
+                item_id: String(item._id),
+                item_name: item.item_name,
+                variant_name: '',
+                category: catalogDoc.category,
+                type: 'Sale',
+                quantity_changed: -orderedQty,
+                balance_stock: item.stock_quantity,
+                order_id: orderId || null,
+                order_type: orderType,
+                remarks: `Sold via ${orderType}`
+              });
+            }
+          }
+        }
+
+        if (modified) {
+          await catalogDoc.save();
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error deducting stock for order items:", err);
+  }
+};
+
+const getStockSalesStatement = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const catalogs = await Catalog.find({ user_id: userId }).lean();
+    const logs = await StockSalesLog.find({ user_id: userId }).sort({ createdAt: -1 }).lean();
+
+    const statement = [];
+
+    catalogs.forEach((cat) => {
+      (cat.items || []).forEach((item) => {
+        if (item.has_variants && Array.isArray(item.variants) && item.variants.length > 0) {
+          item.variants.forEach((v) => {
+            const itemLogs = logs.filter(
+              (l) => l.item_name === item.item_name && l.variant_name === v.size_name
+            );
+            const totalSold = itemLogs
+              .filter((l) => l.type === 'Sale')
+              .reduce((sum, l) => sum + Math.abs(l.quantity_changed), 0);
+
+            statement.push({
+              _id: `${item._id}_${v.size_name}`,
+              item_id: item._id,
+              item_name: item.item_name,
+              variant_name: v.size_name,
+              category: cat.category,
+              initial_stock: v.initial_stock || (v.stock_quantity != null ? v.stock_quantity + totalSold : 'Unlimited'),
+              current_stock: v.stock_quantity != null ? v.stock_quantity : 'Unlimited',
+              total_sold: totalSold,
+              status: v.stock_quantity === 0 ? 'Out of Stock' : (v.stock_quantity != null && v.stock_quantity <= 5 ? 'Low Stock' : 'In Stock')
+            });
+          });
+        } else {
+          const itemLogs = logs.filter(
+            (l) => l.item_name === item.item_name && (!l.variant_name || l.variant_name === '')
+          );
+          const totalSold = itemLogs
+            .filter((l) => l.type === 'Sale')
+            .reduce((sum, l) => sum + Math.abs(l.quantity_changed), 0);
+
+          statement.push({
+            _id: String(item._id),
+            item_id: item._id,
+            item_name: item.item_name,
+            variant_name: '',
+            category: cat.category,
+            initial_stock: item.initial_stock || (item.stock_quantity != null ? item.stock_quantity + totalSold : 'Unlimited'),
+            current_stock: item.stock_quantity != null ? item.stock_quantity : 'Unlimited',
+            total_sold: totalSold,
+            status: item.stock_quantity === 0 ? 'Out of Stock' : (item.stock_quantity != null && item.stock_quantity <= 5 ? 'Low Stock' : 'In Stock')
+          });
+        }
+      });
+    });
+
+    res.status(200).json({ success: true, data: statement, logs });
+  } catch (err) {
+    console.error("Error fetching stock sales statement:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   addCatalog,
   getCatalogData,
@@ -631,4 +780,6 @@ module.exports = {
   updateCatalogCategoryAndType,
   updateCatalog,
   deleteCatalog,
+  deductStockForOrderItems,
+  getStockSalesStatement,
 };
