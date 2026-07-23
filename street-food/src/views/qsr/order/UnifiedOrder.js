@@ -402,8 +402,7 @@ const UnifiedOrder = () => {
   };
 
   // Guard: only run after initial data is loaded
-  
-  
+
   useEffect(() => {
     axios
       .get(`${process.env.REACT_APP_API}/loyalty/settings`, {
@@ -496,10 +495,10 @@ const UnifiedOrder = () => {
       e.returnValue = '';
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
-      const pointsRate = loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1;
-  const pointsDiscountAmount = isRedeeming ? Math.round(redeemPoints * pointsRate) : 0;
+    const pointsRate = loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1;
+    const pointsDiscountAmount = isRedeeming ? Math.round(redeemPoints * pointsRate) : 0;
 
-  return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty, orderNo]);
 
   useEffect(() => {
@@ -557,7 +556,7 @@ const UnifiedOrder = () => {
   };
 
   // ── Validation ────────────────────────────────────────────────────────────
-  
+
   const handleApplyPromo = async () => {
     if (!promoInput) return;
     setIsApplyingPromo(true);
@@ -592,7 +591,7 @@ const UnifiedOrder = () => {
             discountAmount: discountAmount.toFixed(2),
             total: total.toFixed(2),
             paidAmount: total.toFixed(2),
-            waveoffAmount: '0.00'
+            waveoffAmount: '0.00',
           };
         });
         setPromoInput(''); // clear input
@@ -624,12 +623,12 @@ const UnifiedOrder = () => {
         discountAmount: '0.00',
         total: total.toFixed(2),
         paidAmount: total.toFixed(2),
-        waveoffAmount: '0.00'
+        waveoffAmount: '0.00',
       };
     });
   };
-  
-const validateOrder = () => {
+
+  const validateOrder = () => {
     if (orderItems.length === 0) {
       alert('Please add items to the order');
       return false;
@@ -653,9 +652,9 @@ const validateOrder = () => {
 
   // ── Payload Builder ───────────────────────────────────────────────────────
   const pointsRate = loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1;
-    const pointsDiscountAmount = isRedeeming ? Math.round(redeemPoints * pointsRate) : 0;
+  const pointsDiscountAmount = isRedeeming ? Math.round(redeemPoints * pointsRate) : 0;
 
-    const buildPayload = (status, completeAll = false) => {
+  const buildPayload = (status, completeAll = false) => {
     const orderData = {
       order_type: orderType,
       order_date: orderDate ? new Date(orderDate) : new Date(),
@@ -988,25 +987,27 @@ const validateOrder = () => {
       <HtmlHead title={title} description={description} />
 
       {/* POS Wrapper */}
-      <div className="pos-wrapper">
+      <div className="pos-wrapper" style={{ height: '100vh', margin: 0 }}>
         {/* Top Bar */}
         <div className="pos-topbar d-flex align-items-center px-3 py-2 border-bottom" style={{ gap: '15px', background: '#fff' }}>
-          <Button 
-            variant="outline-info" 
-            className="rounded-pill d-flex align-items-center px-3 py-1 text-decoration-none" 
-          onClick={() => history.push(backPath)}
+          <Button
+            variant="outline-info"
+            className="rounded-pill d-flex align-items-center px-3 py-1 text-decoration-none"
+            onClick={() => history.push(backPath)}
             style={{ fontWeight: 600, fontSize: '0.9rem', borderColor: '#23b3f4', color: '#23b3f4' }}
           >
             <CsLineIcons icon="arrow-left" size="15" className="me-2" />
             Back
           </Button>
-          
+
           <div className="fs-4 fw-bold" style={{ color: '#23b3f4' }}>
             {orderId ? 'Edit' : 'New'} Order
           </div>
-          
+
           <div className="d-flex align-items-center ms-auto" style={{ gap: '10px' }}>
-            <span className="text-muted fw-semibold" style={{ fontSize: '13px' }}>Date:</span>
+            <span className="text-muted fw-semibold" style={{ fontSize: '13px' }}>
+              Date:
+            </span>
             <div style={{ width: '200px' }}>
               <DatePicker
                 showTimeSelect
@@ -1029,7 +1030,7 @@ const validateOrder = () => {
                   fontWeight: 700,
                   fontSize: '12px',
                   flexShrink: 0,
-                  marginLeft: '10px'
+                  marginLeft: '10px',
                 }}
               >
                 Token #{tokenNumber}
@@ -1074,9 +1075,9 @@ const validateOrder = () => {
                     disabled={isApplyingPromo}
                     style={{ fontSize: '11px', textTransform: 'uppercase' }}
                   />
-                  <Button 
-                    size="sm" 
-                    variant="outline-primary" 
+                  <Button
+                    size="sm"
+                    variant="outline-primary"
                     onClick={handleApplyPromo}
                     disabled={isApplyingPromo || !promoInput}
                     style={{ fontSize: '11px', padding: '0.2rem 0.75rem', fontWeight: 600 }}
@@ -1085,17 +1086,30 @@ const validateOrder = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="d-flex justify-content-between align-items-center rounded p-1 px-2" style={{ background: '#dcfce7', border: '1px solid #22c55e' }}>
+                <div
+                  className="d-flex justify-content-between align-items-center rounded p-1 px-2"
+                  style={{ background: '#dcfce7', border: '1px solid #22c55e' }}
+                >
                   <div className="d-flex align-items-center gap-2">
                     <span style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a' }}>
                       <CsLineIcons icon="tag" size="12" className="me-1" />
                       {paymentData.appliedPromo.code}
                     </span>
                     <span style={{ fontSize: '10px', color: '#15803d', fontWeight: 600 }}>
-                      {paymentData.appliedPromo.discountType === 'bogo' ? '(BOGO)' : paymentData.appliedPromo.discountType === 'free_item' ? '(FREE ITEM)' : '(APPLIED)'}
+                      {paymentData.appliedPromo.discountType === 'bogo'
+                        ? '(BOGO)'
+                        : paymentData.appliedPromo.discountType === 'free_item'
+                        ? '(FREE ITEM)'
+                        : '(APPLIED)'}
                     </span>
                   </div>
-                  <Button variant="link" size="sm" className="p-0 text-danger" onClick={handleRemovePromo} style={{ textDecoration: 'none', fontWeight: 700, fontSize: '11px' }}>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="p-0 text-danger"
+                    onClick={handleRemovePromo}
+                    style={{ textDecoration: 'none', fontWeight: 700, fontSize: '11px' }}
+                  >
                     Remove
                   </Button>
                 </div>
@@ -1112,61 +1126,59 @@ const validateOrder = () => {
                 visibleFields={visibleFields}
                 requiredFields={requiredFields}
               />
-        {loyaltyProfile && (
-          <div
-            className="my-2 p-2 rounded"
-            style={{
-              background: 'rgba(35,179,244,0.06)',
-              border: '1px dashed rgba(35,179,244,0.3)',
-              fontSize: '12px',
-              color: '#1e293b',
-              textAlign: 'left',
-            }}
-          >
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="fw-bold text-muted">CRM Insights:</span>
-              <span className="badge bg-info">{loyaltyProfile.customer.loyalty_points || 0} pts available</span>
-            </div>
-            <div className="d-flex justify-content-between mb-1 text-muted">
-              <span>
-                Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong>
-              </span>
-              <span>
-                Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong>
-              </span>
-            </div>
-
-            {loyaltyProfile.customer.loyalty_points > 0 && (
-              <div className="d-flex align-items-center mt-1 border-top pt-1 justify-content-between">
-                <Form.Check
-                  type="checkbox"
-                  id={`redeem-loyalty-check-${Math.random()}`}
-                  label="Redeem points for discount"
-                  checked={isRedeeming}
-                  onChange={(e) => {
-                    setIsRedeeming(e.target.checked);
-                    if (e.target.checked) {
-                      setRedeemPoints(loyaltyProfile.customer.loyalty_points);
-                    } else {
-                      setRedeemPoints(0);
-                    }
+              {loyaltyProfile && (
+                <div
+                  className="my-2 p-2 rounded"
+                  style={{
+                    background: 'rgba(35,179,244,0.06)',
+                    border: '1px dashed rgba(35,179,244,0.3)',
+                    fontSize: '12px',
+                    color: '#1e293b',
+                    textAlign: 'left',
                   }}
-                  className="m-0 fw-semibold"
-                  style={{ fontSize: '12px' }}
-                />
-                {isRedeeming && (
-                  <span className="fw-bold text-success">
-                    -₹{Math.round(redeemPoints * (loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1))} off
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-  
+                >
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <span className="fw-bold text-muted">CRM Insights:</span>
+                    <span className="badge bg-info">{loyaltyProfile.customer.loyalty_points || 0} pts available</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-1 text-muted">
+                    <span>
+                      Visits: <strong>{loyaltyProfile.customer.visit_count || 0}</strong>
+                    </span>
+                    <span>
+                      Spend: <strong>₹{(loyaltyProfile.customer.total_spend || 0).toLocaleString()}</strong>
+                    </span>
+                  </div>
+
+                  {loyaltyProfile.customer.loyalty_points > 0 && (
+                    <div className="d-flex align-items-center mt-1 border-top pt-1 justify-content-between">
+                      <Form.Check
+                        type="checkbox"
+                        id={`redeem-loyalty-check-${Math.random()}`}
+                        label="Redeem points for discount"
+                        checked={isRedeeming}
+                        onChange={(e) => {
+                          setIsRedeeming(e.target.checked);
+                          if (e.target.checked) {
+                            setRedeemPoints(loyaltyProfile.customer.loyalty_points);
+                          } else {
+                            setRedeemPoints(0);
+                          }
+                        }}
+                        className="m-0 fw-semibold"
+                        style={{ fontSize: '12px' }}
+                      />
+                      {isRedeeming && (
+                        <span className="fw-bold text-success">
+                          -₹{Math.round(redeemPoints * (loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1))} off
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            
             <div className="pos-cart-section">
               <OrderCartTable orderItems={orderItems} updateItemQuantity={updateItemQuantity} removeItem={removeItem} />
             </div>
@@ -1179,11 +1191,11 @@ const validateOrder = () => {
                 isLoading={isLoading}
                 printing={printing}
                 paymentData={{
-          ...paymentData,
-          discountAmount: parseFloat(paymentData.discountAmount || 0) + (pointsDiscountAmount || 0),
-          total: Math.max(0, parseFloat(paymentData.total || 0) - (pointsDiscountAmount || 0)),
-          paidAmount: Math.max(0, parseFloat(paymentData.total || 0) - (pointsDiscountAmount || 0)),
-        }}
+                  ...paymentData,
+                  discountAmount: parseFloat(paymentData.discountAmount || 0) + (pointsDiscountAmount || 0),
+                  total: Math.max(0, parseFloat(paymentData.total || 0) - (pointsDiscountAmount || 0)),
+                  paidAmount: Math.max(0, parseFloat(paymentData.total || 0) - (pointsDiscountAmount || 0)),
+                }}
                 orderId={orderId}
                 handleSaveOrder={handleSaveOrder}
                 handleOpenPaymentModal={handleOpenPaymentModal}
@@ -1345,14 +1357,17 @@ const validateOrder = () => {
             )}
           </div>
         )}
-  
       </BottomCartSheet>
-      <MobileCartBar orderItems={orderItems} paymentData={{
+      <MobileCartBar
+        orderItems={orderItems}
+        paymentData={{
           ...paymentData,
           discountAmount: parseFloat(paymentData.discountAmount || 0) + (pointsDiscountAmount || 0),
           total: Math.max(0, parseFloat(paymentData.total || 0) - (pointsDiscountAmount || 0)),
           paidAmount: Math.max(0, parseFloat(paymentData.total || 0) - (pointsDiscountAmount || 0)),
-        }} setShowCartSheet={setShowCartSheet} />
+        }}
+        setShowCartSheet={setShowCartSheet}
+      />
     </>
   );
 };

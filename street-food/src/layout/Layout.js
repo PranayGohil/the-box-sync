@@ -10,16 +10,25 @@ const Layout = ({ children }) => {
   useLayout();
 
   const { pathname } = useLocation();
-  const isOrderPage = ['/order/dine-in', '/order/takeaway', '/order/delivery', '/order/qsr-pos', '/order/new'].some(p => pathname.includes(p));
+  const isOrderPage = ['/order/dine-in', '/order/takeaway', '/order/delivery', '/order/qsr-pos', '/order/new'].some((p) => pathname.includes(p));
 
   useEffect(() => {
     document.documentElement.click();
     window.scrollTo(0, 0);
     // eslint-disable-next-line
     }, [pathname]);
+
+  if (isOrderPage) {
+    return (
+      <div className="w-100 h-100 overflow-hidden" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        {children}
+      </div>
+    );
+  }
+
   return (
     <>
-      {!isOrderPage && <Nav />}
+      <Nav />
       <main>
         <Container fluid>
           <Row className="h-100">
