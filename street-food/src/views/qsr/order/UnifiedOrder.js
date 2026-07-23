@@ -989,26 +989,29 @@ const UnifiedOrder = () => {
       {/* POS Wrapper */}
       <div className="pos-wrapper" style={{ height: '100vh', margin: 0 }}>
         {/* Top Bar */}
-        <div className="pos-topbar d-flex align-items-center px-3 py-2 border-bottom" style={{ gap: '15px', background: '#fff' }}>
+        <div
+          className="pos-topbar d-flex align-items-center px-3 py-2 border-bottom flex-nowrap"
+          style={{ gap: '15px', background: '#fff', flexWrap: 'nowrap' }}
+        >
           <Button
             variant="outline-info"
-            className="rounded-pill d-flex align-items-center px-3 py-1 text-decoration-none"
+            className="rounded-pill d-flex align-items-center px-2 px-sm-3 py-1 text-decoration-none"
             onClick={() => history.push(backPath)}
             style={{ fontWeight: 600, fontSize: '0.9rem', borderColor: '#23b3f4', color: '#23b3f4' }}
           >
-            <CsLineIcons icon="arrow-left" size="15" className="me-2" />
-            Back
+            <CsLineIcons icon="arrow-left" size="15" className="me-sm-2" />
+            <span className="d-none d-sm-inline">Back</span>
           </Button>
 
-          <div className="fs-4 fw-bold" style={{ color: '#23b3f4' }}>
+          <div className="fs-5 fs-sm-4 fw-bold text-nowrap" style={{ color: '#23b3f4' }}>
             {orderId ? 'Edit' : 'New'} Order
           </div>
 
           <div className="d-flex align-items-center ms-auto" style={{ gap: '10px' }}>
-            <span className="text-muted fw-semibold" style={{ fontSize: '13px' }}>
+            <span className="text-muted fw-semibold d-none d-sm-inline" style={{ fontSize: '13px' }}>
               Date:
             </span>
-            <div style={{ width: '200px' }}>
+            <div className="pos-datepicker-container">
               <DatePicker
                 showTimeSelect
                 timeFormat="hh:mm a"
