@@ -120,7 +120,10 @@ const BottomNav = () => {
             }
             if (item.to === '/operations/manage-menu') {
               return (
-                pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu')
+                pathname.startsWith('/operations/manage-menu') ||
+                pathname.startsWith('/operations/add-dish') ||
+                pathname.startsWith('/operations/qr-for-menu') ||
+                pathname.startsWith('/operations/qr-for-order')
               );
             }
             if (item.to === '/operations/inventory-history') {

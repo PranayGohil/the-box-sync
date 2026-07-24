@@ -16,6 +16,7 @@ const {
   manualSubscribe
 } = require("../controllers/subscriptionController");
 const adminAuth = require("../middlewares/adminAuth");
+const superAdminAuth = require("../middlewares/superAdminAuth");
 const validate = require("../middlewares/validate");
 const {
   addSubscriptionPlanSchema,
@@ -75,6 +76,6 @@ subscriptionRouter
 
 subscriptionRouter
   .route("/manual-subscribe")
-  .post(authMiddleware, adminAuth, manualSubscribe);
+  .post(superAdminAuth, manualSubscribe);
 
 module.exports = subscriptionRouter;

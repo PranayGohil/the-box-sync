@@ -158,7 +158,11 @@ const MobileBottomNav = () => {
           if (item.label === 'Order') {
             isActive = pathname.startsWith('/operations/order-history') || pathname.startsWith('/operations/order-details');
           } else if (item.label === 'Menu') {
-            isActive = pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
+            isActive =
+              pathname.startsWith('/operations/manage-menu') ||
+              pathname.startsWith('/operations/add-dish') ||
+              pathname.startsWith('/operations/qr-for-menu') ||
+              pathname.startsWith('/operations/qr-for-order');
           } else if (item.label === 'Customers') {
             isActive = pathname.startsWith('/crm/whatsapp') || pathname.startsWith('/crm/customers/');
           } else {

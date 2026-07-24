@@ -82,7 +82,7 @@ const UserDetails = () => {
       setSubscriptions(response.data.subscriptions);
 
       const plansRes = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/subscription/get-plans`,
+        `${process.env.REACT_APP_API_URL}/api/subscription/get-plans?userId=${id}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       setAllPlans(plansRes.data.data || []);
@@ -278,7 +278,7 @@ const UserDetails = () => {
     </div>
   ));
 
-  const CORE_PLAN_NAMES = ["street food", "qsr", "dine in", "cloud kitchen", "chain"];
+  const CORE_PLAN_NAMES = ["street food", "qsr", "dine in", "cloud kitchen", "chain", "basic plan"];
   const corePlans = subscriptions.filter(sub => sub.plan_name && CORE_PLAN_NAMES.some(cp => sub.plan_name.toLowerCase().includes(cp)));
 
   const activeCorePlan = corePlans.find(sub => sub.status === "active") || corePlans[0];
@@ -510,16 +510,14 @@ const UserDetails = () => {
               <Card.Body className="p-4">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3 gap-md-0">
                   <h5 className="fw-bold mb-0">Active Subscriptions</h5>
-                  {!isStreetFood && !isShop && (
-                    <div className="d-flex gap-2">
-                      <button type="button" className="btn btn-outline-warning rounded-pill fw-bold" style={{ height: "32px", display: "flex", alignItems: "center", fontSize: "0.85rem" }} disabled={!selectedSubs.length} onClick={() => setShowBlockModal(true)}>
-                        <CsLineIcons icon="lock-off" size="14" className="me-1" /> Block Selected
-                      </button>
-                      <button type="button" className="btn btn-outline-info rounded-pill fw-bold" style={{ height: "32px", display: "flex", alignItems: "center", fontSize: "0.85rem" }} disabled={!selectedSubs.length} onClick={() => setShowExpandModal(true)}>
-                        <CsLineIcons icon="expand" size="14" className="me-1" /> Extend
-                      </button>
-                    </div>
-                  )}
+                  <div className="d-flex gap-2">
+                    <button type="button" className="btn btn-outline-warning rounded-pill fw-bold" style={{ height: "32px", display: "flex", alignItems: "center", fontSize: "0.85rem" }} disabled={!selectedSubs.length} onClick={() => setShowBlockModal(true)}>
+                      <CsLineIcons icon="lock-off" size="14" className="me-1" /> Block Selected
+                    </button>
+                    <button type="button" className="btn btn-outline-info rounded-pill fw-bold" style={{ height: "32px", display: "flex", alignItems: "center", fontSize: "0.85rem" }} disabled={!selectedSubs.length} onClick={() => setShowExpandModal(true)}>
+                      <CsLineIcons icon="expand" size="14" className="me-1" /> Extend
+                    </button>
+                  </div>
                 </div>
 
                 {/* Main Core Plan Highlight */}
@@ -555,49 +553,49 @@ const UserDetails = () => {
                   </div>
                 ) : null}
 
-                {!isStreetFood && !isShop && (
-                  <>
-                    <div className="d-none d-lg-block">
-                      {addOns.length > 0 && (
-                        <h6 className="text-muted fw-bold mb-3 text-uppercase" style={{ letterSpacing: "1px", fontSize: "0.8rem" }}>Add-on Features</h6>
-                      )}
-                      <Table responsive className="react-table align-middle">
-                        <thead>
-                          <tr>
-                            <th style={{ width: "40px" }}>
-                              <Form.Check type="checkbox" onChange={(e) => setSelectedSubs(e.target.checked ? subscriptions.map((s) => s._id) : [])} checked={selectedSubs.length === subscriptions.length && subscriptions.length > 0} />
-                            </th>
-                            <th>Plan Name</th>
-                            <th>Price</th>
-                            <th>Valid Until</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
+                {/* {!isStreetFood && !isShop && ( */}
+                <>
+                  <div className="d-none d-lg-block">
+                    {addOns.length > 0 && (
+                      <h6 className="text-muted fw-bold mb-3 text-uppercase" style={{ letterSpacing: "1px", fontSize: "0.8rem" }}>Add-on Features</h6>
+                    )}
+                    <Table responsive className="react-table align-middle">
+                      <thead>
+                        <tr>
+                          <th style={{ width: "40px" }}>
+                            <Form.Check type="checkbox" onChange={(e) => setSelectedSubs(e.target.checked ? subscriptions.map((s) => s._id) : [])} checked={selectedSubs.length === subscriptions.length && subscriptions.length > 0} />
+                          </th>
+                          <th>Plan Name</th>
+                          <th>Price</th>
+                          <th>Valid Until</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
 
 
-                          {/* ADD ONS SECTION */}
-                          {addOns.map(renderSubscriptionRow)}
+                        {/* ADD ONS SECTION */}
+                        {addOns.map(renderSubscriptionRow)}
 
-                          {subscriptions.length === 0 && (
-                            <tr><td colSpan="5" className="text-center text-muted py-4">No subscriptions found</td></tr>
-                          )}
-                        </tbody>
-                      </Table>
-                    </div>
+                        {subscriptions.length === 0 && (
+                          <tr><td colSpan="5" className="text-center text-muted py-4">No subscriptions found</td></tr>
+                        )}
+                      </tbody>
+                    </Table>
+                  </div>
 
-                    <div className="d-block d-lg-none">
+                  <div className="d-block d-lg-none">
 
 
-                      {addOns.length > 0 && <h6 className="text-muted fw-bold mt-4 mb-3 text-uppercase" style={{ letterSpacing: "1px", fontSize: "0.8rem" }}>Add-on Features</h6>}
-                      {addOns.map(renderMobileSubscriptionCard)}
+                    {addOns.length > 0 && <h6 className="text-muted fw-bold mt-4 mb-3 text-uppercase" style={{ letterSpacing: "1px", fontSize: "0.8rem" }}>Add-on Features</h6>}
+                    {addOns.map(renderMobileSubscriptionCard)}
 
-                      {subscriptions.length === 0 && (
-                        <div className="text-center text-muted py-4 border rounded bg-light">No subscriptions found</div>
-                      )}
-                    </div>
-                  </>
-                )}
+                    {subscriptions.length === 0 && (
+                      <div className="text-center text-muted py-4 border rounded bg-light">No subscriptions found</div>
+                    )}
+                  </div>
+                </>
+                {/* )} */}
               </Card.Body>
             </Card>
             {/* Customer Queries Card */}
@@ -724,8 +722,8 @@ const UserDetails = () => {
                 <Col xs={12}>
                   <Form.Group>
                     <Form.Label className="fw-bold small">Plan Term</Form.Label>
-                    <Form.Select 
-                      value={approveForm.planTerm} 
+                    <Form.Select
+                      value={approveForm.planTerm}
                       onChange={(e) => handlePlanTermChange(e.target.value)}
                     >
                       <option value="Custom">Custom</option>

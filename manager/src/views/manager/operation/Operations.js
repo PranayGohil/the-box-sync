@@ -22,6 +22,7 @@ import AddTable from './table/AddTable';
 import ManageMenu from './menu/ManageMenu';
 import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
+import QRforOrder from './menu/QRforOrder';
 import AddInventory from './inventory/AddInventory';
 import EditInventory from './inventory/EditInventory';
 import InventoryHistory from './inventory/InventoryHistory';
@@ -118,6 +119,12 @@ const NavContent = () => {
               <span className="align-middle">QR for Menu</span>
             </Nav.Link>
           )}
+          {activePlans.some((plan) => plan.includes('Scan and Order')) && (
+            <Nav.Link as={NavLink} to="/operations/qr-for-order" className="px-0">
+              <i className="me-2 sw-3 d-inline-block" />
+              <span className="align-middle">QR for Order</span>
+            </Nav.Link>
+          )}
         </div>
       </div>
 
@@ -205,7 +212,7 @@ const MobileBottomNav = () => {
       label: 'Menu',
       icon: 'book-open',
       to: '/operations/manage-menu',
-      isActive: (path) => path.startsWith('/operations/manage-menu') || path.startsWith('/operations/add-dish') || path.startsWith('/operations/qr-for-menu')
+      isActive: (path) => path.startsWith('/operations/manage-menu') || path.startsWith('/operations/add-dish') || path.startsWith('/operations/qr-for-menu') || path.startsWith('/operations/qr-for-order')
     },
     {
       label: 'Inventory',
@@ -361,6 +368,9 @@ const Operations = () => {
             <Route path="/operations/add-dish" component={AddDishes} />
             {activePlans.includes('Scan For Menu') && (
               <Route path="/operations/qr-for-menu" component={QRforMenu} />
+            )}
+            {activePlans.some((plan) => plan.includes('Scan and Order')) && (
+              <Route path="/operations/qr-for-order" component={QRforOrder} />
             )}
 
             <Route path="/operations/requested-inventory" render={() => <Redirect to="/operations/inventory-history" />} />
