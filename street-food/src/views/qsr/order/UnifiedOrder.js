@@ -417,24 +417,38 @@ const UnifiedOrder = () => {
   }, []);
 
   useEffect(() => {
-    if (customerInfo?.phone?.length >= 10) {
+    if (loyaltyProfile && loyaltyProfile.customer) {
+      setCustomerInfo((prev) => {
+        if (prev.name === loyaltyProfile.customer.name || prev.name === 'Walk-in Customer') {
+          return { ...prev, name: '' };
+        }
+        return prev;
+      });
+    }
+
+    setLoyaltyProfile(null);
+    setIsRedeeming(false);
+    setRedeemPoints(0);
+
+    const targetPhone = customerInfo?.phone || '';
+    const cleanPhone = targetPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+    if (cleanPhone.length >= 10) {
       axios
-        .get(`${process.env.REACT_APP_API}/loyalty/customer/${customerInfo.phone}`, {
+        .get(`${process.env.REACT_APP_API}/loyalty/customer/${cleanPhone}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         })
         .then((res) => {
           if (res.data.success && res.data.data) {
             setLoyaltyProfile(res.data.data);
-            if ((!customerInfo.name || customerInfo.name === 'Walk-in Customer') && res.data.data.customer.name !== 'Walk-in Customer') {
-              setCustomerInfo((prev) => ({ ...prev, name: res.data.data.customer.name }));
-            }
+            setCustomerInfo((prev) => {
+              if ((!prev.name || prev.name === 'Walk-in Customer') && res.data.data.customer.name !== 'Walk-in Customer') {
+                return { ...prev, name: res.data.data.customer.name };
+              }
+              return prev;
+            });
           }
         })
         .catch((err) => console.error('Error loading customer CRM profile:', err));
-    } else {
-      setLoyaltyProfile(null);
-      setIsRedeeming(false);
-      setRedeemPoints(0);
     }
   }, [customerInfo?.phone]);
 
@@ -1152,22 +1166,36 @@ const UnifiedOrder = () => {
 
                   {loyaltyProfile.customer.loyalty_points > 0 && (
                     <div className="d-flex align-items-center mt-1 border-top pt-1 justify-content-between">
-                      <Form.Check
-                        type="checkbox"
-                        id={`redeem-loyalty-check-${Math.random()}`}
-                        label="Redeem points for discount"
-                        checked={isRedeeming}
-                        onChange={(e) => {
-                          setIsRedeeming(e.target.checked);
-                          if (e.target.checked) {
-                            setRedeemPoints(loyaltyProfile.customer.loyalty_points);
-                          } else {
-                            setRedeemPoints(0);
-                          }
-                        }}
-                        className="m-0 fw-semibold"
-                        style={{ fontSize: '12px' }}
-                      />
+                      <div className="d-flex align-items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`redeem-loyalty-check-${Math.random()}`}
+                          checked={isRedeeming}
+                          onChange={(e) => {
+                            setIsRedeeming(e.target.checked);
+                            if (e.target.checked) {
+                              setRedeemPoints(loyaltyProfile.customer.loyalty_points);
+                            } else {
+                              setRedeemPoints(0);
+                            }
+                          }}
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            margin: 0,
+                            cursor: 'pointer',
+                            appearance: 'checkbox',
+                            WebkitAppearance: 'checkbox',
+                          }}
+                        />
+                        <label
+                          htmlFor={`redeem-loyalty-check-${Math.random()}`}
+                          className="m-0 fw-semibold"
+                          style={{ fontSize: '12px', cursor: 'pointer', userSelect: 'none' }}
+                        >
+                          Redeem points for discount
+                        </label>
+                      </div>
                       {isRedeeming && (
                         <span className="fw-bold text-success">
                           -₹{Math.round(redeemPoints * (loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1))} off
@@ -1332,22 +1360,36 @@ const UnifiedOrder = () => {
 
             {loyaltyProfile.customer.loyalty_points > 0 && (
               <div className="d-flex align-items-center mt-1 border-top pt-1 justify-content-between">
-                <Form.Check
-                  type="checkbox"
-                  id={`redeem-loyalty-check-${Math.random()}`}
-                  label="Redeem points for discount"
-                  checked={isRedeeming}
-                  onChange={(e) => {
-                    setIsRedeeming(e.target.checked);
-                    if (e.target.checked) {
-                      setRedeemPoints(loyaltyProfile.customer.loyalty_points);
-                    } else {
-                      setRedeemPoints(0);
-                    }
-                  }}
-                  className="m-0 fw-semibold"
-                  style={{ fontSize: '12px' }}
-                />
+                <div className="d-flex align-items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`redeem-loyalty-check-${Math.random()}`}
+                    checked={isRedeeming}
+                    onChange={(e) => {
+                      setIsRedeeming(e.target.checked);
+                      if (e.target.checked) {
+                        setRedeemPoints(loyaltyProfile.customer.loyalty_points);
+                      } else {
+                        setRedeemPoints(0);
+                      }
+                    }}
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      margin: 0,
+                      cursor: 'pointer',
+                      appearance: 'checkbox',
+                      WebkitAppearance: 'checkbox',
+                    }}
+                  />
+                  <label
+                    htmlFor={`redeem-loyalty-check-${Math.random()}`}
+                    className="m-0 fw-semibold"
+                    style={{ fontSize: '12px', cursor: 'pointer', userSelect: 'none' }}
+                  >
+                    Redeem points for discount
+                  </label>
+                </div>
                 {isRedeeming && (
                   <span className="fw-bold text-success">
                     -₹{Math.round(redeemPoints * (loyaltySettings ? loyaltySettings.redeemRateDiscount / loyaltySettings.redeemRatePoints : 0.1))} off

@@ -416,24 +416,38 @@ const UnifiedOrder = () => {
   }, []);
 
   useEffect(() => {
-    if (customerInfo?.phone?.length >= 10) {
+    if (loyaltyProfile && loyaltyProfile.customer) {
+      setCustomerInfo((prev) => {
+        if (prev.name === loyaltyProfile.customer.name || prev.name === 'Walk-in Customer') {
+          return { ...prev, name: '' };
+        }
+        return prev;
+      });
+    }
+
+    setLoyaltyProfile(null);
+    setIsRedeeming(false);
+    setRedeemPoints(0);
+
+    const targetPhone = customerInfo?.phone || '';
+    const cleanPhone = targetPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+    if (cleanPhone.length >= 10) {
       axios
-        .get(`${process.env.REACT_APP_API}/loyalty/customer/${customerInfo.phone}`, {
+        .get(`${process.env.REACT_APP_API}/loyalty/customer/${cleanPhone}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         })
         .then((res) => {
           if (res.data.success && res.data.data) {
             setLoyaltyProfile(res.data.data);
-            if ((!customerInfo.name || customerInfo.name === 'Walk-in Customer') && res.data.data.customer.name !== 'Walk-in Customer') {
-              setCustomerInfo((prev) => ({ ...prev, name: res.data.data.customer.name }));
-            }
+            setCustomerInfo((prev) => {
+              if ((!prev.name || prev.name === 'Walk-in Customer') && res.data.data.customer.name !== 'Walk-in Customer') {
+                return { ...prev, name: res.data.data.customer.name };
+              }
+              return prev;
+            });
           }
         })
         .catch((err) => console.error('Error loading customer CRM profile:', err));
-    } else {
-      setLoyaltyProfile(null);
-      setIsRedeeming(false);
-      setRedeemPoints(0);
     }
   }, [customerInfo?.phone]);
 
@@ -1152,7 +1166,14 @@ const validateOrder = () => {
                               setRedeemPoints(0);
                             }
                           }}
-                          style={{ width: '14px', height: '14px', margin: 0, cursor: 'pointer' }}
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            margin: 0,
+                            cursor: 'pointer',
+                            appearance: 'checkbox',
+                            WebkitAppearance: 'checkbox',
+                          }}
                         />
                         <label htmlFor="redeem-loyalty-check" className="m-0 fw-semibold" style={{ fontSize: '11px', cursor: 'pointer' }}>
                           Redeem points for discount
