@@ -3,6 +3,7 @@ const Subscription = require("../models/subscriptionModel");
 const User = require("../models/userModel");
 const cron = require("node-cron");
 const { logActivity } = require("../utils/auditLogger");
+const { sendEmail } = require("../utils/emailService");
 
 const updateExpiredSubscriptions = async () => {
   const today = new Date();
@@ -504,10 +505,19 @@ const manualSubscribe = async (req, res) => {
       return res.status(400).json({ success: false, message: "User already has an active subscription for this plan." });
     }
 
+    let finalPrice = plan.plan_price || 0;
+    if (price !== undefined && price !== "") {
+      const parsedPrice = Number(price);
+      if (!isNaN(parsedPrice)) {
+        finalPrice = parsedPrice;
+      }
+    }
+
     const subscription = new Subscription({
       user_id: userId,
       plan_id: planId,
       plan_name: plan.plan_name,
+      plan_price: finalPrice,
       start_date: new Date(startDate),
       end_date: new Date(endDate),
       status: "active"

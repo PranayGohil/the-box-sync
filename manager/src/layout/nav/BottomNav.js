@@ -57,7 +57,8 @@ const BottomNav = () => {
         return (
           location.pathname.startsWith('/operations/manage-menu') ||
           location.pathname.startsWith('/operations/add-dish') ||
-          location.pathname.startsWith('/operations/qr-for-menu')
+          location.pathname.startsWith('/operations/qr-for-menu') ||
+          location.pathname.startsWith('/operations/qr-for-order')
         );
       },
     },

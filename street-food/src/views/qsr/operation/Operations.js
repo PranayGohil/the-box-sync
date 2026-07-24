@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Row, Col, Nav } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { LAYOUT } from 'constants.js';
@@ -7,6 +7,7 @@ import useCustomLayout from 'hooks/useCustomLayout';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Switch, Route, Redirect, NavLink, useLocation } from 'react-router-dom';
+import { AuthContext } from 'contexts/AuthContext';
 
 import OrderHistory from './order/OrderHistory';
 import OrderDetails from './order/OrderDetails';
@@ -14,11 +15,15 @@ import OrderDetails from './order/OrderDetails';
 import ManageMenu from './menu/ManageMenu';
 import AddDishes from './menu/AddDishes';
 import QRforMenu from './menu/QRforMenu';
+import QRforOrder from './menu/QRforOrder';
 
 import FinancialReport from './FinancialReport';
 import MenuPerformanceReport from './MenuPerformanceReport';
 
 const NavContent = () => {
+  const { activePlans } = useContext(AuthContext);
+  const hasScanAndOrder = activePlans?.some((plan) => plan.includes('Scan and Order'));
+
   return (
     <>
       <style>{`
@@ -102,6 +107,12 @@ const NavContent = () => {
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">QR for Menu</span>
             </Nav.Link>
+            {hasScanAndOrder && (
+              <Nav.Link as={NavLink} to="/operations/qr-for-order" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">QR for Order</span>
+              </Nav.Link>
+            )}
           </div>
         </div>
 
@@ -212,7 +223,10 @@ const MobileBottomNav = () => {
               pathname.startsWith('/operations/web-orders');
           } else if (item.label === 'Menu') {
             isActive =
-              pathname.startsWith('/operations/manage-menu') || pathname.startsWith('/operations/add-dish') || pathname.startsWith('/operations/qr-for-menu');
+              pathname.startsWith('/operations/manage-menu') ||
+              pathname.startsWith('/operations/add-dish') ||
+              pathname.startsWith('/operations/qr-for-menu') ||
+              pathname.startsWith('/operations/qr-for-order');
           } else if (item.label === 'Report') {
             isActive = pathname.startsWith('/operations/financial-report') || pathname.startsWith('/operations/menu-performance');
           } else {
@@ -232,6 +246,8 @@ const MobileBottomNav = () => {
 const Operations = () => {
   useCustomLayout({ layout: LAYOUT.Boxed });
   const { width } = useWindowSize();
+  const { activePlans } = useContext(AuthContext);
+  const hasScanAndOrder = activePlans?.some((plan) => plan.includes('Scan and Order'));
 
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10) || 1200;
@@ -256,6 +272,9 @@ const Operations = () => {
             <Route exact path="/operations/manage-menu" render={() => <ManageMenu />} />
             <Route exact path="/operations/add-dish" render={() => <AddDishes />} />
             <Route exact path="/operations/qr-for-menu" render={() => <QRforMenu />} />
+            {hasScanAndOrder && (
+              <Route exact path="/operations/qr-for-order" render={() => <QRforOrder />} />
+            )}
 
             <Route exact path="/operations/financial-report" render={() => <FinancialReport />} />
             <Route exact path="/operations/menu-performance" render={() => <MenuPerformanceReport />} />
