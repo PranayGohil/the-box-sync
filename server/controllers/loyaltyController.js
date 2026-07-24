@@ -48,9 +48,30 @@ const getCustomerProfile = async (req, res) => {
     const user_id = req.user._id || req.user;
     const { phone } = req.params;
     
-    let customer = await Customer.findOne({ phone, user_id }).sort({ loyalty_points: -1, visit_count: -1, _id: -1 });
+    // Sanitize incoming phone number to its core digits (e.g. last 10 digits)
+    const cleaned = (phone || "").replace(/\D/g, "");
+    const core = cleaned.length === 12 && cleaned.startsWith("91") ? cleaned.slice(2) : (cleaned.length === 11 && cleaned.startsWith("0") ? cleaned.slice(1) : cleaned);
+
+    // Common phone number format representations in the DB
+    const queryPhoneOptions = [
+      core,
+      `91${core}`,
+      `+91${core}`,
+      `+91 ${core.slice(0, 5)} ${core.slice(5)}`,
+      `+91 ${core}`
+    ];
+
+    let customer = await Customer.findOne({
+      user_id,
+      phone: { $in: queryPhoneOptions }
+    }).sort({ loyalty_points: -1, visit_count: -1, _id: -1 });
+
     if (customer && !customer.name) {
-      const fallbackNameCust = await Customer.findOne({ phone, user_id, name: { $nin: ["", null, "Walk-in Customer"] } });
+      const fallbackNameCust = await Customer.findOne({
+        user_id,
+        phone: { $in: queryPhoneOptions },
+        name: { $nin: ["", null, "Walk-in Customer"] }
+      });
       if (fallbackNameCust) {
         customer.name = fallbackNameCust.name;
         await customer.save();
@@ -59,7 +80,7 @@ const getCustomerProfile = async (req, res) => {
     // Auto-create basic profile if this is the customer's first POS interaction
     if (!customer) {
       customer = new Customer({
-        phone,
+        phone: core, // Save as core 10-digit number
         name: "Walk-in Customer",
         user_id,
         loyalty_points: 0,
