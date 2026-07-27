@@ -5,6 +5,7 @@ import { Row, Col, Button, Badge, Modal, Spinner, Alert, Card } from 'react-boot
 import { useTable, useGlobalFilter, useSortBy, usePagination } from 'react-table';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import { format } from 'date-fns';
 
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
@@ -213,8 +214,8 @@ const Subscription = () => {
           ...sub,
           plan_name: plan?.plan_name || 'Unknown',
           is_addon: plan?.is_addon || false,
-          formatted_start: new Date(sub.start_date).toLocaleDateString('en-IN'),
-          formatted_end: new Date(sub.end_date).toLocaleDateString('en-IN'),
+          formatted_start: format(new Date(sub.start_date), 'dd/MM/yyyy'),
+          formatted_end: format(new Date(sub.end_date), 'dd/MM/yyyy'),
         };
       });
 

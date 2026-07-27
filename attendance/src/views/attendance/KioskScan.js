@@ -6,6 +6,8 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import Webcam from 'react-webcam';
 import * as faceapi from 'face-api.js';
 import HtmlHead from 'components/html-head/HtmlHead';
+import Loading from 'components/loading/Loading';
+
 
 const parseTimeToMinutes = (timeStr) => {
   if (!timeStr) return 0;
@@ -498,10 +500,13 @@ const KioskScan = () => {
                 </div>
 
                 {!modelsLoaded || !faceDataLoaded ? (
-                  <div className="d-flex flex-column align-items-center justify-content-center py-5">
-                    <Spinner animation="border" variant="primary" className="mb-3" />
-                    <span className="text-muted fw-semibold">{!modelsLoaded ? 'Loading AI models...' : 'Fetching staff face data...'}</span>
-                  </div>
+                  <>
+                    <Loading />
+                    <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                      <Spinner animation="border" variant="primary" className="mb-3" />
+                      <span className="text-muted fw-semibold">{!modelsLoaded ? 'Loading AI models...' : 'Fetching staff face data...'}</span>
+                    </div>
+                  </>
                 ) : (
                   <div
                     className="webcam-container position-relative overflow-hidden rounded-3 shadow w-100"

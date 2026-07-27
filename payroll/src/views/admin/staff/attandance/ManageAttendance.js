@@ -674,29 +674,26 @@ export default function ManageAttendance() {
           const lateMin = todayAttendance.late_by_minutes || 0;
           const formatHHMM = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
           const lateBadge = lateMin > 0 ? (
-            <span className="ms-1" style={{ display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.55rem', borderRadius: '50px', fontSize: '0.7rem', fontWeight: 700, background: 'rgba(239,68,68,0.1)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)' }}>
-              🔴 Late {formatHHMM(lateMin)}
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700, background: 'rgba(239,68,68,0.1)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.15)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+              Late {formatHHMM(lateMin)}
             </span>
           ) : null;
+
+          let firstInTime = null;
           if (todayAttendance.sessions && todayAttendance.sessions.length > 0) {
-            return (
-              <div className="d-flex flex-column gap-1">
-                {todayAttendance.sessions.map((session, idx) => (
-                  <span key={idx} className="time-badge time-badge-in">
-                    <CsLineIcons icon="clock" size="12" className="me-1 text-success" /> {session.in_time}
-                    {idx === 0 && lateBadge}
-                  </span>
-                ))}
-              </div>
-            );
+            firstInTime = todayAttendance.sessions[0].in_time;
+          } else {
+            firstInTime = todayAttendance.in_time;
           }
-          const time = todayAttendance.in_time;
-          if (!time) return <span className="text-muted fw-medium">—</span>;
+
+          if (!firstInTime) return <span className="text-muted fw-medium">—</span>;
           return (
-            <span className="time-badge time-badge-in">
-              <CsLineIcons icon="clock" size="12" className="me-1 text-success" /> {time}
+            <div className="d-flex flex-column align-items-start gap-1">
+              <span className="time-badge time-badge-in">
+                <CsLineIcons icon="clock" size="12" className="me-1 text-success" /> {firstInTime}
+              </span>
               {lateBadge}
-            </span>
+            </div>
           );
         },
       },
@@ -711,27 +708,36 @@ export default function ManageAttendance() {
           const otHours = todayAttendance.overtime_hours || 0;
           const formatHHMM = (h) => { const m = Math.round(h * 60); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`; };
           const otBadge = otHours > 0 ? (
-            <span className="ms-1" style={{ display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.55rem', borderRadius: '50px', fontSize: '0.7rem', fontWeight: 700, background: 'rgba(109,40,217,0.1)', color: '#7c3aed', border: '1px solid rgba(109,40,217,0.2)' }}>
-              ⚡ OT {formatHHMM(otHours)}
+            <span className="ms-1" style={{ display: 'inline-flex', alignItems: 'center', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700, background: 'rgba(109,40,217,0.1)', color: '#7c3aed', border: '1px solid rgba(109,40,217,0.15)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+              OT {formatHHMM(otHours)}
             </span>
           ) : null;
+
+          let lastOutTime = null;
+          let isActive = false;
           if (todayAttendance.sessions && todayAttendance.sessions.length > 0) {
+            const lastSession = todayAttendance.sessions[todayAttendance.sessions.length - 1];
+            if (lastSession.out_time) {
+              lastOutTime = lastSession.out_time;
+            } else {
+              isActive = true;
+            }
+          } else {
+            lastOutTime = todayAttendance.out_time;
+          }
+
+          if (isActive) {
             return (
-              <div className="d-flex flex-column gap-1">
-                {todayAttendance.sessions.map((session, idx) => (
-                  <span key={idx} className={session.out_time ? "time-badge time-badge-out" : "time-badge bg-soft-warning text-warning"}>
-                    <CsLineIcons icon="clock" size="12" className={session.out_time ? "me-1 text-danger" : "me-1 text-warning"} /> {session.out_time || 'Active'}
-                    {idx === todayAttendance.sessions.length - 1 && session.out_time && otBadge}
-                  </span>
-                ))}
-              </div>
+              <span className="time-badge bg-soft-warning text-warning">
+                <CsLineIcons icon="clock" size="12" className="me-1 text-warning" /> Active
+              </span>
             );
           }
-          const time = todayAttendance.out_time;
-          if (!time) return <span className="text-muted fw-medium">—</span>;
+
+          if (!lastOutTime) return <span className="text-muted fw-medium">—</span>;
           return (
             <span className="time-badge time-badge-out">
-              <CsLineIcons icon="clock" size="12" className="me-1 text-danger" /> {time}
+              <CsLineIcons icon="clock" size="12" className="me-1 text-danger" /> {lastOutTime}
               {otBadge}
             </span>
           );
@@ -1204,23 +1210,19 @@ export default function ManageAttendance() {
                         <Row className="mb-3 g-0 border-top pt-2" style={{ borderColor: '#f3f4f6' }}>
                           <Col xs="4">
                             <div className="text-muted small" style={{ fontSize: '10px' }}>CHECK-IN</div>
-                            {todayAttendance?.sessions && todayAttendance.sessions.length > 0 ? (
-                              todayAttendance.sessions.map((s, i) => (
-                                <div key={i} className="fw-bold mt-1" style={{ fontSize: '11px' }}>{s.in_time}</div>
-                              ))
-                            ) : (
-                              <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>{todayAttendance?.in_time || '—'}</div>
-                            )}
+                            <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>
+                              {todayAttendance?.sessions && todayAttendance.sessions.length > 0 
+                                ? todayAttendance.sessions[0].in_time 
+                                : (todayAttendance?.in_time || '—')}
+                            </div>
                           </Col>
                           <Col xs="4" className="text-center">
                             <div className="text-muted small" style={{ fontSize: '10px' }}>CHECK-OUT</div>
-                            {todayAttendance?.sessions && todayAttendance.sessions.length > 0 ? (
-                              todayAttendance.sessions.map((s, i) => (
-                                <div key={i} className="fw-bold mt-1" style={{ fontSize: '11px' }}>{s.out_time || 'Active'}</div>
-                              ))
-                            ) : (
-                              <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>{todayAttendance?.out_time || '—'}</div>
-                            )}
+                            <div className="fw-bold mt-1" style={{ fontSize: '11px' }}>
+                              {todayAttendance?.sessions && todayAttendance.sessions.length > 0 
+                                ? (todayAttendance.sessions[todayAttendance.sessions.length - 1].out_time || 'Active') 
+                                : (todayAttendance?.out_time || '—')}
+                            </div>
                           </Col>
                           <Col xs="4" className="text-end">
                             <div className="text-muted small" style={{ fontSize: '10px' }}>HOURS</div>

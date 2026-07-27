@@ -7,6 +7,7 @@ import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
+import { format } from 'date-fns';
 
 const ViewStaff = () => {
   const title = 'Manage Staff';
@@ -62,7 +63,7 @@ const ViewStaff = () => {
       setProcessingId(id);
       const res = await axios.post(
         `${process.env.REACT_APP_API}/staff/process-resignation/${id}`,
-        { status, admin_remarks: `Processed by HR on ${new Date().toLocaleDateString('en-GB')}` },
+        { status, admin_remarks: `Processed by HR on ${format(new Date(), 'dd/MM/yyyy')}` },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       if (res.data.success) {
@@ -262,9 +263,9 @@ const ViewStaff = () => {
                         </div>
                         <div className="mb-3 small">
                           <div className="mb-1"><strong>Reason:</strong> {member.resignation.reason || 'No reason provided'}</div>
-                          <div className="mb-1"><strong>Submitted:</strong> {submittedDate.toLocaleDateString('en-IN')}</div>
+                          <div className="mb-1"><strong>Submitted:</strong> {format(submittedDate, 'dd/MM/yyyy')}</div>
                           <div className="mb-1"><strong>Notice Period:</strong> {noticeDays} Days</div>
-                          <div className="mb-1 text-danger"><strong>Calculated Last Day:</strong> {lastWorkingDay.toLocaleDateString('en-IN')}</div>
+                          <div className="mb-1 text-danger"><strong>Calculated Last Day:</strong> {format(lastWorkingDay, 'dd/MM/yyyy')}</div>
                         </div>
 
                         {/* Assets List */}
@@ -370,10 +371,10 @@ const ViewStaff = () => {
                         </div>
                         <div className="mb-3 small">
                           <div className="mb-1"><strong>Reason:</strong> {member.resignation.reason || 'No reason provided'}</div>
-                          <div className="mb-1"><strong>Submitted:</strong> {submittedDate.toLocaleDateString('en-IN')}</div>
-                          {lastWorkingDay && (
-                            <div className="mb-1 text-danger"><strong>Last Working Day:</strong> {lastWorkingDay.toLocaleDateString('en-IN')}</div>
-                          )}
+                           <div className="mb-1"><strong>Submitted:</strong> {format(submittedDate, 'dd/MM/yyyy')}</div>
+                           {lastWorkingDay && (
+                             <div className="mb-1 text-danger"><strong>Last Working Day:</strong> {format(lastWorkingDay, 'dd/MM/yyyy')}</div>
+                           )}
                           {member.resignation.admin_remarks && (
                             <div className="mb-1 text-muted"><strong>HR Remarks:</strong> {member.resignation.admin_remarks}</div>
                           )}
@@ -442,7 +443,7 @@ const ViewStaff = () => {
 
             <Row className="g-3 g-md-4">
               {members.map((staffMember) => (
-                <Col key={staffMember._id} xs="12" sm="6" md="4" lg="3" xl="2">
+                <Col key={staffMember._id} xs="12" sm="6" md="6" lg="4" xl="3">
                   <Link to={`/staff/profile/${staffMember._id}`} className="text-decoration-none h-100 d-block">
                     <Card className="view-staff-staff-card border-0 shadow-sm h-100">
                       <Card.Body className="p-3 p-md-4 text-center d-flex flex-column align-items-center justify-content-between h-100">

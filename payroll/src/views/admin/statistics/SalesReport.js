@@ -173,13 +173,13 @@ const SalesReport = () => {
       date.setHours(_id.hour, 0, 0, 0);
        if (isToday(date)) return `Today ${format(date, 'hh:mm a')}`;
        if (isYesterday(date)) return `Yesterday ${format(date, 'hh:mm a')}`;
-       return format(date, 'dd-MM-yyyy hh:mm a', { locale: enIN });
+       return format(date, 'dd/MM/yyyy hh:mm a', { locale: enIN });
     }
 
     if (groupBy === 'day') {
       if (isToday(date)) return 'Today';
       if (isYesterday(date)) return 'Yesterday';
-      return format(date, 'dd-MM-yyyy', { locale: enIN });
+      return format(date, 'dd/MM/yyyy', { locale: enIN });
     }
 
     if (groupBy === 'month') {
@@ -265,8 +265,8 @@ const SalesReport = () => {
           ['SALES REPORT DASHBOARD'],
           [],
           ['Company:', COMPANY_NAME],
-          ['Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`],
-          ['Generated:', format(new Date(), 'dd MMM yyyy hh:mm a')],
+          ['Period:', `${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`],
+          ['Generated:', format(new Date(), 'dd/MM/yyyy hh:mm a')],
           [],
           ['METRICS'],
           ['Metric', 'Value'],

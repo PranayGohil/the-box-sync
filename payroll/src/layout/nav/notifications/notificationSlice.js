@@ -1,11 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { format } from 'date-fns';
 
 const formatDateSafely = (dateStr) => {
   if (!dateStr) return '—';
   const date = new Date(dateStr);
   if (!Number.isNaN(date.getTime())) {
-    return date.toLocaleDateString('en-IN');
+    return format(date, 'dd/MM/yyyy');
   }
   const parts = String(dateStr).split(/[-/]/);
   if (parts.length === 3) {
@@ -15,7 +16,7 @@ const formatDateSafely = (dateStr) => {
       const year = parseInt(parts[2], 10);
       const parsedDate = new Date(year, month, day);
       if (!Number.isNaN(parsedDate.getTime())) {
-        return parsedDate.toLocaleDateString('en-IN');
+        return format(parsedDate, 'dd/MM/yyyy');
       }
     } else if (parts[0].length === 4) {
       const year = parseInt(parts[0], 10);
@@ -23,7 +24,7 @@ const formatDateSafely = (dateStr) => {
       const day = parseInt(parts[2], 10);
       const parsedDate = new Date(year, month, day);
       if (!Number.isNaN(parsedDate.getTime())) {
-        return parsedDate.toLocaleDateString('en-IN');
+        return format(parsedDate, 'dd/MM/yyyy');
       }
     }
   }

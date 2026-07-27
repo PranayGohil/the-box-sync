@@ -191,7 +191,7 @@ const MenuPerformanceReport = () => {
         const dashboardData = [
           ['MENU PERFORMANCE DASHBOARD'], [],
           ['Company:', COMPANY_NAME],
-          ['Report Period:', `${startDate} to ${endDate}`],
+          ['Report Period:', `${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`],
           [],
           ['SUMMARY METRICS'],
           ['Metric', 'Value'],

@@ -174,13 +174,13 @@ const StaffProfile = () => {
 
       <div className="page-title-container mb-4 mt-3 mt-lg-0">
         <Row className="g-3 align-items-center">
-          <Col md={6}>
+          <Col md={4}>
             <h1 className="mb-0 pb-0 display-4 fw-bold" style={{ color: '#1ea8e7' }}>
               {staff.f_name} {staff.l_name}
             </h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
-          <Col md={6} className="d-flex flex-wrap justify-content-md-end align-items-center gap-2">
+          <Col md={8} className="d-flex flex-wrap justify-content-md-end align-items-center gap-2">
             <Button
               className="custom-btn-outline px-4 py-2 d-flex align-items-center gap-2"
               onClick={() => history.goBack()}
@@ -429,54 +429,62 @@ const StaffProfile = () => {
                       </div>
                     </div>
                     
-                    {globalLeavePolicies.length > 0 ? (
-                      <Row className="g-3">
-                        {globalLeavePolicies.map((policy) => {
-                          const currentConfig = staff.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
-                          const isActive = currentConfig ? currentConfig.is_active : false;
-                          const bal = leaveBalances.find(b => b.leave_type_id === policy.leave_type_id) || {};
-                          
-                          return (
-                          <Col md={6} key={policy.leave_type_id}>
-                            <div className={`border rounded-3 p-3 bg-light h-100 ${!isActive ? 'opacity-50' : ''}`}>
-                              <div className="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                  <h6 className="fw-bold mb-1 text-primary">{policy.name}</h6>
-                                  <div className="text-muted small">{policy.days_per_year} Days / Year</div>
+                    {(() => {
+                      const activePolicies = globalLeavePolicies.filter((policy) => {
+                        const currentConfig = staff.leave_policy_configuration?.find(c => c.leave_type_id === policy.leave_type_id);
+                        return currentConfig ? currentConfig.is_active : false;
+                      });
+
+                      return activePolicies.length > 0 ? (
+                        <Row className="g-3">
+                          {activePolicies.map((policy) => {
+                            const bal = leaveBalances.find(b => b.leave_type_id === policy.leave_type_id) || {};
+
+                            return (
+                              <Col md={6} key={policy.leave_type_id}>
+                                <div className="border rounded-3 p-3 bg-light h-100">
+                                  <div className="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                      <h6 className="fw-bold mb-1 text-primary">{policy.name}</h6>
+                                      <div className="text-muted small">{policy.days_per_year} Days / Year</div>
+                                    </div>
+                                    <Button 
+                                      variant="outline-danger" 
+                                      size="sm"
+                                      className="rounded-pill fw-bold"
+                                      onClick={() => handleToggleSpecificLeave(policy.leave_type_id, true)}
+                                    >
+                                      Disable
+                                    </Button>
+                                  </div>
+
+                                  <div className="d-flex justify-content-between mt-3 px-2 bg-white rounded p-2 border">
+                                    <div className="text-center">
+                                      <div className="info-label mb-0" style={{ fontSize: '0.65rem' }}>Used</div>
+                                      <div className="fw-bold text-dark">{bal.taken || 0}</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="info-label mb-0" style={{ fontSize: '0.65rem' }}>Pending</div>
+                                      <div className="fw-bold text-warning">{bal.pending || 0}</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="info-label mb-0" style={{ fontSize: '0.65rem' }}>Balance</div>
+                                      <div className="fw-bold text-success">
+                                        {bal.entitled !== undefined ? ((bal.entitled || 0) + (bal.carried_forward || 0) - (bal.taken || 0) - (bal.pending || 0)) : policy.days_per_year}
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
-                                <Button 
-                                  variant={isActive ? "outline-danger" : "outline-success"} 
-                                  size="sm"
-                                  className="rounded-pill fw-bold"
-                                  onClick={() => handleToggleSpecificLeave(policy.leave_type_id, isActive)}
-                                >
-                                  {isActive ? 'Disable' : 'Enable'}
-                                </Button>
-                              </div>
-                              
-                              <div className="d-flex justify-content-between mt-3 px-2 bg-white rounded p-2 border">
-                                <div className="text-center">
-                                  <div className="info-label mb-0" style={{ fontSize: '0.65rem' }}>Used</div>
-                                  <div className="fw-bold text-dark">{bal.taken || 0}</div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="info-label mb-0" style={{ fontSize: '0.65rem' }}>Pending</div>
-                                  <div className="fw-bold text-warning">{bal.pending || 0}</div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="info-label mb-0" style={{ fontSize: '0.65rem' }}>Balance</div>
-                                  <div className="fw-bold text-success">{bal.entitled !== undefined ? ((bal.entitled || 0) + (bal.carried_forward || 0) - (bal.taken || 0) - (bal.pending || 0)) : policy.days_per_year}</div>
-                                </div>
-                              </div>
-                            </div>
-                          </Col>
-                        )})}
-                      </Row>
-                    ) : (
-                      <div className="text-muted text-center py-4 bg-light rounded border">
-                        No leave policies found in the system.
-                      </div>
-                    )}
+                              </Col>
+                            );
+                          })}
+                        </Row>
+                      ) : (
+                        <div className="text-muted text-center py-4 bg-light rounded border">
+                          No active leave policies enabled for this staff member.
+                        </div>
+                      );
+                    })()}
                   </Card.Body>
                 </Card>
               </Tab.Pane>

@@ -1087,25 +1087,23 @@ const ViewAttendance = () => {
                           <td className="text-center">
                             <div className="d-flex justify-content-center gap-2">
                               <Button
-                                variant="none"
+                                variant="outline-primary"
                                 size="sm"
-                                className="btn-icon btn-icon-only rounded-circle custom-btn-primary-outline"
+                                className="btn-icon btn-icon-only"
                                 onClick={() => handleOpenDetailModal(att)}
                                 title="View Detail"
-                                style={{ width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                               >
-                                <CsLineIcons icon="eye" size="14" />
+                                <CsLineIcons icon="eye" />
                               </Button>
                               {att.wfh_tracking?.is_wfh && (
                                 <Button
-                                  variant="none"
+                                  variant="outline-info"
                                   size="sm"
-                                  className="btn-icon btn-icon-only rounded-circle custom-btn-info-outline"
+                                  className="btn-icon btn-icon-only"
                                   onClick={() => { setWfhModalData(att); setShowWfhModal(true); }}
                                   title="View WFH Logs"
-                                  style={{ width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
-                                  <CsLineIcons icon="laptop" size="14" />
+                                  <CsLineIcons icon="laptop" />
                                 </Button>
                               )}
                             </div>

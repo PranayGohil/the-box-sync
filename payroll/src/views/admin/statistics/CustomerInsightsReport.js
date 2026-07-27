@@ -171,7 +171,7 @@ const CustomerInsightsReport = () => {
     setExportType('Excel');
     try {
       const wb = XLSX.utils.book_new();
-      const wsData = [['Customer Insights Report'], [], ['Report Period', `${startDate} to ${endDate}`], []];
+      const wsData = [['Customer Insights Report'], [], ['Report Period', `${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`], []];
       wsData.push(['Metric', 'Value']);
       wsData.push(['Total Customers', totalCustomers]);
       wsData.push(['Repeat Customers', repeatCustomers]);

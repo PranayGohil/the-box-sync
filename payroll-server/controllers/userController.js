@@ -296,7 +296,7 @@ const register = async (req, res) => {
       <p>
         <br><strong>Restaurant Code: </strong> ${restaurantCode}
         <br><strong>Email Address: </strong> ${email}
-        <br><strong>Date of Registration: </strong> ${new Date().toLocaleDateString('en-IN')}
+        <br><strong>Date of Registration: </strong> ${new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date())}
       </p>
   
       <p>Please keep this information safe for your records.</p>

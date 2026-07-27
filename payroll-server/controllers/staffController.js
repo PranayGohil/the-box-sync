@@ -92,6 +92,16 @@ const getTodayIST = () => {
   }).format(new Date());
 };
 
+const formatDateToDDMMYYYY = (dateVal) => {
+  if (!dateVal) return '';
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return '';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 // Helper: Compile all text and salary bifurcation placeholders for staff member
 const getStaffFieldMap = (staff, config) => {
   const fields = {
@@ -99,14 +109,14 @@ const getStaffFieldMap = (staff, config) => {
     last_name: staff.l_name || '',
     full_name: `${staff.f_name || ''} ${staff.l_name || ''}`.trim(),
     job_title: staff.position || '',
-    joining_date: staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-IN') : '',
+    joining_date: formatDateToDDMMYYYY(staff.joining_date),
     staff_id: staff.staff_id || '',
     email: staff.email || '',
     phone: staff.phone_no ? String(staff.phone_no) : '',
     gross_salary: staff.salary ? String(staff.salary) : '0',
     department: (staff.department && typeof staff.department === 'object') ? (staff.department.name || '') : (staff.department || ''),
     company_name: config?.company_name || '',
-    birth_date: staff.birth_date ? new Date(staff.birth_date).toLocaleDateString('en-IN') : '',
+    birth_date: formatDateToDDMMYYYY(staff.birth_date),
     address: staff.address || '',
     country: staff.country || '',
     state: staff.state || '',

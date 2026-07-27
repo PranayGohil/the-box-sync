@@ -286,7 +286,7 @@ export default function ViewStaffPayroll() {
             doc.setFont(undefined, 'bold');
             doc.text('Date of Joining:', 110, headerY + 15);
             doc.setFont(undefined, 'normal');
-            doc.text(`${staffData.joining_date ? format(new Date(staffData.joining_date), 'dd-MMM-yyyy') : '-'}`, 145, headerY + 15);
+            doc.text(`${staffData.joining_date ? format(new Date(staffData.joining_date), 'dd/MM/yyyy') : '-'}`, 145, headerY + 15);
             doc.setFont(undefined, 'bold');
             doc.text('UAN Number:', 18, headerY + 22);
             doc.setFont(undefined, 'normal');

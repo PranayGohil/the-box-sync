@@ -18,6 +18,14 @@ const LeaveRequests = () => {
         { to: 'staff/leave-requests', text: 'Leave Requests' }
     ];
 
+    const getActiveBalancesForRecord = (record) => {
+        const config = record.staff_id?.leave_policy_configuration || [];
+        return (record.balances || []).filter(b => {
+            const cfg = config.find(c => c.leave_type_id === b.leave_type_id);
+            return cfg ? cfg.is_active === true : false;
+        });
+    };
+
     const currentYear = new Date().getFullYear();
     const statusOptions = [
         { value: 'all', label: 'All Status' },
@@ -608,9 +616,10 @@ const LeaveRequests = () => {
                                                 </thead>
                                                 <tbody>
                                                     {currentBalances.map((b, idx) => {
-                                                        const totalEntitled = b.balances.reduce((acc, curr) => acc + curr.entitled + curr.carried_forward, 0);
-                                                        const totalTaken = b.balances.reduce((acc, curr) => acc + curr.taken, 0);
-                                                        const totalPending = b.balances.reduce((acc, curr) => acc + curr.pending, 0);
+                                                        const activeBalances = getActiveBalancesForRecord(b);
+                                                        const totalEntitled = activeBalances.reduce((acc, curr) => acc + curr.entitled + curr.carried_forward, 0);
+                                                        const totalTaken = activeBalances.reduce((acc, curr) => acc + curr.taken, 0);
+                                                        const totalPending = activeBalances.reduce((acc, curr) => acc + curr.pending, 0);
                                                         const totalRemaining = totalEntitled - totalTaken - totalPending;
 
                                                         return (
@@ -639,7 +648,7 @@ const LeaveRequests = () => {
                                                                 <td className="py-3 fw-bold text-dark" style={{ fontSize: '0.95rem' }}>{totalRemaining}d</td>
                                                                 <td className="py-3">
                                                                     <div className="d-flex flex-wrap gap-1">
-                                                                        {b.balances.map((lt, ltIdx) => {
+                                                                        {activeBalances.map((lt, ltIdx) => {
                                                                             const policyItem = leavePolicy[lt.leave_type_id];
                                                                             const entitled = lt.entitled + lt.carried_forward;
                                                                             const remaining = entitled - lt.taken - lt.pending;
@@ -692,9 +701,10 @@ const LeaveRequests = () => {
                             <div className="d-md-none">
                                 <Row className="g-4">
                                     {currentBalances.map((b, idx) => {
-                                        const totalEntitled = b.balances.reduce((acc, curr) => acc + curr.entitled + curr.carried_forward, 0);
-                                        const totalTaken = b.balances.reduce((acc, curr) => acc + curr.taken, 0);
-                                        const totalPending = b.balances.reduce((acc, curr) => acc + curr.pending, 0);
+                                        const activeBalances = getActiveBalancesForRecord(b);
+                                        const totalEntitled = activeBalances.reduce((acc, curr) => acc + curr.entitled + curr.carried_forward, 0);
+                                        const totalTaken = activeBalances.reduce((acc, curr) => acc + curr.taken, 0);
+                                        const totalPending = activeBalances.reduce((acc, curr) => acc + curr.pending, 0);
                                         const totalRemaining = totalEntitled - totalTaken - totalPending;
 
                                         return (
@@ -743,7 +753,7 @@ const LeaveRequests = () => {
 
                                                         <h6 className="fw-bold text-dark mb-3 small text-uppercase letter-spacing-1">Leave Types Breakdown</h6>
                                                         <Row className="g-3">
-                                                            {b.balances.map((lt, ltIdx) => {
+                                                            {activeBalances.map((lt, ltIdx) => {
                                                                 const policyItem = leavePolicy[lt.leave_type_id];
                                                                 const entitled = lt.entitled + lt.carried_forward;
                                                                 const remaining = entitled - lt.taken - lt.pending;

@@ -179,7 +179,7 @@ const FinancialReport = () => {
     try {
       const wb = XLSX.utils.book_new();
       if (exportOptions.includeSummary) {
-        const dashboardData = [['FINANCIAL REPORT DASHBOARD'], [], ['Company:', COMPANY_NAME], ['Period:', `${startDate} to ${endDate}`], [], ['Metric', 'Value'], ['Gross', reportData.summary.grossRevenue], ['Net', reportData.summary.netRevenue]];
+        const dashboardData = [['FINANCIAL REPORT DASHBOARD'], [], ['Company:', COMPANY_NAME], ['Period:', `${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`], [], ['Metric', 'Value'], ['Gross', reportData.summary.grossRevenue], ['Net', reportData.summary.netRevenue]];
         const ws = XLSX.utils.aoa_to_sheet(dashboardData);
         XLSX.utils.book_append_sheet(wb, ws, 'Dashboard');
       }

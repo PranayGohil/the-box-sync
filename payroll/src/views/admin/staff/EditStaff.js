@@ -12,6 +12,7 @@ import Webcam from 'react-webcam';
 import { AuthContext } from 'contexts/AuthContext';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
+import { format } from 'date-fns';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
@@ -1860,7 +1861,7 @@ const EditStaff = () => {
                               Projected New {baseLabel}: <strong className="text-primary fs-6">₹{newBaseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                             </div>
                             <div className="mt-2 text-uppercase text-muted" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
-                              Scheduled execution date: <strong>{new Date(values.increment_plan.scheduled_date).toLocaleDateString('en-GB')}</strong>
+                              Scheduled execution date: <strong>{format(new Date(values.increment_plan.scheduled_date), 'dd/MM/yyyy')}</strong>
                             </div>
                           </div>
                         );

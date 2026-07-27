@@ -199,8 +199,8 @@ const OperationalReport = () => {
           ['OPERATIONAL PERFORMANCE DASHBOARD'],
           [],
           ['Company:', COMPANY_NAME],
-          ['Report Period:', `${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`],
-          ['Generated On:', format(new Date(), 'dd MMM yyyy hh:mm a')],
+          ['Report Period:', `${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`],
+          ['Generated On:', format(new Date(), 'dd/MM/yyyy hh:mm a')],
           [],
           ['KEY OPERATIONAL METRICS'],
           ['Metric', 'Value'],
@@ -395,7 +395,7 @@ const OperationalReport = () => {
       yPosition = 50;
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
-      doc.text(`Report Period: ${format(new Date(startDate), 'dd MMM yyyy')} to ${format(new Date(endDate), 'dd MMM yyyy')}`, 20, yPosition);
+      doc.text(`Report Period: ${format(new Date(startDate), 'dd/MM/yyyy')} to ${format(new Date(endDate), 'dd/MM/yyyy')}`, 20, yPosition);
       yPosition += 15;
 
       if (exportOptions.includeInsights) {
