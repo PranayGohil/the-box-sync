@@ -424,7 +424,7 @@ const getUserData = async (req, res) => {
         return res.status(404).json({ message: "Staff not found" });
       }
 
-      const adminUser = await User.findById(staff.user_id).select("name logo printSettings").lean();
+      const adminUser = await User.findById(staff.user_id).select("name logo printSettings whatsappBillSettings").lean();
 
       return res.json({
         _id: staff._id,
@@ -440,6 +440,7 @@ const getUserData = async (req, res) => {
         restaurant_name: adminUser?.name || "",
         logo: adminUser?.logo || "",
         printSettings: adminUser?.printSettings || null,
+        whatsappBillSettings: adminUser?.whatsappBillSettings || null,
       });
     }
 
@@ -466,6 +467,7 @@ const getUserData = async (req, res) => {
       restaurant_token: 1,
       isApproved: 1,
       printSettings: 1,
+      whatsappBillSettings: 1,
       // don't include password, otp, feedbacks by default
     };
 
@@ -797,6 +799,37 @@ const updatePrintSettings = async (req, res) => {
   }
 };
 
+const updateWhatsAppBillSettings = async (req, res) => {
+  const { whatsappBillSettings } = req.body;
+  const userId = req.user._id;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        whatsappBillSettings: {
+          showGst: whatsappBillSettings?.showGst ?? true,
+          showFssai: whatsappBillSettings?.showFssai ?? true,
+          showCustomerDetails: whatsappBillSettings?.showCustomerDetails ?? true,
+          showItemizedList: whatsappBillSettings?.showItemizedList ?? true,
+          headerNote: whatsappBillSettings?.headerNote ?? "",
+          footerNote: whatsappBillSettings?.footerNote ?? "Thank you for your visit!",
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "WhatsApp bill settings updated successfully.",
+      whatsappBillSettings: updatedUser.whatsappBillSettings,
+    });
+  } catch (error) {
+    console.error("Error updating WhatsApp bill settings:", error);
+    res.status(500).send("Failed to update WhatsApp bill settings.");
+  }
+};
+
 module.exports = {
   contactEmail,
   sendEnquiry,
@@ -812,5 +845,6 @@ module.exports = {
   updateUser,
   updateTax,
   updatePrintSettings,
+  updateWhatsAppBillSettings,
   getAllUsers,
 };

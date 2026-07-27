@@ -13,8 +13,9 @@ import TaxAndCharges from './TaxAndCharges';
 import Subscription from './Subscription';
 import ForgotPassword from './ForgotPassword';
 import PrintConfig from './PrintConfig';
+import WhatsAppBillConfig from './WhatsAppBillConfig';
 
-const NavContent = ({ activePlans }) => {
+const NavContent = ({ activePlans, canUseWhatsApp }) => {
   return (
     <>
       <Nav className="flex-column operations-operations-sidebar">
@@ -58,6 +59,12 @@ const NavContent = ({ activePlans }) => {
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Print Settings</span>
             </Nav.Link>
+            {canUseWhatsApp && (
+              <Nav.Link as={NavLink} to="/settings/whatsapp-bill-config" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">WhatsApp Bill Settings</span>
+              </Nav.Link>
+            )}
           </div>
         </div>
 
@@ -78,7 +85,7 @@ const NavContent = ({ activePlans }) => {
   );
 };
 
-const MobileNavbar = () => {
+const MobileNavbar = ({ canUseWhatsApp }) => {
   const { navClasses } = useSelector((state) => state.menu);
   const isSidebarOpen = navClasses && navClasses['mobile-side-in'];
 
@@ -87,6 +94,7 @@ const MobileNavbar = () => {
     { to: '/settings/tax-charges', icon: 'dollar', title: 'Tax & Charges' },
     { to: '/settings/subscription', icon: 'star', title: 'Subscription' },
     { to: '/settings/print-config', icon: 'print', title: 'Print Settings' },
+    ...(canUseWhatsApp ? [{ to: '/settings/whatsapp-bill-config', icon: 'messages', title: 'WhatsApp Bill' }] : []),
     { to: '/settings/forgot-password', icon: 'key', title: 'Forgot Password' },
   ];
 
@@ -155,7 +163,8 @@ const Settings = () => {
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10) || 1200;
 
-  const { activePlans } = useContext(AuthContext);
+  const { activePlans, currentUser } = useContext(AuthContext);
+  const canUseWhatsApp = true;
 
   return (
     <div className="position-relative container-fluid">
@@ -163,12 +172,12 @@ const Settings = () => {
         {width && width >= lgBreakpoint ? (
           <Col xs="auto" className="d-none d-lg-flex">
             <div className="nav flex-column sw-25 mt-2">
-              <NavContent activePlans={activePlans} />
+              <NavContent activePlans={activePlans} canUseWhatsApp={canUseWhatsApp} />
             </div>
           </Col>
         ) : (
           <Col xs={12} className="d-lg-none">
-            <MobileNavbar />
+            <MobileNavbar canUseWhatsApp={canUseWhatsApp} />
           </Col>
         )}
         <Col xs={12} lg className="settings-content-col">
@@ -179,6 +188,7 @@ const Settings = () => {
             <Route exact path="/settings/subscription" render={() => <Subscription />} />
             <Route exact path="/settings/forgot-password" render={() => <ForgotPassword />} />
             <Route exact path="/settings/print-config" render={() => <PrintConfig />} />
+            <Route exact path="/settings/whatsapp-bill-config" render={() => <WhatsAppBillConfig />} />
           </Switch>
         </Col>
       </Row>

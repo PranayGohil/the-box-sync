@@ -83,7 +83,7 @@ const Dashboard = () => {
               </h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
-            <Col xs="auto">
+            <Col xs="auto" className="d-none d-md-flex">
               <div className="d-flex gap-3 align-items-center">
                 <Button className="custom-btn-outline d-flex align-items-center gap-2" onClick={createNewOrder}>
                   <CsLineIcons icon="plus" size="20" />
@@ -95,7 +95,7 @@ const Dashboard = () => {
         </div>
 
         <Row className="g-4">
-          {/* Section 1: Takeaways & Deliveries */}
+          {/* Section 1: Takeaway & Delivery */}
           <Col xs="12" lg="6">
             <div className="d-flex align-items-center mb-4">
               <div
@@ -109,7 +109,7 @@ const Dashboard = () => {
                 }}
               />
               <h3 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>
-                Takeaways & Deliveries
+                Takeaway & Delivery
                 <span className="ms-2 status-badge qsr-badge-active" style={{ fontSize: '12px', padding: '4px 10px', height: 'fit-content' }}>
                   {activeTakeawaysAndDeliveries.length} Active
                 </span>

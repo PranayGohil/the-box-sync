@@ -86,19 +86,22 @@ main,
 
 /* Custom Outlined Pill Button (Admin Style) */
 .custom-btn-outline {
-  background: #ffffff !important;
-  border: 1.5px solid #23b3f4 !important;
+  border: 1px solid #23b3f4 !important;
   color: #23b3f4 !important;
+  background-color: #fff !important;
+  transition: all 0.2s ease-in-out !important;
   border-radius: 50px !important;
-  padding: 0.6rem 1.5rem !important;
-  font-weight: 700 !important;
-  transition: all 0.3s ease !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
 }
 .custom-btn-outline:hover {
-  background: #23b3f4 !important;
-  color: #ffffff !important;
+  background-color: #23b3f4 !important;
+  color: #fff !important;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(35, 179, 244, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
 }
 
 /* Global Page Title Styles */
@@ -673,15 +676,6 @@ main,
   .pos-title {
     font-size: 15px;
   }
-  .pos-back-btn {
-    padding: 0 !important;
-    min-width: 30px !important;
-    height: 30px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 50% !important;
-  }
   .pos-menu-filters {
     padding: 8px 10px;
     flex-wrap: nowrap;
@@ -726,6 +720,15 @@ main,
   .pos-wrapper {
     margin-left: -12px !important;
     margin-right: -12px !important;
+  }
+  .pos-back-btn {
+    padding: 0 !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
   }
 }
 

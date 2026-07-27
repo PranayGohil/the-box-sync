@@ -7,6 +7,7 @@ import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { toast } from 'react-toastify';
 import { openPrintWindow } from 'utils/printUtils';
+import { generateWhatsAppBillMessage } from 'utils/whatsappUtils';
 import { AuthContext } from 'contexts/AuthContext';
 
 const OrderDetails = () => {
@@ -98,57 +99,7 @@ const OrderDetails = () => {
   const sendWhatsAppMessage = async (phoneVal) => {
     setSharing(true);
     try {
-      const restaurantName = restaurantInfo?.name || 'Restaurant';
-      const printSettings = restaurantInfo?.printSettings || restaurantInfo?.user?.printSettings;
-      const showGst = printSettings?.showGst ?? true;
-      const showFssai = printSettings?.showFssai ?? true;
-      const showCustomerDetails = printSettings?.showCustomerDetails ?? true;
-
-      let message = `*${restaurantName}*\n`;
-      message += `*Order Summary*\n\n`;
-      if (showGst && restaurantInfo?.gst_no) {
-        message += `*GSTIN:* ${restaurantInfo.gst_no}\n`;
-      }
-      if (showFssai && restaurantInfo?.fssai_no) {
-        message += `*FSSAI No:* ${restaurantInfo.fssai_no}\n`;
-      }
-
-      if (showCustomerDetails) {
-        message += `*Customer Name :* ${order.customer_name || 'Guest'}\n`;
-        const contactNum = order.customer_phone || order.customer_details?.phone || '';
-        message += `*Customer Contact :* ${contactNum}\n`;
-      }
-      message += `*Bill No:* ${order.order_no || order.id}\n`;
-      message += `*Date:* ${new Date(order.order_date).toLocaleString('en-IN', {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true,
-      })}\n\n`;
-
-      message += `*Items:*\n`;
-      order.order_items.forEach((item) => {
-        message += `- ${item.quantity} x ${item.dish_name} - ₹${(item.dish_price * item.quantity).toFixed(2)}\n`;
-      });
-      message += `\n*Sub Total:* ₹${parseFloat(order.sub_total || 0).toFixed(2)}\n`;
-      if (order.cgst_amount > 0) message += `*CGST:* ₹${parseFloat(order.cgst_amount).toFixed(2)}\n`;
-      if (order.sgst_amount > 0) message += `*SGST:* ₹${parseFloat(order.sgst_amount).toFixed(2)}\n`;
-      if (order.vat_amount > 0) message += `*VAT:* ₹${parseFloat(order.vat_amount).toFixed(2)}\n`;
-      if (order.discount_amount > 0) message += `*Discount:* -₹${parseFloat(order.discount_amount).toFixed(2)}\n`;
-      if (order.waveoff_amount > 0) message += `*Waveoff:* -₹${parseFloat(order.waveoff_amount).toFixed(2)}\n`;
-      message += `*Total Amount:* ₹${parseFloat(order.total_amount || 0).toFixed(2)}\n\n`;
-      message += `Thank you for your visit!`;
-
-      const encodedMessage = encodeURIComponent(message);
-      let phoneNumber = phoneVal ? String(phoneVal).replace(/\D/g, '') : '';
-
-      if (phoneNumber && phoneNumber.length === 10) {
-        phoneNumber = `91${phoneNumber}`;
-      }
-
-      const whatsappUrl = phoneNumber ? `https://wa.me/${phoneNumber}?text=${encodedMessage}` : `https://wa.me/?text=${encodedMessage}`;
+      const whatsappUrl = generateWhatsAppBillMessage(order, restaurantInfo, phoneVal);
       window.open(whatsappUrl, '_blank');
     } catch (err) {
       console.error('WhatsApp share error:', err);

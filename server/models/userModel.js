@@ -161,6 +161,32 @@ const userSchema = new Schema({
       default: true,
     },
   },
+  whatsappBillSettings: {
+    showGst: {
+      type: Boolean,
+      default: true,
+    },
+    showFssai: {
+      type: Boolean,
+      default: true,
+    },
+    showCustomerDetails: {
+      type: Boolean,
+      default: true,
+    },
+    showItemizedList: {
+      type: Boolean,
+      default: true,
+    },
+    headerNote: {
+      type: String,
+      default: "",
+    },
+    footerNote: {
+      type: String,
+      default: "Thank you for your visit!",
+    },
+  },
 });
 
 // userModel.js

@@ -43,7 +43,7 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (!socket) return () => {};
+    if (!socket) return () => { };
     const handleSocketUpdate = () => {
       console.log('Realtime order update (QSR): fetching active orders');
       fetchActiveOrders();
@@ -111,7 +111,7 @@ const Dashboard = () => {
               </h1>
               <BreadcrumbList items={breadcrumbs} />
             </Col>
-            <Col xs="auto">
+            <Col xs="auto" className="d-none d-md-flex">
               <div className="d-flex gap-3 align-items-center">
                 <Button className="custom-btn-outline d-flex align-items-center gap-2" onClick={createNewOrder}>
                   <CsLineIcons icon="plus" size="20" />
@@ -123,7 +123,7 @@ const Dashboard = () => {
         </div>
 
         <Row className="gy-4 gx-lg-5">
-          {/* Section 1: Takeaways & Deliveries */}
+          {/* Section 1: Takeaway & Delivery */}
           <Col xs="12" lg="6" className={showOnlinePartners ? 'd-none d-lg-block' : 'd-block'}>
             <div className="d-flex align-items-center mb-4">
               <div
@@ -137,7 +137,7 @@ const Dashboard = () => {
                 }}
               />
               <h3 className="mb-0 fw-bold d-flex align-items-center" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>
-                Takeaways & Deliveries
+                Takeaway & Delivery
                 <span className="ms-2 status-badge qsr-badge-active" style={{ fontSize: '12px', padding: '4px 10px', height: 'fit-content' }}>
                   {takeawaysAndDeliveriesFiltered.length} Active
                 </span>
@@ -193,8 +193,8 @@ const Dashboard = () => {
                             order.order_status === 'Paid' || order.order_status === 'Save' || order.order_status === 'Delivered'
                               ? 'success'
                               : order.order_status === 'Out for Delivery'
-                              ? 'info'
-                              : 'warning'
+                                ? 'info'
+                                : 'warning'
                           }
                           className={order.order_status === 'KOT' ? 'text-dark' : 'text-white'}
                           style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}

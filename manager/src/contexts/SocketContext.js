@@ -431,8 +431,6 @@ export const SocketProvider = ({ children }) => {
         }
         if (order.order_status === "Requested") {
           toast.info("New online order request received!");
-        } else {
-          toast.info(`Order #${order._id.substring(18).toUpperCase()} updated: ${order.order_status}`);
         }
       }
     });
@@ -458,7 +456,7 @@ export const SocketProvider = ({ children }) => {
       const body = notification.type === "inventory_approved"
         ? `Your request for ${notification.data?.category || 'items'} (₹${notification.data?.total_amount || 0}) is approved/delivered.`
         : `Your request for ${notification.data?.category || 'items'} is rejected. Reason: ${notification.data?.reject_reason || 'N/A'}`;
-      
+
       toast.info(body);
 
       // Native browser notification

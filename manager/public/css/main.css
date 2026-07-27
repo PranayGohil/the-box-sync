@@ -563,15 +563,6 @@
   .pos-title {
     font-size: 15px;
   }
-  .pos-back-btn {
-    padding: 0 !important;
-    min-width: 30px !important;
-    height: 30px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 50% !important;
-  }
   .pos-menu-filters {
     padding: 8px 10px;
     flex-wrap: nowrap;
@@ -615,6 +606,15 @@
   .pos-wrapper {
     margin-left: -12px !important;
     margin-right: -12px !important;
+  }
+  .pos-back-btn {
+    padding: 0 !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
   }
 }
 

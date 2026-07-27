@@ -15,8 +15,9 @@ import Subscription from './subscription/Subscription';
 import ManageWebsite from './manage-website/ManageWebsite';
 import ForgotPassword from './forgot-password/ForgotPassword';
 import PrintConfig from './print-config/PrintConfig';
+import WhatsAppBillConfig from './whatsapp-bill-config/WhatsAppBillConfig';
 
-const NavContent = ({ activePlans }) => {
+const NavContent = ({ activePlans, canUseWhatsApp }) => {
   return (
     <>
       <Nav className="flex-column operations-operations-sidebar">
@@ -66,6 +67,12 @@ const NavContent = ({ activePlans }) => {
               <i className="me-2 sw-3 d-inline-block" />
               <span className="align-middle">Print Settings</span>
             </Nav.Link>
+            {canUseWhatsApp && (
+              <Nav.Link as={NavLink} to="/settings/whatsapp-bill-config" className="px-0">
+                <i className="me-2 sw-3 d-inline-block" />
+                <span className="align-middle">WhatsApp Bill Settings</span>
+              </Nav.Link>
+            )}
           </div>
         </div>
 
@@ -159,7 +166,8 @@ const Settings = () => {
   const { themeValues } = useSelector((state) => state.settings);
   const lgBreakpoint = parseInt(themeValues.lg.replace('px', ''), 10) || 1200;
 
-  const { activePlans } = useContext(AuthContext);
+  const { activePlans, currentUser } = useContext(AuthContext);
+  const canUseWhatsApp = true;
 
   return (
     <div className="position-relative">
@@ -173,7 +181,7 @@ const Settings = () => {
         {width && width >= lgBreakpoint && (
           <Col xs="auto" className="d-none d-lg-flex">
             <div className="nav flex-column sw-25 mt-2">
-              <NavContent activePlans={activePlans} />
+              <NavContent activePlans={activePlans} canUseWhatsApp={canUseWhatsApp} />
             </div>
           </Col>
         )}
@@ -198,6 +206,7 @@ const Settings = () => {
             />
             <Route exact path="/settings/forgot-password" render={() => <ForgotPassword />} />
             <Route exact path="/settings/print-config" render={() => <PrintConfig />} />
+            <Route exact path="/settings/whatsapp-bill-config" render={() => <WhatsAppBillConfig />} />
           </Switch>
         </Col>
       </Row>

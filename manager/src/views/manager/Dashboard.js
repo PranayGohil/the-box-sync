@@ -348,157 +348,157 @@ const Dashboard = () => {
             {tables
               .filter((tableArea) => !selectedArea || tableArea.area === selectedArea)
               .map((tableArea) => (
-              <div className="gx-2 mb-5" key={tableArea._id}>
-                <div className="d-flex align-items-center mb-4">
-                  <div
-                    style={{
-                      width: '8px',
-                      height: '24px',
-                      background: '#23b3f4',
-                      borderRadius: '4px',
-                      marginRight: '12px',
-                      boxShadow: '0 2px 5px rgba(35,179,244,0.3)',
-                    }}
-                  />
-                  <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>
-                    {tableArea.area}
-                  </h3>
-                </div>
-                <Col className="p-0">
-                  <Row className="g-4">
-                    {tableArea.tables
-                      .sort((a, b) => String(a.table_no).localeCompare(String(b.table_no), undefined, { numeric: true, sensitivity: 'base' }))
-                      .map((table) => {
-                        const activeOrder = activeDineInOrders.find((order) => order.table_no === table.table_no && order.table_area === tableArea.area);
+                <div className="gx-2 mb-5" key={tableArea._id}>
+                  <div className="d-flex align-items-center mb-4">
+                    <div
+                      style={{
+                        width: '8px',
+                        height: '24px',
+                        background: '#23b3f4',
+                        borderRadius: '4px',
+                        marginRight: '12px',
+                        boxShadow: '0 2px 5px rgba(35,179,244,0.3)',
+                      }}
+                    />
+                    <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>
+                      {tableArea.area}
+                    </h3>
+                  </div>
+                  <Col className="p-0">
+                    <Row className="g-4">
+                      {tableArea.tables
+                        .sort((a, b) => String(a.table_no).localeCompare(String(b.table_no), undefined, { numeric: true, sensitivity: 'base' }))
+                        .map((table) => {
+                          const activeOrder = activeDineInOrders.find((order) => order.table_no === table.table_no && order.table_area === tableArea.area);
 
-                        let preparingCount = 0;
-                        let completedCount = 0;
+                          let preparingCount = 0;
+                          let completedCount = 0;
 
-                        if (activeOrder) {
-                          preparingCount = activeOrder.order_items.filter((item) => item.status === 'Preparing' || item.status === 'Pending').length;
+                          if (activeOrder) {
+                            preparingCount = activeOrder.order_items.filter((item) => item.status === 'Preparing' || item.status === 'Pending').length;
 
-                          completedCount = activeOrder.order_items.filter((item) => item.status === 'Completed').length;
-                        }
-
-                        let borderStyle = '1px solid rgba(35, 179, 244, 0.15)';
-                        if (activeOrder) {
-                          if (activeOrder.order_status === 'Save') {
-                            borderStyle = '2px solid #198754';
-                          } else if (activeOrder.order_status === 'KOT') {
-                            borderStyle = '2px solid #ffc107';
+                            completedCount = activeOrder.order_items.filter((item) => item.status === 'Completed').length;
                           }
-                        }
 
-                        return (
-                          <Col key={table._id} xs="6" sm="4" md="3" lg="3" xl="2" style={{ position: 'relative' }}>
-                            {completedCount > 0 && (
-                              <Badge
-                                bg="success"
-                                style={{
-                                  position: 'absolute',
-                                  zIndex: 10,
-                                  top: '-8px',
-                                  right: '-2px',
-                                  fontSize: '11px',
-                                  padding: '6px 10px',
-                                  borderRadius: '10px',
-                                  boxShadow: '0 4px 10px rgba(25,135,84,0.3)',
-                                }}
-                              >
-                                Served: {completedCount}
-                              </Badge>
-                            )}
-                            <div
-                              style={{ ...glassCardStyle, border: borderStyle, height: 'auto' }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-5px)';
-                                e.currentTarget.style.boxShadow = '0 15px 35px rgba(35,179,244,0.15)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = glassCardStyle.boxShadow;
-                              }}
-                              onClick={() => handleTableClick(table._id, activeOrder?._id)}
-                            >
-                              <div className={`p-2 p-sm-3 text-center d-flex flex-column h-100 align-items-center ${activeOrder ? 'justify-content-between' : 'justify-content-start'}`}>
-                                <div
-                                  className="d-flex align-items-center justify-content-center mb-2 mb-sm-3 dashboard-table-circle"
+                          let borderStyle = '1px solid rgba(35, 179, 244, 0.15)';
+                          if (activeOrder) {
+                            if (activeOrder.order_status === 'Save') {
+                              borderStyle = '2px solid #198754';
+                            } else if (activeOrder.order_status === 'KOT') {
+                              borderStyle = '2px solid #ffc107';
+                            }
+                          }
+
+                          return (
+                            <Col key={table._id} xs="6" sm="4" md="3" lg="3" xl="2" style={{ position: 'relative' }}>
+                              {completedCount > 0 && (
+                                <Badge
+                                  bg="success"
                                   style={{
-                                    background: 'linear-gradient(135deg, rgba(35, 179, 244, 0.1) 0%, rgba(35, 179, 244, 0.2) 100%)',
-                                    borderRadius: '50%',
-                                    border: '2px solid rgba(35,179,244,0.3)',
+                                    position: 'absolute',
+                                    zIndex: 10,
+                                    top: '-8px',
+                                    right: '-2px',
+                                    fontSize: '11px',
+                                    padding: '6px 10px',
+                                    borderRadius: '10px',
+                                    boxShadow: '0 4px 10px rgba(25,135,84,0.3)',
                                   }}
                                 >
-                                  <h3
-                                    className="mb-0 fw-bold dashboard-table-no"
+                                  Served: {completedCount}
+                                </Badge>
+                              )}
+                              <div
+                                style={{ ...glassCardStyle, border: borderStyle, height: 'auto' }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'translateY(-5px)';
+                                  e.currentTarget.style.boxShadow = '0 15px 35px rgba(35,179,244,0.15)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                  e.currentTarget.style.boxShadow = glassCardStyle.boxShadow;
+                                }}
+                                onClick={() => handleTableClick(table._id, activeOrder?._id)}
+                              >
+                                <div className={`p-2 p-sm-3 text-center d-flex flex-column h-100 align-items-center ${activeOrder ? 'justify-content-between' : 'justify-content-start'}`}>
+                                  <div
+                                    className="d-flex align-items-center justify-content-center mb-2 mb-sm-3 dashboard-table-circle"
                                     style={{
-                                      color: '#23b3f4',
-                                      whiteSpace: 'nowrap',
-                                      overflow: 'hidden',
-                                      fontSize:
-                                        String(table.table_no).length <= 2
-                                          ? '1.5rem'
-                                          : String(table.table_no).length <= 4
-                                            ? '1.1rem'
-                                            : '0.75rem',
+                                      background: 'linear-gradient(135deg, rgba(35, 179, 244, 0.1) 0%, rgba(35, 179, 244, 0.2) 100%)',
+                                      borderRadius: '50%',
+                                      border: '2px solid rgba(35,179,244,0.3)',
                                     }}
                                   >
-                                    {table.table_no}
-                                  </h3>
-                                </div>
-                                <div className="w-100">
-                                  <p className="dashboard-table-max-person mb-2">
-                                    Capacity: <span className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>{table.max_person}</span>
-                                  </p>
-                                  {activeOrder && (
-                                    <div className="mb-2">
-                                      <Badge
-                                        bg="none"
-                                        className="rounded-pill px-2 py-1"
-                                        style={{
-                                          fontSize: '10px',
-                                          fontWeight: 'bold',
-                                          display: 'inline-flex',
-                                          alignItems: 'center',
-                                          gap: '4px',
-                                          ...getBadgeStyle(activeOrder.order_date),
-                                        }}
-                                      >
-                                        <i className="far fa-clock" style={{ fontSize: '9px' }} />
-                                        <span>{getOccupiedDuration(activeOrder.order_date)}</span>
-                                      </Badge>
-                                    </div>
-                                  )}
-                                  {activeOrder &&
-                                    (activeOrder.order_status === 'KOT' ? (
-                                      <div className="w-100 mt-1 mt-sm-2">
-                                        {preparingCount >= 0 && (
-                                          <Badge bg="warning" className="dashboard-table-badge w-100 rounded-3 shadow-sm text-dark fw-bold">
-                                            KOT: {preparingCount}
-                                          </Badge>
-                                        )}
+                                    <h3
+                                      className="mb-0 fw-bold dashboard-table-no"
+                                      style={{
+                                        color: '#23b3f4',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        fontSize:
+                                          String(table.table_no).length <= 2
+                                            ? '1.5rem'
+                                            : String(table.table_no).length <= 4
+                                              ? '1.1rem'
+                                              : '0.75rem',
+                                      }}
+                                    >
+                                      {table.table_no}
+                                    </h3>
+                                  </div>
+                                  <div className="w-100">
+                                    <p className="dashboard-table-max-person mb-2">
+                                      Capacity: <span className="fw-bold" style={{ color: '#23b3f4', fontSize: '13px' }}>{table.max_person}</span>
+                                    </p>
+                                    {activeOrder && (
+                                      <div className="mb-2">
+                                        <Badge
+                                          bg="none"
+                                          className="rounded-pill px-2 py-1"
+                                          style={{
+                                            fontSize: '10px',
+                                            fontWeight: 'bold',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            ...getBadgeStyle(activeOrder.order_date),
+                                          }}
+                                        >
+                                          <i className="far fa-clock" style={{ fontSize: '9px' }} />
+                                          <span>{getOccupiedDuration(activeOrder.order_date)}</span>
+                                        </Badge>
                                       </div>
-                                    ) : (
-                                      activeOrder.order_status === 'Save' && (
+                                    )}
+                                    {activeOrder &&
+                                      (activeOrder.order_status === 'KOT' ? (
                                         <div className="w-100 mt-1 mt-sm-2">
                                           {preparingCount >= 0 && (
-                                            <Badge bg="success" className="dashboard-table-badge w-100 rounded-3 shadow-sm fw-bold">
-                                              Save: {preparingCount}
+                                            <Badge bg="warning" className="dashboard-table-badge w-100 rounded-3 shadow-sm text-dark fw-bold">
+                                              KOT: {preparingCount}
                                             </Badge>
                                           )}
                                         </div>
-                                      )
-                                    ))}
+                                      ) : (
+                                        activeOrder.order_status === 'Save' && (
+                                          <div className="w-100 mt-1 mt-sm-2">
+                                            {preparingCount >= 0 && (
+                                              <Badge bg="success" className="dashboard-table-badge w-100 rounded-3 shadow-sm fw-bold">
+                                                Save: {preparingCount}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                        )
+                                      ))}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </Col>
-                        );
-                      })}
-                  </Row>
-                </Col>
-              </div>
-            ))}
+                            </Col>
+                          );
+                        })}
+                    </Row>
+                  </Col>
+                </div>
+              ))}
           </Col>
 
           <Col xs="12" lg="4" className={mobileActiveSection === 'takeaway-delivery' ? 'd-block' : 'd-none d-lg-block'}>
@@ -653,7 +653,7 @@ const Dashboard = () => {
                     }}
                   />
                   <h3 className="mb-0 fw-bold" style={{ color: '#23b3f4', letterSpacing: '0.5px' }}>
-                    Active Takeaways & Deliveries
+                    Active Takeaway & Delivery
                   </h3>
                 </div>
                 <div style={{ maxHeight: '90vh', overflowY: 'auto', paddingRight: '5px' }} className="custom-scrollbar">

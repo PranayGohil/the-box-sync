@@ -15,6 +15,7 @@ const {
   updateUser,
   updateTax,
   updatePrintSettings,
+  updateWhatsAppBillSettings,
   getTokenRole,
   getAllUsers,
 } = require("../controllers/userController");
@@ -44,6 +45,7 @@ userRouter.route("/get/:code").get(authMiddleware, getUserDataByCode);
 userRouter.route("/update").put(authMiddleware, adminAuth, upload.single("logo"), updateUser);
 userRouter.route("/update-tax").put(authMiddleware, adminAuth, validate(updateTaxSchema), updateTax);
 userRouter.route("/update-print-settings").put(authMiddleware, adminAuth, updatePrintSettings);
+userRouter.route("/update-whatsapp-bill-settings").put(authMiddleware, adminAuth, updateWhatsAppBillSettings);
 userRouter.route("/get-all").get(authMiddleware, getAllUsers);
 
 module.exports = userRouter;

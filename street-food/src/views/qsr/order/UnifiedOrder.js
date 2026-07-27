@@ -1003,36 +1003,10 @@ const UnifiedOrder = () => {
       {/* POS Wrapper */}
       <div className="pos-wrapper" style={{ height: '100vh', margin: 0 }}>
         {/* Top Bar */}
-        <div className="pos-topbar d-flex align-items-center px-3 py-2 border-bottom flex-nowrap" style={{ background: '#fff', flexWrap: 'nowrap' }}>
-          <Button
-            variant="outline-info"
-            className="rounded-pill d-flex align-items-center px-2 px-sm-3 py-1 text-decoration-none"
-            onClick={() => history.push(backPath)}
-            style={{ fontWeight: 600, fontSize: '0.9rem', borderColor: '#23b3f4', color: '#23b3f4' }}
-          >
-            <CsLineIcons icon="arrow-left" size="15" className="me-sm-2" />
-            <span className="d-none d-sm-inline">Back</span>
-          </Button>
-
-          <div className="fs-6 fs-sm-4 fw-bold text-nowrap" style={{ color: '#23b3f4' }}>
-            {orderId ? 'Edit' : 'New'} Order
-          </div>
-
-          <div className="d-flex align-items-center ms-auto" style={{ gap: '10px' }}>
-            <span className="text-muted fw-semibold d-none d-sm-inline" style={{ fontSize: '13px' }}>
-              Date:
-            </span>
-            <div className="pos-datepicker-container">
-              <DatePicker
-                showTimeSelect
-                timeFormat="hh:mm a"
-                timeIntervals={15}
-                timeCaption="Time"
-                dateFormat="dd/MM/yyyy hh:mm a"
-                selected={orderDate ? new Date(orderDate) : new Date()}
-                onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
-                customInput={<CustomDateInput />}
-              />
+        <div className="pos-topbar d-flex align-items-center justify-content-between flex-nowrap gap-2">
+          <div className="d-flex align-items-center gap-2 overflow-hidden flex-grow-1 order-1 order-md-2">
+            <div className="fs-6 fs-sm-4 fw-bold text-nowrap" style={{ color: '#23b3f4' }}>
+              {orderId ? 'Edit' : 'New'} Order
             </div>
             {tokenNumber && (
               <div
@@ -1044,12 +1018,69 @@ const UnifiedOrder = () => {
                   fontWeight: 700,
                   fontSize: '12px',
                   flexShrink: 0,
-                  marginLeft: '10px',
                 }}
               >
                 Token #{tokenNumber}
               </div>
             )}
+            {orderStatus && (
+              <div
+                style={{
+                  border: '1.5px solid #6c757d',
+                  borderRadius: '50px',
+                  padding: '3px 12px',
+                  color: '#6c757d',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  flexShrink: 0,
+                }}
+              >
+                {orderStatus}
+              </div>
+            )}
+          </div>
+          <Button
+            className="custom-btn-outline order-2 order-md-1 pos-back-btn"
+            style={{ padding: '0.35rem 1rem', flexShrink: 0 }}
+            onClick={() => history.push(backPath)}
+          >
+            <CsLineIcons icon="arrow-left" size="13" className="me-md-1" />
+            <span className="d-none d-md-inline">Back</span>
+          </Button>
+          <Form.Select
+            size="sm"
+            className="d-none d-md-inline-block order-md-3"
+            value={orderType}
+            onChange={(e) => handleOrderTypeChange(e.target.value)}
+            disabled={isEditMode || !!tableId}
+            style={{
+              maxWidth: '130px',
+              borderRadius: '50px',
+              borderColor: 'rgba(35,179,244,0.35)',
+              color: '#23b3f4',
+              fontWeight: 700,
+              fontSize: '13px',
+              flexShrink: 0,
+            }}
+          >
+            {ORDER_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </Form.Select>
+          <div className="d-none d-md-flex align-items-center gap-1 order-md-4" style={{ flexShrink: 0 }}>
+            <span className="text-muted small fw-semibold">Date:</span>
+            <DatePicker
+              showTimeSelect
+              timeFormat="hh:mm a"
+              timeIntervals={15}
+              timeCaption="Time"
+              dateFormat="dd/MM/yyyy hh:mm a"
+              selected={orderDate ? new Date(orderDate) : new Date()}
+              onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
+              customInput={<CustomDateInput />}
+            />
           </div>
         </div>
 
@@ -1113,8 +1144,8 @@ const UnifiedOrder = () => {
                       {paymentData.appliedPromo.discountType === 'bogo'
                         ? '(BOGO)'
                         : paymentData.appliedPromo.discountType === 'free_item'
-                        ? '(FREE ITEM)'
-                        : '(APPLIED)'}
+                          ? '(FREE ITEM)'
+                          : '(APPLIED)'}
                     </span>
                   </div>
                   <Button
@@ -1243,10 +1274,10 @@ const UnifiedOrder = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div >
 
       {/* Modals */}
-      <PaymentModal
+      < PaymentModal
         showPaymentModal={showPaymentModal}
         setShowPaymentModal={setShowPaymentModal}
         paymentData={{
@@ -1323,7 +1354,75 @@ const UnifiedOrder = () => {
       >
         <h6 className="mb-2 fw-bold text-muted border-bottom pb-2">Customer Details</h6>
 
-        {/* Order Date has been moved to Top Bar */}
+        {/* Row 1: Order Type + Order Date */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ flex: 1 }}>
+            <label
+              style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                color: '#94a3b8',
+                marginBottom: '3px',
+                display: 'block',
+              }}
+            >
+              Order Type
+            </label>
+            <Form.Select
+              size="sm"
+              value={orderType}
+              onChange={(e) => handleOrderTypeChange(e.target.value)}
+              disabled={isEditMode || !!tableId}
+              style={{
+                width: '100%',
+                height: '30px',
+                padding: '0 8px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#1e293b',
+                border: '1.5px solid rgba(226,232,240,0.9)',
+                borderRadius: '6px',
+                outline: 'none',
+                background: '#f8fafc',
+                transition: 'all 0.18s',
+                boxSizing: 'border-box',
+              }}
+            >
+              {ORDER_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </Form.Select>
+          </div>
+          <div style={{ flex: 1.5 }} className="d-md-none">
+            <label
+              style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                color: '#94a3b8',
+                marginBottom: '3px',
+                display: 'block',
+              }}
+            >
+              Order Date
+            </label>
+            <DatePicker
+              showTimeSelect
+              timeFormat="hh:mm a"
+              timeIntervals={15}
+              timeCaption="Time"
+              dateFormat="dd/MM/yyyy hh:mm a"
+              selected={orderDate ? new Date(orderDate) : new Date()}
+              onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
+              customInput={<CustomDateInput />}
+            />
+          </div>
+        </div>
 
         <CustomerInfoForm
           customerInfo={customerInfo}

@@ -269,31 +269,30 @@ body {
 }
 
 .custom-btn-outline {
-  border: 1.5px solid #23b3f4 !important;
+  border: 1px solid #23b3f4 !important;
   color: #23b3f4 !important;
   background-color: #fff !important;
   transition: all 0.2s ease-in-out !important;
-  font-weight: 700 !important;
   border-radius: 50px !important;
-  padding: 0.6rem 1.5rem !important;
+  font-weight: 600 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 8px !important;
-}
+  box-shadow: none !important;
 
-.custom-btn-outline:hover {
-  background-color: #23b3f4 !important;
-  color: #fff !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
-}
+  &:hover {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(35, 179, 244, 0.25) !important;
+  }
 
-.custom-btn-outline:active,
-.custom-btn-outline:focus {
-  background-color: #23b3f4 !important;
-  color: #fff !important;
-  border-color: #23b3f4 !important;
+  &:active,
+  &:focus {
+    background-color: #23b3f4 !important;
+    color: #fff !important;
+    border-color: #23b3f4 !important;
+  }
 }
 
 .pill-input {

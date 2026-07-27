@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Form, Button, Card, Row, Col, Spinner } from 'react-bootstrap';
 import HtmlHead from 'components/html-head/HtmlHead';
 import BreadcrumbList from 'components/breadcrumb-list/BreadcrumbList';
+import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useFormik } from 'formik';
@@ -9,6 +11,7 @@ import * as Yup from 'yup';
 import { AuthContext } from 'contexts/AuthContext';
 
 const PrintConfig = () => {
+  const history = useHistory();
   const { activePlans, currentUser } = useContext(AuthContext);
   const hasWebsitePlan = activePlans?.includes('Restaurant Website') || false;
   const [restaurantToken, setRestaurantToken] = useState('');
@@ -140,12 +143,31 @@ const PrintConfig = () => {
       <HtmlHead title={title} description={description} />
 
       <div className="qsr-page-title-container">
-        <Row>
-          <Col xs="12" md="7">
+        <Row className="g-0 align-items-center">
+          <Col xs="auto" className="me-auto">
             <h1 className="qsr-page-title">{title}</h1>
             <BreadcrumbList items={breadcrumbs} />
           </Col>
+          <Col xs="auto" className="d-none d-lg-block">
+            <Button
+              onClick={() => history.push('/settings/whatsapp-bill-config')}
+              className="manage-menu-custom-btn-outline shadow-sm px-4 py-2 d-flex align-items-center border-2"
+              style={{ borderRadius: '50px', borderColor: '#1ea8e7', color: '#1ea8e7', fontWeight: '700' }}
+            >
+              <CsLineIcons icon="messages" size="18" className="me-2" /> WhatsApp Bill Settings
+            </Button>
+          </Col>
         </Row>
+
+        <div className="mt-2 d-lg-none d-flex justify-content-start">
+          <Button
+            onClick={() => history.push('/settings/whatsapp-bill-config')}
+            className="w-100 manage-menu-custom-btn-outline shadow-sm px-4 py-2 d-flex align-items-center justify-content-center border-2"
+            style={{ borderRadius: '50px', borderColor: '#1ea8e7', color: '#1ea8e7', fontWeight: '700' }}
+          >
+            <CsLineIcons icon="messages" size="16" className="me-2" /> WhatsApp Bill Settings
+          </Button>
+        </div>
       </div>
 
       <Row>
