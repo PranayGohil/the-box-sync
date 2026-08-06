@@ -27,6 +27,9 @@ const accounting = {
   dashboard: lazy(() => import('views/accounting/AccountingDashboard')),
   createInvoice: lazy(() => import('views/accounting/CreateInvoice')),
   createQuotation: lazy(() => import('views/accounting/CreateQuotation')),
+  createPurchaseOrder: lazy(() => import('views/accounting/CreatePurchaseOrder')),
+  createSalesOrder: lazy(() => import('views/accounting/CreateSalesOrder')),
+  createNote: lazy(() => import('views/accounting/CreateCreditDebitNote')),
 };
 
 
@@ -75,7 +78,7 @@ const allRoutes = {
     {
       path: `${appRoot}/accounting`,
       label: 'Accounting',
-      icon: 'calculator',
+      icon: 'file-text',
       component: accounting.dashboard,
       exact: true,
     },
@@ -88,6 +91,24 @@ const allRoutes = {
     {
       path: `${appRoot}/accounting/create-quotation`,
       component: accounting.createQuotation,
+      hideInMenu: true,
+      exact: true,
+    },
+    {
+      path: `${appRoot}/accounting/create-purchase-order`,
+      component: accounting.createPurchaseOrder,
+      hideInMenu: true,
+      exact: true,
+    },
+    {
+      path: `${appRoot}/accounting/create-sales-order`,
+      component: accounting.createSalesOrder,
+      hideInMenu: true,
+      exact: true,
+    },
+    {
+      path: `${appRoot}/accounting/create-note`,
+      component: accounting.createNote,
       hideInMenu: true,
       exact: true,
     },

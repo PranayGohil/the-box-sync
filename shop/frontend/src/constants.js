@@ -52,27 +52,10 @@ export const isAccountingShopType = (shopType) => {
   const st = String(shopType).toLowerCase();
   const allowedKeywords = [
     'electronic',
+    'electric',
     'mobile',
     'laptop',
     'computer',
-    'hardware',
-    'garment',
-    'clothing',
-    'jewellery',
-    'stationery',
-    'retail',
-    'gift',
-    'cosmetics',
-    'beauty',
-    'sports',
-    'flower',
-    'bouquet',
-    'liquor',
-    'wine',
-    'medical',
-    'pharmacy',
-    'general store',
-    'super market',
   ];
   return allowedKeywords.some((keyword) => st.includes(keyword));
 };
@@ -109,14 +92,9 @@ export const ALLOWED_ACCOUNTING_SHOP_TYPES = [
   'electronic',
   'electronics',
   'electronics & mobile',
+  'electric',
   'mobile',
   'laptop',
   'computer',
-  'hardware shop',
-  'hardware',
-  'clothing / garment',
-  'jewellery shop',
-  'gift shop',
-  'stationery shop',
 ];
 

@@ -43,8 +43,8 @@ const Subscription = () => {
         setSubscriptions(
           userRes.data.data.map((sub) => ({
             ...sub,
-            formatted_start: new Date(sub.start_date).toLocaleDateString('en-IN'),
-            formatted_end: new Date(sub.end_date).toLocaleDateString('en-IN'),
+            formatted_start: new Date(sub.start_date).toLocaleDateString('en-GB'),
+            formatted_end: new Date(sub.end_date).toLocaleDateString('en-GB'),
           }))
         );
       }

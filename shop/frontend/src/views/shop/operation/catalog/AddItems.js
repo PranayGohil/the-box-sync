@@ -188,6 +188,8 @@ const AddItems = () => {
         item_img: null,
         description: '',
         barcode: '',
+        hsn_sac_code: '',
+        hsn_code: '',
         variants: [{ size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true }],
         addons: [],
       },
@@ -422,7 +424,9 @@ const AddItems = () => {
             size_name: v.size_name || '',
             price: Number(v.price) || 0,
             extra: v.extra || '',
+            barcode: v.barcode || '',
             is_available: v.is_available !== false,
+            stock_quantity: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : null,
           }));
         }
 
@@ -443,6 +447,8 @@ const AddItems = () => {
           type: item.type || 'veg',
           item_price: cleanedVariants[0] ? Number(cleanedVariants[0].price) || 0 : 0,
           description: item.description,
+          hsn_sac_code: item.hsn_sac_code || '',
+          hsn_code: item.hsn_sac_code || '',
           has_variants: cleanedVariants.length > 1,
           variants: cleanedVariants,
           addons: cleanedAddons,
@@ -472,6 +478,8 @@ const AddItems = () => {
               item_img: null,
               description: '',
               barcode: '',
+              hsn_sac_code: '',
+              hsn_code: '',
               variants: [{ size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true }],
               addons: [],
             }]
@@ -654,6 +662,24 @@ const AddItems = () => {
                             );
                           })()}
 
+                          <Col xs={12} md={6}>
+                            <BForm.Group>
+                              <BForm.Label className="fw-bold text-muted text-uppercase mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>
+                                HSN Code / SAC
+                              </BForm.Label>
+                              <Field
+                                type="text"
+                                name="items[0].hsn_sac_code"
+                                className="form-control pill-input bg-white"
+                                placeholder="e.g. 84713010"
+                                onChange={(e) => {
+                                  setFieldValue('items[0].hsn_sac_code', e.target.value);
+                                  setFieldValue('items[0].hsn_code', e.target.value);
+                                }}
+                              />
+                            </BForm.Group>
+                          </Col>
+
                           <Col xs={12} md={4} className="pt-md-2 mt-3">
                             <div className="d-flex align-items-center h-100">
                               <input
@@ -705,131 +731,15 @@ const AddItems = () => {
                               <FieldArray name="items[0].variants">
                                 {({ push: pushVariant, remove: removeVariant }) => (
                                   <>
-                                    {/* Desktop Table Layout */}
-                                    <div className="table-responsive d-none d-md-block">
-                                      <Table borderless hover className="align-middle mb-0">
-                                        <thead>
-                                          <tr className="border-bottom" style={{ color: '#64748b', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
-                                            <th className="pb-2 text-uppercase">{variantLabel}</th>
-                                            <th className="pb-2 text-uppercase" width="130">Price</th>
-                                            <th className="pb-2 text-uppercase" width="130">Stock Qty</th>
-                                            <th className="pb-2 text-uppercase" width="180">Extra Details</th>
-                                            <th className="pb-2 text-uppercase" width="240">Barcode</th>
-                                            <th className="pb-2 text-uppercase text-center" width="60" />
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {(values.items[0].variants || []).map((variant, vIdx) => (
-                                            <tr key={vIdx} className="border-bottom border-light">
-                                              <td className="py-3">
-                                                <CreatableSelect
-                                                  styles={selectStyles}
-                                                  isClearable
-                                                  menuPlacement="auto"
-                                                  menuPortalTarget={document.body}
-                                                  options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                                                  value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
-                                                  onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].size_name`, selected ? selected.value : '')}
-                                                  placeholder="e.g. 1kg"
-                                                />
-                                                <ErrorMessage name={`items[0].variants[${vIdx}].size_name`} component="div" className="text-danger small mt-1" />
-                                              </td>
-                                              <td className="py-3">
-                                                <BForm.Control
-                                                  type="text"
-                                                  name={`items[0].variants[${vIdx}].price`}
-                                                  value={variant.price || ''}
-                                                  onChange={handleChange}
-                                                  placeholder="Price"
-                                                  className="pill-input"
-                                                  style={{ height: '38px', borderRadius: '10px' }}
-                                                />
-                                                <ErrorMessage name={`items[0].variants[${vIdx}].price`} component="div" className="text-danger small mt-1" />
-                                              </td>
-                                              <td className="py-3">
-                                                <BForm.Control
-                                                  type="number"
-                                                  name={`items[0].variants[${vIdx}].stock_quantity`}
-                                                  value={variant.stock_quantity ?? ''}
-                                                  onChange={handleChange}
-                                                  placeholder="Qty (Optional)"
-                                                  className="pill-input"
-                                                  style={{ height: '38px', borderRadius: '10px' }}
-                                                />
-                                              </td>
-                                              <td className="py-3">
-                                                <CreatableSelect
-                                                  styles={selectStyles}
-                                                  isClearable
-                                                  menuPlacement="auto"
-                                                  menuPortalTarget={document.body}
-                                                  options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                                                  value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
-                                                  onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].extra`, selected ? selected.value : '')}
-                                                  placeholder="Optional"
-                                                />
-                                              </td>
-                                              <td className="py-3">
-                                                <div className="d-flex align-items-center gap-1">
-                                                  <BForm.Control
-                                                    type="text"
-                                                    name={`items[0].variants[${vIdx}].barcode`}
-                                                    value={variant.barcode || ''}
-                                                    onChange={handleChange}
-                                                    placeholder="Barcode"
-                                                    className="pill-input"
-                                                    style={{ height: '38px', borderRadius: '10px' }}
-                                                  />
-                                                  <Button
-                                                    variant="outline-primary"
-                                                    className="flex-shrink-0 d-flex align-items-center justify-content-center px-3"
-                                                    style={{ height: '38px', borderRadius: '10px' }}
-                                                    onClick={() => setFieldValue(`items[0].variants[${vIdx}].barcode`, Math.floor(100000000000 + Math.random() * 900000000000).toString())}
-                                                  >
-                                                    <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Gen</span>
-                                                  </Button>
-                                                </div>
-                                              </td>
-                                              <td className="py-3 text-center">
-                                                <Button
-                                                  variant="outline-danger"
-                                                  onClick={() => removeVariant(vIdx)}
-                                                  disabled={values.items[0].variants.length === 1}
-                                                  style={{ height: '34px', width: '34px', minWidth: '34px', borderRadius: '50%', padding: 0 }}
-                                                  className="d-flex align-items-center justify-content-center btn btn-outline-danger mx-auto"
-                                                >
-                                                  <CsLineIcons icon="bin" size="14" />
-                                                </Button>
-                                              </td>
-                                            </tr>
-                                          ))}
-                                          <tr>
-                                            <td colSpan="5" className="pt-3 pb-0 border-0">
-                                              <Button
-                                                type="button"
-                                                variant="outline-primary"
-                                                className="custom-btn-outline py-1 px-3 d-flex align-items-center gap-1 btn btn-outline-primary"
-                                                style={{ height: '34px', fontSize: '0.85rem', borderRadius: '8px' }}
-                                                onClick={() => pushVariant({ size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true })}
-                                              >
-                                                <CsLineIcons icon="plus" size="12" />
-                                                Add Row
-                                              </Button>
-                                            </td>
-                                          </tr>
-                                        </tbody>
-                                      </Table>
-                                    </div>
-
-                                    {/* Mobile Stacked Layout (Hidden on Desktop) */}
-                                    <div className="d-flex d-md-none flex-column gap-2">
+                                    {/* Desktop Grid Layout (For md and larger) */}
+                                    <div className="d-none d-md-block">
                                       {(values.items[0].variants || []).map((variant, vIdx) => (
-                                        <React.Fragment key={vIdx}>
-                                          {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
-                                          <Row className="g-2 align-items-start mb-3 pb-3 border-bottom border-light">
-                                            <Col xs={10} className="order-1">
+                                        <div key={vIdx} className="p-3 mb-3 border rounded position-relative" style={{ borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                          <Row className="g-2 align-items-center">
+                                            {/* Size Name */}
+                                            <Col md={5}>
                                               <BForm.Group>
-                                                <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                <BForm.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem' }}>
                                                   {variantLabel}
                                                 </BForm.Label>
                                                 <CreatableSelect
@@ -840,14 +750,16 @@ const AddItems = () => {
                                                   options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
                                                   value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
                                                   onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].size_name`, selected ? selected.value : '')}
-                                                  placeholder="e.g. 1kg"
+                                                  placeholder={`Select or type ${variantLabel.toLowerCase()}...`}
                                                 />
                                                 <ErrorMessage name={`items[0].variants[${vIdx}].size_name`} component="div" className="text-danger small mt-1" />
                                               </BForm.Group>
                                             </Col>
-                                            <Col xs={6} className="order-3">
+
+                                            {/* Price */}
+                                            <Col md={3}>
                                               <BForm.Group>
-                                                <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                <BForm.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem' }}>
                                                   Price
                                                 </BForm.Label>
                                                 <BForm.Control
@@ -862,64 +774,162 @@ const AddItems = () => {
                                                 <ErrorMessage name={`items[0].variants[${vIdx}].price`} component="div" className="text-danger small mt-1" />
                                               </BForm.Group>
                                             </Col>
-                                            <Col xs={6} className="order-4">
+
+                                            {/* Stock Quantity */}
+                                            <Col md={3}>
                                               <BForm.Group>
-                                                <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                  Extra Details
+                                                <BForm.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem' }}>
+                                                  Stock Qty
                                                 </BForm.Label>
-                                                <CreatableSelect
-                                                  styles={selectStyles}
-                                                  isClearable
-                                                  menuPlacement="auto"
-                                                  menuPortalTarget={document.body}
-                                                  options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                                                  value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
-                                                  onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].extra`, selected ? selected.value : '')}
-                                                  placeholder="Optional"
+                                                <BForm.Control
+                                                  type="number"
+                                                  name={`items[0].variants[${vIdx}].stock_quantity`}
+                                                  value={variant.stock_quantity ?? ''}
+                                                  onChange={handleChange}
+                                                  placeholder="Qty (Optional)"
+                                                  className="pill-input"
+                                                  style={{ height: '38px', borderRadius: '10px' }}
                                                 />
                                               </BForm.Group>
                                             </Col>
-                                            <Col xs={12} className="order-5">
-                                              <BForm.Group>
-                                                <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                                                  Barcode
-                                                </BForm.Label>
-                                                <div className="d-flex align-items-center gap-1">
-                                                  <BForm.Control
-                                                    type="text"
-                                                    name={`items[0].variants[${vIdx}].barcode`}
-                                                    value={variant.barcode || ''}
-                                                    onChange={handleChange}
-                                                    placeholder="Barcode"
-                                                    className="pill-input"
-                                                    style={{ height: '38px', borderRadius: '10px' }}
-                                                  />
-                                                  <Button
-                                                    variant="outline-primary"
-                                                    className="flex-shrink-0 d-flex align-items-center justify-content-center px-3"
-                                                    style={{ height: '38px', borderRadius: '10px' }}
-                                                    onClick={() => setFieldValue(`items[0].variants[${vIdx}].barcode`, Math.floor(100000000000 + Math.random() * 900000000000).toString())}
-                                                  >
-                                                    <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Gen</span>
-                                                  </Button>
-                                                </div>
-                                              </BForm.Group>
-                                            </Col>
-                                            <Col xs={2} className="order-2 d-flex flex-column justify-content-end pb-1 px-1">
-                                              <BForm.Label className="d-none d-sm-block mb-1" style={{ fontSize: '0.75rem', visibility: 'hidden' }}>
-                                                Delete
-                                              </BForm.Label>
+
+                                            {/* Delete Button */}
+                                            <Col md={1} className="d-flex align-items-center justify-content-center pt-3">
                                               <Button
                                                 variant="outline-danger"
                                                 onClick={() => removeVariant(vIdx)}
                                                 disabled={values.items[0].variants.length === 1}
                                                 style={{ height: '36px', width: '36px', minWidth: '36px', borderRadius: '50%', padding: 0 }}
-                                                className="flex-shrink-0 d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                                className="d-flex align-items-center justify-content-center btn btn-outline-danger"
                                               >
                                                 <CsLineIcons icon="bin" size="14" />
                                               </Button>
                                             </Col>
                                           </Row>
+
+                                          {/* Row 2: Extra Details (Text Area 100% width) */}
+                                          <Row className="mt-2">
+                                            <Col md={12}>
+                                              <BForm.Group>
+                                                <BForm.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem' }}>
+                                                  Extra Details
+                                                </BForm.Label>
+                                                <BForm.Control
+                                                  as="textarea"
+                                                  rows={2}
+                                                  name={`items[0].variants[${vIdx}].extra`}
+                                                  value={variant.extra || ''}
+                                                  onChange={handleChange}
+                                                  placeholder="Add extra details (e.g. specifications, warranty)..."
+                                                  className="pill-input bg-white w-100"
+                                                  style={{ resize: 'none', borderRadius: '10px', minHeight: '50px' }}
+                                                />
+                                              </BForm.Group>
+                                            </Col>
+                                          </Row>
+                                        </div>
+                                      ))}
+
+                                      <Button
+                                        type="button"
+                                        variant="outline-primary"
+                                        className="custom-btn-outline py-1 px-3 d-flex align-items-center gap-1 btn btn-outline-primary mt-2"
+                                        style={{ height: '34px', fontSize: '0.85rem', borderRadius: '8px' }}
+                                        onClick={() => pushVariant({ size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true, stock_quantity: '' })}
+                                      >
+                                        <CsLineIcons icon="plus" size="12" />
+                                        Add Variant
+                                      </Button>
+                                    </div>
+
+                                    {/* Mobile Stacked Layout (Hidden on Desktop) */}
+                                    <div className="d-flex d-md-none flex-column gap-2">
+                                      {(values.items[0].variants || []).map((variant, vIdx) => (
+                                        <React.Fragment key={vIdx}>
+                                          {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
+                                          <div className="p-3 border rounded position-relative" style={{ borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                            <Row className="g-2 align-items-start">
+                                              <Col xs={10}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    {variantLabel}
+                                                  </BForm.Label>
+                                                  <CreatableSelect
+                                                    styles={selectStyles}
+                                                    isClearable
+                                                    menuPlacement="auto"
+                                                    menuPortalTarget={document.body}
+                                                    options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                                                    value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
+                                                    onChange={(selected) => setFieldValue(`items[0].variants[${vIdx}].size_name`, selected ? selected.value : '')}
+                                                    placeholder={`Select or type ${variantLabel.toLowerCase()}...`}
+                                                  />
+                                                  <ErrorMessage name={`items[0].variants[${vIdx}].size_name`} component="div" className="text-danger small mt-1" />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={2} className="d-flex align-items-center justify-content-center pt-4">
+                                                <Button
+                                                  variant="outline-danger"
+                                                  onClick={() => removeVariant(vIdx)}
+                                                  disabled={values.items[0].variants.length === 1}
+                                                  style={{ height: '36px', width: '36px', minWidth: '36px', borderRadius: '50%', padding: 0 }}
+                                                  className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                                                >
+                                                  <CsLineIcons icon="bin" size="14" />
+                                                </Button>
+                                              </Col>
+                                              <Col xs={6}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Price
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="text"
+                                                    name={`items[0].variants[${vIdx}].price`}
+                                                    value={variant.price || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="Price"
+                                                    className="pill-input"
+                                                    style={{ height: '38px', borderRadius: '10px' }}
+                                                  />
+                                                  <ErrorMessage name={`items[0].variants[${vIdx}].price`} component="div" className="text-danger small mt-1" />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={6}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Stock Qty
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    type="number"
+                                                    name={`items[0].variants[${vIdx}].stock_quantity`}
+                                                    value={variant.stock_quantity ?? ''}
+                                                    onChange={handleChange}
+                                                    placeholder="Qty (Optional)"
+                                                    className="pill-input"
+                                                    style={{ height: '38px', borderRadius: '10px' }}
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                              <Col xs={12}>
+                                                <BForm.Group>
+                                                  <BForm.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                                    Extra Details
+                                                  </BForm.Label>
+                                                  <BForm.Control
+                                                    as="textarea"
+                                                    rows={2}
+                                                    name={`items[0].variants[${vIdx}].extra`}
+                                                    value={variant.extra || ''}
+                                                    onChange={handleChange}
+                                                    placeholder="Add extra details..."
+                                                    className="pill-input bg-white w-100"
+                                                    style={{ resize: 'none', borderRadius: '10px', minHeight: '50px' }}
+                                                  />
+                                                </BForm.Group>
+                                              </Col>
+                                            </Row>
+                                          </div>
                                         </React.Fragment>
                                       ))}
                                       <Button
@@ -930,7 +940,7 @@ const AddItems = () => {
                                         onClick={() => pushVariant({ size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true })}
                                       >
                                         <CsLineIcons icon="plus" size="12" />
-                                        Add Row
+                                        Add Variant
                                       </Button>
                                     </div>
                                   </>

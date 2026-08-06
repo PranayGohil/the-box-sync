@@ -16,7 +16,7 @@ const CreateQuotation = () => {
   });
 
   const [items, setItems] = useState([
-    { name: '', hsnCode: '', quantity: 1, unitPrice: 0, taxRate: 18, cgstAmount: 0, sgstAmount: 0, igstAmount: 0, totalAmount: 0 }
+    { name: '', hsnCode: '', quantity: 1, unitPrice: 0, taxRate: 18, cgstAmount: 0, sgstAmount: 0, igstAmount: 0, totalAmount: 0, serialNumbers: [] }
   ]);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ const CreateQuotation = () => {
   };
 
   const addItem = () => {
-    setItems([...items, { name: '', hsnCode: '', quantity: 1, unitPrice: 0, taxRate: 18, cgstAmount: 0, sgstAmount: 0, igstAmount: 0, totalAmount: 0 }]);
+    setItems([...items, { name: '', hsnCode: '', quantity: 1, unitPrice: 0, taxRate: 18, cgstAmount: 0, sgstAmount: 0, igstAmount: 0, totalAmount: 0, serialNumbers: [] }]);
   };
 
   const removeItem = (index) => {
@@ -166,6 +166,7 @@ const CreateQuotation = () => {
                   <th>Qty</th>
                   <th>Unit Price</th>
                   <th>Tax Rate (%)</th>
+                  <th>Serial / IMEI (Optional)</th>
                   <th>Total (Incl. Tax)</th>
                   <th>Action</th>
                 </tr>
@@ -177,6 +178,14 @@ const CreateQuotation = () => {
                     <td><Form.Control type="number" min="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required /></td>
                     <td><Form.Control type="number" min="0" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} required /></td>
                     <td><Form.Control type="number" value={item.taxRate} onChange={(e) => handleItemChange(index, 'taxRate', e.target.value)} /></td>
+                    <td>
+                      <Form.Control 
+                        type="text" 
+                        placeholder="Comma separated" 
+                        value={item.serialNumbers ? item.serialNumbers.join(', ') : ''} 
+                        onChange={(e) => handleItemChange(index, 'serialNumbers', e.target.value.split(',').map(s => s.trim()))} 
+                      />
+                    </td>
                     <td>{item.totalAmount.toFixed(2)}</td>
                     <td><Button variant="danger" size="sm" onClick={() => removeItem(index)}>Remove</Button></td>
                   </tr>

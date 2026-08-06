@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const Catalog = require("../models/catalogModel");
 const User = require("../models/userModel");
+const PurchaseOrder = require("../models/PurchaseOrder");
 const { count } = require("console");
 
 const addCatalog = async (req, res) => {
@@ -80,8 +81,14 @@ const addCatalog = async (req, res) => {
           Array.isArray(parsedVariants) && parsedVariants[0]
             ? Number(parsedVariants[0].price)
             : Number(item.item_price || 0),
-        stock_quantity: item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : null,
-        initial_stock: item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : 0,
+        stock_quantity:
+          Array.isArray(parsedVariants) && parsedVariants[0] && parsedVariants[0].stock_quantity != null && parsedVariants[0].stock_quantity !== ""
+            ? Number(parsedVariants[0].stock_quantity)
+            : (item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : null),
+        initial_stock:
+          Array.isArray(parsedVariants) && parsedVariants[0] && parsedVariants[0].stock_quantity != null && parsedVariants[0].stock_quantity !== ""
+            ? Number(parsedVariants[0].stock_quantity)
+            : (item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : 0),
         has_variants:
           Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
         variants: Array.isArray(parsedVariants)
@@ -439,6 +446,8 @@ const updateCatalog = async (req, res) => {
       addons,
       type,
       barcode,
+      hsn_sac_code,
+      hsn_code,
     } = req.body;
 
     const userId = req.user._id;
@@ -503,21 +512,34 @@ const updateCatalog = async (req, res) => {
           ? typeof is_available === "string" ? is_available === "true" : !!is_available
           : currentDishObj.is_available,
       stock_quantity:
-        req.body.stock_quantity !== undefined && req.body.stock_quantity !== "" && req.body.stock_quantity !== null
-          ? Number(req.body.stock_quantity)
-          : currentDishObj.stock_quantity,
+        Array.isArray(parsedVariants) && parsedVariants[0]
+          ? (parsedVariants[0].stock_quantity != null && parsedVariants[0].stock_quantity !== "" ? Number(parsedVariants[0].stock_quantity) : null)
+          : (req.body.stock_quantity !== undefined && req.body.stock_quantity !== "" && req.body.stock_quantity !== null
+              ? Number(req.body.stock_quantity)
+              : currentDishObj.stock_quantity),
+      initial_stock:
+        Array.isArray(parsedVariants) && parsedVariants[0]
+          ? (currentDishObj.initial_stock || (parsedVariants[0].stock_quantity != null && parsedVariants[0].stock_quantity !== "" ? Number(parsedVariants[0].stock_quantity) : 0))
+          : currentDishObj.initial_stock,
       has_variants:
         Array.isArray(parsedVariants) ? parsedVariants.length > 1 : currentDishObj.has_variants,
       variants: Array.isArray(parsedVariants)
-        ? parsedVariants.map((v) => ({
-          size_name: v.size_name,
-          price: v.price != null && v.price !== "" ? Number(v.price) : 0,
-          extra: v.extra,
-          barcode: v.barcode || null,
-          is_available: v.is_available !== false,
-          stock_quantity: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : null,
-          initial_stock: v.initial_stock != null ? Number(v.initial_stock) : 0,
-        }))
+        ? parsedVariants.map((v) => {
+          const dbVariant = currentDishObj.variants?.find(dv => 
+            (v._id && String(dv._id) === String(v._id)) || 
+            (dv.size_name?.trim().toLowerCase() === v.size_name?.trim().toLowerCase())
+          );
+          const initialStockVal = dbVariant && dbVariant.initial_stock ? dbVariant.initial_stock : (v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : 0);
+          return {
+            size_name: v.size_name,
+            price: v.price != null && v.price !== "" ? Number(v.price) : 0,
+            extra: v.extra,
+            barcode: v.barcode || null,
+            is_available: v.is_available !== false,
+            stock_quantity: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : null,
+            initial_stock: v.initial_stock != null ? Number(v.initial_stock) : initialStockVal,
+          };
+        })
         : currentDishObj.variants,
       addons: Array.isArray(parsedAddons)
         ? parsedAddons.map((a) => ({
@@ -527,6 +549,8 @@ const updateCatalog = async (req, res) => {
         }))
         : currentDishObj.addons,
       type: type !== undefined ? type : currentDishObj.type || "veg",
+      hsn_sac_code: hsn_sac_code !== undefined ? hsn_sac_code : currentDishObj.hsn_sac_code || "",
+      hsn_code: hsn_code !== undefined ? hsn_code : currentDishObj.hsn_code || "",
     };
 
     if (req.file) {
@@ -647,16 +671,24 @@ const deductStockForOrderItems = async (userId, orderItems, orderId, orderType =
         let modified = false;
         for (const item of catalogDoc.items) {
           if (item.item_name?.trim().toLowerCase() === itemName.trim().toLowerCase()) {
-            if (selectedVariant && Array.isArray(item.variants) && item.variants.length > 0) {
+            if (item.has_variants && Array.isArray(item.variants) && item.variants.length > 0) {
               const variant = item.variants.find(
-                (v) => v.size_name?.trim().toLowerCase() === String(selectedVariant).trim().toLowerCase()
-              );
+                (v) => v.size_name?.trim().toLowerCase() === String(selectedVariant || '').trim().toLowerCase()
+              ) || item.variants[0];
+
               if (variant && variant.stock_quantity !== null && variant.stock_quantity !== undefined) {
                 variant.stock_quantity = Math.max(0, variant.stock_quantity - orderedQty);
                 if (variant.stock_quantity === 0) {
                   variant.is_available = false;
                 }
                 modified = true;
+
+                if (item.variants[0] === variant) {
+                  item.stock_quantity = variant.stock_quantity;
+                  if (item.stock_quantity === 0) {
+                    item.is_available = false;
+                  }
+                }
 
                 await StockSalesLog.create({
                   user_id: String(userId),
@@ -677,6 +709,14 @@ const deductStockForOrderItems = async (userId, orderItems, orderId, orderType =
               if (item.stock_quantity === 0) {
                 item.is_available = false;
               }
+              
+              if (Array.isArray(item.variants) && item.variants[0]) {
+                item.variants[0].stock_quantity = item.stock_quantity;
+                if (item.variants[0].stock_quantity === 0) {
+                  item.variants[0].is_available = false;
+                }
+              }
+
               modified = true;
 
               await StockSalesLog.create({
@@ -711,6 +751,18 @@ const getStockSalesStatement = async (req, res) => {
     const userId = req.user._id;
     const catalogs = await Catalog.find({ user_id: userId }).lean();
     const logs = await StockSalesLog.find({ user_id: userId }).sort({ createdAt: -1 }).lean();
+    const purchaseOrders = await PurchaseOrder.find({ shopId: userId, isDeleted: false, status: { $nin: ['Completed', 'Cancelled'] } }).lean();
+
+    const matchPoItem = (poItemName, itemName, variantName) => {
+      const pin = String(poItemName || '').trim().toLowerCase();
+      const itn = String(itemName || '').trim().toLowerCase();
+      const vn = variantName ? String(variantName).trim().toLowerCase() : '';
+      
+      if (vn) {
+        return pin === itn || pin === `${itn} ${vn}` || pin === vn;
+      }
+      return pin === itn;
+    };
 
     const statement = [];
 
@@ -725,16 +777,25 @@ const getStockSalesStatement = async (req, res) => {
               .filter((l) => l.type === 'Sale')
               .reduce((sum, l) => sum + Math.abs(l.quantity_changed), 0);
 
+            const poStock = purchaseOrders.reduce((sum, po) => {
+              const matchItems = po.items.filter(pi => matchPoItem(pi.name, item.item_name, v.size_name));
+              return sum + matchItems.reduce((s, pi) => s + (Number(pi.quantity) || 0), 0);
+            }, 0);
+
+            const currentStock = v.stock_quantity != null ? Math.max(0, v.stock_quantity - poStock) : 'Unlimited';
+
             statement.push({
               _id: `${item._id}_${v.size_name}`,
               item_id: item._id,
               item_name: item.item_name,
               variant_name: v.size_name,
               category: cat.category,
-              initial_stock: v.initial_stock || (v.stock_quantity != null ? v.stock_quantity + totalSold : 'Unlimited'),
-              current_stock: v.stock_quantity != null ? v.stock_quantity : 'Unlimited',
+              initial_stock: (v.initial_stock != null && v.initial_stock !== '') ? v.initial_stock : (v.stock_quantity != null ? v.stock_quantity + totalSold : 'Unlimited'),
+              total_stock: v.stock_quantity != null ? v.stock_quantity : 'Unlimited',
+              purchase_order_stock: poStock,
+              current_stock: currentStock,
               total_sold: totalSold,
-              status: v.stock_quantity === 0 ? 'Out of Stock' : (v.stock_quantity != null && v.stock_quantity <= 5 ? 'Low Stock' : 'In Stock')
+              status: currentStock === 0 ? 'Out of Stock' : (currentStock !== 'Unlimited' && currentStock <= 5 ? 'Low Stock' : 'In Stock')
             });
           });
         } else {
@@ -745,16 +806,25 @@ const getStockSalesStatement = async (req, res) => {
             .filter((l) => l.type === 'Sale')
             .reduce((sum, l) => sum + Math.abs(l.quantity_changed), 0);
 
+          const poStock = purchaseOrders.reduce((sum, po) => {
+            const matchItems = po.items.filter(pi => matchPoItem(pi.name, item.item_name, ''));
+            return sum + matchItems.reduce((s, pi) => s + (Number(pi.quantity) || 0), 0);
+          }, 0);
+
+          const currentStock = item.stock_quantity != null ? Math.max(0, item.stock_quantity - poStock) : 'Unlimited';
+
           statement.push({
             _id: String(item._id),
             item_id: item._id,
             item_name: item.item_name,
             variant_name: '',
             category: cat.category,
-            initial_stock: item.initial_stock || (item.stock_quantity != null ? item.stock_quantity + totalSold : 'Unlimited'),
-            current_stock: item.stock_quantity != null ? item.stock_quantity : 'Unlimited',
+            initial_stock: (item.initial_stock != null && item.initial_stock !== '') ? item.initial_stock : (item.stock_quantity != null ? item.stock_quantity + totalSold : 'Unlimited'),
+            total_stock: item.stock_quantity != null ? item.stock_quantity : 'Unlimited',
+            purchase_order_stock: poStock,
+            current_stock: currentStock,
             total_sold: totalSold,
-            status: item.stock_quantity === 0 ? 'Out of Stock' : (item.stock_quantity != null && item.stock_quantity <= 5 ? 'Low Stock' : 'In Stock')
+            status: currentStock === 0 ? 'Out of Stock' : (currentStock !== 'Unlimited' && currentStock <= 5 ? 'Low Stock' : 'In Stock')
           });
         }
       });

@@ -43,7 +43,11 @@ const useCatalogFetcher = () => {
           item.item_name.toLowerCase().includes(searchText.toLowerCase()) &&
           (selectedCategory === '' || category.category === selectedCategory) &&
           (!showSpecial || item.is_special) &&
-          item.is_available
+          item.is_available &&
+          (item.has_variants && Array.isArray(item.variants) && item.variants.length > 0
+            ? item.variants.some(v => v.is_available !== false && (v.stock_quantity === null || v.stock_quantity === undefined || v.stock_quantity > 0))
+            : (item.stock_quantity === null || item.stock_quantity === undefined || item.stock_quantity > 0)
+          )
       ),
     }))
     .filter((category) => category.items.length > 0);

@@ -12,6 +12,7 @@ const Notification = require("../models/notificationModel");
 const OrderCounter = require("../models/orderCounterModel");
 const { processOrderLoyalty } = require("./loyaltyController");
 const mongoose = require("mongoose");
+const { deductStockForOrderItems } = require("./catalogController");
 
 const recalculateOrderTotals = (orderInfo) => {
   if (!orderInfo || !Array.isArray(orderInfo.order_items)) return orderInfo;
@@ -321,6 +322,15 @@ const getActiveOrders = async (req, res) => {
 };
 
 const generateToken = async (user_id, source) => {
+  try {
+    const user = await User.findById(user_id);
+    if (user && user.is_shop) {
+      return null;
+    }
+  } catch (err) {
+    console.error("Error in generateToken checking user.is_shop:", err);
+  }
+
   const today = new Date();
   const dateOnly = new Date(
     today.getFullYear(),
@@ -507,12 +517,19 @@ const orderController = async (req, res) => {
     }
 
     if (orderId) {
+      const existingOrder = await Order.findById(orderId);
+      if (!existingOrder) {
+        return res.status(404).json({ message: "Order not found" });
+      }
       // Existing order: update
       savedOrder = await Order.findByIdAndUpdate(orderId, orderInfo, {
         new: true,
       });
       if (!savedOrder) {
         return res.status(404).json({ message: "Order not found" });
+      }
+      if (savedOrder.order_status === "Paid" && existingOrder.order_status !== "Paid") {
+        await deductStockForOrderItems(req.user._id, savedOrder.order_items, savedOrder._id, savedOrder.order_type);
       }
       return res.status(200).json({
         status: "success",
@@ -523,6 +540,9 @@ const orderController = async (req, res) => {
       // New order
       const newOrder = new Order(orderInfo);
       savedOrder = await newOrder.save();
+      if (savedOrder.order_status === "Paid") {
+        await deductStockForOrderItems(req.user._id, savedOrder.order_items, savedOrder._id, savedOrder.order_type);
+      }
       return res.status(200).json({
         status: "success",
         message: "Order created successfully",
@@ -768,6 +788,9 @@ const dineInController = async (req, res) => {
         }
       } else if (orderInfo.order_status === "Paid") {
         await clearTable(tableId);
+        if (existingOrder.order_status !== "Paid") {
+          await deductStockForOrderItems(req.user._id, savedOrder.order_items, savedOrder._id, "Dine In");
+        }
         if (savedOrder.customer_id) {
           await processOrderLoyalty(
             req.user,
@@ -825,6 +848,7 @@ const dineInController = async (req, res) => {
       }
     } else if (orderInfo.order_status === "Paid") {
       await clearTable(tableId);
+      await deductStockForOrderItems(req.user._id, savedOrder.order_items, savedOrder._id, "Dine In");
       if (savedOrder.customer_id) {
         await processOrderLoyalty(
           req.user,
@@ -1009,19 +1033,24 @@ const takeawayController = async (req, res) => {
       }
 
       if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
-        if (savedOrder.order_status === "Paid" && savedOrder.customer_id) {
-          await processOrderLoyalty(
-            req.user,
-            savedOrder._id,
-            savedOrder.total_amount,
-            savedOrder.customer_id,
-            req.body.redeemedPoints || 0
-          );
+        if (savedOrder.order_status === "Paid") {
+          if (existingOrder.order_status !== "Paid") {
+            await deductStockForOrderItems(req.user._id, savedOrder.order_items, savedOrder._id, "Takeaway");
+          }
+          if (savedOrder.customer_id) {
+            await processOrderLoyalty(
+              req.user,
+              savedOrder._id,
+              savedOrder.total_amount,
+              savedOrder.customer_id,
+              req.body.redeemedPoints || 0
+            );
+          }
         }
         const io = req.app.get("io");
         const connectedUsers = req.app.get("connectedUsers");
         console.log("Now it's time for kot refresh", connectedUsers)
-
+ 
         const key = `${req.user._id}_KOT`; // or however you store admin socket
         console.log("kot Key", key)
         if (io && connectedUsers && connectedUsers[key]) {
@@ -1030,7 +1059,7 @@ const takeawayController = async (req, res) => {
           );
         }
       }
-
+ 
       return res.status(200).json({
         status: "success",
         message: "Order updated successfully",
@@ -1052,19 +1081,22 @@ const takeawayController = async (req, res) => {
 
 
     if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
-      if (savedOrder.order_status === "Paid" && savedOrder.customer_id) {
-        await processOrderLoyalty(
-          req.user,
-          savedOrder._id,
-          savedOrder.total_amount,
-          savedOrder.customer_id,
-          req.body.redeemedPoints || 0
-        );
+      if (savedOrder.order_status === "Paid") {
+        await deductStockForOrderItems(req.user._id, savedOrder.order_items, savedOrder._id, "Takeaway");
+        if (savedOrder.customer_id) {
+          await processOrderLoyalty(
+            req.user,
+            savedOrder._id,
+            savedOrder.total_amount,
+            savedOrder.customer_id,
+            req.body.redeemedPoints || 0
+          );
+        }
       }
       const io = req.app.get("io");
       const connectedUsers = req.app.get("connectedUsers");
       console.log("Now it's time for kot refresh", connectedUsers)
-
+ 
       const key = `${req.user._id}_KOT`; // or however you store admin socket
       console.log("kot Key", key)
       if (io && connectedUsers && connectedUsers[key]) {
@@ -1259,14 +1291,19 @@ const deliveryController = async (req, res) => {
       }
 
       if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
-        if (savedOrder.order_status === "Paid" && savedOrder.customer_id) {
-          await processOrderLoyalty(
-            req.user,
-            savedOrder._id,
-            savedOrder.total_amount,
-            savedOrder.customer_id,
-            req.body.redeemedPoints || 0
-          );
+        if (savedOrder.order_status === "Paid") {
+          if (existingOrder.order_status !== "Paid") {
+            await deductStockForOrderItems(req.user._id, savedOrder.order_items, savedOrder._id, "Delivery");
+          }
+          if (savedOrder.customer_id) {
+            await processOrderLoyalty(
+              req.user,
+              savedOrder._id,
+              savedOrder.total_amount,
+              savedOrder.customer_id,
+              req.body.redeemedPoints || 0
+            );
+          }
         }
         const io = req.app.get("io");
         const connectedUsers = req.app.get("connectedUsers");
@@ -1301,14 +1338,17 @@ const deliveryController = async (req, res) => {
     savedOrder = await newOrder.save();
 
     if (savedOrder.order_status === "KOT" || savedOrder.order_status === "Paid") {
-      if (savedOrder.order_status === "Paid" && savedOrder.customer_id) {
-        await processOrderLoyalty(
-          req.user,
-          savedOrder._id,
-          savedOrder.total_amount,
-          savedOrder.customer_id,
-          req.body.redeemedPoints || 0
-        );
+      if (savedOrder.order_status === "Paid") {
+        await deductStockForOrderItems(req.user._id, savedOrder.order_items, savedOrder._id, "Delivery");
+        if (savedOrder.customer_id) {
+          await processOrderLoyalty(
+            req.user,
+            savedOrder._id,
+            savedOrder.total_amount,
+            savedOrder.customer_id,
+            req.body.redeemedPoints || 0
+          );
+        }
       }
       const io = req.app.get("io");
       const connectedUsers = req.app.get("connectedUsers");

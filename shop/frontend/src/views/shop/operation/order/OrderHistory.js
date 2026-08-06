@@ -581,7 +581,7 @@ const OrderHistory = () => {
         sortable: true,
         isSorted: sortBy === 'order_date',
         isSortedDesc: sortBy === 'order_date' && sortOrder === 'desc',
-        Cell: ({ value }) => format(new Date(value), 'dd MMM yyyy'),
+        Cell: ({ value }) => format(new Date(value), 'dd/MM/yyyy'),
       },
       {
         Header: 'Time',
@@ -673,7 +673,7 @@ const OrderHistory = () => {
                   size="sm"
                   title="View"
                   className="btn-icon btn-icon-only"
-                  onClick={() => history.push(`/operations/order-details/${row.original.id}`)}
+                  onClick={() => history.push(`/operations/sales-details/${row.original.id}`)}
                 >
                   <CsLineIcons icon="eye" size="15" />
                 </Button>
@@ -940,7 +940,7 @@ const OrderHistory = () => {
                           <div className="fw-bolder text-primary mb-1" style={{ fontSize: '14px' }}>
                             {order.order_no || 'ORD-0000'}
                           </div>
-                          <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd MMM yyyy, hh:mm a')}</div>
+                          <div className="text-muted small fw-medium">{format(new Date(order.order_date), 'dd/MM/yyyy, hh:mm a')}</div>
                         </div>
                         <Badge
                           bg={
@@ -1001,7 +1001,7 @@ const OrderHistory = () => {
                                 variant="outline-primary"
                                 size="sm"
                                 className="btn-icon btn-icon-only rounded-circle"
-                                onClick={() => history.push(`/operations/order-details/${order.id}`)}
+                                onClick={() => history.push(`/operations/sales-details/${order.id}`)}
                                 title="View Details"
                               >
                                 <CsLineIcons icon="eye" size="14" />

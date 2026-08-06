@@ -554,12 +554,17 @@ const sendAdminOtp = async (req, res) => {
       </div>
     `;
 
-    // Send OTP via email
-    await sendEmail({
-      to: email,
-      subject: "OTP Verification for Login from TheBox",
-      html: adminOtpMail,
-    });
+    // Send OTP via email with try/catch fallback for development/offline mode
+    try {
+      await sendEmail({
+        to: email,
+        subject: "OTP Verification for Login from TheBox",
+        html: adminOtpMail,
+      });
+    } catch (mailErr) {
+      console.error('Mail send failed, falling back to console log:', mailErr);
+      console.log(`\n===============================================\n[DEVELOPMENT OTP] Verification Code for ${email} is: ${otp}\n===============================================\n`);
+    }
     console.log("OTP sent to your email.", otp);
     res.json({ message: "OTP sent to your email." });
   } catch (err) {
@@ -570,14 +575,19 @@ const sendAdminOtp = async (req, res) => {
 
 const verifyAdminOtp = async (req, res) => {
   const { email, otp } = req.body;
+  console.log(`[DEBUG VERIFY OTP - SHOP SERVER] Email: ${email}, OTP input: ${otp}`);
 
   try {
     const user = await User.findOne({ email });
     if (!user) {
+      console.log(`[DEBUG VERIFY OTP - SHOP SERVER] User not found for email: ${email}`);
       return res.status(404).json({ message: "Email not found." });
     }
 
+    console.log(`[DEBUG VERIFY OTP - SHOP SERVER] DB OTP: ${user.otp}, DB Expiry: ${user.otpExpiry}, Current Time: ${Date.now()}`);
+
     if (user.otp !== parseInt(otp, 10) || Date.now() > user.otpExpiry) {
+      console.log(`[DEBUG VERIFY OTP - SHOP SERVER] Match check failed: user.otp !== parseInt(otp) is ${user.otp !== parseInt(otp, 10)}, Expired is ${Date.now() > user.otpExpiry}`);
       return res.status(400).json({ message: "Invalid or expired OTP." });
     }
 

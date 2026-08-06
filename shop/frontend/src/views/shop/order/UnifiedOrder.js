@@ -37,13 +37,13 @@ import 'react-datepicker/dist/react-datepicker.css';
 const ORDER_TYPES = ['Takeaway', 'Delivery'];
 
 const DEFAULT_CUSTOMER_INFO = {
-  Takeaway: { name: '', phone: '', comment: '' },
+  Takeaway: { name: '', phone: '', address: '', comment: '' },
   Delivery: { name: '', phone: '', address: '', comment: '' },
   'Dine In': { name: '', total_persons: '', waiter: '', table_no: '', comment: '' },
 };
 
 const VISIBLE_FIELDS = {
-  Takeaway: { name: true, phone: true, address: false, total_persons: false, waiter: false },
+  Takeaway: { name: true, phone: true, address: true, total_persons: false, waiter: false },
   Delivery: { name: true, phone: true, address: true, total_persons: false, waiter: false },
   'Dine In': { name: true, phone: false, address: false, total_persons: true, waiter: true },
 };
@@ -348,7 +348,7 @@ const UnifiedOrder = () => {
           if (item.barcode === scannedBarcode) {
             foundItem = item;
             if (item.has_variants && item.variants && item.variants.length > 0) {
-               foundVariant = item.variants.find(v => v.barcode === scannedBarcode) || item.variants[0];
+              foundVariant = item.variants.find(v => v.barcode === scannedBarcode) || item.variants[0];
             }
             break;
           }
@@ -624,7 +624,7 @@ const UnifiedOrder = () => {
 
     const custPayload = { name: customerInfo.name };
     if (customerInfo.phone) custPayload.phone = customerInfo.phone;
-    if (orderType === 'Delivery') custPayload.address = customerInfo.address;
+    if (customerInfo.address) custPayload.address = customerInfo.address;
 
     return {
       orderInfo: { ...orderData, order_id: orderId },
@@ -798,7 +798,7 @@ const UnifiedOrder = () => {
 
         let targetPath = redirectPath || nextLocation || '/order/new';
         if (targetPath === '/operations') {
-          targetPath = '/operations/order-history';
+          targetPath = '/operations/sales-history';
         }
         allowNavigationRef.current = true;
 
@@ -942,16 +942,17 @@ const UnifiedOrder = () => {
           {/* Order Panel */}
           <div className="pos-order-panel d-none d-xl-flex">
             <div className="pos-order-header">
-              <div className="d-flex justify-content-between align-items-center">
-                <div className="fw-bold d-none d-sm-block" style={{ color: '#23b3f4', fontSize: '13px' }}>
-                  {orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) ? `T-${tableInfo.table_no || customerInfo.table_no}` : 'Billing'} (
-                  {orderItems.length})
+              {/* Row 1: Title, Token, Date Picker */}
+              <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <div className="fw-bold d-flex align-items-center gap-2" style={{ color: '#23b3f4', fontSize: '14px' }}>
+                  <span>{orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) ? `Table ${tableInfo.table_no || customerInfo.table_no}` : 'Billing'}</span>
+                  <span className="badge bg-primary rounded-pill" style={{ fontSize: '10px', padding: '3px 8px' }}>{orderItems.length} items</span>
+                  {tokenNumber && (
+                    <span className="badge bg-info text-white rounded-pill" style={{ fontSize: '10px', padding: '3px 8px' }}>#{tokenNumber}</span>
+                  )}
                 </div>
-                {/* Right side date picker for laptop/large viewports */}
-                <div className="d-none d-lg-flex align-items-center gap-1">
-                  <span className="text-muted small fw-semibold" style={{ fontSize: '11px' }}>
-                    Date:
-                  </span>
+                <div className="d-flex align-items-center gap-1">
+                  <span className="text-muted small fw-semibold" style={{ fontSize: '11px' }}>Date:</span>
                   <DatePicker
                     showTimeSelect
                     timeFormat="hh:mm a"
@@ -963,35 +964,57 @@ const UnifiedOrder = () => {
                     customInput={<CustomDateInput />}
                   />
                 </div>
-                {tokenNumber && (
-                  <div
-                    style={{
-                      background: 'rgba(35,179,244,0.1)',
-                      borderRadius: '50px',
-                      padding: '2px 10px',
-                      color: '#23b3f4',
-                      fontWeight: 800,
-                      fontSize: '11px',
-                    }}
-                  >
-                    #{tokenNumber}
-                  </div>
-                )}
-                {canSeeAccounting && (
-                  <Button 
-                    variant="outline-primary" 
-                    size="sm" 
-                    className="ms-2 d-none d-sm-inline-flex align-items-center"
+              </div>
+
+              {/* Row 2: Accounting Shortcuts */}
+              {canSeeAccounting && (
+                <div className="d-flex flex-wrap gap-1 align-items-center border-top pt-2 mt-1">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
                     onClick={() => {
                       allowNavigationRef.current = true;
                       history.push('/accounting/create-invoice', { items: orderItems, customer: customerInfo });
                     }}
-                    style={{ fontSize: '11px', fontWeight: 600, padding: '4px 10px' }}
+                    style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', fontFamily: 'inherit' }}
                   >
-                    <CsLineIcons icon="file-text" size="13" className="me-1" /> GST Invoice
+                    <CsLineIcons icon="file-text" size="12" className="me-1" /> GST Invoice
                   </Button>
-                )}
-              </div>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => {
+                      allowNavigationRef.current = true;
+                      history.push('/accounting/create-sales-order', { items: orderItems, customer: customerInfo });
+                    }}
+                    style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', fontFamily: 'inherit' }}
+                  >
+                    <CsLineIcons icon="cart" size="12" className="me-1" /> Sales Order
+                  </Button>
+                  <Button
+                    variant="outline-info"
+                    size="sm"
+                    onClick={() => {
+                      allowNavigationRef.current = true;
+                      history.push('/accounting/create-purchase-order', { items: orderItems, customer: customerInfo });
+                    }}
+                    style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', fontFamily: 'inherit' }}
+                  >
+                    <CsLineIcons icon="plus" size="12" className="me-1" /> PO
+                  </Button>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => {
+                      allowNavigationRef.current = true;
+                      history.push('/accounting/create-note', { items: orderItems, customer: customerInfo });
+                    }}
+                    style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', fontFamily: 'inherit' }}
+                  >
+                    <CsLineIcons icon="file-text" size="12" className="me-1" /> Note
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="pos-customer-section d-none d-xl-block">
@@ -1061,6 +1084,7 @@ const UnifiedOrder = () => {
         handlePrint={handlePrint}
         canSeeAccounting={canSeeAccounting}
         history={history}
+        taxRates={taxRates}
       />
 
       <CancelOrderModal showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal} handleCancelOrder={handleCancelOrder} isLoading={isLoading} />
@@ -1108,74 +1132,93 @@ const UnifiedOrder = () => {
         paymentHistory={paymentHistory}
         orderType={orderType}
       >
+        {canSeeAccounting && (
+          <div className="mb-3">
+            <h6 className="mb-2 fw-bold text-muted border-bottom pb-2">Accounting Options</h6>
+            <div className="d-flex flex-wrap gap-2">
+              <Button
+                variant="outline-primary"
+                size="sm"
+                className="flex-grow-1"
+                onClick={() => {
+                  allowNavigationRef.current = true;
+                  setShowCartSheet(false);
+                  history.push('/accounting/create-invoice', { items: orderItems, customer: customerInfo });
+                }}
+                style={{ fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', fontFamily: 'inherit' }}
+              >
+                <CsLineIcons icon="file-text" size="13" className="me-1" /> GST Invoice
+              </Button>
+              <Button
+                variant="outline-primary"
+                size="sm"
+                className="flex-grow-1"
+                onClick={() => {
+                  allowNavigationRef.current = true;
+                  setShowCartSheet(false);
+                  history.push('/accounting/create-sales-order', { items: orderItems, customer: customerInfo });
+                }}
+                style={{ fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', fontFamily: 'inherit' }}
+              >
+                <CsLineIcons icon="cart" size="13" className="me-1" /> Sales Order
+              </Button>
+              <Button
+                variant="outline-info"
+                size="sm"
+                className="flex-grow-1"
+                onClick={() => {
+                  allowNavigationRef.current = true;
+                  setShowCartSheet(false);
+                  history.push('/accounting/create-purchase-order', { items: orderItems, customer: customerInfo });
+                }}
+                style={{ fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', fontFamily: 'inherit' }}
+              >
+                <CsLineIcons icon="plus" size="13" className="me-1" /> PO
+              </Button>
+              <Button
+                variant="outline-primary"
+                size="sm"
+                className="flex-grow-1"
+                onClick={() => {
+                  allowNavigationRef.current = true;
+                  setShowCartSheet(false);
+                  history.push('/accounting/create-note', { items: orderItems, customer: customerInfo });
+                }}
+                style={{ fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', fontFamily: 'inherit' }}
+              >
+                <CsLineIcons icon="file-text" size="13" className="me-1" /> Note
+              </Button>
+            </div>
+          </div>
+        )}
+
         <h6 className="mb-2 fw-bold text-muted border-bottom pb-2">Customer Details</h6>
 
-        {/* Row 1: Order Type + Order Date */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-          <div style={{ flex: 1 }}>
-            <label
-              style={{
-                fontSize: '10px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                color: '#94a3b8',
-                marginBottom: '3px',
-                display: 'block',
-              }}
-            >
-              Order Type
-            </label>
-            <Form.Select
-              size="sm"
-              value={orderType}
-              onChange={(e) => handleOrderTypeChange(e.target.value)}
-              disabled={isEditMode}
-              style={{
-                width: '100%',
-                height: '30px',
-                padding: '0 8px',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#1e293b',
-                border: '1.5px solid rgba(226,232,240,0.9)',
-                borderRadius: '6px',
-                outline: 'none',
-                background: '#f8fafc',
-                transition: 'all 0.18s',
-                boxSizing: 'border-box',
-              }}
-            >
-              <option value="Takeaway">Takeaway</option>
-              <option value="Dine In">Dine In</option>
-              <option value="Delivery">Delivery</option>
-            </Form.Select>
-          </div>
-          <div style={{ flex: 1.5 }}>
-            <label
-              style={{
-                fontSize: '10px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                color: '#94a3b8',
-                marginBottom: '3px',
-                display: 'block',
-              }}
-            >
-              Order Date
-            </label>
-            <DatePicker
-              showTimeSelect
-              timeFormat="hh:mm a"
-              timeIntervals={15}
-              timeCaption="Time"
-              dateFormat="dd/MM/yyyy hh:mm a"
-              selected={orderDate ? new Date(orderDate) : new Date()}
-              onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
-              customInput={<CustomDateInput />}
-            />
-          </div>
+        {/* Row 1: Order Date */}
+        <div style={{ marginBottom: '8px' }}>
+          <label
+            style={{
+              fontSize: '10px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              color: '#94a3b8',
+              marginBottom: '3px',
+              display: 'block',
+            }}
+          >
+            Order Date
+          </label>
+          <DatePicker
+            showTimeSelect
+            timeFormat="hh:mm a"
+            timeIntervals={15}
+            timeCaption="Time"
+            dateFormat="dd/MM/yyyy hh:mm a"
+            selected={orderDate ? new Date(orderDate) : new Date()}
+            onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
+            customInput={<CustomDateInput />}
+          />
         </div>
 
         <CustomerInfoForm

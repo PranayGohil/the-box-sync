@@ -8,7 +8,7 @@ import { isAccountingShopType } from 'constants.js';
 export function printA4InvoiceHTML(ord, userData, items, subTotal) {
   const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads';
   const logoUrl = userData.logo ? `${uploadDir}${userData.logo.startsWith('/') ? '' : '/'}${userData.logo}` : '';
-  const printDate = new Date(ord.order_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+  const printDate = new Date(ord.order_date).toLocaleDateString('en-GB');
   const invoiceNo = ord.order_no || ord._id;
 
   return `
@@ -167,7 +167,7 @@ export function printA4InvoiceHTML(ord, userData, items, subTotal) {
 export function printA4QuotationHTML(ord, userData, items, subTotal) {
   const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads';
   const logoUrl = userData.logo ? `${uploadDir}${userData.logo.startsWith('/') ? '' : '/'}${userData.logo}` : '';
-  const printDate = new Date(ord.order_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+  const printDate = new Date(ord.order_date).toLocaleDateString('en-GB');
   const quotationNo = ord.order_no ? ord.order_no.replace('ORD', 'QT') : `QT-${Date.now().toString().slice(-6)}`;
 
   return `

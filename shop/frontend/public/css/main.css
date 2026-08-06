@@ -485,7 +485,7 @@
 
 /* ── Order Panel ── */
 .pos-order-panel {
-  width: 355px;
+  width: 400px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -618,39 +618,16 @@
   overflow: hidden;
 }
 
-/* Custom 5-Column Grid */
+/* Custom Responsive Grid */
 .pos-grid-5 {
-  display: flex;
-  flex-wrap: wrap;
-  margin: 0 -6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .pos-grid-item {
-  padding: 6px;
-  width: 20%; /* 5 items per row */
-}
-
-@media (max-width: 1199px) {
-  .pos-order-panel {
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid rgba(226, 232, 240, 0.9);
-  }
-  .pos-grid-item {
-    width: 33.33%;
-  } /* 3 items on tablet */
-}
-
-@media (max-width: 767px) {
-  .pos-grid-item {
-    width: 50%;
-  } /* 2 items on mobile */
-}
-
-@media (max-width: 480px) {
-  .pos-grid-item {
-    width: 50%;
-  }
+  width: 100%;
 }
 
 /* Global Mobile View Side Spacing Optimization */

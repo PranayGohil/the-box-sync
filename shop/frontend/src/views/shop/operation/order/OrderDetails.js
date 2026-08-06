@@ -222,7 +222,7 @@ const OrderDetails = () => {
               <CsLineIcons icon="error" size={32} className="mb-3" />
               <h4>Error Loading Order</h4>
               <p>{error}</p>
-              <Button variant="secondary" onClick={() => history.push('/operations/order-history')}>
+              <Button variant="secondary" onClick={() => history.push('/operations/sales-history')}>
                 Back to Order History
               </Button>
             </Alert>
@@ -246,7 +246,7 @@ const OrderDetails = () => {
               <CsLineIcons icon="search" size={32} className="mb-3" />
               <h4>Order Not Found</h4>
               <p>The requested order could not be found or has been deleted.</p>
-              <Button variant="secondary" onClick={() => history.push('/operations/order-history')}>
+              <Button variant="secondary" onClick={() => history.push('/operations/sales-history')}>
                 Back to Order History
               </Button>
             </Alert>
@@ -270,7 +270,7 @@ const OrderDetails = () => {
           <Col xs="12" className="d-flex gap-2 flex-wrap justify-content-start">
             <Button
               variant="outline-primary"
-              onClick={() => history.push('/operations/order-history')}
+              onClick={() => history.push('/operations/sales-history')}
               className="rounded-pill px-4 btn-icon btn-icon-start border-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1 flex-md-grow-0"
               style={{ minWidth: '100px', borderColor: '#23b3f4', color: '#23b3f4' }}
             >

@@ -199,12 +199,12 @@ const InventoryDetails = () => {
           <div className="d-flex flex-wrap gap-3 gap-md-5">
             <div>
               <div className="inventory-details-info-label">Bill Date</div>
-              <div className="inventory-details-info-val">{new Date(inventory.bill_date).toLocaleDateString('en-IN')}</div>
+              <div className="inventory-details-info-val">{new Date(inventory.bill_date).toLocaleDateString('en-GB')}</div>
             </div>
             <div>
               <div className="inventory-details-info-label">Requested On</div>
               <div className="inventory-details-info-val">
-                {new Date(inventory.request_date).toLocaleDateString('en-IN')} at{' '}
+                {new Date(inventory.request_date).toLocaleDateString('en-GB')} at{' '}
                 {new Date(inventory.request_date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>

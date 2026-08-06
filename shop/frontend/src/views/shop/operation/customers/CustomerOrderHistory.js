@@ -125,12 +125,12 @@ const getInitials = (name) => {
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return '—';
-  try { return format(new Date(dateStr), 'dd MMM yyyy, hh:mm a'); } catch { return '—'; }
+  try { return format(new Date(dateStr), 'dd/MM/yyyy, hh:mm a'); } catch { return '—'; }
 };
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '—';
-  try { return format(new Date(dateStr), 'dd MMM yyyy'); } catch { return '—'; }
+  try { return format(new Date(dateStr), 'dd/MM/yyyy'); } catch { return '—'; }
 };
 
 const statusBadge = (status) => {

@@ -10,7 +10,6 @@ const PaymentSummaryBox = ({
   paymentHistory = [], alreadyPaid = 0, canKOT = false,
   orderType, canSeeAccounting = false, handleQuotation,
 }) => {
-  const [showKotHistory, setShowKotHistory] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
 
   const isPaid = orderStatus === 'Paid';
@@ -128,8 +127,8 @@ const PaymentSummaryBox = ({
                 onClick={handleOpenPaymentModal}
                 disabled={orderItems.length === 0}
               >
-                <CsLineIcons icon="credit-card" size="13" stroke="#fff" />
-                {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'Bill'}
+                <CsLineIcons icon="file-text" size="13" stroke="#fff" />
+                {dueAmount > 0.01 && totalPaid > 0 ? 'Pay' : 'GST Invoice'}
               </button>
             </>
           ) : isPaid && !isDirty && dueAmount <= 0.01 ? (
@@ -321,43 +320,6 @@ const PaymentSummaryBox = ({
           {/* Secondary row: History removed */}
         </div>
       </div>
-
-      {/* ── KOT History Modal ── */}
-      <Modal show={showKotHistory} onHide={() => setShowKotHistory(false)} centered>
-        <Modal.Header closeButton style={{ borderBottom: '1px solid rgba(226,232,240,0.8)' }}>
-          <Modal.Title style={{ fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Order Print History</Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-          {kotHistory.length === 0 ? (
-            <p className="text-muted text-center py-3">No order prints yet</p>
-          ) : (
-            [...kotHistory].reverse().map((record) => (
-              <div key={record.id} style={{ border: '1px solid rgba(226,232,240,0.9)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <div>
-                    <Badge bg="dark" className="me-2">Print #{record.kotNo}</Badge>
-                    <small className="text-muted">{new Date(record.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</small>
-                  </div>
-                  <Button size="sm" variant="outline-primary" onClick={() => onReprintKOT && onReprintKOT(record)} disabled={kotPrinting}>
-                    Reprint
-                  </Button>
-                </div>
-                <ul className="mb-0 ps-4" style={{ fontSize: '13px' }}>
-                  {record.items.map((item, i) => (
-                    <li key={i}>
-                      {item.item_name} × {item.quantity}
-                      {item.special_notes && <span className="text-muted ms-1">({item.special_notes})</span>}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
-          )}
-        </Modal.Body>
-        <Modal.Footer style={{ borderTop: '1px solid rgba(226,232,240,0.8)' }}>
-          <Button variant="secondary" onClick={() => setShowKotHistory(false)}>Close</Button>
-        </Modal.Footer>
-      </Modal>
 
       {/* ── Payment History Modal ── */}
       <Modal show={showPaymentHistory} onHide={() => setShowPaymentHistory(false)} centered>

@@ -51,6 +51,7 @@ const Login = () => {
     setIsLoading(true);
     setError('');
     setSuccess('');
+    console.log("[FRONTEND DEBUG] apiBase on send-otp:", apiBase);
     try {
       const response = await axios.post(`${apiBase}/user/send-otp`, { email, login_from: 'shop' });
       setSuccess(response.data.message || 'OTP sent successfully to your email!');
@@ -69,6 +70,7 @@ const Login = () => {
     setIsLoading(true);
     setError('');
     setSuccess('');
+    console.log("[FRONTEND DEBUG] apiBase on verify-otp:", apiBase);
     try {
       const response = await axios.post(`${apiBase}/user/verify-otp`, { email, otp, login_from: 'shop' });
       if (!response.data.verified) {

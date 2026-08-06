@@ -228,7 +228,7 @@ export const LeaveConfirmationModal = ({
             allowNavigationRef.current = true;
             setIsDirty(false);
             setShowLeaveModal(false);
-            const target = nextLocation === '/operations' ? '/operations/order-history' : nextLocation;
+            const target = nextLocation === '/operations' ? '/operations/sales-history' : nextLocation;
             if (target) {
               setTimeout(() => {
                 history.push(target);
@@ -245,7 +245,7 @@ export const LeaveConfirmationModal = ({
           onClick={async () => {
             allowNavigationRef.current = true;
             setShowLeaveModal(false);
-            await handleSaveOrder('Save', '/operations/order-history');
+            await handleSaveOrder('Save', '/operations/sales-history');
           }}
           disabled={isLoading}
         >

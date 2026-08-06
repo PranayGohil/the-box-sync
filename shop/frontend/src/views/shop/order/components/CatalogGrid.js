@@ -96,40 +96,6 @@ const CatalogGrid = ({
             All Items
           </button>
 
-          {setShowParcelCharge && (
-            <button
-              type="button"
-              className={`pos-category-item ${showParcelCharge ? 'active' : ''}`}
-              onClick={() => {
-                setShowParcelCharge(true);
-                setShowSpecial(false);
-                setSelectedCategory('');
-                setShowCategories(false);
-              }}
-            >
-              <span role="img" aria-label="parcel">
-                📦
-              </span>{' '}
-              Parcel Charges
-            </button>
-          )}
-
-          <button
-            type="button"
-            className={`pos-category-item ${showSpecial && !showParcelCharge ? 'active' : ''}`}
-            onClick={() => {
-              setShowSpecial(true);
-              setSelectedCategory('');
-              if (setShowParcelCharge) setShowParcelCharge(false);
-              setShowCategories(false);
-            }}
-          >
-            <span role="img" aria-label="specials">
-              ⭐
-            </span>{' '}
-            Specials
-          </button>
-
           <div className="pos-drawer-divider">
             <span>Catalog</span>
           </div>

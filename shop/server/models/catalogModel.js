@@ -27,6 +27,14 @@ const catalog = new Schema({
         type: String,
         default: null,
       },
+      hsn_sac_code: {
+        type: String,
+        default: "",
+      },
+      hsn_code: {
+        type: String,
+        default: "",
+      },
       description: {
         type: String,
       },

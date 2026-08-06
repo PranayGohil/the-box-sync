@@ -216,12 +216,8 @@ const orderTypeBadge = (type) => {
 };
 
 const formatDate = (dateStr) => {
-  if (!dateStr) return '—';
-  try {
-    return format(new Date(dateStr), 'dd MMM yyyy');
-  } catch {
-    return '—';
-  }
+  if (!dateStr) return 'N/A';
+  return new Date(dateStr).toLocaleDateString('en-GB');
 };
 
 /* ─── Component ─────────────────────────────────────────────────────────────── */

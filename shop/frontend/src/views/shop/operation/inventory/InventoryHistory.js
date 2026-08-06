@@ -1122,7 +1122,7 @@ const RequestedInventory = ({ refreshKey, onRejectClick }) => {
               <tbody>
                 {data.map((item) => (
                   <tr key={item._id}>
-                    <td>{new Date(item.request_date).toLocaleDateString('en-IN')}</td>
+                    <td>{new Date(item.request_date).toLocaleDateString('en-GB')}</td>
                     <td><Badge bg="light" text="dark" className="border">{item.category}</Badge></td>
                     <td>
                       {item.items.map((it, i) => (
@@ -1199,7 +1199,7 @@ const CompletedInventory = ({ refreshKey, history, onDeleteClick }) => {
               <tbody>
                 {data.map((item) => (
                   <tr key={item._id}>
-                    <td>{item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-IN') : new Date(item.request_date).toLocaleDateString('en-IN')}</td>
+                    <td>{item.bill_date ? new Date(item.bill_date).toLocaleDateString('en-GB') : new Date(item.request_date).toLocaleDateString('en-GB')}</td>
                     <td className="fw-bold text-dark">{item.bill_number || '—'}</td>
                     <td>{item.vendor_name || '—'}</td>
                     <td className="fw-bold text-primary">₹{item.total_amount || 0}</td>
@@ -1273,7 +1273,7 @@ const RejectedInventory = ({ refreshKey, history, onDeleteClick }) => {
               <tbody>
                 {data.map((item) => (
                   <tr key={item._id}>
-                    <td>{new Date(item.request_date).toLocaleDateString('en-IN')}</td>
+                    <td>{new Date(item.request_date).toLocaleDateString('en-GB')}</td>
                     <td><Badge bg="danger" className="text-uppercase">{item.category}</Badge></td>
                     <td className="text-muted small">"{item.reject_reason || 'No reason provided'}"</td>
                     <td className="text-end">

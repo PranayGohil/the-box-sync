@@ -205,6 +205,8 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
           : [{ size_name: '', price: '', extra: '', barcode: '', is_available: true }],
       addons: data?.addons || [],
       type: data?.type || 'veg',
+      hsn_sac_code: data?.hsn_sac_code || '',
+      hsn_code: data?.hsn_code || '',
     },
     validationSchema: Yup.object().shape({
       item_name: Yup.string().required('Item name is required'),
@@ -238,6 +240,8 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
         formData.append('barcode', values.barcode);
         formData.append('hide_on_kot', values.hide_on_kot);
         formData.append('type', values.type);
+        formData.append('hsn_sac_code', values.hsn_sac_code);
+        formData.append('hsn_code', values.hsn_code);
 
         let cleanedVariants = [];
         if (Array.isArray(values.variants)) {
@@ -247,6 +251,7 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
             extra: v.extra || '',
             barcode: v.barcode || '',
             is_available: v.is_available !== false,
+            stock_quantity: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : null,
           }));
         }
         formData.append('variants', JSON.stringify(cleanedVariants));
@@ -382,6 +387,24 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                 )}
 
                 <Col md={12}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">HSN Code / SAC</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="hsn_sac_code"
+                      value={formik.values.hsn_sac_code}
+                      onChange={(e) => {
+                        formik.setFieldValue('hsn_sac_code', e.target.value);
+                        formik.setFieldValue('hsn_code', e.target.value);
+                      }}
+                      disabled={isSubmitting}
+                      className="pill-input shadow-sm"
+                      placeholder="e.g. 84713010"
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={12}>
                   <Form.Group className="mb-4">
                     <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Description</Form.Label>
                     <Form.Control
@@ -429,23 +452,9 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                   </label>
                 </div>
               </Form.Group>
-            </Col>
 
-            <Col xs={4}>
               <div
-                className="d-flex align-items-center gap-2 cursor-pointer mb-4"
-                onClick={() => formik.setFieldValue('is_special', !formik.values.is_special)}
-              >
-                <div className={`custom-check ${formik.values.is_special ? 'active' : ''}`}>
-                  {formik.values.is_special && <CsLineIcons icon="check" size="12" className="text-white" />}
-                </div>
-                <span className="fw-bold text-alternate small text-uppercase">Special</span>
-              </div>
-            </Col>
-
-            <Col xs={4}>
-              <div
-                className="d-flex align-items-center gap-2 cursor-pointer mb-4"
+                className="d-flex align-items-center gap-2 cursor-pointer mt-1"
                 onClick={() => formik.setFieldValue('is_available', !formik.values.is_available)}
               >
                 <div className={`custom-check ${formik.values.is_available ? 'active' : ''}`}>
@@ -454,6 +463,9 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                 <span className="fw-bold text-alternate small text-uppercase">Available</span>
               </div>
             </Col>
+
+
+
 
             <Col md={12} className="mt-3">
               <div className="p-3 p-md-4 rounded-xl border bg-white" style={{ borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
@@ -466,142 +478,15 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                   )}
                 </div>
 
-                {/* Desktop Table Layout */}
-                <div className="table-responsive d-none d-md-block">
-                  <Table borderless hover className="align-middle mb-0">
-                    <thead>
-                      <tr className="border-bottom" style={{ color: '#64748b', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
-                        <th className="pb-2 text-uppercase">{variantLabel}</th>
-                        <th className="pb-2 text-uppercase" width="130">Price (₹)</th>
-                        <th className="pb-2 text-uppercase" width="130">Stock Qty</th>
-                        <th className="pb-2 text-uppercase" width="180">Extra Details</th>
-                        <th className="pb-2 text-uppercase" width="240">Barcode</th>
-                        <th className="pb-2 text-uppercase text-center" width="60" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(formik.values.variants || []).map((variant, vIdx) => (
-                        <tr key={vIdx} className="border-bottom border-light">
-                          <td className="py-3">
-                            <CreatableSelect
-                              styles={selectStyles}
-                              isClearable
-                              menuPlacement="auto"
-                              menuPortalTarget={document.body}
-                              options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                              value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
-                              onChange={(selected) => formik.setFieldValue(`variants[${vIdx}].size_name`, selected ? selected.value : '')}
-                              placeholder="e.g. 1kg"
-                            />
-                            {formik.errors.variants?.[vIdx]?.size_name && (
-                              <div className="text-danger small mt-1">{formik.errors.variants[vIdx].size_name}</div>
-                            )}
-                          </td>
-                          <td className="py-3">
-                            <Form.Control
-                              type="text"
-                              name={`variants[${vIdx}].price`}
-                              value={variant.price || ''}
-                              onChange={formik.handleChange}
-                              placeholder="Price"
-                              className="pill-input"
-                              style={{ height: '38px', borderRadius: '10px' }}
-                              isInvalid={formik.touched.variants?.[vIdx]?.price && !!formik.errors.variants?.[vIdx]?.price}
-                            />
-                            {formik.errors.variants?.[vIdx]?.price && (
-                              <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>
-                            )}
-                          </td>
-                          <td className="py-3">
-                            <Form.Control
-                              type="number"
-                              name={`variants[${vIdx}].stock_quantity`}
-                              value={variant.stock_quantity ?? ''}
-                              onChange={formik.handleChange}
-                              placeholder="Qty"
-                              className="pill-input"
-                              style={{ height: '38px', borderRadius: '10px' }}
-                            />
-                          </td>
-                          <td className="py-3">
-                            <CreatableSelect
-                              styles={selectStyles}
-                              isClearable
-                              menuPlacement="auto"
-                              menuPortalTarget={document.body}
-                              options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                              value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
-                              onChange={(selected) => formik.setFieldValue(`variants[${vIdx}].extra`, selected ? selected.value : '')}
-                              placeholder="Optional"
-                            />
-                          </td>
-                          <td className="py-3">
-                            <div className="d-flex align-items-center gap-1">
-                              <Form.Control
-                                type="text"
-                                name={`variants[${vIdx}].barcode`}
-                                value={variant.barcode || ''}
-                                onChange={formik.handleChange}
-                                placeholder="Barcode"
-                                className="pill-input"
-                                style={{ height: '38px', borderRadius: '10px' }}
-                              />
-                              <Button
-                                variant="outline-primary"
-                                className="flex-shrink-0 d-flex align-items-center justify-content-center px-3"
-                                style={{ height: '38px', borderRadius: '10px' }}
-                                onClick={() => formik.setFieldValue(`variants[${vIdx}].barcode`, Math.floor(100000000000 + Math.random() * 900000000000).toString())}
-                              >
-                                <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Gen</span>
-                              </Button>
-                            </div>
-                          </td>
-                          <td className="py-3 text-center">
-                            <Button
-                              variant="outline-danger"
-                              onClick={() => {
-                                const newVariants = [...formik.values.variants];
-                                newVariants.splice(vIdx, 1);
-                                formik.setFieldValue('variants', newVariants);
-                              }}
-                              disabled={formik.values.variants.length === 1}
-                              style={{ height: '34px', width: '34px', minWidth: '34px', borderRadius: '50%', padding: 0 }}
-                              className="d-flex align-items-center justify-content-center btn btn-outline-danger mx-auto"
-                            >
-                              <CsLineIcons icon="bin" size="14" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                      <tr>
-                        <td colSpan="5" className="pt-3 pb-0 border-0">
-                          <Button
-                            type="button"
-                            variant="outline-primary"
-                            className="custom-btn-outline py-1 px-3 d-flex align-items-center gap-1 btn btn-outline-primary"
-                            style={{ height: '34px', fontSize: '0.85rem', borderRadius: '8px' }}
-                            onClick={() => {
-                              formik.setFieldValue('variants', [...formik.values.variants, { size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true }]);
-                            }}
-                          >
-                            <CsLineIcons icon="plus" size="12" />
-                            Add Row
-                          </Button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </Table>
-                </div>
-
-                {/* Mobile Stacked Layout (Hidden on Desktop) */}
-                <div className="d-flex d-md-none flex-column gap-2">
+                {/* Desktop Grid Layout (For md and larger) */}
+                <div className="d-none d-md-block">
                   {(formik.values.variants || []).map((variant, vIdx) => (
-                    <React.Fragment key={vIdx}>
-                      {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
-                      <Row className="g-2 align-items-end mb-3 pb-3 border-bottom border-light">
-                        <Col xs={10} className="order-1">
+                    <div key={vIdx} className="p-3 mb-3 border rounded position-relative" style={{ borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                      <Row className="g-2 align-items-center">
+                        {/* Size Name */}
+                        <Col md={5}>
                           <Form.Group>
-                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                            <Form.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem' }}>
                               {variantLabel}
                             </Form.Label>
                             <CreatableSelect
@@ -612,17 +497,19 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                               options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
                               value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
                               onChange={(selected) => formik.setFieldValue(`variants[${vIdx}].size_name`, selected ? selected.value : '')}
-                              placeholder="e.g. 1kg"
+                               placeholder={`Select or type ${variantLabel.toLowerCase()}...`}
                             />
                             {formik.errors.variants?.[vIdx]?.size_name && (
                               <div className="text-danger small mt-1">{formik.errors.variants[vIdx].size_name}</div>
                             )}
                           </Form.Group>
                         </Col>
-                        <Col xs={6} className="order-3">
+
+                        {/* Price */}
+                        <Col md={3}>
                           <Form.Group>
-                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                              Price (₹)
+                            <Form.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem' }}>
+                              Price
                             </Form.Label>
                             <Form.Control
                               type="text"
@@ -639,53 +526,27 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                             )}
                           </Form.Group>
                         </Col>
-                        <Col xs={6} className="order-4">
+
+                        {/* Stock Quantity */}
+                        <Col md={3}>
                           <Form.Group>
-                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                              Extra Details
+                            <Form.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem' }}>
+                              Stock Qty
                             </Form.Label>
-                            <CreatableSelect
-                              styles={selectStyles}
-                              isClearable
-                              menuPlacement="auto"
-                              menuPortalTarget={document.body}
-                              options={extraSuggestions.map((opt) => ({ value: opt, label: opt }))}
-                              value={variant.extra ? { value: variant.extra, label: variant.extra } : null}
-                              onChange={(selected) => formik.setFieldValue(`variants[${vIdx}].extra`, selected ? selected.value : '')}
-                              placeholder="Optional"
+                            <Form.Control
+                              type="number"
+                              name={`variants[${vIdx}].stock_quantity`}
+                              value={variant.stock_quantity ?? ''}
+                              onChange={formik.handleChange}
+                              placeholder="Qty"
+                              className="pill-input"
+                              style={{ height: '38px', borderRadius: '10px' }}
                             />
                           </Form.Group>
                         </Col>
-                        <Col xs={12} className="order-5">
-                          <Form.Group>
-                            <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
-                              Barcode
-                            </Form.Label>
-                            <div className="d-flex align-items-center gap-1">
-                              <Form.Control
-                                type="text"
-                                name={`variants[${vIdx}].barcode`}
-                                value={variant.barcode || ''}
-                                onChange={formik.handleChange}
-                                placeholder="Barcode"
-                                className="pill-input"
-                                style={{ height: '38px', borderRadius: '10px' }}
-                              />
-                              <Button
-                                variant="outline-primary"
-                                className="flex-shrink-0 d-flex align-items-center justify-content-center px-3"
-                                style={{ height: '38px', borderRadius: '10px' }}
-                                onClick={() => formik.setFieldValue(`variants[${vIdx}].barcode`, Math.floor(100000000000 + Math.random() * 900000000000).toString())}
-                              >
-                                <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Gen</span>
-                              </Button>
-                            </div>
-                          </Form.Group>
-                        </Col>
-                        <Col xs={2} className="order-2 d-flex flex-column justify-content-end pb-1 px-1">
-                          <Form.Label className="d-none d-sm-block mb-1" style={{ fontSize: '0.75rem', visibility: 'hidden' }}>
-                            Delete
-                          </Form.Label>
+
+                        {/* Delete Button */}
+                        <Col md={1} className="d-flex align-items-center justify-content-center pt-3">
                           <Button
                             variant="outline-danger"
                             onClick={() => {
@@ -695,12 +556,147 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                             }}
                             disabled={formik.values.variants.length === 1}
                             style={{ height: '36px', width: '36px', minWidth: '36px', borderRadius: '50%', padding: 0 }}
-                            className="flex-shrink-0 d-flex align-items-center justify-content-center btn btn-outline-danger"
+                            className="d-flex align-items-center justify-content-center btn btn-outline-danger"
                           >
                             <CsLineIcons icon="bin" size="14" />
                           </Button>
                         </Col>
                       </Row>
+
+                      {/* Row 2: Extra Details (Text Area 100% width) */}
+                      <Row className="mt-2">
+                        <Col md={12}>
+                          <Form.Group>
+                            <Form.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.75rem' }}>
+                              Extra Details
+                            </Form.Label>
+                            <Form.Control
+                              as="textarea"
+                              rows={2}
+                              name={`variants[${vIdx}].extra`}
+                              value={variant.extra || ''}
+                              onChange={formik.handleChange}
+                              placeholder="Add extra details (e.g. specifications, warranty)..."
+                              className="pill-input bg-white w-100"
+                              style={{ resize: 'none', borderRadius: '10px', minHeight: '50px' }}
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                    </div>
+                  ))}
+
+                  <Button
+                    type="button"
+                    variant="outline-primary"
+                    className="custom-btn-outline py-1 px-3 d-flex align-items-center gap-1 btn btn-outline-primary mt-2"
+                    style={{ height: '34px', fontSize: '0.85rem', borderRadius: '8px' }}
+                    onClick={() => {
+                      formik.setFieldValue('variants', [...formik.values.variants, { size_name: '', price: '', extra: '', barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(), is_available: true, stock_quantity: '' }]);
+                    }}
+                  >
+                    <CsLineIcons icon="plus" size="12" />
+                    Add Variant
+                  </Button>
+                </div>
+
+                {/* Mobile Stacked Layout (Hidden on Desktop) */}
+                <div className="d-flex d-md-none flex-column gap-2">
+                  {(formik.values.variants || []).map((variant, vIdx) => (
+                    <React.Fragment key={vIdx}>
+                      {vIdx > 0 && <hr className="my-3" style={{ borderTop: '1px dashed #cbd5e1' }} />}
+                      <div className="p-3 border rounded position-relative" style={{ borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                        <Row className="g-2 align-items-start">
+                          <Col xs={10}>
+                            <Form.Group>
+                              <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                {variantLabel}
+                              </Form.Label>
+                              <CreatableSelect
+                                styles={selectStyles}
+                                isClearable
+                                menuPlacement="auto"
+                                menuPortalTarget={document.body}
+                                options={sizeSuggestions.map((opt) => ({ value: opt, label: opt }))}
+                                value={variant.size_name ? { value: variant.size_name, label: variant.size_name } : null}
+                                onChange={(selected) => formik.setFieldValue(`variants[${vIdx}].size_name`, selected ? selected.value : '')}
+                                placeholder={`Select or type ${variantLabel.toLowerCase()}...`}
+                              />
+                              {formik.errors.variants?.[vIdx]?.size_name && (
+                                <div className="text-danger small mt-1">{formik.errors.variants[vIdx].size_name}</div>
+                              )}
+                            </Form.Group>
+                          </Col>
+                          <Col xs={2} className="d-flex align-items-center justify-content-center pt-4">
+                            <Button
+                              variant="outline-danger"
+                              onClick={() => {
+                                const newVariants = [...formik.values.variants];
+                                newVariants.splice(vIdx, 1);
+                                formik.setFieldValue('variants', newVariants);
+                              }}
+                              disabled={formik.values.variants.length === 1}
+                              style={{ height: '36px', width: '36px', minWidth: '36px', borderRadius: '50%', padding: 0 }}
+                              className="d-flex align-items-center justify-content-center btn btn-outline-danger"
+                            >
+                              <CsLineIcons icon="bin" size="14" />
+                            </Button>
+                          </Col>
+                          <Col xs={6}>
+                            <Form.Group>
+                              <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                Price (₹)
+                              </Form.Label>
+                              <Form.Control
+                                type="text"
+                                name={`variants[${vIdx}].price`}
+                                value={variant.price || ''}
+                                onChange={formik.handleChange}
+                                placeholder="Price"
+                                className="pill-input"
+                                style={{ height: '38px', borderRadius: '10px' }}
+                                isInvalid={formik.touched.variants?.[vIdx]?.price && !!formik.errors.variants?.[vIdx]?.price}
+                              />
+                              {formik.errors.variants?.[vIdx]?.price && (
+                                <div className="text-danger small mt-1">{formik.errors.variants[vIdx].price}</div>
+                              )}
+                            </Form.Group>
+                          </Col>
+                          <Col xs={6}>
+                            <Form.Group>
+                              <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                Stock Qty
+                              </Form.Label>
+                              <Form.Control
+                                type="number"
+                                name={`variants[${vIdx}].stock_quantity`}
+                                value={variant.stock_quantity ?? ''}
+                                onChange={formik.handleChange}
+                                placeholder="Qty"
+                                className="pill-input"
+                                style={{ height: '38px', borderRadius: '10px' }}
+                              />
+                            </Form.Group>
+                          </Col>
+                          <Col xs={12}>
+                            <Form.Group>
+                              <Form.Label className="small text-muted mb-1" style={{ fontSize: '0.75rem' }}>
+                                Extra Details
+                              </Form.Label>
+                              <Form.Control
+                                as="textarea"
+                                rows={2}
+                                name={`variants[${vIdx}].extra`}
+                                value={variant.extra || ''}
+                                onChange={formik.handleChange}
+                                placeholder="Add extra details..."
+                                className="pill-input bg-white w-100"
+                                style={{ resize: 'none', borderRadius: '10px', minHeight: '50px' }}
+                              />
+                            </Form.Group>
+                          </Col>
+                        </Row>
+                      </div>
                     </React.Fragment>
                   ))}
                   <Button
@@ -713,7 +709,7 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
                     }}
                   >
                     <CsLineIcons icon="plus" size="12" />
-                    Add Row
+                    Add Variant
                   </Button>
                 </div>
               </div>

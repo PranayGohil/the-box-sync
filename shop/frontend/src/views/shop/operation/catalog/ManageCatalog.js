@@ -426,6 +426,13 @@ const ManageCatalog = () => {
                               </div>
                             )}
 
+                             {/* HSN Code label */}
+                             {(item.hsn_sac_code || item.hsn_code) && (
+                               <div className="text-muted fw-bold" style={{ fontSize: '9px', marginTop: '2.5px', letterSpacing: '0.02em' }}>
+                                 HSN: {item.hsn_sac_code || item.hsn_code}
+                               </div>
+                             )}
+
                             {/* Stock Badge */}
                             <div className="mt-2">
                               {item.has_variants && Array.isArray(item.variants) && item.variants.length > 0 ? (
