@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
           setActiveBusiness(newBiz);
           setBusinesses([newBiz]);
         }
-        addToast('Registration successful! Welcome to Zenith ERP.', 'success');
+        addToast('Registration successful! Welcome to TheBox.', 'success');
         return { success: true };
       }
     } catch (err) {

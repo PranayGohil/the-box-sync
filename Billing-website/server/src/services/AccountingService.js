@@ -250,6 +250,32 @@ class AccountingService {
       });
     }
 
+    // Handle extra charges / custom fields (e.g. Courier charges, TDS, etc.)
+    if (invoice.extraCharges && invoice.extraCharges.length > 0) {
+      for (const ch of invoice.extraCharges) {
+        if (ch.amount > 0) {
+          if (ch.isDeduction) {
+            const isTds = /tds/i.test(ch.name);
+            const accountType = isTds ? 'tds_payable' : 'discount_allowed';
+            const acc = (await AccountingService.getAccountByType(invoice.businessId, accountType)) || salesAcc;
+            lines.push({
+              accountId: acc._id,
+              debit: ch.amount,
+              credit: 0,
+              narration: `${ch.name} on #${invoice.invoiceNo}`
+            });
+          } else {
+            lines.push({
+              accountId: salesAcc._id,
+              debit: 0,
+              credit: ch.amount,
+              narration: `${ch.name} on #${invoice.invoiceNo}`
+            });
+          }
+        }
+      }
+    }
+
     // Handle round-off
     if (invoice.roundOff !== 0) {
       const discountAcc = await AccountingService.getAccountByType(invoice.businessId, 'discount_allowed');

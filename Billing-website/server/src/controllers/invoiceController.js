@@ -154,6 +154,42 @@ exports.createInvoice = async (req, res, next) => {
       isTaxInclusive
     );
 
+    // 1.1 Process Extra Charges / Custom Fields (e.g. TDS, Courier charges, Freight, etc.)
+    let totalExtraAdditions = 0;
+    let totalExtraDeductions = 0;
+    const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
+      const rate = Number(ch.rate) || 0;
+      const type = ch.type === 'percentage' ? 'percentage' : 'amount';
+      let computed = 0;
+      if (type === 'percentage') {
+        computed = (taxCalc.taxableAmount * rate) / 100;
+      } else {
+        computed = rate;
+      }
+      const isDeduction = ch.isDeduction !== undefined
+        ? Boolean(ch.isDeduction)
+        : /tds|discount|less|deduct/i.test(ch.name || '');
+
+      const roundedAmount = Number(computed.toFixed(2));
+      if (isDeduction) {
+        totalExtraDeductions += roundedAmount;
+      } else {
+        totalExtraAdditions += roundedAmount;
+      }
+
+      return {
+        name: String(ch.name).trim(),
+        rate,
+        type,
+        amount: roundedAmount,
+        isDeduction
+      };
+    });
+
+    const adjustedRawGrandTotal = taxCalc.taxableAmount + taxCalc.totalTax + totalExtraAdditions - totalExtraDeductions;
+    const finalGrandTotal = Math.max(0, Math.round(adjustedRawGrandTotal));
+    const finalRoundOff = Number((finalGrandTotal - adjustedRawGrandTotal).toFixed(2));
+
     // 2. Generate Safe Sequential Invoice Number
     const invoiceNo = await SequenceService.getNextDocumentNumber(
       req.businessId,
@@ -162,9 +198,9 @@ exports.createInvoice = async (req, res, next) => {
       req.body.branchId || null
     );
 
-    const initialPaid = Math.min(taxCalc.grandTotal, Number(paidAmount) || 0);
-    const balance = taxCalc.grandTotal - initialPaid;
-    const paymentStatus = initialPaid >= taxCalc.grandTotal ? 'paid' : initialPaid > 0 ? 'partially_paid' : 'unpaid';
+    const initialPaid = Math.min(finalGrandTotal, Number(paidAmount) || 0);
+    const balance = finalGrandTotal - initialPaid;
+    const paymentStatus = initialPaid >= finalGrandTotal ? 'paid' : initialPaid > 0 ? 'partially_paid' : 'unpaid';
 
     // 3. Create Finalized Invoice
     const invoice = await Invoice.create({
@@ -192,6 +228,7 @@ exports.createInvoice = async (req, res, next) => {
       sourceDocumentId,
       salespersonId,
       items: taxCalc.items,
+      extraCharges: processedExtraCharges,
       subtotal: taxCalc.subtotal,
       totalDiscount: taxCalc.totalDiscount,
       taxableAmount: taxCalc.taxableAmount,
@@ -200,8 +237,8 @@ exports.createInvoice = async (req, res, next) => {
       igstTotal: taxCalc.igstTotal,
       cessTotal: taxCalc.cessTotal,
       totalTax: taxCalc.totalTax,
-      roundOff: taxCalc.roundOff,
-      grandTotal: taxCalc.grandTotal,
+      roundOff: finalRoundOff,
+      grandTotal: finalGrandTotal,
       paidAmount: initialPaid,
       balanceAmount: balance,
       paymentStatus,

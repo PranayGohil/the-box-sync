@@ -35,12 +35,12 @@ export const Register = () => {
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light p-3">
       <div className="card-zenith p-4 p-md-5 my-4" style={{ maxWidth: '520px', width: '100%' }}>
         <div className="text-center mb-4">
-          <div
-            className="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 mb-2"
-            style={{ width: '50px', height: '50px', fontSize: '1.6rem' }}
-          >
-            <i className="bi bi-building"></i>
-          </div>
+          <img
+            src="/logo-blue.svg"
+            alt="TheBox Logo"
+            className="mb-2"
+            style={{ height: '48px', maxWidth: '200px', objectFit: 'contain' }}
+          />
           <h4 className="fw-bold mb-1">Create New Business</h4>
           <p className="text-muted small">Start invoicing with GST compliance in under 2 minutes</p>
         </div>
@@ -141,7 +141,7 @@ export const Register = () => {
             className="btn btn-primary-zenith w-100 justify-content-center py-2 mb-3"
             disabled={loading}
           >
-            {loading ? 'Creating Business Workspace...' : 'Register & Launch ERP'}
+            {loading ? 'Creating Business Workspace...' : 'Register & Launch TheBox'}
           </button>
 
           <div className="text-center small text-muted">
