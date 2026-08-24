@@ -26,6 +26,8 @@ export const InvoiceCreate = () => {
     { productId: '', name: '', hsnSacCode: '', quantity: 1, rate: 0, taxRate: 18, unit: 'PCS', discountPercent: 0, total: 0 }
   ]);
 
+  const [extraCharges, setExtraCharges] = useState([]);
+
   useEffect(() => {
     fetchFormData();
   }, []);
@@ -95,6 +97,27 @@ export const InvoiceCreate = () => {
     setItems(items.filter((_, idx) => idx !== index));
   };
 
+  const addExtraCharge = () => {
+    setExtraCharges([
+      ...extraCharges,
+      { name: '', rate: 0, type: 'amount', isDeduction: false }
+    ]);
+  };
+
+  const removeExtraCharge = (index) => {
+    setExtraCharges(extraCharges.filter((_, idx) => idx !== index));
+  };
+
+  const handleExtraChargeChange = (index, field, value) => {
+    const updated = [...extraCharges];
+    const current = { ...updated[index], [field]: value };
+    if (field === 'name' && updated[index].isDeduction === undefined) {
+      current.isDeduction = /tds|discount|less|deduct/i.test(value);
+    }
+    updated[index] = current;
+    setExtraCharges(updated);
+  };
+
   // Calculations
   const subtotal = items.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
   const totalTax = items.reduce((sum, item) => {
@@ -108,8 +131,37 @@ export const InvoiceCreate = () => {
     }
   }, 0);
 
-  const rawGrandTotal = isTaxInclusive ? subtotal : subtotal + totalTax;
-  const grandTotal = Math.round(rawGrandTotal);
+  const baseAmount = isTaxInclusive ? subtotal : subtotal + totalTax;
+
+  const calculatedExtraCharges = extraCharges.map((charge) => {
+    const rate = Number(charge.rate) || 0;
+    let computedAmt = 0;
+    if (charge.type === 'percentage') {
+      computedAmt = (subtotal * rate) / 100;
+    } else {
+      computedAmt = rate;
+    }
+    const isDeduction = charge.isDeduction !== undefined
+      ? Boolean(charge.isDeduction)
+      : /tds|discount|less|deduct/i.test(charge.name || '');
+
+    return {
+      ...charge,
+      amount: Number(computedAmt.toFixed(2)),
+      isDeduction
+    };
+  });
+
+  const totalExtraAdditions = calculatedExtraCharges
+    .filter((c) => !c.isDeduction && c.name?.trim())
+    .reduce((sum, c) => sum + c.amount, 0);
+
+  const totalExtraDeductions = calculatedExtraCharges
+    .filter((c) => c.isDeduction && c.name?.trim())
+    .reduce((sum, c) => sum + c.amount, 0);
+
+  const rawGrandTotal = baseAmount + totalExtraAdditions - totalExtraDeductions;
+  const grandTotal = Math.max(0, Math.round(rawGrandTotal));
   const roundOff = Number((grandTotal - rawGrandTotal).toFixed(2));
 
   const handleSubmit = async (e) => {
@@ -125,6 +177,8 @@ export const InvoiceCreate = () => {
       return;
     }
 
+    const validExtraCharges = calculatedExtraCharges.filter((c) => c.name && c.name.trim());
+
     setLoading(true);
     try {
       const res = await api.post('/sales/invoices', {
@@ -132,6 +186,7 @@ export const InvoiceCreate = () => {
         invoiceDate,
         dueDate: dueDate || null,
         items: validItems,
+        extraCharges: validExtraCharges,
         isTaxInclusive,
         paidAmount: Number(paidAmount) || 0,
         paymentMode,
@@ -321,9 +376,108 @@ export const InvoiceCreate = () => {
           </table>
         </div>
 
-        <button type="button" className="btn btn-outline-primary btn-sm mb-4" onClick={addItemRow}>
-          <i className="bi bi-plus-circle me-1"></i> Add Another Item
-        </button>
+        <div className="d-flex flex-wrap gap-2 mb-4">
+          <button type="button" className="btn btn-outline-primary btn-sm" onClick={addItemRow}>
+            <i className="bi bi-plus-circle me-1"></i> Add Another Item
+          </button>
+          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={addExtraCharge}>
+            <i className="bi bi-plus-slash-minus me-1"></i> Add Extra Field / Charge (TDS, Courier, etc.)
+          </button>
+        </div>
+
+        {/* Extra Charges & Custom Fields Section */}
+        {extraCharges.length > 0 && (
+          <div className="card-zenith p-3 p-sm-4 mb-4 bg-white border">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h6 className="fw-bold mb-0 text-dark d-flex align-items-center">
+                  <i className="bi bi-tag-fill text-primary me-2"></i>Extra Fields & Charges (TDS, Courier, Freight, etc.)
+                </h6>
+                <div className="small text-muted">Add custom charges or deductions specifying category name, amount/rate, and percentage/amount type</div>
+              </div>
+              <button type="button" className="btn btn-outline-primary btn-sm" onClick={addExtraCharge}>
+                <i className="bi bi-plus-circle me-1"></i> Add More
+              </button>
+            </div>
+
+            <div className="d-flex flex-column gap-2">
+              {extraCharges.map((charge, idx) => {
+                const computed = calculatedExtraCharges[idx] || { amount: 0, isDeduction: false };
+                return (
+                  <div key={idx} className="row g-2 align-items-center bg-light p-2 rounded border">
+                    {/* Option 1: Category Name */}
+                    <div className="col-12 col-md-4">
+                      <label className="small text-muted mb-1 d-md-none">Category Name</label>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm fw-semibold"
+                        placeholder="Category Name (e.g. TDS, Courier charges)"
+                        value={charge.name}
+                        onChange={(e) => handleExtraChargeChange(idx, 'name', e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    {/* Option 2: Amount / Value */}
+                    <div className="col-5 col-md-3">
+                      <label className="small text-muted mb-1 d-md-none">Amount / Value</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="form-control form-control-sm font-mono fw-bold text-end"
+                        placeholder="Amount / %"
+                        value={charge.rate}
+                        onChange={(e) => handleExtraChargeChange(idx, 'rate', e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    {/* Option 3: Dropdown for select Percentage or Amount */}
+                    <div className="col-4 col-md-2">
+                      <label className="small text-muted mb-1 d-md-none">Type</label>
+                      <select
+                        className="form-select form-select-sm"
+                        value={charge.type || 'amount'}
+                        onChange={(e) => handleExtraChargeChange(idx, 'type', e.target.value)}
+                      >
+                        <option value="amount">Amount (₹)</option>
+                        <option value="percentage">Percentage (%)</option>
+                      </select>
+                    </div>
+
+                    {/* Effect Toggle & Computed Preview */}
+                    <div className="col-2 col-md-2 text-center text-md-end font-mono fw-bold">
+                      <button
+                        type="button"
+                        className={`btn btn-sm py-0 px-2 me-1 ${computed.isDeduction ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                        style={{ fontSize: '0.75rem' }}
+                        onClick={() => handleExtraChargeChange(idx, 'isDeduction', !computed.isDeduction)}
+                        title="Click to toggle Addition (+) or Deduction (-)"
+                      >
+                        {computed.isDeduction ? '- Deduct' : '+ Add'}
+                      </button>
+                      <span className={computed.isDeduction ? 'text-danger' : 'text-success'} style={{ fontSize: '0.88rem' }}>
+                        {computed.isDeduction ? '-' : '+'}₹{computed.amount.toFixed(2)}
+                      </span>
+                    </div>
+
+                    {/* Delete Action */}
+                    <div className="col-1 col-md-1 text-end">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-link text-danger p-0"
+                        onClick={() => removeExtraCharge(idx)}
+                        title="Remove this extra field"
+                      >
+                        <i className="bi bi-trash fs-6"></i>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Bottom Section: Notes, Payment & Summary Breakdown */}
         <div className="row g-4">
@@ -389,6 +543,17 @@ export const InvoiceCreate = () => {
                 <span className="text-muted">Total GST Tax:</span>
                 <span className="fw-bold font-mono text-primary">+₹{totalTax.toFixed(2)}</span>
               </div>
+
+              {/* Extra Charges / Deductions List */}
+              {calculatedExtraCharges.filter((c) => c.name?.trim()).map((c, i) => (
+                <div key={i} className="d-flex justify-content-between py-1">
+                  <span className="text-muted">{c.name} {c.type === 'percentage' ? `(${c.rate}%)` : ''}:</span>
+                  <span className={`fw-bold font-mono ${c.isDeduction ? 'text-danger' : 'text-success'}`}>
+                    {c.isDeduction ? '-' : '+'}₹{c.amount.toFixed(2)}
+                  </span>
+                </div>
+              ))}
+
               {roundOff !== 0 && (
                 <div className="d-flex justify-content-between py-1">
                   <span className="text-muted">Round Off:</span>

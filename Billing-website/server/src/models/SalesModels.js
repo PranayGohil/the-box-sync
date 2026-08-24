@@ -1,5 +1,14 @@
 const mongoose = require('mongoose');
 
+// Extra / Custom Field Charges Schema (TDS, Courier charges, Packaging, etc.)
+const extraChargeSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+  rate: { type: Number, required: true, default: 0 },
+  type: { type: String, enum: ['percentage', 'amount'], default: 'amount' },
+  amount: { type: Number, required: true, default: 0 },
+  isDeduction: { type: Boolean, default: false }
+}, { _id: false });
+
 // Standard Line Item Schema for Sales Documents
 const salesItemSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
@@ -158,6 +167,7 @@ const invoiceSchema = new mongoose.Schema({
   sourceDocumentId: { type: mongoose.Schema.Types.ObjectId },
   salespersonId: { type: mongoose.Schema.Types.ObjectId, ref: 'Salesperson' },
   items: [salesItemSchema],
+  extraCharges: [extraChargeSchema],
   subtotal: { type: Number, required: true, default: 0 },
   totalDiscount: { type: Number, default: 0 },
   taxableAmount: { type: Number, required: true, default: 0 },

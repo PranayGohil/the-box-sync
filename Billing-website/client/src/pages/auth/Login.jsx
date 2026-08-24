@@ -28,14 +28,13 @@ export const Login = () => {
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light p-3">
       <div className="card-zenith p-4 p-md-5" style={{ maxWidth: '440px', width: '100%' }}>
         <div className="text-center mb-4">
-          <div
-            className="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 mb-2"
-            style={{ width: '50px', height: '50px', fontSize: '1.6rem' }}
-          >
-            <i className="bi bi-boxes"></i>
-          </div>
-          <h4 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em' }}>Zenith ERP</h4>
-          <p className="text-muted small">GST Billing, Inventory & Double-Entry Accounting</p>
+          <img
+            src="/logo-blue.svg"
+            alt="TheBox Logo"
+            className="mb-2"
+            style={{ height: '48px', maxWidth: '200px', objectFit: 'contain' }}
+          />
+          <p className="text-muted small mb-0">GST Billing, Inventory & Double-Entry Accounting</p>
         </div>
 
         <form onSubmit={handleSubmit}>

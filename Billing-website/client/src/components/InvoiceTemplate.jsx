@@ -98,6 +98,12 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
               <span>{formatCurrency(invoice.igstTotal)}</span>
             </div>
           )}
+          {invoice.extraCharges?.map((ch, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: ch.isDeduction ? '#b91c1c' : '#15803d' }}>
+              <span>{ch.name}{ch.type === 'percentage' ? ` (${ch.rate}%)` : ''}:</span>
+              <span>{ch.isDeduction ? '-' : '+'}{formatCurrency(ch.amount)}</span>
+            </div>
+          ))}
           {invoice.roundOff !== 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Round Off:</span>
@@ -322,6 +328,12 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
                 <span>{formatCurrency(invoice.igstTotal)}</span>
               </div>
             )}
+            {invoice.extraCharges?.map((ch, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem', color: ch.isDeduction ? '#dc2626' : '#16a34a' }}>
+                <span style={{ color: '#64748b' }}>{ch.name}{ch.type === 'percentage' ? ` (${ch.rate}%)` : ''}:</span>
+                <span style={{ fontWeight: 600 }}>{ch.isDeduction ? '-' : '+'}{formatCurrency(ch.amount)}</span>
+              </div>
+            ))}
             {invoice.roundOff !== 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
                 <span style={{ color: '#64748b' }}>Round Off:</span>

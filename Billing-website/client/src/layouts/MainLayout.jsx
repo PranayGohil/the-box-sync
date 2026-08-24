@@ -116,9 +116,8 @@ export const MainLayout = () => {
       {/* Sidebar Navigation */}
       <aside className={`app-sidebar ${showMobileSidebar ? 'd-flex' : 'd-none d-lg-flex'}`}>
         <div className="d-flex justify-content-between align-items-center sidebar-brand">
-          <NavLink to="/dashboard" className="d-flex align-items-center text-decoration-none text-white">
-            <i className="bi bi-boxes text-primary me-2" style={{ fontSize: '1.4rem' }}></i>
-            <span className="fw-bold fs-5">Zenith<span style={{ color: 'var(--primary-subtle)' }}>ERP</span></span>
+          <NavLink to="/dashboard" className="d-flex align-items-center text-decoration-none text-white gap-2">
+            <img src="/logo-blue.svg" alt="TheBox" style={{ height: '34px', maxWidth: '150px', objectFit: 'contain' }} />
           </NavLink>
           {/* Close button for mobile drawer */}
           <button
@@ -196,7 +195,7 @@ export const MainLayout = () => {
             <button
               onClick={logout}
               className="btn btn-sm btn-outline-danger py-1 px-2 d-flex align-items-center gap-1"
-              title="Log Out of Zenith ERP"
+              title="Log Out of TheBox"
               style={{ fontSize: '0.78rem' }}
             >
               <i className="bi bi-box-arrow-right"></i>
