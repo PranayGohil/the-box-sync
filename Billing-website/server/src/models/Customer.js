@@ -26,7 +26,7 @@ const customerSchema = new mongoose.Schema({
     country: { type: String, default: 'India' }
   },
   creditLimit: { type: Number, default: 0 },
-  creditDays: { type: Number, default: 30 },
+  creditDays: { type: Number, default: 0 },
   creditBlock: { type: Boolean, default: false },
   openingBalance: { type: Number, default: 0 },
   openingBalanceType: { type: String, enum: ['Dr', 'Cr'], default: 'Dr' },

@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
 import { InvoiceModal } from '../../components/InvoiceModal';
-import { PaymentModal } from '../../components/PaymentModal';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const Invoices = () => {
   const { activeBusiness } = useAuth();
@@ -14,20 +14,65 @@ export const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
+  const [datePreset, setDatePreset] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   // Modals state
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  const handleDatePresetChange = (preset) => {
+    setDatePreset(preset);
+    const now = new Date();
+    if (preset === 'today') {
+      const today = now.toISOString().split('T')[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (preset === 'this_month') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'last_month') {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+      const end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'this_fy') {
+      const startYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+      setStartDate(`${startYear}-04-01`);
+      setEndDate(`${startYear + 1}-03-31`);
+    } else {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setCategoryFilter('');
+    setStatusFilter('');
+    setPaymentFilter('');
+    setDatePreset('');
+    setStartDate('');
+    setEndDate('');
+  };
+
+  const hasActiveFilters = Boolean(search || categoryFilter || statusFilter || paymentFilter || datePreset || startDate || endDate);
 
   const fetchInvoices = async () => {
     setLoading(true);
     try {
       let url = `/sales/invoices?search=${encodeURIComponent(search)}`;
+      if (categoryFilter) url += `&category=${categoryFilter}`;
       if (statusFilter) url += `&status=${statusFilter}`;
       if (paymentFilter) url += `&paymentStatus=${paymentFilter}`;
+      if (startDate) url += `&startDate=${startDate}`;
+      if (endDate) url += `&endDate=${endDate}`;
 
       const res = await api.get(url);
       if (res.data.success) {
@@ -43,7 +88,7 @@ export const Invoices = () => {
 
   useEffect(() => {
     fetchInvoices();
-  }, [search, statusFilter, paymentFilter]);
+  }, [search, categoryFilter, statusFilter, paymentFilter, startDate, endDate]);
 
   const handleCancelInvoice = async (invoiceId) => {
     const reason = prompt('Please enter cancellation reason:');
@@ -93,16 +138,27 @@ export const Invoices = () => {
     {
       header: 'Customer',
       accessor: 'customerNameSnapshot',
-      render: (row) => (
-        <div>
-          <div className="fw-bold text-dark">{row.customerNameSnapshot}</div>
-          {row.customerGSTINSnapshot && (
-            <span className="badge bg-light text-muted border font-mono" style={{ fontSize: '0.68rem' }}>
-              GSTIN: {row.customerGSTINSnapshot}
-            </span>
-          )}
-        </div>
-      )
+      render: (row) => {
+        const isB2B = row.invoiceCategory === 'B2B' || Boolean(row.customerGSTINSnapshot);
+        return (
+          <div>
+            <div className="d-flex align-items-center gap-1">
+              <span
+                className={`badge ${isB2B ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-secondary border'}`}
+                style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem' }}
+              >
+                {row.invoiceCategory || (isB2B ? 'B2B' : 'B2C')}
+              </span>
+              <span className="fw-bold text-dark">{row.customerNameSnapshot}</span>
+            </div>
+            {row.customerGSTINSnapshot && (
+              <div className="text-muted font-mono mt-1" style={{ fontSize: '0.68rem' }}>
+                GSTIN: {row.customerGSTINSnapshot}
+              </div>
+            )}
+          </div>
+        );
+      }
     },
     {
       header: 'Taxable (₹)',
@@ -140,11 +196,33 @@ export const Invoices = () => {
       header: 'Status',
       accessor: 'status',
       align: 'center',
-      render: (row) => (
-        <span className={`badge-status ${row.status === 'finalized' ? 'badge-finalized' : 'badge-cancelled'}`}>
-          {row.status?.toUpperCase()}
-        </span>
-      )
+      render: (row) => {
+        let badgeClass = 'badge-finalized';
+        let label = row.status?.toUpperCase();
+
+        if (row.status === 'cancelled') {
+          badgeClass = 'badge-cancelled';
+        } else if (row.status === 'returned') {
+          badgeClass = 'badge-returned';
+          label = 'RETURNED';
+        } else if (row.status === 'partially_returned') {
+          badgeClass = 'badge-partial-return';
+          label = 'PARTIAL RETURN';
+        }
+
+        return (
+          <div className="d-flex flex-column align-items-center">
+            <span className={`badge-status ${badgeClass}`}>
+              {label}
+            </span>
+            {row.returnedAmount > 0 && (
+              <span className="text-danger font-mono mt-1" style={{ fontSize: '0.65rem' }}>
+                Ret: ₹{fmt(row.returnedAmount)}
+              </span>
+            )}
+          </div>
+        );
+      }
     },
     {
       header: 'Actions',
@@ -161,17 +239,14 @@ export const Invoices = () => {
           >
             <i className="bi bi-printer"></i>
           </button>
-          {row.balanceAmount > 0 && row.status !== 'cancelled' && (
-            <button
-              className="btn btn-sm btn-outline-success py-1 px-2"
-              title="Record Payment"
-              onClick={() => {
-                setSelectedInvoice(row);
-                setShowPaymentModal(true);
-              }}
+          {row.status !== 'cancelled' && (
+            <NavLink
+              to={`/sales/invoices/${row._id}/edit`}
+              className="btn btn-sm btn-outline-primary py-1 px-2"
+              title="Edit Invoice / Record Payment"
             >
-              <i className="bi bi-wallet2"></i>
-            </button>
+              <i className="bi bi-pencil"></i>
+            </NavLink>
           )}
           <button
             className="btn btn-sm btn-outline-secondary py-1 px-2"
@@ -206,12 +281,31 @@ export const Invoices = () => {
             Manage customer billing, GST compliance, PDF generation, and receipts
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <NavLink to="/pos" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-lightning-charge-fill text-warning"></i> POS Billing
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="GST_Invoices"
+            title="GST Sales Invoices Register"
+            subtitle={`${activeBusiness?.name || 'Business'} | Invoices Report`}
+            headers={['Invoice #', 'Date', 'Customer', 'GSTIN', 'Category', 'Taxable Amt (Rs)', 'GST Tax (Rs)', 'Grand Total (Rs)', 'Paid (Rs)', 'Balance (Rs)', 'Status']}
+            data={invoices.map((inv) => [
+              inv.invoiceNo,
+              new Date(inv.invoiceDate).toLocaleDateString('en-IN'),
+              inv.customerNameSnapshot || inv.customerId?.name || 'Walk-in',
+              inv.customerGSTINSnapshot || inv.customerId?.gstin || '-',
+              (inv.customerGSTINSnapshot || inv.customerId?.gstin) ? 'B2B' : 'B2C',
+              inv.taxableAmount || 0,
+              inv.totalTax || 0,
+              inv.grandTotal || 0,
+              inv.paidAmount || 0,
+              inv.balanceAmount || 0,
+              inv.status?.toUpperCase()
+            ])}
+          />
+          <NavLink to="/pos" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap text-center">
+            <i className="bi bi-lightning-charge-fill text-warning me-1"></i> POS Billing
           </NavLink>
-          <NavLink to="/sales/invoices/new" className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-plus-lg"></i> Create Invoice
+          <NavLink to="/sales/invoices/new" className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap text-center">
+            <i className="bi bi-plus-lg me-1"></i> Create Invoice
           </NavLink>
         </div>
       </div>
@@ -278,13 +372,14 @@ export const Invoices = () => {
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
         <div className="row g-2">
-          <div className="col-12 col-md-5">
+          {/* Search Box */}
+          <div className="col-12 col-md-4">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
               <input
                 type="text"
                 className="form-control form-control-sm ps-5"
-                placeholder="Search by invoice #, customer name, GSTIN..."
+                placeholder="Search invoice #, customer, GSTIN..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -299,7 +394,24 @@ export const Invoices = () => {
             </div>
           </div>
 
-          <div className="col-6 col-md-3">
+          {/* B2B / B2C Category Filter */}
+          <div className="col-6 col-md-2">
+            <select
+              className="form-select form-select-sm fw-semibold"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              title="Filter by GST Category (B2B / B2C)"
+            >
+              <option value="">All Categories (B2B/B2C)</option>
+              <option value="B2B">B2B (Business / GSTIN)</option>
+              <option value="B2C">B2C (Retail / Consumer)</option>
+              <option value="SEZ">SEZ / Zero-Rated</option>
+              <option value="DEEMED">Deemed Export</option>
+            </select>
+          </div>
+
+          {/* Payment Status Filter */}
+          <div className="col-6 col-md-2">
             <select
               className="form-select form-select-sm fw-semibold"
               value={paymentFilter}
@@ -312,7 +424,8 @@ export const Invoices = () => {
             </select>
           </div>
 
-          <div className="col-6 col-md-3">
+          {/* Document Status Filter */}
+          <div className="col-6 col-md-2">
             <select
               className="form-select form-select-sm fw-semibold"
               value={statusFilter}
@@ -320,20 +433,79 @@ export const Invoices = () => {
             >
               <option value="">All Document Statuses</option>
               <option value="finalized">Finalized</option>
+              <option value="partially_returned">Partially Returned</option>
+              <option value="returned">Returned</option>
               <option value="cancelled">Cancelled</option>
             </select>
           </div>
 
-          <div className="col-12 col-md-1">
-            <button
-              className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
-              onClick={fetchInvoices}
-              title="Refresh Invoices"
+          {/* Date Preset Filter */}
+          <div className="col-6 col-md-2">
+            <select
+              className="form-select form-select-sm fw-semibold"
+              value={datePreset}
+              onChange={(e) => handleDatePresetChange(e.target.value)}
+              title="Filter by Date Period"
             >
-              <i className="bi bi-arrow-clockwise"></i> <span className="d-md-none">Refresh</span>
-            </button>
+              <option value="">All Periods</option>
+              <option value="today">Today</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="this_fy">This Financial Year</option>
+            </select>
           </div>
         </div>
+
+        {/* Active Filter Chips & Actions Row */}
+        {hasActiveFilters && (
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
+            <div className="d-flex flex-wrap align-items-center gap-1">
+              <span className="small text-muted me-1">Active filters:</span>
+              {categoryFilter && (
+                <span className="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center gap-1">
+                  Category: {categoryFilter}
+                  <i className="bi bi-x cursor-pointer" onClick={() => setCategoryFilter('')}></i>
+                </span>
+              )}
+              {paymentFilter && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Payment: {paymentFilter}
+                  <i className="bi bi-x cursor-pointer" onClick={() => setPaymentFilter('')}></i>
+                </span>
+              )}
+              {statusFilter && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Status: {statusFilter}
+                  <i className="bi bi-x cursor-pointer" onClick={() => setStatusFilter('')}></i>
+                </span>
+              )}
+              {datePreset && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Period: {datePreset.replace('_', ' ')}
+                  <i className="bi bi-x cursor-pointer" onClick={() => handleDatePresetChange('')}></i>
+                </span>
+              )}
+            </div>
+
+            <div className="d-flex align-items-center gap-2 ms-auto">
+              <button
+                type="button"
+                className="btn btn-link btn-sm text-danger p-0 text-decoration-none small fw-semibold"
+                onClick={handleClearFilters}
+              >
+                <i className="bi bi-x-circle me-1"></i> Clear All
+              </button>
+              <button
+                className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 py-0 px-2"
+                style={{ fontSize: '0.78rem', height: '26px' }}
+                onClick={fetchInvoices}
+                title="Refresh Invoices"
+              >
+                <i className="bi bi-arrow-clockwise"></i> Refresh
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 4. Desktop & Tablet View (DataTable, hidden on mobile <768px) */}
@@ -368,9 +540,18 @@ export const Invoices = () => {
               <div key={inv._id} className="invoice-card-mobile">
                 {/* Header Line */}
                 <div className="invoice-card-mobile-header">
-                  <div>
-                    <span className="fw-bold font-mono text-primary fs-6">#{inv.invoiceNo}</span>
-                    <span className="text-muted ms-2" style={{ fontSize: '0.75rem' }}>
+                  <div
+                    className="d-flex align-items-center gap-1 cursor-pointer"
+                    onClick={() => {
+                      setSelectedInvoice(inv);
+                      setShowPreviewModal(true);
+                    }}
+                    title="Tap to preview invoice"
+                  >
+                    <span className="fw-bold font-mono text-primary fs-6 text-decoration-underline">
+                      #{inv.invoiceNo}
+                    </span>
+                    <span className="text-muted ms-1" style={{ fontSize: '0.75rem' }}>
                       {new Date(inv.invoiceDate).toLocaleDateString('en-IN')}
                     </span>
                   </div>
@@ -381,12 +562,26 @@ export const Invoices = () => {
 
                 {/* Customer Details */}
                 <div className="mb-2">
-                  <div className="fw-bold text-dark small">{inv.customerNameSnapshot}</div>
-                  {inv.customerGSTINSnapshot && (
-                    <span className="badge bg-light text-muted border font-mono" style={{ fontSize: '0.68rem' }}>
-                      GSTIN: {inv.customerGSTINSnapshot}
+                  <div className="d-flex align-items-center gap-1">
+                    <span
+                      className={`badge ${inv.invoiceCategory === 'B2B' || inv.customerGSTINSnapshot ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-secondary border'}`}
+                      style={{ fontSize: '0.62rem', padding: '0.15rem 0.35rem' }}
+                    >
+                      {inv.invoiceCategory || (inv.customerGSTINSnapshot ? 'B2B' : 'B2C')}
                     </span>
+                    <span className="fw-bold text-dark small text-truncate">{inv.customerNameSnapshot || 'Retail Customer'}</span>
+                  </div>
+                  {inv.customerGSTINSnapshot && (
+                    <div className="text-muted font-mono mt-0.5" style={{ fontSize: '0.68rem' }}>
+                      GSTIN: {inv.customerGSTINSnapshot}
+                    </div>
                   )}
+                </div>
+
+                {/* Tax Breakdown Strip */}
+                <div className="d-flex justify-content-between text-muted small font-mono py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
+                  <span>Taxable: <strong className="text-dark">₹{fmt(inv.taxableAmount || 0)}</strong></span>
+                  <span>GST: <strong className="text-primary">+₹{fmt(inv.totalTax || 0)}</strong></span>
                 </div>
 
                 {/* Financial Status & Badges */}
@@ -399,22 +594,28 @@ export const Invoices = () => {
                       </span>
                     )}
                   </div>
-                  <div className="d-flex gap-1">
+                  <div className="d-flex gap-1 flex-wrap justify-content-end">
                     <span
                       className={`badge-status ${
                         isPaid ? 'badge-paid' : isPartial ? 'badge-partial' : 'badge-unpaid'
                       }`}
-                      style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}
+                      style={{ fontSize: '0.68rem', padding: '0.2rem 0.45rem' }}
                     >
                       {inv.paymentStatus?.toUpperCase()}
                     </span>
                     <span
                       className={`badge-status ${
-                        inv.status === 'finalized' ? 'badge-finalized' : 'badge-cancelled'
+                        inv.status === 'cancelled'
+                          ? 'badge-cancelled'
+                          : inv.status === 'returned'
+                          ? 'badge-returned'
+                          : inv.status === 'partially_returned'
+                          ? 'badge-partial-return'
+                          : 'badge-finalized'
                       }`}
-                      style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}
+                      style={{ fontSize: '0.68rem', padding: '0.2rem 0.45rem' }}
                     >
-                      {inv.status?.toUpperCase()}
+                      {inv.status === 'partially_returned' ? 'PARTIAL RETURN' : inv.status?.toUpperCase()}
                     </span>
                   </div>
                 </div>
@@ -433,18 +634,14 @@ export const Invoices = () => {
                     <i className="bi bi-printer"></i> View / Print
                   </button>
 
-                  {inv.balanceAmount > 0 && inv.status !== 'cancelled' && (
-                    <button
-                      type="button"
-                      className="btn btn-outline-success btn-sm flex-fill py-1 d-flex align-items-center justify-content-center gap-1"
+                  {inv.status !== 'cancelled' && (
+                    <NavLink
+                      to={`/sales/invoices/${inv._id}/edit`}
+                      className="btn btn-outline-primary btn-sm flex-fill py-1 d-flex align-items-center justify-content-center gap-1"
                       style={{ fontSize: '0.78rem' }}
-                      onClick={() => {
-                        setSelectedInvoice(inv);
-                        setShowPaymentModal(true);
-                      }}
                     >
-                      <i className="bi bi-wallet2"></i> Pay
-                    </button>
+                      <i className="bi bi-pencil"></i> Edit / Pay
+                    </NavLink>
                   )}
 
                   <button
@@ -480,16 +677,6 @@ export const Invoices = () => {
           onClose={() => setShowPreviewModal(false)}
           invoice={selectedInvoice}
           business={activeBusiness}
-        />
-      )}
-
-      {/* Record Payment Receipt Modal */}
-      {showPaymentModal && selectedInvoice && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          invoice={selectedInvoice}
-          onPaymentSuccess={fetchInvoices}
         />
       )}
     </div>

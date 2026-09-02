@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
-import * as XLSX from 'xlsx';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const ReportsHub = () => {
   const { addToast } = useToast();
@@ -44,80 +44,77 @@ export const ReportsHub = () => {
     });
   };
 
-  const handleExportExcel = () => {
-    try {
-      let exportRows = [];
-      let filename = 'Report.xlsx';
-
-      if (activeReport === 'sales_register') {
-        exportRows =
-          data?.invoices?.map((i) => ({
-            'Invoice No': i.invoiceNo,
-            Date: new Date(i.invoiceDate).toLocaleDateString('en-IN'),
-            Customer: i.customerNameSnapshot,
-            GSTIN: i.customerGSTINSnapshot || 'B2C',
-            'Taxable Value': i.taxableAmount,
-            'Total Tax': i.totalTax,
-            'Grand Total': i.grandTotal,
-            Paid: i.paidAmount,
-            Balance: i.balanceAmount
-          })) || [];
-        filename = 'Sales_Register.xlsx';
-      } else if (activeReport === 'purchase_register') {
-        exportRows =
-          data?.bills?.map((b) => ({
-            'Bill No': b.billNo,
-            Date: new Date(b.billDate).toLocaleDateString('en-IN'),
-            Supplier: b.supplierNameSnapshot,
-            GSTIN: b.supplierGSTINSnapshot || 'Unregistered',
-            'Taxable Value': b.taxableAmount,
-            'Total Tax': b.totalTax,
-            'Grand Total': b.grandTotal,
-            Paid: b.paidAmount,
-            Balance: b.balanceAmount
-          })) || [];
-        filename = 'Purchase_Register.xlsx';
-      } else if (activeReport === 'stock_valuation') {
-        exportRows =
-          data?.items?.map((item) => ({
-            Product: item.productName,
-            SKU: item.sku,
-            Warehouse: item.warehouseName,
-            'Quantity on Hand': item.quantity,
-            'Unit Cost': item.unitCost,
-            'Total Valuation': item.totalValue
-          })) || [];
-        filename = 'Stock_Valuation_Report.xlsx';
-      } else if (activeReport === 'receivables_aging') {
-        exportRows =
-          data?.items?.map((item) => ({
-            'Invoice No': item.invoiceNo,
-            Date: new Date(item.invoiceDate).toLocaleDateString('en-IN'),
-            Customer: item.customerName,
-            'Grand Total': item.grandTotal,
-            'Outstanding Balance': item.balanceAmount,
-            'Days Overdue': item.daysOverdue,
-            'Aging Bucket': item.bucket
-          })) || [];
-        filename = 'Customer_Receivables_Aging.xlsx';
-      }
-
-      if (exportRows.length === 0) {
-        addToast('No data available to export', 'warning');
-        return;
-      }
-
-      const ws = XLSX.utils.json_to_sheet(exportRows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Report Data');
-      XLSX.writeFile(wb, filename);
-
-      addToast(`Exported ${filename} successfully!`, 'success');
-    } catch (err) {
-      console.error(err);
-      addToast('Failed to export Excel file', 'error');
+  const getExportConfig = () => {
+    if (activeReport === 'sales_register' && data?.invoices) {
+      return {
+        filename: 'Sales_Register',
+        title: 'Sales Register Report',
+        headers: ['Invoice #', 'Date', 'Customer', 'GSTIN', 'Taxable (Rs)', 'Total Tax (Rs)', 'Grand Total (Rs)', 'Paid (Rs)', 'Balance (Rs)'],
+        data: data.invoices.map((i) => [
+          i.invoiceNo,
+          new Date(i.invoiceDate).toLocaleDateString('en-IN'),
+          i.customerNameSnapshot,
+          i.customerGSTINSnapshot || 'B2C',
+          i.taxableAmount || 0,
+          i.totalTax || 0,
+          i.grandTotal || 0,
+          i.paidAmount || 0,
+          i.balanceAmount || 0
+        ])
+      };
     }
+    if (activeReport === 'purchase_register' && data?.bills) {
+      return {
+        filename: 'Purchase_Register',
+        title: 'Purchase Register Report',
+        headers: ['Bill #', 'Date', 'Supplier', 'GSTIN', 'Taxable (Rs)', 'Total Tax (Rs)', 'Grand Total (Rs)', 'Paid (Rs)', 'Balance (Rs)'],
+        data: data.bills.map((b) => [
+          b.billNo,
+          new Date(b.billDate).toLocaleDateString('en-IN'),
+          b.supplierNameSnapshot,
+          b.supplierGSTINSnapshot || 'Unregistered',
+          b.taxableAmount || 0,
+          b.totalTax || 0,
+          b.grandTotal || 0,
+          b.paidAmount || 0,
+          b.balanceAmount || 0
+        ])
+      };
+    }
+    if (activeReport === 'stock_valuation' && data?.items) {
+      return {
+        filename: 'Stock_Valuation_Report',
+        title: 'Warehouse Stock Valuation Report',
+        headers: ['Product', 'SKU', 'Warehouse', 'Quantity on Hand', 'Unit Cost (Rs)', 'Total Valuation (Rs)'],
+        data: data.items.map((item) => [
+          item.productName,
+          item.sku || '-',
+          item.warehouseName,
+          item.quantity || 0,
+          item.unitCost || 0,
+          item.totalValue || 0
+        ])
+      };
+    }
+    if (activeReport === 'receivables_aging' && data?.items) {
+      return {
+        filename: 'Customer_Receivables_Aging',
+        title: 'Accounts Receivable Aging Analysis',
+        headers: ['Invoice #', 'Date', 'Customer', 'Aging Bucket', 'Days Overdue', 'Balance Due (Rs)'],
+        data: data.items.map((item) => [
+          item.invoiceNo,
+          new Date(item.invoiceDate).toLocaleDateString('en-IN'),
+          item.customerName,
+          item.bucket,
+          `${item.daysOverdue || 0} days`,
+          item.balanceAmount || 0
+        ])
+      };
+    }
+    return { filename: 'Analytics_Report', title: 'Analytics Report', headers: [], data: [] };
   };
+
+  const exportConfig = getExportConfig();
 
   return (
     <div className="reports-hub-page-container">
@@ -131,15 +128,15 @@ export const ReportsHub = () => {
             Exportable statutory registers, inventory valuations, and debtor aging analyses
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename={exportConfig.filename}
+            title={exportConfig.title}
+            headers={exportConfig.headers}
+            data={exportConfig.data}
+          />
           <button
-            className="btn btn-success btn-sm flex-fill flex-sm-grow-0 d-flex align-items-center justify-content-center gap-2"
-            onClick={handleExportExcel}
-          >
-            <i className="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel (.xlsx)
-          </button>
-          <button
-            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 d-flex align-items-center justify-content-center gap-1"
+            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 d-flex align-items-center justify-content-center gap-1 text-nowrap"
             onClick={fetchReport}
           >
             <i className="bi bi-arrow-clockwise"></i> Refresh

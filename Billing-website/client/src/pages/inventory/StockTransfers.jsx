@@ -135,12 +135,12 @@ export const StockTransfers = () => {
             Relocate inventory between branches, stores, and regional distribution warehouses
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <NavLink to="/inventory/summary" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-boxes"></i> Stock Summary
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <NavLink to="/inventory/summary" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap">
+            <i className="bi bi-boxes me-1"></i> Stock Summary
           </NavLink>
-          <NavLink to="/inventory/movements" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-arrow-left-right"></i> Movements Ledger
+          <NavLink to="/inventory/movements" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap">
+            <i className="bi bi-arrow-left-right me-1"></i> Movements Ledger
           </NavLink>
         </div>
       </div>
@@ -215,11 +215,11 @@ export const StockTransfers = () => {
 
             <form onSubmit={handleTransfer}>
               {/* Warehouses From/To */}
-              <div className="row g-3 mb-4 align-items-center">
+              <div className="row g-2 g-sm-3 mb-4 align-items-center">
                 <div className="col-12 col-md-5">
-                  <label className="form-label fw-bold">Source Warehouse (FROM)*</label>
+                  <label className="form-label small fw-bold mb-1">Source Warehouse (FROM)*</label>
                   <select
-                    className="form-select fw-semibold"
+                    className="form-select form-select-sm fw-semibold"
                     value={fromWarehouseId}
                     onChange={(e) => setFromWarehouseId(e.target.value)}
                     required
@@ -240,9 +240,9 @@ export const StockTransfers = () => {
                 </div>
 
                 <div className="col-12 col-md-5">
-                  <label className="form-label fw-bold">Destination Warehouse (TO)*</label>
+                  <label className="form-label small fw-bold mb-1">Destination Warehouse (TO)*</label>
                   <select
-                    className="form-select fw-semibold"
+                    className="form-select form-select-sm fw-semibold"
                     value={toWarehouseId}
                     onChange={(e) => setToWarehouseId(e.target.value)}
                     required
@@ -257,9 +257,9 @@ export const StockTransfers = () => {
                 </div>
               </div>
 
-              {/* Transfer Line Items */}
-              <h6 className="fw-bold small mb-2 text-dark">Products & Quantities to Transfer:</h6>
-              <div className="table-responsive mb-3 border rounded">
+              {/* Transfer Line Items Desktop (>= 768px) */}
+              <h6 className="fw-bold small mb-2 text-dark">Products & Quantities to Relocate:</h6>
+              <div className="table-responsive mb-3 border rounded d-none d-md-block">
                 <table className="table table-bordered align-middle mb-0">
                   <thead className="bg-light">
                     <tr style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -322,14 +322,92 @@ export const StockTransfers = () => {
                 </table>
               </div>
 
-              <button type="button" className="btn btn-outline-primary btn-sm mb-4" onClick={addItemRow}>
-                <i className="bi bi-plus-circle me-1"></i> Add Another Product
-              </button>
+              {/* Mobile Transfer Line Items Cards (< 768px) */}
+              <div className="d-md-none mb-3">
+                {items.map((item, idx) => {
+                  const selectedP = products.find((p) => p._id === item.productId);
+
+                  return (
+                    <div key={idx} className="card p-3 mb-2 bg-light border rounded" style={{ overflow: 'hidden' }}>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="badge bg-primary text-white font-mono" style={{ fontSize: '0.72rem' }}>Item #{idx + 1}</span>
+                        {items.length > 1 && (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger py-0 px-2"
+                            onClick={() => removeItemRow(idx)}
+                            title="Remove Product"
+                          >
+                            <i className="bi bi-trash"></i>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="mb-2">
+                        <label className="form-label small mb-1 fw-semibold" style={{ fontSize: '0.75rem' }}>Select Product*</label>
+                        <select
+                          className="form-select form-select-sm fw-bold"
+                          value={item.productId}
+                          onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
+                          required
+                        >
+                          <option value="">-- Select Product --</option>
+                          {products.map((p) => (
+                            <option key={p._id} value={p._id}>
+                              {p.name} (In Stock: {p.currentStock} {p.unitId?.symbol || 'PCS'})
+                            </option>
+                          ))}
+                        </select>
+                        {selectedP && (
+                          <div className="small text-muted font-mono mt-1" style={{ fontSize: '0.72rem' }}>
+                            SKU: {selectedP.sku || '-'} | Unit: {selectedP.unitId?.symbol || 'PCS'}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="d-flex align-items-center justify-content-between gap-2 pt-1">
+                        <span className="small fw-semibold text-muted" style={{ fontSize: '0.78rem' }}>Transfer Qty:</span>
+                        <div className="input-group input-group-sm" style={{ width: '140px' }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-sm px-2 fw-bold"
+                            disabled={item.quantity <= 1}
+                            onClick={() => handleItemChange(idx, 'quantity', Math.max(1, Number(item.quantity || 1) - 1))}
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm font-mono text-center fw-bold px-1"
+                            value={item.quantity}
+                            min="1"
+                            onChange={(e) => handleItemChange(idx, 'quantity', Math.max(1, Number(e.target.value) || 1))}
+                            required
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-sm px-2 fw-bold"
+                            onClick={() => handleItemChange(idx, 'quantity', Number(item.quantity || 0) + 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="d-flex flex-wrap gap-2 mb-4">
+                <button type="button" className="btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={addItemRow}>
+                  <i className="bi bi-plus-circle me-1"></i> Add Another Product
+                </button>
+              </div>
 
               {/* Logistics & Manifest Details */}
-              <div className="row g-3 mb-4 p-3 bg-light border rounded">
+              <div className="row g-2 g-sm-3 mb-4 p-3 bg-light border rounded">
                 <div className="col-12 col-sm-6">
-                  <label className="form-label small fw-bold">Transporter / Vehicle Number</label>
+                  <label className="form-label small fw-bold mb-1">Transporter / Vehicle Number</label>
                   <input
                     type="text"
                     className="form-control form-control-sm font-mono text-uppercase"
@@ -339,7 +417,7 @@ export const StockTransfers = () => {
                   />
                 </div>
                 <div className="col-12 col-sm-6">
-                  <label className="form-label small fw-bold">Transfer Remarks & Gate Pass</label>
+                  <label className="form-label small fw-bold mb-1">Transfer Remarks & Gate Pass</label>
                   <input
                     type="text"
                     className="form-control form-control-sm"
@@ -351,7 +429,7 @@ export const StockTransfers = () => {
               </div>
 
               {/* Summary Card */}
-              <div className="p-3 mb-4 rounded border bg-light">
+              <div className="p-3 mb-4 rounded border bg-light shadow-sm">
                 <div className="d-flex justify-content-between align-items-center">
                   <span className="text-muted fw-semibold">Total Quantity to Relocate:</span>
                   <span className="fw-bold font-mono text-primary fs-5">{totalTransferUnits} Units</span>

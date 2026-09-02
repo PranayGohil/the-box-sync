@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const AuditLogs = () => {
   const { addToast } = useToast();
@@ -118,9 +119,22 @@ export const AuditLogs = () => {
             Immutable compliance record tracking all user creations, modifications, cancellations, and IP origins
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="System_Audit_Trail"
+            title="System Audit Trail & Security Logs"
+            headers={['Timestamp', 'Module', 'Action', 'Document Number', 'Document Type', 'IP Address']}
+            data={filteredLogs.map((l) => [
+              new Date(l.timestamp).toLocaleString('en-IN'),
+              l.module?.toUpperCase() || '-',
+              l.action?.toUpperCase() || '-',
+              l.documentNumber || '-',
+              l.documentType || '-',
+              l.ipAddress || '127.0.0.1'
+            ])}
+          />
           <button
-            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 d-flex align-items-center justify-content-center gap-1"
+            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 d-flex align-items-center justify-content-center gap-1 text-nowrap"
             onClick={fetchLogs}
           >
             <i className="bi bi-arrow-clockwise"></i> Refresh Logs
@@ -189,8 +203,8 @@ export const AuditLogs = () => {
 
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
-        <div className="row g-2">
-          <div className="col-12 col-md-6">
+        <div className="row g-2 align-items-center">
+          <div className="col-12 col-md-5">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
               <input
@@ -238,6 +252,16 @@ export const AuditLogs = () => {
               <option value="cancel">CANCEL</option>
               <option value="delete">DELETE</option>
             </select>
+          </div>
+
+          <div className="col-12 col-md-1">
+            <button
+              className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center"
+              onClick={fetchLogs}
+              title="Refresh Logs"
+            >
+              <i className="bi bi-arrow-clockwise"></i> <span className="d-md-none ms-1">Refresh</span>
+            </button>
           </div>
         </div>
       </div>

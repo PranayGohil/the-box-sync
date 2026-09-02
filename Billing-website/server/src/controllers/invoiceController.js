@@ -4,7 +4,8 @@ const {
   Warehouse,
   Payment,
   PaymentAllocation,
-  Product
+  Product,
+  SalesOrder
 } = require('../models');
 const TaxDeterminationService = require('../services/TaxDeterminationService');
 const SequenceService = require('../services/SequenceService');
@@ -17,26 +18,79 @@ const ProviderService = require('../services/ProviderService');
 // @route   GET /api/invoices
 exports.getInvoices = async (req, res, next) => {
   try {
-    const { status, paymentStatus, customerId, startDate, endDate, search, page = 1, limit = 50 } = req.query;
-    const query = { businessId: req.businessId };
+    const {
+      status,
+      paymentStatus,
+      customerId,
+      startDate,
+      endDate,
+      search,
+      page = 1,
+      limit = 50,
+      category,
+      invoiceCategory
+    } = req.query;
 
-    if (status) query.status = status;
-    if (paymentStatus) query.paymentStatus = paymentStatus;
-    if (customerId) query.customerId = customerId;
+    const andClauses = [{ businessId: req.businessId }];
+
+    if (status) andClauses.push({ status });
+    if (paymentStatus) andClauses.push({ paymentStatus });
+    if (customerId) andClauses.push({ customerId });
 
     if (startDate || endDate) {
-      query.invoiceDate = {};
-      if (startDate) query.invoiceDate.$gte = new Date(startDate);
-      if (endDate) query.invoiceDate.$lte = new Date(endDate);
+      const dateClause = {};
+      if (startDate) dateClause.$gte = new Date(startDate);
+      if (endDate) {
+        const endD = new Date(endDate);
+        endD.setHours(23, 59, 59, 999);
+        dateClause.$lte = endD;
+      }
+      andClauses.push({ invoiceDate: dateClause });
     }
 
     if (search) {
-      query.$or = [
-        { invoiceNo: { $regex: search, $options: 'i' } },
-        { customerNameSnapshot: { $regex: search, $options: 'i' } },
-        { customerGSTINSnapshot: { $regex: search, $options: 'i' } }
-      ];
+      andClauses.push({
+        $or: [
+          { invoiceNo: { $regex: search, $options: 'i' } },
+          { customerNameSnapshot: { $regex: search, $options: 'i' } },
+          { customerGSTINSnapshot: { $regex: search, $options: 'i' } }
+        ]
+      });
     }
+
+    const cat = category || invoiceCategory;
+    if (cat) {
+      if (cat === 'B2B') {
+        andClauses.push({
+          $or: [
+            { invoiceCategory: 'B2B' },
+            { customerGSTINSnapshot: { $exists: true, $regex: /\S+/ } }
+          ]
+        });
+      } else if (cat === 'B2C') {
+        andClauses.push({
+          $or: [
+            { invoiceCategory: 'B2C' },
+            {
+              $and: [
+                { invoiceCategory: { $nin: ['B2B', 'SEZ', 'DEEMED'] } },
+                {
+                  $or: [
+                    { customerGSTINSnapshot: { $exists: false } },
+                    { customerGSTINSnapshot: '' },
+                    { customerGSTINSnapshot: null }
+                  ]
+                }
+              ]
+            }
+          ]
+        });
+      } else {
+        andClauses.push({ invoiceCategory: cat });
+      }
+    }
+
+    const query = andClauses.length > 1 ? { $and: andClauses } : andClauses[0];
 
     const total = await Invoice.countDocuments(query);
     const invoices = await Invoice.find(query)
@@ -219,7 +273,7 @@ exports.createInvoice = async (req, res, next) => {
       customerPANSnapshot: customer.pan || '',
       sellerGSTINSnapshot: req.business.gstin || '',
       billingAddressSnapshot: customer.billingAddress,
-      shippingAddressSnapshot: customer.shippingAddress || customer.billingAddress,
+      shippingAddressSnapshot: req.body.shippingAddress || customer.shippingAddress || customer.billingAddress,
       placeOfSupply: customer.billingAddress?.state || req.business.state,
       placeOfSupplyStateCode,
       isInterState: taxCalc.isInterState,
@@ -300,6 +354,15 @@ exports.createInvoice = async (req, res, next) => {
       await AccountingService.postPayment(payment, req.user._id);
     }
 
+    // 7. If converted from Sales Order, mark sales order as completed & release reservation
+    if (sourceDocumentType === 'sales_order' && sourceDocumentId) {
+      await SalesOrder.findOneAndUpdate(
+        { _id: sourceDocumentId, businessId: req.businessId },
+        { status: 'completed' }
+      );
+      await StockService.releaseStockReservation(req.businessId, sourceDocumentId);
+    }
+
     res.status(201).json({
       success: true,
       message: `Invoice #${invoiceNo} created & finalized successfully`,
@@ -369,6 +432,130 @@ exports.cancelInvoice = async (req, res, next) => {
       success: true,
       message: `Invoice #${cancelledInvoice.invoiceNo} cancelled and reversed successfully`,
       data: cancelledInvoice
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update an existing GST Invoice
+// @route   PUT /api/invoices/:id
+exports.updateInvoice = async (req, res, next) => {
+  try {
+    const invoice = await Invoice.findOne({ _id: req.params.id, businessId: req.businessId });
+    if (!invoice) {
+      return res.status(404).json({ success: false, message: 'Invoice not found' });
+    }
+    if (invoice.status === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'Cancelled invoices cannot be edited' });
+    }
+
+    const {
+      customerId,
+      items,
+      isTaxInclusive,
+      invoiceDate,
+      dueDate,
+      paidAmount,
+      paymentMode,
+      printTemplate,
+      terms,
+      notes,
+      shippingAddress
+    } = req.body;
+
+    const customer = await Customer.findOne({ _id: customerId || invoice.customerId, businessId: req.businessId });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const supplierStateCode = req.business.stateCode || '27';
+    const placeOfSupplyStateCode = customer.billingAddress?.stateCode || supplierStateCode;
+
+    // Calculate Tax Breakdown
+    const taxCalc = TaxDeterminationService.calculateItemTaxes(
+      items || invoice.items,
+      supplierStateCode,
+      placeOfSupplyStateCode,
+      isTaxInclusive !== undefined ? isTaxInclusive : invoice.isTaxInclusive
+    );
+
+    let totalExtraAdditions = 0;
+    let totalExtraDeductions = 0;
+    const rawExtraCharges = req.body.extraCharges !== undefined ? req.body.extraCharges : invoice.extraCharges;
+    const processedExtraCharges = (rawExtraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
+      const rate = Number(ch.rate) || 0;
+      const type = ch.type === 'percentage' ? 'percentage' : 'amount';
+      let computed = 0;
+      if (type === 'percentage') {
+        computed = (taxCalc.taxableAmount * rate) / 100;
+      } else {
+        computed = rate;
+      }
+      const isDeduction = ch.isDeduction !== undefined
+        ? Boolean(ch.isDeduction)
+        : /tds|discount|less|deduct/i.test(ch.name || '');
+
+      const roundedAmount = Number(computed.toFixed(2));
+      if (isDeduction) {
+        totalExtraDeductions += roundedAmount;
+      } else {
+        totalExtraAdditions += roundedAmount;
+      }
+
+      return {
+        name: String(ch.name).trim(),
+        rate,
+        type,
+        amount: roundedAmount,
+        isDeduction
+      };
+    });
+
+    const adjustedRawGrandTotal = taxCalc.taxableAmount + taxCalc.totalTax + totalExtraAdditions - totalExtraDeductions;
+    const finalGrandTotal = Math.max(0, Math.round(adjustedRawGrandTotal));
+    const finalRoundOff = Number((finalGrandTotal - adjustedRawGrandTotal).toFixed(2));
+
+    const newPaid = paidAmount !== undefined ? Number(paidAmount) : invoice.paidAmount;
+    const finalPaid = Math.min(finalGrandTotal, Math.max(0, newPaid));
+    const balance = finalGrandTotal - finalPaid;
+    const paymentStatus = finalPaid >= finalGrandTotal ? 'paid' : finalPaid > 0 ? 'partially_paid' : 'unpaid';
+
+    invoice.customerId = customer._id;
+    invoice.customerNameSnapshot = customer.name;
+    invoice.customerGSTINSnapshot = customer.gstin || '';
+    invoice.customerPANSnapshot = customer.pan || '';
+    invoice.billingAddressSnapshot = customer.billingAddress;
+    if (shippingAddress) invoice.shippingAddressSnapshot = shippingAddress;
+    invoice.invoiceCategory = customer.customerType === 'B2B' ? 'B2B' : 'B2C';
+    if (invoiceDate) invoice.invoiceDate = new Date(invoiceDate);
+    if (dueDate) invoice.dueDate = new Date(dueDate);
+    invoice.isTaxInclusive = Boolean(isTaxInclusive);
+    invoice.items = taxCalc.items;
+    invoice.extraCharges = processedExtraCharges;
+    invoice.subtotal = taxCalc.subtotal;
+    invoice.totalDiscount = taxCalc.totalDiscount;
+    invoice.taxableAmount = taxCalc.taxableAmount;
+    invoice.cgstTotal = taxCalc.cgstTotal;
+    invoice.sgstTotal = taxCalc.sgstTotal;
+    invoice.igstTotal = taxCalc.igstTotal;
+    invoice.cessTotal = taxCalc.cessTotal;
+    invoice.totalTax = taxCalc.totalTax;
+    invoice.roundOff = finalRoundOff;
+    invoice.grandTotal = finalGrandTotal;
+    invoice.paidAmount = finalPaid;
+    invoice.balanceAmount = balance;
+    invoice.paymentStatus = paymentStatus;
+    if (terms !== undefined) invoice.terms = terms;
+    if (notes !== undefined) invoice.notes = notes;
+    if (printTemplate) invoice.printTemplate = printTemplate;
+
+    await invoice.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Invoice updated successfully',
+      data: invoice
     });
   } catch (error) {
     next(error);

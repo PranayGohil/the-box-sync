@@ -419,12 +419,16 @@ class AccountingService {
   }
 
   /**
-   * Post Expense into Double-Entry Ledgers with TDS deduction
+   * Post Expense into Double-Entry Ledgers with TDS deduction & GST input credit
    */
   static async postExpense(expense, userId) {
-    const expenseAcc = expense.chartOfAccountId
+    let expenseAcc = expense.chartOfAccountId
       ? await ChartOfAccount.findById(expense.chartOfAccountId)
       : await AccountingService.getAccountByType(expense.businessId, 'expense');
+
+    if (!expenseAcc) {
+      expenseAcc = await AccountingService.getAccountByType(expense.businessId, 'expense');
+    }
 
     let paymentAcc;
     if (expense.paymentMode === 'cash') {
@@ -433,21 +437,38 @@ class AccountingService {
       paymentAcc = await AccountingService.getAccountByType(expense.businessId, 'bank');
     }
 
+    if (!paymentAcc) {
+      paymentAcc = await AccountingService.getAccountByType(expense.businessId, 'cash') || expenseAcc;
+    }
+
     const lines = [
       {
         accountId: expenseAcc._id,
-        debit: expense.amount,
+        debit: Number(expense.amount) || 0,
         credit: 0,
         narration: `Expense: ${expense.categoryName} (${expense.vendorName || 'General'})`
       }
     ];
 
+    if (expense.taxAmount > 0) {
+      const inputGstAcc = await AccountingService.getAccountByType(expense.businessId, 'gst_cgst_input')
+        || await AccountingService.getAccountByType(expense.businessId, 'expense')
+        || expenseAcc;
+      lines.push({
+        accountId: inputGstAcc._id,
+        debit: Number(expense.taxAmount) || 0,
+        credit: 0,
+        narration: `Input GST on ${expense.categoryName}`
+      });
+    }
+
     if (expense.tdsAmount > 0) {
-      const tdsPayableAcc = await AccountingService.getAccountByType(expense.businessId, 'tds_payable');
+      const tdsPayableAcc = await AccountingService.getAccountByType(expense.businessId, 'tds_payable')
+        || expenseAcc;
       lines.push({
         accountId: tdsPayableAcc._id,
         debit: 0,
-        credit: expense.tdsAmount,
+        credit: Number(expense.tdsAmount) || 0,
         narration: `TDS deducted on ${expense.categoryName}`
       });
     }
@@ -455,14 +476,14 @@ class AccountingService {
     lines.push({
       accountId: paymentAcc._id,
       debit: 0,
-      credit: expense.netPayable,
-      narration: `Paid via ${expense.paymentMode.toUpperCase()} for ${expense.categoryName}`
+      credit: Number(expense.netPayable) || 0,
+      narration: `Paid via ${String(expense.paymentMode || 'cash').toUpperCase()} for ${expense.categoryName}`
     });
 
     return AccountingService.postJournalEntry({
       businessId: expense.businessId,
       branchId: expense.branchId,
-      financialYear: '2026-27',
+      financialYear: expense.financialYear || '2026-27',
       voucherType: 'expense',
       voucherNo: expense.expenseNo,
       referenceId: expense._id,

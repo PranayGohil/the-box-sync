@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ExtraChargesSection, computeExtraCharges } from '../../components/ExtraChargesSection';
+import { ShippingAddressSection } from '../../components/ShippingAddressSection';
 
 export const InvoiceCreate = () => {
+  const { id } = useParams();
+  const isEdit = Boolean(id);
   const { activeBusiness } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const salesOrderId = searchParams.get('salesOrderId') || searchParams.get('orderId');
+  const quotationId = searchParams.get('quotationId');
+  const challanId = searchParams.get('challanId');
+
+  const [sourceDocInfo, setSourceDocInfo] = useState(null);
+  const [sourceLoading, setSourceLoading] = useState(Boolean(salesOrderId || quotationId || challanId));
 
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
@@ -21,6 +33,17 @@ export const InvoiceCreate = () => {
   const [notes, setNotes] = useState('');
   const [terms, setTerms] = useState(activeBusiness?.settings?.termsAndConditions || '');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEdit);
+
+  const [shippingAddress, setShippingAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    stateCode: '',
+    pincode: '',
+    country: 'India'
+  });
+  const [sameAsBilling, setSameAsBilling] = useState(true);
 
   const [items, setItems] = useState([
     { productId: '', name: '', hsnSacCode: '', quantity: 1, rate: 0, taxRate: 18, unit: 'PCS', discountPercent: 0, total: 0 }
@@ -30,7 +53,94 @@ export const InvoiceCreate = () => {
 
   useEffect(() => {
     fetchFormData();
-  }, []);
+    if (isEdit) {
+      fetchInvoiceDetails(id);
+    }
+  }, [id, isEdit]);
+
+  useEffect(() => {
+    if (!isEdit) {
+      if (salesOrderId) {
+        fetchSalesOrder(salesOrderId);
+      } else if (quotationId) {
+        fetchQuotation(quotationId);
+      } else if (challanId) {
+        fetchDeliveryChallan(challanId);
+      }
+    }
+  }, [salesOrderId, quotationId, challanId, isEdit]);
+
+  const fetchInvoiceDetails = async (invId) => {
+    try {
+      setInitialLoading(true);
+      const res = await api.get(`/sales/invoices/${invId}`);
+      if (res.data.success) {
+        const inv = res.data.data?.invoice || res.data.data;
+        const custId = inv.customerId?._id || inv.customerId;
+        setSelectedCustomerId(custId || '');
+        setSelectedCustomer(inv.customerId || null);
+
+        if (inv.invoiceDate) setInvoiceDate(new Date(inv.invoiceDate).toISOString().split('T')[0]);
+        if (inv.dueDate) setDueDate(new Date(inv.dueDate).toISOString().split('T')[0]);
+        setIsTaxInclusive(Boolean(inv.isTaxInclusive));
+        setPaidAmount(inv.paidAmount || 0);
+        setPaymentMode(inv.paymentMode || 'cash');
+        setTerms(inv.terms || '');
+        setNotes(inv.notes || '');
+
+        if (inv.shippingAddressSnapshot) {
+          setShippingAddress({
+            street: inv.shippingAddressSnapshot.street || '',
+            city: inv.shippingAddressSnapshot.city || '',
+            state: inv.shippingAddressSnapshot.state || '',
+            stateCode: inv.shippingAddressSnapshot.stateCode || '',
+            pincode: inv.shippingAddressSnapshot.pincode || '',
+            country: inv.shippingAddressSnapshot.country || 'India'
+          });
+          const b = inv.billingAddressSnapshot || inv.customerId?.billingAddress;
+          const s = inv.shippingAddressSnapshot;
+          if (b && s && b.street === s.street && b.city === s.city && b.state === s.state) {
+            setSameAsBilling(true);
+          } else {
+            setSameAsBilling(false);
+          }
+        }
+
+        if (inv.items && inv.items.length > 0) {
+          setItems(
+            inv.items.map((item) => ({
+              productId: item.productId?._id || item.productId || '',
+              name: item.name || '',
+              hsnSacCode: item.hsnSacCode || '',
+              quantity: item.quantity || 1,
+              rate: item.rate || 0,
+              taxRate: item.taxRate || 18,
+              unit: item.unit || 'PCS',
+              discountPercent: item.discountPercent || 0,
+              total: item.total || 0
+            }))
+          );
+        }
+
+        if (inv.extraCharges && inv.extraCharges.length > 0) {
+          setExtraCharges(
+            inv.extraCharges.map((ch) => ({
+              name: ch.name || '',
+              rate: ch.rate || 0,
+              type: ch.type || 'amount',
+              isDeduction: Boolean(ch.isDeduction)
+            }))
+          );
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      addToast(err.response?.data?.message || 'Failed to load invoice details', 'error');
+      navigate('/sales/invoices');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   const fetchFormData = async () => {
     try {
@@ -46,6 +156,179 @@ export const InvoiceCreate = () => {
     }
   };
 
+  const fetchSalesOrder = async (orderId) => {
+    try {
+      setSourceLoading(true);
+      const res = await api.get(`/sales/orders/${orderId}`);
+      if (res.data.success) {
+        const so = res.data.data;
+        setSourceDocInfo({ type: 'sales_order', id: so._id, number: so.orderNo });
+        const custId = so.customerId?._id || so.customerId;
+        setSelectedCustomerId(custId || '');
+        setSelectedCustomer(so.customerId || null);
+
+        if (so.customerId?.creditDays) {
+          const d = new Date();
+          d.setDate(d.getDate() + so.customerId.creditDays);
+          setDueDate(d.toISOString().split('T')[0]);
+        }
+
+        setIsTaxInclusive(Boolean(so.isTaxInclusive));
+        if (so.terms) setTerms(so.terms);
+        setNotes(so.notes ? `Order Ref: #${so.orderNo} - ${so.notes}` : `Order Ref: #${so.orderNo}`);
+
+        if (so.shippingAddressSnapshot) {
+          setShippingAddress({
+            street: so.shippingAddressSnapshot.street || '',
+            city: so.shippingAddressSnapshot.city || '',
+            state: so.shippingAddressSnapshot.state || '',
+            stateCode: so.shippingAddressSnapshot.stateCode || '',
+            pincode: so.shippingAddressSnapshot.pincode || '',
+            country: so.shippingAddressSnapshot.country || 'India'
+          });
+          const b = so.billingAddressSnapshot || so.customerId?.billingAddress;
+          const s = so.shippingAddressSnapshot;
+          if (b && s && b.street === s.street && b.city === s.city && b.state === s.state) {
+            setSameAsBilling(true);
+          } else {
+            setSameAsBilling(false);
+          }
+        }
+
+        if (so.items && so.items.length > 0) {
+          setItems(
+            so.items.map((item) => ({
+              productId: item.productId?._id || item.productId || '',
+              name: item.name || '',
+              hsnSacCode: item.hsnSacCode || '',
+              quantity: item.quantity || 1,
+              rate: item.rate || 0,
+              taxRate: item.taxRate || 18,
+              unit: item.unit || 'PCS',
+              discountPercent: item.discountPercent || 0,
+              total: item.total || 0
+            }))
+          );
+        }
+
+        if (so.extraCharges && so.extraCharges.length > 0) {
+          setExtraCharges(
+            so.extraCharges.map((ch) => ({
+              name: ch.name || '',
+              rate: ch.rate || 0,
+              type: ch.type || 'amount',
+              isDeduction: Boolean(ch.isDeduction)
+            }))
+          );
+        }
+
+        addToast(`Loaded line items and details from Sales Order #${so.orderNo}`, 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to load Sales Order data', 'error');
+    } finally {
+      setSourceLoading(false);
+    }
+  };
+
+  const fetchQuotation = async (quoteId) => {
+    try {
+      setSourceLoading(true);
+      const res = await api.get(`/sales/quotations/${quoteId}`);
+      if (res.data.success) {
+        const q = res.data.data;
+        setSourceDocInfo({ type: 'quotation', id: q._id, number: q.quotationNo });
+        const custId = q.customerId?._id || q.customerId;
+        setSelectedCustomerId(custId || '');
+        setSelectedCustomer(q.customerId || null);
+
+        if (q.customerId?.creditDays) {
+          const d = new Date();
+          d.setDate(d.getDate() + q.customerId.creditDays);
+          setDueDate(d.toISOString().split('T')[0]);
+        }
+
+        setIsTaxInclusive(Boolean(q.isTaxInclusive));
+        if (q.terms) setTerms(q.terms);
+        setNotes(q.notes ? `Quotation Ref: #${q.quotationNo} - ${q.notes}` : `Quotation Ref: #${q.quotationNo}`);
+
+        if (q.items && q.items.length > 0) {
+          setItems(
+            q.items.map((item) => ({
+              productId: item.productId?._id || item.productId || '',
+              name: item.name || '',
+              hsnSacCode: item.hsnSacCode || '',
+              quantity: item.quantity || 1,
+              rate: item.rate || 0,
+              taxRate: item.taxRate || 18,
+              unit: item.unit || 'PCS',
+              discountPercent: item.discountPercent || 0,
+              total: item.total || 0
+            }))
+          );
+        }
+
+        if (q.extraCharges && q.extraCharges.length > 0) {
+          setExtraCharges(
+            q.extraCharges.map((ch) => ({
+              name: ch.name || '',
+              rate: ch.rate || 0,
+              type: ch.type || 'amount',
+              isDeduction: Boolean(ch.isDeduction)
+            }))
+          );
+        }
+
+        addToast(`Loaded line items and details from Quotation #${q.quotationNo}`, 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to load Quotation data', 'error');
+    } finally {
+      setSourceLoading(false);
+    }
+  };
+
+  const fetchDeliveryChallan = async (cId) => {
+    try {
+      setSourceLoading(true);
+      const res = await api.get(`/sales/challans/${cId}`);
+      if (res.data.success) {
+        const dc = res.data.data;
+        setSourceDocInfo({ type: 'delivery_challan', id: dc._id, number: dc.challanNo });
+        const custId = dc.customerId?._id || dc.customerId;
+        setSelectedCustomerId(custId || '');
+        setSelectedCustomer(dc.customerId || null);
+
+        setNotes(dc.notes ? `Challan Ref: #${dc.challanNo} - ${dc.notes}` : `Challan Ref: #${dc.challanNo}`);
+
+        if (dc.items && dc.items.length > 0) {
+          setItems(
+            dc.items.map((item) => ({
+              productId: item.productId?._id || item.productId || '',
+              name: item.name || '',
+              hsnSacCode: item.hsnSacCode || '',
+              quantity: item.quantity || 1,
+              rate: item.rate || 0,
+              taxRate: item.taxRate || 18,
+              unit: item.unit || 'PCS',
+              discountPercent: item.discountPercent || 0,
+              total: item.total || 0
+            }))
+          );
+        }
+
+        addToast(`Loaded items from Delivery Challan #${dc.challanNo}`, 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to load Delivery Challan data', 'error');
+    } finally {
+      setSourceLoading(false);
+    }
+  };
+
   const handleCustomerChange = (e) => {
     const custId = e.target.value;
     setSelectedCustomerId(custId);
@@ -56,6 +339,28 @@ export const InvoiceCreate = () => {
       const d = new Date();
       d.setDate(d.getDate() + found.creditDays);
       setDueDate(d.toISOString().split('T')[0]);
+    }
+
+    if (found?.shippingAddress && (found.shippingAddress.street || found.shippingAddress.city)) {
+      setShippingAddress({
+        street: found.shippingAddress.street || '',
+        city: found.shippingAddress.city || '',
+        state: found.shippingAddress.state || found.billingAddress?.state || '',
+        stateCode: found.shippingAddress.stateCode || found.billingAddress?.stateCode || '',
+        pincode: found.shippingAddress.pincode || '',
+        country: found.shippingAddress.country || 'India'
+      });
+      setSameAsBilling(false);
+    } else if (found?.billingAddress) {
+      setShippingAddress({
+        street: found.billingAddress.street || '',
+        city: found.billingAddress.city || '',
+        state: found.billingAddress.state || '',
+        stateCode: found.billingAddress.stateCode || '',
+        pincode: found.billingAddress.pincode || '',
+        country: found.billingAddress.country || 'India'
+      });
+      setSameAsBilling(true);
     }
   };
 
@@ -133,32 +438,20 @@ export const InvoiceCreate = () => {
 
   const baseAmount = isTaxInclusive ? subtotal : subtotal + totalTax;
 
-  const calculatedExtraCharges = extraCharges.map((charge) => {
-    const rate = Number(charge.rate) || 0;
-    let computedAmt = 0;
-    if (charge.type === 'percentage') {
-      computedAmt = (subtotal * rate) / 100;
-    } else {
-      computedAmt = rate;
-    }
-    const isDeduction = charge.isDeduction !== undefined
-      ? Boolean(charge.isDeduction)
-      : /tds|discount|less|deduct/i.test(charge.name || '');
+  const {
+    calculatedExtraCharges,
+    totalExtraAdditions,
+    totalExtraDeductions,
+    validExtraCharges
+  } = computeExtraCharges(extraCharges, subtotal);
 
-    return {
-      ...charge,
-      amount: Number(computedAmt.toFixed(2)),
-      isDeduction
-    };
-  });
-
-  const totalExtraAdditions = calculatedExtraCharges
-    .filter((c) => !c.isDeduction && c.name?.trim())
-    .reduce((sum, c) => sum + c.amount, 0);
-
-  const totalExtraDeductions = calculatedExtraCharges
-    .filter((c) => c.isDeduction && c.name?.trim())
-    .reduce((sum, c) => sum + c.amount, 0);
+  // GST Determination & Breakdown
+  const supplierStateCode = activeBusiness?.stateCode || '27';
+  const placeOfSupplyStateCode = (sameAsBilling ? selectedCustomer?.billingAddress?.stateCode : shippingAddress?.stateCode) || selectedCustomer?.billingAddress?.stateCode || supplierStateCode;
+  const isInterState = String(supplierStateCode).trim() !== String(placeOfSupplyStateCode).trim();
+  const cgstAmount = isInterState ? 0 : totalTax / 2;
+  const sgstAmount = isInterState ? 0 : totalTax / 2;
+  const igstAmount = isInterState ? totalTax : 0;
 
   const rawGrandTotal = baseAmount + totalExtraAdditions - totalExtraDeductions;
   const grandTotal = Math.max(0, Math.round(rawGrandTotal));
@@ -177,11 +470,9 @@ export const InvoiceCreate = () => {
       return;
     }
 
-    const validExtraCharges = calculatedExtraCharges.filter((c) => c.name && c.name.trim());
-
     setLoading(true);
     try {
-      const res = await api.post('/sales/invoices', {
+      const payload = {
         customerId: selectedCustomerId,
         invoiceDate,
         dueDate: dueDate || null,
@@ -191,38 +482,92 @@ export const InvoiceCreate = () => {
         paidAmount: Number(paidAmount) || 0,
         paymentMode,
         terms,
-        notes
-      });
+        notes,
+        shippingAddress: sameAsBilling ? (selectedCustomer?.billingAddress || shippingAddress) : shippingAddress,
+        sourceDocumentType: sourceDocInfo?.type || 'direct',
+        sourceDocumentId: sourceDocInfo?.id || null
+      };
 
-      if (res.data.success) {
-        addToast('GST Invoice created and finalized!', 'success');
-        navigate('/sales/invoices');
+      if (isEdit) {
+        const res = await api.put(`/sales/invoices/${id}`, payload);
+        if (res.data.success) {
+          addToast('GST Invoice updated successfully!', 'success');
+          navigate('/sales/invoices');
+        }
+      } else {
+        const res = await api.post('/sales/invoices', payload);
+        if (res.data.success) {
+          addToast('GST Invoice created and finalized!', 'success');
+          navigate('/sales/invoices');
+        }
       }
     } catch (err) {
       console.error(err);
-      addToast(err.response?.data?.message || 'Failed to create invoice', 'error');
+      addToast(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} invoice`, 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  if (initialLoading) {
+    return (
+      <div className="card-zenith p-5 text-center my-4">
+        <div className="spinner-border text-primary" role="status"></div>
+        <div className="mt-2 text-muted small">Loading invoice details...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="card-zenith p-4 mb-5">
-      <div className="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div className="card-zenith p-3 p-sm-4 mb-4">
+      {/* 1. Page Header */}
+      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 pb-2 border-bottom">
         <div>
-          <h4 className="fw-bold mb-1">Create GST Tax Invoice</h4>
+          <h4 className="fw-bold mb-1">{isEdit ? 'Edit GST Tax Invoice' : 'Create GST Tax Invoice'}</h4>
           <p className="text-muted small mb-0">Direct B2B/B2C billing with inventory stock sync & double-entry posting</p>
         </div>
-        <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => navigate('/sales/invoices')}>
-          Back to Invoices
+        <button type="button" className="btn btn-outline-secondary btn-sm align-self-stretch align-self-sm-auto text-nowrap" onClick={() => navigate('/sales/invoices')}>
+          <i className="bi bi-arrow-left me-1"></i> Back to Invoices
         </button>
       </div>
 
+      {sourceDocInfo && (
+        <div className="alert alert-info py-2 px-3 d-flex align-items-center justify-content-between mb-4 border-info">
+          <div className="d-flex align-items-center">
+            <i className="bi bi-link-45deg fs-4 text-info me-2"></i>
+            <div>
+              <strong className="text-dark">
+                Converting from {sourceDocInfo.type === 'sales_order' ? 'Sales Order' : sourceDocInfo.type === 'quotation' ? 'Quotation' : 'Delivery Challan'} #{sourceDocInfo.number}
+              </strong>
+              <div className="small text-muted">Customer, line items, rates, and extra charges have been automatically fetched.</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => {
+              setSourceDocInfo(null);
+              navigate('/sales/invoices/new', { replace: true });
+            }}
+            title="Clear source link"
+          >
+            <i className="bi bi-x me-1"></i> Clear Link
+          </button>
+        </div>
+      )}
+
+      {sourceLoading && (
+        <div className="alert alert-light py-2 px-3 d-flex align-items-center mb-3">
+          <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+          <span className="small text-muted">Fetching document line items and details...</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         {/* Customer & Invoice Date Info */}
-        <div className="row g-3 mb-4">
-          <div className="col-12 col-md-5">
-            <label className="form-label">Select Customer*</label>
+        <div className="row g-2 g-sm-3 mb-3">
+          <div className="col-12 col-lg-5">
+            <label className="form-label small fw-bold mb-1">Select Customer*</label>
             <select
               className="form-select fw-bold"
               value={selectedCustomerId}
@@ -232,52 +577,67 @@ export const InvoiceCreate = () => {
               <option value="">-- Choose Customer --</option>
               {customers.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name} {c.gstin ? `[GSTIN: ${c.gstin}]` : ''} - {c.billingAddress?.state || 'Maharashtra'}
+                  {c.name} {c.gstin ? `[GSTIN: ${c.gstin}]` : ''} - {c.billingAddress?.city ? `${c.billingAddress.city}, ` : ''}{c.billingAddress?.state || 'Maharashtra'}
                 </option>
               ))}
             </select>
             {selectedCustomer && (
-              <div className="small text-muted mt-1">
-                State: <strong>{selectedCustomer.billingAddress?.state}</strong> | Type: <strong>{selectedCustomer.customerType}</strong> | Bal: <strong>₹{selectedCustomer.currentBalance?.toFixed(2)}</strong>
+              <div className="small text-muted mt-1 text-truncate" style={{ fontSize: '0.75rem' }}>
+                Location: <strong>{selectedCustomer.billingAddress?.city ? `${selectedCustomer.billingAddress.city}, ` : ''}{selectedCustomer.billingAddress?.state}</strong> | Type: <strong>{selectedCustomer.customerType}</strong> | Bal: <strong>₹{selectedCustomer.currentBalance?.toFixed(2)}</strong>
               </div>
             )}
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Invoice Date*</label>
+          <div className="col-12 col-sm-6 col-lg-3">
+            <label className="form-label small fw-bold mb-1">Invoice Date*</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={invoiceDate}
               onChange={(e) => setInvoiceDate(e.target.value)}
               required
             />
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Due Date</label>
+          <div className="col-12 col-sm-6 col-lg-2">
+            <label className="form-label small fw-bold mb-1">Due Date</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
             />
           </div>
 
-          <div className="col-12 col-md-1 d-flex align-items-end">
+          <div className="col-12 col-lg-2 d-flex flex-column justify-content-end">
+            <label className="form-label small fw-bold mb-1 d-none d-lg-block">Tax Mode</label>
             <button
               type="button"
-              className={`btn btn-sm w-100 ${isTaxInclusive ? 'btn-success' : 'btn-outline-secondary'}`}
+              className={`btn btn-sm w-100 fw-bold d-flex align-items-center justify-content-center ${
+                isTaxInclusive ? 'btn-success' : 'btn-outline-secondary'
+              }`}
+              style={{ height: '34px' }}
               onClick={() => setIsTaxInclusive(!isTaxInclusive)}
               title="Toggle Tax Inclusive / Exclusive"
             >
-              {isTaxInclusive ? 'Incl.' : 'Excl.'}
+              {isTaxInclusive ? '✓ Tax Inclusive' : 'Tax Exclusive'}
             </button>
           </div>
         </div>
 
-        {/* Line Items Table */}
-        <div className="table-responsive mb-3 border rounded">
+        {/* Shipping Address Section */}
+        {selectedCustomer && (
+          <ShippingAddressSection
+            billingAddress={selectedCustomer.billingAddress}
+            shippingAddress={shippingAddress}
+            onChange={setShippingAddress}
+            sameAsBilling={sameAsBilling}
+            setSameAsBilling={setSameAsBilling}
+          />
+        )}
+
+        {/* 2. Line Items Desktop Table (>= 768px) */}
+        <div className="table-responsive mb-3 border rounded d-none d-md-block">
           <table className="table table-bordered align-middle mb-0">
             <thead className="bg-light">
               <tr style={{ fontSize: '0.8rem', textTransform: 'uppercase' }}>
@@ -376,6 +736,105 @@ export const InvoiceCreate = () => {
           </table>
         </div>
 
+        {/* 3. Mobile Line Items Card List (< 768px) */}
+        <div className="d-md-none mb-3">
+          {items.map((item, idx) => (
+            <div key={idx} className="card p-3 mb-2 bg-light border rounded">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="badge bg-primary text-white font-mono">Item #{idx + 1}</span>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="fw-bold font-mono text-dark fs-6">₹{Number(item.total || 0).toFixed(2)}</span>
+                  {items.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger py-0 px-2"
+                      onClick={() => removeItemRow(idx)}
+                      title="Remove Item"
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Product Select / Name */}
+              <div className="mb-2">
+                <label className="form-label small mb-1 fw-semibold">Product / Description*</label>
+                <select
+                  className="form-select form-select-sm mb-1 fw-bold"
+                  value={item.productId}
+                  onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
+                >
+                  <option value="">-- Select or type custom item --</option>
+                  {products.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} (Stock: {p.currentStock} {p.unitId?.symbol || 'PCS'})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Item Description"
+                  value={item.name}
+                  onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Qty, Rate, GST %, HSN in 2x2 grid */}
+              <div className="row g-2">
+                <div className="col-6">
+                  <label className="form-label small mb-1">Quantity*</label>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm font-mono text-center fw-bold"
+                    value={item.quantity}
+                    min="1"
+                    onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small mb-1">Rate (₹)*</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-control form-control-sm font-mono text-end fw-bold"
+                    value={item.rate}
+                    onChange={(e) => handleItemChange(idx, 'rate', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small mb-1">GST Rate</label>
+                  <select
+                    className="form-select form-select-sm"
+                    value={item.taxRate}
+                    onChange={(e) => handleItemChange(idx, 'taxRate', Number(e.target.value))}
+                  >
+                    <option value="0">0%</option>
+                    <option value="5">5%</option>
+                    <option value="12">12%</option>
+                    <option value="18">18%</option>
+                    <option value="28">28%</option>
+                  </select>
+                </div>
+                <div className="col-6">
+                  <label className="form-label small mb-1">HSN/SAC</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm font-mono"
+                    placeholder="HSN"
+                    value={item.hsnSacCode}
+                    onChange={(e) => handleItemChange(idx, 'hsnSacCode', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="d-flex flex-wrap gap-2 mb-4">
           <button type="button" className="btn btn-outline-primary btn-sm" onClick={addItemRow}>
             <i className="bi bi-plus-circle me-1"></i> Add Another Item
@@ -385,99 +844,13 @@ export const InvoiceCreate = () => {
           </button>
         </div>
 
-        {/* Extra Charges & Custom Fields Section */}
-        {extraCharges.length > 0 && (
-          <div className="card-zenith p-3 p-sm-4 mb-4 bg-white border">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h6 className="fw-bold mb-0 text-dark d-flex align-items-center">
-                  <i className="bi bi-tag-fill text-primary me-2"></i>Extra Fields & Charges (TDS, Courier, Freight, etc.)
-                </h6>
-                <div className="small text-muted">Add custom charges or deductions specifying category name, amount/rate, and percentage/amount type</div>
-              </div>
-              <button type="button" className="btn btn-outline-primary btn-sm" onClick={addExtraCharge}>
-                <i className="bi bi-plus-circle me-1"></i> Add More
-              </button>
-            </div>
-
-            <div className="d-flex flex-column gap-2">
-              {extraCharges.map((charge, idx) => {
-                const computed = calculatedExtraCharges[idx] || { amount: 0, isDeduction: false };
-                return (
-                  <div key={idx} className="row g-2 align-items-center bg-light p-2 rounded border">
-                    {/* Option 1: Category Name */}
-                    <div className="col-12 col-md-4">
-                      <label className="small text-muted mb-1 d-md-none">Category Name</label>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm fw-semibold"
-                        placeholder="Category Name (e.g. TDS, Courier charges)"
-                        value={charge.name}
-                        onChange={(e) => handleExtraChargeChange(idx, 'name', e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    {/* Option 2: Amount / Value */}
-                    <div className="col-5 col-md-3">
-                      <label className="small text-muted mb-1 d-md-none">Amount / Value</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-control form-control-sm font-mono fw-bold text-end"
-                        placeholder="Amount / %"
-                        value={charge.rate}
-                        onChange={(e) => handleExtraChargeChange(idx, 'rate', e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    {/* Option 3: Dropdown for select Percentage or Amount */}
-                    <div className="col-4 col-md-2">
-                      <label className="small text-muted mb-1 d-md-none">Type</label>
-                      <select
-                        className="form-select form-select-sm"
-                        value={charge.type || 'amount'}
-                        onChange={(e) => handleExtraChargeChange(idx, 'type', e.target.value)}
-                      >
-                        <option value="amount">Amount (₹)</option>
-                        <option value="percentage">Percentage (%)</option>
-                      </select>
-                    </div>
-
-                    {/* Effect Toggle & Computed Preview */}
-                    <div className="col-2 col-md-2 text-center text-md-end font-mono fw-bold">
-                      <button
-                        type="button"
-                        className={`btn btn-sm py-0 px-2 me-1 ${computed.isDeduction ? 'btn-outline-danger' : 'btn-outline-success'}`}
-                        style={{ fontSize: '0.75rem' }}
-                        onClick={() => handleExtraChargeChange(idx, 'isDeduction', !computed.isDeduction)}
-                        title="Click to toggle Addition (+) or Deduction (-)"
-                      >
-                        {computed.isDeduction ? '- Deduct' : '+ Add'}
-                      </button>
-                      <span className={computed.isDeduction ? 'text-danger' : 'text-success'} style={{ fontSize: '0.88rem' }}>
-                        {computed.isDeduction ? '-' : '+'}₹{computed.amount.toFixed(2)}
-                      </span>
-                    </div>
-
-                    {/* Delete Action */}
-                    <div className="col-1 col-md-1 text-end">
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-link text-danger p-0"
-                        onClick={() => removeExtraCharge(idx)}
-                        title="Remove this extra field"
-                      >
-                        <i className="bi bi-trash fs-6"></i>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <ExtraChargesSection
+          extraCharges={extraCharges}
+          calculatedExtraCharges={calculatedExtraCharges}
+          onAdd={addExtraCharge}
+          onRemove={removeExtraCharge}
+          onChange={handleExtraChargeChange}
+        />
 
         {/* Bottom Section: Notes, Payment & Summary Breakdown */}
         <div className="row g-4">
@@ -539,10 +912,31 @@ export const InvoiceCreate = () => {
                 <span className="text-muted">Taxable Subtotal:</span>
                 <span className="fw-bold font-mono">₹{subtotal.toFixed(2)}</span>
               </div>
-              <div className="d-flex justify-content-between py-1">
-                <span className="text-muted">Total GST Tax:</span>
-                <span className="fw-bold font-mono text-primary">+₹{totalTax.toFixed(2)}</span>
-              </div>
+
+              {/* GST Breakdown */}
+              {isInterState ? (
+                <div className="d-flex justify-content-between py-1">
+                  <span className="text-muted d-flex align-items-center gap-1">
+                    <span>IGST (Integrated Tax):</span>
+                    <span className="badge bg-primary-subtle text-primary border border-primary-subtle" style={{ fontSize: '0.65rem' }}>Inter-State</span>
+                  </span>
+                  <span className="fw-bold font-mono text-primary">+₹{igstAmount.toFixed(2)}</span>
+                </div>
+              ) : (
+                <>
+                  <div className="d-flex justify-content-between py-1">
+                    <span className="text-muted d-flex align-items-center gap-1">
+                      <span>CGST (Central Tax):</span>
+                      <span className="badge bg-secondary-subtle text-secondary" style={{ fontSize: '0.65rem' }}>Intra-State</span>
+                    </span>
+                    <span className="fw-bold font-mono text-primary">+₹{cgstAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between py-1">
+                    <span className="text-muted">SGST (State Tax):</span>
+                    <span className="fw-bold font-mono text-primary">+₹{sgstAmount.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
 
               {/* Extra Charges / Deductions List */}
               {calculatedExtraCharges.filter((c) => c.name?.trim()).map((c, i) => (
@@ -576,7 +970,13 @@ export const InvoiceCreate = () => {
                 className="btn btn-primary-zenith py-2 mt-3 w-100 justify-content-center fw-bold fs-6"
                 disabled={loading}
               >
-                {loading ? 'Creating & Finalizing Invoice...' : 'Save & Finalize GST Invoice'}
+                {loading
+                  ? isEdit
+                    ? 'Updating Invoice...'
+                    : 'Creating & Finalizing Invoice...'
+                  : isEdit
+                  ? 'Update GST Invoice'
+                  : 'Save & Finalize GST Invoice'}
               </button>
             </div>
           </div>

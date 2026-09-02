@@ -18,10 +18,32 @@ const DocConversionService = require('../services/DocConversionService');
 
 exports.getPurchaseOrders = async (req, res, next) => {
   try {
-    const { status, supplierId, page = 1, limit = 50 } = req.query;
-    const query = { businessId: req.businessId };
-    if (status) query.status = status;
-    if (supplierId) query.supplierId = supplierId;
+    const { status, supplierId, startDate, endDate, search, page = 1, limit = 50 } = req.query;
+    const andClauses = [{ businessId: req.businessId }];
+    if (status) andClauses.push({ status });
+    if (supplierId) andClauses.push({ supplierId });
+
+    if (startDate || endDate) {
+      const dateClause = {};
+      if (startDate) dateClause.$gte = new Date(startDate);
+      if (endDate) {
+        const endD = new Date(endDate);
+        endD.setHours(23, 59, 59, 999);
+        dateClause.$lte = endD;
+      }
+      andClauses.push({ date: dateClause });
+    }
+
+    if (search) {
+      andClauses.push({
+        $or: [
+          { poNo: { $regex: search, $options: 'i' } },
+          { supplierNameSnapshot: { $regex: search, $options: 'i' } }
+        ]
+      });
+    }
+
+    const query = andClauses.length > 1 ? { $and: andClauses } : andClauses[0];
 
     const total = await PurchaseOrder.countDocuments(query);
     const pos = await PurchaseOrder.find(query)
@@ -53,6 +75,37 @@ exports.createPurchaseOrder = async (req, res, next) => {
     const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive);
     const poNo = await SequenceService.getNextDocumentNumber(req.businessId, 'purchase_order', req.financialYear);
 
+    const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
+      const rate = Number(ch.rate) || 0;
+      let amount = 0;
+      if (ch.type === 'percentage') {
+        amount = (taxCalc.subtotal * rate) / 100;
+      } else {
+        amount = rate;
+      }
+      const isDeduction = ch.isDeduction !== undefined
+        ? Boolean(ch.isDeduction)
+        : /tds|discount|less|deduct/i.test(ch.name);
+
+      return {
+        name: String(ch.name).trim(),
+        rate,
+        type: ch.type === 'percentage' ? 'percentage' : 'amount',
+        amount: Number(amount.toFixed(2)),
+        isDeduction
+      };
+    });
+
+    const totalExtraAdditions = processedExtraCharges
+      .filter(c => !c.isDeduction)
+      .reduce((sum, c) => sum + c.amount, 0);
+
+    const totalExtraDeductions = processedExtraCharges
+      .filter(c => c.isDeduction)
+      .reduce((sum, c) => sum + c.amount, 0);
+
+    const finalGrandTotal = Math.max(0, taxCalc.grandTotal + totalExtraAdditions - totalExtraDeductions);
+
     const po = await PurchaseOrder.create({
       businessId: req.businessId,
       branchId: req.body.branchId || null,
@@ -67,6 +120,7 @@ exports.createPurchaseOrder = async (req, res, next) => {
       placeOfSupply: req.business.state,
       isInterState: taxCalc.isInterState,
       items: taxCalc.items,
+      extraCharges: processedExtraCharges,
       subtotal: taxCalc.subtotal,
       totalDiscount: taxCalc.totalDiscount,
       taxableAmount: taxCalc.taxableAmount,
@@ -75,7 +129,7 @@ exports.createPurchaseOrder = async (req, res, next) => {
       igstTotal: taxCalc.igstTotal,
       totalTax: taxCalc.totalTax,
       roundOff: taxCalc.roundOff,
-      grandTotal: taxCalc.grandTotal,
+      grandTotal: finalGrandTotal,
       terms,
       notes,
       status: 'approved',
@@ -83,6 +137,100 @@ exports.createPurchaseOrder = async (req, res, next) => {
     });
 
     res.status(201).json({ success: true, message: 'Purchase Order created', data: po });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getPurchaseOrderById = async (req, res, next) => {
+  try {
+    const po = await PurchaseOrder.findOne({ _id: req.params.id, businessId: req.businessId })
+      .populate('supplierId', 'name phone gstin address currentBalance creditDays');
+    if (!po) {
+      return res.status(404).json({ success: false, message: 'Purchase Order not found' });
+    }
+    res.status(200).json({ success: true, data: po });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updatePurchaseOrder = async (req, res, next) => {
+  try {
+    const { supplierId, warehouseId, items, isTaxInclusive, expectedDeliveryDate, terms, notes } = req.body;
+    const po = await PurchaseOrder.findOne({ _id: req.params.id, businessId: req.businessId });
+    if (!po) {
+      return res.status(404).json({ success: false, message: 'Purchase Order not found' });
+    }
+    if (['completed', 'cancelled'].includes(po.status)) {
+      return res.status(400).json({ success: false, message: `Cannot edit a ${po.status} purchase order` });
+    }
+
+    const supplier = await Supplier.findOne({ _id: supplierId || po.supplierId, businessId: req.businessId });
+    if (!supplier) return res.status(404).json({ success: false, message: 'Supplier not found' });
+
+    const supplierStateCode = supplier.address?.stateCode || '27';
+    const placeOfSupplyStateCode = req.business.stateCode || '27';
+
+    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive);
+
+    const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
+      const rate = Number(ch.rate) || 0;
+      let amount = 0;
+      if (ch.type === 'percentage') {
+        amount = (taxCalc.subtotal * rate) / 100;
+      } else {
+        amount = rate;
+      }
+      const isDeduction = ch.isDeduction !== undefined
+        ? Boolean(ch.isDeduction)
+        : /tds|discount|less|deduct/i.test(ch.name);
+
+      return {
+        name: String(ch.name).trim(),
+        rate,
+        type: ch.type === 'percentage' ? 'percentage' : 'amount',
+        amount: Number(amount.toFixed(2)),
+        isDeduction
+      };
+    });
+
+    const totalExtraAdditions = processedExtraCharges
+      .filter(c => !c.isDeduction)
+      .reduce((sum, c) => sum + c.amount, 0);
+
+    const totalExtraDeductions = processedExtraCharges
+      .filter(c => c.isDeduction)
+      .reduce((sum, c) => sum + c.amount, 0);
+
+    const finalGrandTotal = Math.max(0, taxCalc.grandTotal + totalExtraAdditions - totalExtraDeductions);
+
+    po.supplierId = supplier._id;
+    po.supplierNameSnapshot = supplier.name;
+    po.supplierGSTINSnapshot = supplier.gstin;
+    po.supplierAddressSnapshot = supplier.address;
+    po.placeOfSupply = req.business.state;
+    po.isInterState = taxCalc.isInterState;
+    if (warehouseId) po.warehouseId = warehouseId;
+    if (req.body.date) po.date = req.body.date;
+    if (expectedDeliveryDate !== undefined) po.expectedDeliveryDate = expectedDeliveryDate;
+    po.items = taxCalc.items;
+    po.extraCharges = processedExtraCharges;
+    po.subtotal = taxCalc.subtotal;
+    po.totalDiscount = taxCalc.totalDiscount;
+    po.taxableAmount = taxCalc.taxableAmount;
+    po.cgstTotal = taxCalc.cgstTotal;
+    po.sgstTotal = taxCalc.sgstTotal;
+    po.igstTotal = taxCalc.igstTotal;
+    po.totalTax = taxCalc.totalTax;
+    po.roundOff = taxCalc.roundOff;
+    po.grandTotal = finalGrandTotal;
+    if (terms !== undefined) po.terms = terms;
+    if (notes !== undefined) po.notes = notes;
+
+    await po.save();
+
+    res.status(200).json({ success: true, message: 'Purchase Order updated successfully', data: po });
   } catch (error) {
     next(error);
   }
@@ -126,18 +274,36 @@ exports.getGoodsReceipts = async (req, res, next) => {
 
 exports.getPurchaseBills = async (req, res, next) => {
   try {
-    const { status, paymentStatus, supplierId, startDate, endDate, page = 1, limit = 50 } = req.query;
-    const query = { businessId: req.businessId };
+    const { status, paymentStatus, supplierId, startDate, endDate, search, page = 1, limit = 50 } = req.query;
+    const andClauses = [{ businessId: req.businessId }];
 
-    if (status) query.status = status;
-    if (paymentStatus) query.paymentStatus = paymentStatus;
-    if (supplierId) query.supplierId = supplierId;
+    if (status) andClauses.push({ status });
+    if (paymentStatus) andClauses.push({ paymentStatus });
+    if (supplierId) andClauses.push({ supplierId });
 
     if (startDate || endDate) {
-      query.billDate = {};
-      if (startDate) query.billDate.$gte = new Date(startDate);
-      if (endDate) query.billDate.$lte = new Date(endDate);
+      const dateClause = {};
+      if (startDate) dateClause.$gte = new Date(startDate);
+      if (endDate) {
+        const endD = new Date(endDate);
+        endD.setHours(23, 59, 59, 999);
+        dateClause.$lte = endD;
+      }
+      andClauses.push({ billDate: dateClause });
     }
+
+    if (search) {
+      andClauses.push({
+        $or: [
+          { billNo: { $regex: search, $options: 'i' } },
+          { supplierInvoiceNo: { $regex: search, $options: 'i' } },
+          { supplierNameSnapshot: { $regex: search, $options: 'i' } },
+          { supplierGSTINSnapshot: { $regex: search, $options: 'i' } }
+        ]
+      });
+    }
+
+    const query = andClauses.length > 1 ? { $and: andClauses } : andClauses[0];
 
     const total = await PurchaseBill.countDocuments(query);
     const bills = await PurchaseBill.find(query)
@@ -190,6 +356,37 @@ exports.createPurchaseBill = async (req, res, next) => {
     const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive);
     const billNo = await SequenceService.getNextDocumentNumber(req.businessId, 'purchase_bill', req.financialYear);
 
+    const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
+      const rate = Number(ch.rate) || 0;
+      let amount = 0;
+      if (ch.type === 'percentage') {
+        amount = (taxCalc.subtotal * rate) / 100;
+      } else {
+        amount = rate;
+      }
+      const isDeduction = ch.isDeduction !== undefined
+        ? Boolean(ch.isDeduction)
+        : /tds|discount|less|deduct/i.test(ch.name);
+
+      return {
+        name: String(ch.name).trim(),
+        rate,
+        type: ch.type === 'percentage' ? 'percentage' : 'amount',
+        amount: Number(amount.toFixed(2)),
+        isDeduction
+      };
+    });
+
+    const totalExtraAdditions = processedExtraCharges
+      .filter(c => !c.isDeduction)
+      .reduce((sum, c) => sum + c.amount, 0);
+
+    const totalExtraDeductions = processedExtraCharges
+      .filter(c => c.isDeduction)
+      .reduce((sum, c) => sum + c.amount, 0);
+
+    const finalGrandTotal = Math.max(0, taxCalc.grandTotal + totalExtraAdditions - totalExtraDeductions);
+
     const purchaseBill = await PurchaseBill.create({
       businessId: req.businessId,
       branchId: req.body.branchId || null,
@@ -208,6 +405,7 @@ exports.createPurchaseBill = async (req, res, next) => {
       placeOfSupplyStateCode,
       isInterState: taxCalc.isInterState,
       items: taxCalc.items,
+      extraCharges: processedExtraCharges,
       subtotal: taxCalc.subtotal,
       totalDiscount: taxCalc.totalDiscount,
       taxableAmount: taxCalc.taxableAmount,
@@ -217,9 +415,9 @@ exports.createPurchaseBill = async (req, res, next) => {
       cessTotal: taxCalc.cessTotal,
       totalTax: taxCalc.totalTax,
       roundOff: taxCalc.roundOff,
-      grandTotal: taxCalc.grandTotal,
+      grandTotal: finalGrandTotal,
       paidAmount: 0,
-      balanceAmount: taxCalc.grandTotal,
+      balanceAmount: finalGrandTotal,
       paymentStatus: 'unpaid',
       notes,
       status: 'finalized',

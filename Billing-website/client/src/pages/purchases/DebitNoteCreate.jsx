@@ -130,8 +130,8 @@ export const DebitNoteCreate = () => {
   };
 
   return (
-    <div className="card-zenith p-3 p-sm-4 mb-5">
-      {/* Header */}
+    <div className="card-zenith p-3 p-sm-4 mb-4">
+      {/* 1. Page Header */}
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 pb-2 border-bottom">
         <div>
           <h4 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em' }}>
@@ -143,7 +143,7 @@ export const DebitNoteCreate = () => {
         </div>
         <button
           type="button"
-          className="btn btn-outline-secondary btn-sm text-nowrap"
+          className="btn btn-outline-secondary btn-sm align-self-stretch align-self-sm-auto text-nowrap"
           onClick={() => navigate('/purchases/returns')}
         >
           <i className="bi bi-arrow-left me-1"></i> Back to Debit Notes
@@ -152,9 +152,9 @@ export const DebitNoteCreate = () => {
 
       <form onSubmit={handleSubmit}>
         {/* Bill & Return Reason Row */}
-        <div className="row g-3 mb-4">
-          <div className="col-12 col-md-5">
-            <label className="form-label">Select Original Purchase Bill*</label>
+        <div className="row g-2 g-sm-3 mb-3">
+          <div className="col-12 col-lg-5">
+            <label className="form-label small fw-bold mb-1">Select Original Purchase Bill*</label>
             <select
               className="form-select fw-bold"
               value={selectedBillId}
@@ -169,27 +169,27 @@ export const DebitNoteCreate = () => {
               ))}
             </select>
             {selectedBill && (
-              <div className="small text-muted mt-1">
+              <div className="small text-muted mt-1 text-truncate" style={{ fontSize: '0.75rem' }}>
                 Supplier: <strong>{selectedBill.supplierNameSnapshot}</strong> | Bill Date: <strong>{new Date(selectedBill.billDate).toLocaleDateString('en-IN')}</strong>
               </div>
             )}
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Return Date*</label>
+          <div className="col-6 col-sm-4 col-lg-3">
+            <label className="form-label small fw-bold mb-1">Return Date*</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={returnDate}
               onChange={(e) => setReturnDate(e.target.value)}
               required
             />
           </div>
 
-          <div className="col-6 col-md-4">
-            <label className="form-label">Return Reason*</label>
+          <div className="col-6 col-sm-8 col-lg-4">
+            <label className="form-label small fw-bold mb-1">Return Reason*</label>
             <select
-              className="form-select fw-semibold"
+              className="form-select form-select-sm fw-semibold"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             >
@@ -201,8 +201,36 @@ export const DebitNoteCreate = () => {
           </div>
         </div>
 
-        {/* Line Items Table from Selected Bill */}
-        <div className="table-responsive mb-3 border rounded">
+        {/* Select All / Deselect All Quick Bar */}
+        {items.length > 0 && (
+          <div className="d-flex justify-content-between align-items-center mb-2 px-1">
+            <div className="small text-muted font-mono" style={{ fontSize: '0.78rem' }}>
+              <strong>{activeItems.length}</strong> of <strong>{items.length}</strong> items selected for return
+            </div>
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-link p-0 text-primary fw-bold"
+                style={{ fontSize: '0.78rem', textDecoration: 'none' }}
+                onClick={() => setItems(items.map((i) => ({ ...i, selected: true })))}
+              >
+                Select All
+              </button>
+              <span className="text-muted small">|</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-link p-0 text-muted"
+                style={{ fontSize: '0.78rem', textDecoration: 'none' }}
+                onClick={() => setItems(items.map((i) => ({ ...i, selected: false })))}
+              >
+                Deselect All
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 2. Line Items Desktop Table (>= 768px) */}
+        <div className="table-responsive mb-3 border rounded d-none d-md-block">
           <table className="table table-bordered align-middle mb-0">
             <thead className="bg-light">
               <tr style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -265,11 +293,99 @@ export const DebitNoteCreate = () => {
           </table>
         </div>
 
+        {/* 3. Mobile Line Items Card List (< 768px) */}
+        <div className="d-md-none mb-3">
+          {items.length === 0 ? (
+            <div className="card-zenith p-4 text-center text-muted">
+              <i className="bi bi-receipt-cutoff fs-3 d-block mb-1 opacity-50"></i>
+              <div className="fw-bold">No Items Loaded</div>
+              <div className="small">Please select a purchase bill to view items.</div>
+            </div>
+          ) : (
+            items.map((item, idx) => (
+              <div
+                key={idx}
+                className={`card p-3 mb-2 border rounded ${item.selected ? 'bg-white border-danger-subtle shadow-sm' : 'bg-light opacity-60'}`}
+                style={{ overflow: 'hidden' }}
+              >
+                {/* Header Row: Checkbox, Badge, Return Total */}
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="form-check d-flex align-items-center gap-2 mb-0">
+                    <input
+                      type="checkbox"
+                      id={`mob-dn-item-${idx}`}
+                      className="form-check-input"
+                      checked={item.selected}
+                      onChange={() => handleToggleItem(idx)}
+                      style={{ cursor: 'pointer', width: '1.15rem', height: '1.15rem' }}
+                    />
+                    <label htmlFor={`mob-dn-item-${idx}`} className="form-check-label fw-bold small" style={{ cursor: 'pointer', fontSize: '0.78rem' }}>
+                      {item.selected ? 'Returning' : 'Skip Item'}
+                    </label>
+                  </div>
+                  <span className="fw-bold font-mono text-danger" style={{ fontSize: '0.95rem' }}>
+                    ₹{fmt(item.selected ? item.total : 0)}
+                  </span>
+                </div>
+
+                {/* Product Name & HSN */}
+                <div className="mb-2">
+                  <div className="fw-bold text-dark small">{item.name}</div>
+                  {item.hsnSacCode && (
+                    <span className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
+                      HSN: {item.hsnSacCode}
+                    </span>
+                  )}
+                </div>
+
+                {/* Billed Qty & Cost Rate Strip */}
+                <div className="d-flex justify-content-between font-mono small text-muted py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.75rem' }}>
+                  <span>Billed: <strong className="text-dark">{item.maxQuantity} {item.unit}</strong></span>
+                  <span>Rate: <strong className="text-dark">₹{fmt(item.rate)}</strong></span>
+                </div>
+
+                {/* Return Quantity Stepper */}
+                {item.selected && (
+                  <div className="d-flex align-items-center justify-content-between gap-2 pt-1">
+                    <span className="small fw-semibold text-muted" style={{ fontSize: '0.78rem' }}>Return Qty:</span>
+                    <div className="input-group input-group-sm" style={{ width: '140px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm px-2 fw-bold"
+                        disabled={item.quantity <= 0}
+                        onClick={() => handleItemQuantityChange(idx, Math.max(0, Number(item.quantity || 0) - 1))}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm font-mono text-center fw-bold px-1"
+                        value={item.quantity}
+                        min="0"
+                        max={item.maxQuantity}
+                        onChange={(e) => handleItemQuantityChange(idx, e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm px-2 fw-bold"
+                        disabled={item.quantity >= item.maxQuantity}
+                        onClick={() => handleItemQuantityChange(idx, Math.min(item.maxQuantity, Number(item.quantity || 0) + 1))}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
         {/* Bottom Section: Notes & Summary Calculation */}
-        <div className="row g-4">
+        <div className="row g-3 g-md-4">
           <div className="col-12 col-md-6">
             <div className="mb-3">
-              <label className="form-label">Return Remarks & Vendor Rejection Notes</label>
+              <label className="form-label small fw-bold mb-1">Return Remarks & Vendor Rejection Notes</label>
               <textarea
                 className="form-control"
                 rows="3"
@@ -282,7 +398,7 @@ export const DebitNoteCreate = () => {
 
           {/* Right Calculation Totals Card */}
           <div className="col-12 col-md-6">
-            <div className="card p-3 bg-light border">
+            <div className="card p-3 p-sm-4 bg-light border rounded shadow-sm" style={{ overflow: 'hidden' }}>
               <div className="d-flex justify-content-between py-1">
                 <span className="text-muted">Return Taxable Subtotal:</span>
                 <span className="fw-bold font-mono text-dark">₹{fmt(subtotal)}</span>

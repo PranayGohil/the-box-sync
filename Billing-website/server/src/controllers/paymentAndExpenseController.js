@@ -248,25 +248,33 @@ exports.createExpense = async (req, res, next) => {
     const taxAmount = taxRate > 0 ? Number(((grossAmount * taxRate) / 100).toFixed(2)) : 0;
     const netPayable = grossAmount + taxAmount - tdsAmount;
 
+    let categoryIdToSave = categoryId || null;
     let catName = categoryName || 'General Expense';
     if (categoryId) {
       const cat = await ExpenseCategory.findOne({ _id: categoryId, businessId: req.businessId });
       if (cat) catName = cat.name;
+    } else if (categoryName) {
+      let cat = await ExpenseCategory.findOne({ name: categoryName, businessId: req.businessId });
+      if (!cat) {
+        cat = await ExpenseCategory.create({ businessId: req.businessId, name: categoryName });
+      }
+      categoryIdToSave = cat._id;
     }
 
     const expense = await Expense.create({
       businessId: req.businessId,
       branchId: req.body.branchId || null,
+      financialYear: req.financialYear,
       expenseNo,
       date: req.body.date || new Date(),
-      categoryId,
+      categoryId: categoryIdToSave,
       categoryName: catName,
       vendorName,
       vendorGSTIN,
       amount: grossAmount,
       taxRate,
       taxAmount,
-      tdsSectionId,
+      tdsSectionId: selectedTDSSection?._id || tdsSectionId || null,
       tdsRate,
       tdsAmount,
       netPayable,
@@ -297,9 +305,15 @@ exports.createExpense = async (req, res, next) => {
     }
 
     // Post to Double-Entry Accounting
-    const journalEntry = await AccountingService.postExpense(expense, req.user._id);
-    expense.journalEntryId = journalEntry._id;
-    await expense.save();
+    try {
+      const journalEntry = await AccountingService.postExpense(expense, req.user._id);
+      if (journalEntry) {
+        expense.journalEntryId = journalEntry._id;
+        await expense.save();
+      }
+    } catch (journalErr) {
+      console.error('[Expense Journal Post Error]:', journalErr);
+    }
 
     res.status(201).json({
       success: true,

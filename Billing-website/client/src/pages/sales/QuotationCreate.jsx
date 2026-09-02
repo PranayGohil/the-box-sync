@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ExtraChargesSection, computeExtraCharges } from '../../components/ExtraChargesSection';
+import { ShippingAddressSection } from '../../components/ShippingAddressSection';
 
 export const QuotationCreate = () => {
+  const { id } = useParams();
+  const isEdit = Boolean(id);
   const { activeBusiness } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
@@ -13,20 +17,40 @@ export const QuotationCreate = () => {
   const [products, setProducts] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [quotationNo, setQuotationNo] = useState('');
   const [quotationDate, setQuotationDate] = useState(new Date().toISOString().split('T')[0]);
   const [validUntil, setValidUntil] = useState('');
   const [isTaxInclusive, setIsTaxInclusive] = useState(false);
   const [notes, setNotes] = useState('');
   const [terms, setTerms] = useState(activeBusiness?.settings?.termsAndConditions || '');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEdit);
+
+  const [shippingAddress, setShippingAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    stateCode: '',
+    pincode: '',
+    country: 'India'
+  });
+  const [sameAsBilling, setSameAsBilling] = useState(true);
 
   const [items, setItems] = useState([
     { productId: '', name: '', hsnSacCode: '', quantity: 1, rate: 0, taxRate: 18, unit: 'PCS', discountPercent: 0, total: 0 }
   ]);
 
+  const [extraCharges, setExtraCharges] = useState([]);
+
   useEffect(() => {
     fetchFormData();
   }, []);
+
+  useEffect(() => {
+    if (id) {
+      fetchQuotationDetails();
+    }
+  }, [id]);
 
   const fetchFormData = async () => {
     try {
@@ -42,16 +66,114 @@ export const QuotationCreate = () => {
     }
   };
 
+  const fetchQuotationDetails = async () => {
+    try {
+      setInitialLoading(true);
+      const res = await api.get(`/sales/quotations/${id}`);
+      if (res.data.success) {
+        const q = res.data.data;
+        if (q.status === 'converted') {
+          addToast('This quotation has already been converted to a Sales Order and cannot be edited.', 'warning');
+          navigate('/sales/quotations');
+          return;
+        }
+        setQuotationNo(q.quotationNo || '');
+        const custId = q.customerId?._id || q.customerId;
+        setSelectedCustomerId(custId || '');
+        setSelectedCustomer(q.customerId || null);
+        if (q.date) setQuotationDate(new Date(q.date).toISOString().split('T')[0]);
+        if (q.validUntil) setValidUntil(new Date(q.validUntil).toISOString().split('T')[0]);
+        setIsTaxInclusive(Boolean(q.isTaxInclusive));
+        setTerms(q.terms || '');
+        setNotes(q.notes || '');
+
+        if (q.shippingAddressSnapshot) {
+          setShippingAddress({
+            street: q.shippingAddressSnapshot.street || '',
+            city: q.shippingAddressSnapshot.city || '',
+            state: q.shippingAddressSnapshot.state || '',
+            stateCode: q.shippingAddressSnapshot.stateCode || '',
+            pincode: q.shippingAddressSnapshot.pincode || '',
+            country: q.shippingAddressSnapshot.country || 'India'
+          });
+          const b = q.billingAddressSnapshot || q.customerId?.billingAddress;
+          const s = q.shippingAddressSnapshot;
+          if (b && s && b.street === s.street && b.city === s.city && b.state === s.state) {
+            setSameAsBilling(true);
+          } else {
+            setSameAsBilling(false);
+          }
+        }
+
+        if (q.items && q.items.length > 0) {
+          setItems(
+            q.items.map((item) => ({
+              productId: item.productId?._id || item.productId || '',
+              name: item.name || '',
+              hsnSacCode: item.hsnSacCode || '',
+              quantity: item.quantity || 1,
+              rate: item.rate || 0,
+              taxRate: item.taxRate || 18,
+              unit: item.unit || 'PCS',
+              discountPercent: item.discountPercent || 0,
+              total: item.total || 0
+            }))
+          );
+        }
+
+        if (q.extraCharges && q.extraCharges.length > 0) {
+          setExtraCharges(
+            q.extraCharges.map((ch) => ({
+              name: ch.name || '',
+              rate: ch.rate || 0,
+              type: ch.type || 'amount',
+              isDeduction: Boolean(ch.isDeduction)
+            }))
+          );
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      addToast(err.response?.data?.message || 'Failed to load quotation details', 'error');
+      navigate('/sales/quotations');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
   const handleCustomerChange = (e) => {
     const custId = e.target.value;
     setSelectedCustomerId(custId);
     const found = customers.find((c) => c._id === custId);
     setSelectedCustomer(found || null);
 
-    // Default valid until: 30 days from now
-    const d = new Date();
-    d.setDate(d.getDate() + 30);
-    setValidUntil(d.toISOString().split('T')[0]);
+    if (!validUntil) {
+      const d = new Date();
+      d.setDate(d.getDate() + 30);
+      setValidUntil(d.toISOString().split('T')[0]);
+    }
+
+    if (found?.shippingAddress && (found.shippingAddress.street || found.shippingAddress.city)) {
+      setShippingAddress({
+        street: found.shippingAddress.street || '',
+        city: found.shippingAddress.city || '',
+        state: found.shippingAddress.state || found.billingAddress?.state || '',
+        stateCode: found.shippingAddress.stateCode || found.billingAddress?.stateCode || '',
+        pincode: found.shippingAddress.pincode || '',
+        country: found.shippingAddress.country || 'India'
+      });
+      setSameAsBilling(false);
+    } else if (found?.billingAddress) {
+      setShippingAddress({
+        street: found.billingAddress.street || '',
+        city: found.billingAddress.city || '',
+        state: found.billingAddress.state || '',
+        stateCode: found.billingAddress.stateCode || '',
+        pincode: found.billingAddress.pincode || '',
+        country: found.billingAddress.country || 'India'
+      });
+      setSameAsBilling(true);
+    }
   };
 
   const handleItemChange = (index, field, value) => {
@@ -92,6 +214,27 @@ export const QuotationCreate = () => {
     setItems(items.filter((_, idx) => idx !== index));
   };
 
+  const addExtraCharge = () => {
+    setExtraCharges([
+      ...extraCharges,
+      { name: '', rate: 0, type: 'amount', isDeduction: false }
+    ]);
+  };
+
+  const removeExtraCharge = (index) => {
+    setExtraCharges(extraCharges.filter((_, idx) => idx !== index));
+  };
+
+  const handleExtraChargeChange = (index, field, value) => {
+    const updated = [...extraCharges];
+    const current = { ...updated[index], [field]: value };
+    if (field === 'name' && updated[index].isDeduction === undefined) {
+      current.isDeduction = /tds|discount|less|deduct/i.test(value);
+    }
+    updated[index] = current;
+    setExtraCharges(updated);
+  };
+
   // Calculations
   const subtotal = items.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
   const totalTax = items.reduce((sum, item) => {
@@ -105,9 +248,25 @@ export const QuotationCreate = () => {
     }
   }, 0);
 
-  const rawGrandTotal = isTaxInclusive ? subtotal : subtotal + totalTax;
+  const {
+    calculatedExtraCharges,
+    totalExtraAdditions,
+    totalExtraDeductions,
+    validExtraCharges
+  } = computeExtraCharges(extraCharges, subtotal);
+
+  const baseAmount = isTaxInclusive ? subtotal : subtotal + totalTax;
+  const rawGrandTotal = Math.max(0, baseAmount + totalExtraAdditions - totalExtraDeductions);
   const grandTotal = Math.round(rawGrandTotal);
   const roundOff = Number((grandTotal - rawGrandTotal).toFixed(2));
+
+  // GST Determination & Breakdown
+  const supplierStateCode = activeBusiness?.stateCode || '27';
+  const placeOfSupplyStateCode = (sameAsBilling ? selectedCustomer?.billingAddress?.stateCode : shippingAddress?.stateCode) || selectedCustomer?.billingAddress?.stateCode || supplierStateCode;
+  const isInterState = String(supplierStateCode).trim() !== String(placeOfSupplyStateCode).trim();
+  const cgstAmount = isInterState ? 0 : totalTax / 2;
+  const sgstAmount = isInterState ? 0 : totalTax / 2;
+  const igstAmount = isInterState ? totalTax : 0;
 
   const fmt = (val) => {
     return Number(val || 0).toLocaleString('en-IN', {
@@ -131,43 +290,65 @@ export const QuotationCreate = () => {
 
     setLoading(true);
     try {
-      const res = await api.post('/sales/quotations', {
+      const payload = {
         customerId: selectedCustomerId,
         date: quotationDate,
         validUntil: validUntil || null,
         items: validItems,
+        extraCharges: validExtraCharges,
         isTaxInclusive,
+        shippingAddress: sameAsBilling ? (selectedCustomer?.billingAddress || shippingAddress) : shippingAddress,
         terms,
         notes
-      });
+      };
 
-      if (res.data.success) {
-        addToast('Quotation created successfully!', 'success');
-        navigate('/sales/quotations');
+      if (isEdit) {
+        const res = await api.put(`/sales/quotations/${id}`, payload);
+        if (res.data.success) {
+          addToast('Quotation updated successfully!', 'success');
+          navigate('/sales/quotations');
+        }
+      } else {
+        const res = await api.post('/sales/quotations', payload);
+        if (res.data.success) {
+          addToast('Quotation created successfully!', 'success');
+          navigate('/sales/quotations');
+        }
       }
     } catch (err) {
       console.error(err);
-      addToast(err.response?.data?.message || 'Failed to create quotation', 'error');
+      addToast(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} quotation`, 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  if (initialLoading) {
+    return (
+      <div className="card-zenith p-5 text-center my-4">
+        <div className="spinner-border text-primary" role="status"></div>
+        <div className="mt-2 text-muted small">Loading quotation details...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="card-zenith p-3 p-sm-4 mb-5">
-      {/* Header */}
+    <div className="card-zenith p-3 p-sm-4 mb-4">
+      {/* 1. Page Header */}
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 pb-2 border-bottom">
         <div>
           <h4 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em' }}>
-            Create Quotation / Price Estimate
+            {isEdit ? `Edit Quotation #${quotationNo}` : 'Create Quotation / Price Estimate'}
           </h4>
           <p className="text-muted small mb-0">
-            Issue formal price quotation that can convert directly to Sales Orders or GST Invoices
+            {isEdit
+              ? 'Update price estimate items, extra charges, and terms'
+              : 'Issue formal price quotation that can convert directly to Sales Orders or GST Invoices'}
           </p>
         </div>
         <button
           type="button"
-          className="btn btn-outline-secondary btn-sm text-nowrap"
+          className="btn btn-outline-secondary btn-sm align-self-stretch align-self-sm-auto text-nowrap"
           onClick={() => navigate('/sales/quotations')}
         >
           <i className="bi bi-arrow-left me-1"></i> Back to Quotations
@@ -176,9 +357,9 @@ export const QuotationCreate = () => {
 
       <form onSubmit={handleSubmit}>
         {/* Customer & Quotation Date Info */}
-        <div className="row g-3 mb-4">
-          <div className="col-12 col-md-5">
-            <label className="form-label">Select Customer*</label>
+        <div className="row g-2 g-sm-3 mb-3">
+          <div className="col-12 col-lg-5">
+            <label className="form-label small fw-bold mb-1">Select Customer*</label>
             <select
               className="form-select fw-bold"
               value={selectedCustomerId}
@@ -188,53 +369,67 @@ export const QuotationCreate = () => {
               <option value="">-- Choose Customer --</option>
               {customers.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name} {c.gstin ? `[GSTIN: ${c.gstin}]` : ''} - {c.billingAddress?.state || 'State'}
+                  {c.name} {c.gstin ? `[GSTIN: ${c.gstin}]` : ''} - {c.billingAddress?.city ? `${c.billingAddress.city}, ` : ''}{c.billingAddress?.state || 'State'}
                 </option>
               ))}
             </select>
             {selectedCustomer && (
-              <div className="small text-muted mt-1">
-                State: <strong>{selectedCustomer.billingAddress?.state || 'N/A'}</strong> | Type: <strong>{selectedCustomer.customerType}</strong> | Bal: <strong>₹{fmt(selectedCustomer.currentBalance)}</strong>
+              <div className="small text-muted mt-1 text-truncate" style={{ fontSize: '0.75rem' }}>
+                Location: <strong>{selectedCustomer.billingAddress?.city ? `${selectedCustomer.billingAddress.city}, ` : ''}{selectedCustomer.billingAddress?.state || 'N/A'}</strong> | Type: <strong>{selectedCustomer.customerType}</strong> | Bal: <strong>₹{fmt(selectedCustomer.currentBalance)}</strong>
               </div>
             )}
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Quotation Date*</label>
+          <div className="col-12 col-sm-6 col-lg-3">
+            <label className="form-label small fw-bold mb-1">Quotation Date*</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={quotationDate}
               onChange={(e) => setQuotationDate(e.target.value)}
               required
             />
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Valid Until</label>
+          <div className="col-12 col-sm-6 col-lg-2">
+            <label className="form-label small fw-bold mb-1">Valid Until</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={validUntil}
               onChange={(e) => setValidUntil(e.target.value)}
             />
           </div>
 
-          <div className="col-12 col-md-1 d-flex align-items-end">
+          <div className="col-12 col-lg-2 d-flex flex-column justify-content-end">
+            <label className="form-label small fw-bold mb-1 d-none d-lg-block">Tax Mode</label>
             <button
               type="button"
-              className={`btn btn-sm w-100 fw-bold ${isTaxInclusive ? 'btn-success' : 'btn-outline-secondary bg-white'}`}
+              className={`btn btn-sm w-100 fw-bold d-flex align-items-center justify-content-center ${
+                isTaxInclusive ? 'btn-success' : 'btn-outline-secondary'
+              }`}
+              style={{ height: '34px' }}
               onClick={() => setIsTaxInclusive(!isTaxInclusive)}
               title="Toggle Tax Inclusive / Exclusive"
-              style={{ height: '38px' }}
             >
-              {isTaxInclusive ? 'Incl.' : 'Excl.'}
+              {isTaxInclusive ? '✓ Tax Inclusive' : 'Tax Exclusive'}
             </button>
           </div>
         </div>
 
-        {/* Line Items Table */}
-        <div className="table-responsive mb-3 border rounded">
+        {/* Shipping Address Section */}
+        {selectedCustomer && (
+          <ShippingAddressSection
+            billingAddress={selectedCustomer.billingAddress}
+            shippingAddress={shippingAddress}
+            onChange={setShippingAddress}
+            sameAsBilling={sameAsBilling}
+            setSameAsBilling={setSameAsBilling}
+          />
+        )}
+
+        {/* 2. Line Items Desktop Table (>= 768px) */}
+        <div className="table-responsive mb-3 border rounded d-none d-md-block">
           <table className="table table-bordered align-middle mb-0">
             <thead className="bg-light">
               <tr style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -333,9 +528,121 @@ export const QuotationCreate = () => {
           </table>
         </div>
 
-        <button type="button" className="btn btn-outline-primary btn-sm mb-4" onClick={addItemRow}>
-          <i className="bi bi-plus-circle me-1"></i> Add Another Item
-        </button>
+        {/* 3. Mobile Line Items Card List (< 768px) */}
+        <div className="d-md-none mb-3">
+          {items.map((item, idx) => (
+            <div key={idx} className="card p-3 mb-2 bg-light border rounded" style={{ overflow: 'hidden' }}>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="badge bg-primary text-white font-mono" style={{ fontSize: '0.72rem' }}>Item #{idx + 1}</span>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="fw-bold font-mono text-dark" style={{ fontSize: '0.95rem' }}>₹{fmt(item.total)}</span>
+                  {items.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger py-0 px-2"
+                      onClick={() => removeItemRow(idx)}
+                      title="Remove Item"
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Product Select / Name */}
+              <div className="mb-2">
+                <label className="form-label small mb-1 fw-semibold" style={{ fontSize: '0.75rem' }}>Product / Description*</label>
+                <select
+                  className="form-select form-select-sm mb-1 fw-bold"
+                  value={item.productId}
+                  onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
+                >
+                  <option value="">-- Select or type custom item --</option>
+                  {products.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} (Stock: {p.currentStock} {p.unitId?.symbol || 'PCS'})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Item Description"
+                  value={item.name}
+                  onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Qty, Rate, GST %, HSN in 2x2 grid */}
+              <div className="row g-2">
+                <div className="col-6">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>Quantity*</label>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm font-mono text-center fw-bold"
+                    value={item.quantity}
+                    min="1"
+                    onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>Rate (₹)*</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-control form-control-sm font-mono text-end fw-bold"
+                    value={item.rate}
+                    onChange={(e) => handleItemChange(idx, 'rate', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>GST Rate</label>
+                  <select
+                    className="form-select form-select-sm"
+                    value={item.taxRate}
+                    onChange={(e) => handleItemChange(idx, 'taxRate', Number(e.target.value))}
+                  >
+                    <option value="0">0%</option>
+                    <option value="5">5%</option>
+                    <option value="12">12%</option>
+                    <option value="18">18%</option>
+                    <option value="28">28%</option>
+                  </select>
+                </div>
+                <div className="col-6">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>HSN/SAC</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm font-mono"
+                    placeholder="HSN"
+                    value={item.hsnSacCode}
+                    onChange={(e) => handleItemChange(idx, 'hsnSacCode', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="d-flex flex-wrap gap-2 mb-4">
+          <button type="button" className="btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={addItemRow}>
+            <i className="bi bi-plus-circle me-1"></i> Add Another Item
+          </button>
+          <button type="button" className="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={addExtraCharge}>
+            <i className="bi bi-plus-slash-minus me-1"></i> Add Extra Field / Charge (TDS, Courier, etc.)
+          </button>
+        </div>
+
+        <ExtraChargesSection
+          extraCharges={extraCharges}
+          calculatedExtraCharges={calculatedExtraCharges}
+          onAdd={addExtraCharge}
+          onRemove={removeExtraCharge}
+          onChange={handleExtraChargeChange}
+        />
 
         {/* Bottom Section: Notes, Terms & Summary Calculation */}
         <div className="row g-4">
@@ -369,10 +676,39 @@ export const QuotationCreate = () => {
                 <span className="text-muted">Taxable Subtotal:</span>
                 <span className="fw-bold font-mono text-dark">₹{fmt(subtotal)}</span>
               </div>
-              <div className="d-flex justify-content-between py-1">
-                <span className="text-muted">Estimated GST Tax Total:</span>
-                <span className="fw-bold font-mono text-primary">+₹{fmt(totalTax)}</span>
-              </div>
+
+              {/* GST Breakdown */}
+              {isInterState ? (
+                <div className="d-flex justify-content-between py-1">
+                  <span className="text-muted d-flex align-items-center gap-1">
+                    <span>Estimated IGST:</span>
+                    <span className="badge bg-primary-subtle text-primary border border-primary-subtle" style={{ fontSize: '0.65rem' }}>Inter-State</span>
+                  </span>
+                  <span className="fw-bold font-mono text-primary">+₹{fmt(igstAmount)}</span>
+                </div>
+              ) : (
+                <>
+                  <div className="d-flex justify-content-between py-1">
+                    <span className="text-muted d-flex align-items-center gap-1">
+                      <span>Estimated CGST:</span>
+                      <span className="badge bg-secondary-subtle text-secondary" style={{ fontSize: '0.65rem' }}>Intra-State</span>
+                    </span>
+                    <span className="fw-bold font-mono text-primary">+₹{fmt(cgstAmount)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between py-1">
+                    <span className="text-muted">Estimated SGST:</span>
+                    <span className="fw-bold font-mono text-primary">+₹{fmt(sgstAmount)}</span>
+                  </div>
+                </>
+              )}
+              {calculatedExtraCharges.filter((c) => c.name?.trim()).map((c, i) => (
+                <div key={i} className="d-flex justify-content-between py-1 small">
+                  <span className="text-muted">{c.name} {c.type === 'percentage' ? `(${c.rate}%)` : ''}:</span>
+                  <span className={`font-mono fw-semibold ${c.isDeduction ? 'text-danger' : 'text-success'}`}>
+                    {c.isDeduction ? '-' : '+'}₹{fmt(c.amount)}
+                  </span>
+                </div>
+              ))}
               {roundOff !== 0 && (
                 <div className="d-flex justify-content-between py-1">
                   <span className="text-muted">Round Off:</span>
@@ -389,7 +725,13 @@ export const QuotationCreate = () => {
                 className="btn btn-primary-zenith py-2 mt-3 w-100 justify-content-center fw-bold fs-6 shadow-sm"
                 disabled={loading}
               >
-                {loading ? 'Creating Quotation...' : 'Save & Issue Quotation'}
+                {loading
+                  ? isEdit
+                    ? 'Updating Quotation...'
+                    : 'Creating Quotation...'
+                  : isEdit
+                  ? 'Update Quotation'
+                  : 'Save & Issue Quotation'}
               </button>
             </div>
           </div>

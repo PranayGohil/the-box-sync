@@ -136,8 +136,8 @@ export const GoodsReceiptCreate = () => {
   };
 
   return (
-    <div className="card-zenith p-3 p-sm-4 mb-5">
-      {/* Header */}
+    <div className="card-zenith p-3 p-sm-4 mb-4">
+      {/* 1. Page Header */}
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 pb-2 border-bottom">
         <div>
           <h4 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em' }}>
@@ -149,7 +149,7 @@ export const GoodsReceiptCreate = () => {
         </div>
         <button
           type="button"
-          className="btn btn-outline-secondary btn-sm text-nowrap"
+          className="btn btn-outline-secondary btn-sm align-self-stretch align-self-sm-auto text-nowrap"
           onClick={() => navigate('/purchases/grn')}
         >
           <i className="bi bi-arrow-left me-1"></i> Back to GRNs
@@ -158,9 +158,9 @@ export const GoodsReceiptCreate = () => {
 
       <form onSubmit={handleSubmit}>
         {/* Supplier & Warehouse Info */}
-        <div className="row g-3 mb-4">
-          <div className="col-12 col-md-4">
-            <label className="form-label">Select Supplier*</label>
+        <div className="row g-2 g-sm-3 mb-3">
+          <div className="col-12 col-lg-4">
+            <label className="form-label small fw-bold mb-1">Select Supplier*</label>
             <select
               className="form-select fw-bold"
               value={selectedSupplierId}
@@ -176,10 +176,10 @@ export const GoodsReceiptCreate = () => {
             </select>
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Receiving Warehouse*</label>
+          <div className="col-12 col-sm-6 col-lg-3">
+            <label className="form-label small fw-bold mb-1">Receiving Warehouse*</label>
             <select
-              className="form-select fw-semibold"
+              className="form-select form-select-sm fw-semibold"
               value={selectedWarehouseId}
               onChange={(e) => setSelectedWarehouseId(e.target.value)}
               required
@@ -192,22 +192,22 @@ export const GoodsReceiptCreate = () => {
             </select>
           </div>
 
-          <div className="col-6 col-md-2">
-            <label className="form-label">Receipt Date*</label>
+          <div className="col-6 col-sm-3 col-lg-2">
+            <label className="form-label small fw-bold mb-1">Receipt Date*</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={receiptDate}
               onChange={(e) => setReceiptDate(e.target.value)}
               required
             />
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Vendor Challan / Ref #</label>
+          <div className="col-6 col-sm-3 col-lg-3">
+            <label className="form-label small fw-bold mb-1">Vendor Challan / Ref #</label>
             <input
               type="text"
-              className="form-control font-mono"
+              className="form-control form-control-sm font-mono"
               placeholder="e.g. DC-4401"
               value={deliveryChallanNo}
               onChange={(e) => setDeliveryChallanNo(e.target.value)}
@@ -216,9 +216,9 @@ export const GoodsReceiptCreate = () => {
         </div>
 
         {/* Transporter / Vehicle Row */}
-        <div className="row g-3 mb-4 p-3 bg-light border rounded">
+        <div className="row g-2 g-sm-3 mb-3 p-3 bg-light border rounded">
           <div className="col-12 col-sm-6">
-            <label className="form-label small">Vehicle / Delivery Truck Number</label>
+            <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Vehicle / Delivery Truck Number</label>
             <input
               type="text"
               className="form-control form-control-sm font-mono text-uppercase"
@@ -228,7 +228,7 @@ export const GoodsReceiptCreate = () => {
             />
           </div>
           <div className="col-12 col-sm-6">
-            <label className="form-label small">Gate Inward Notes / Inspection Sign-off</label>
+            <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Gate Inward Notes / Inspection Sign-off</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -239,8 +239,8 @@ export const GoodsReceiptCreate = () => {
           </div>
         </div>
 
-        {/* Line Items Table */}
-        <div className="table-responsive mb-3 border rounded">
+        {/* 2. Line Items Desktop Table (>= 768px) */}
+        <div className="table-responsive mb-3 border rounded d-none d-md-block">
           <table className="table table-bordered align-middle mb-0">
             <thead className="bg-light">
               <tr style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -319,14 +319,118 @@ export const GoodsReceiptCreate = () => {
           </table>
         </div>
 
-        <button type="button" className="btn btn-outline-primary btn-sm mb-4" onClick={addItemRow}>
-          <i className="bi bi-plus-circle me-1"></i> Add Another Item
-        </button>
+        {/* 3. Mobile Line Items Card List (< 768px) */}
+        <div className="d-md-none mb-3">
+          {items.map((item, idx) => (
+            <div key={idx} className="card p-3 mb-2 bg-light border rounded" style={{ overflow: 'hidden' }}>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="badge bg-primary text-white font-mono" style={{ fontSize: '0.72rem' }}>Item #{idx + 1}</span>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="fw-bold font-mono text-dark" style={{ fontSize: '0.9rem' }}>{item.quantity} {item.unit}</span>
+                  {items.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger py-0 px-2"
+                      onClick={() => removeItemRow(idx)}
+                      title="Remove Item"
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Product Select / Name */}
+              <div className="mb-2">
+                <label className="form-label small mb-1 fw-semibold" style={{ fontSize: '0.75rem' }}>Product / Description*</label>
+                <select
+                  className="form-select form-select-sm mb-1 fw-bold"
+                  value={item.productId}
+                  onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
+                >
+                  <option value="">-- Select Product --</option>
+                  {products.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} (Current Stock: {p.currentStock} {p.unitId?.symbol || 'PCS'})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Item Description"
+                  value={item.name}
+                  onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Qty, Batch, Expiry in grid */}
+              <div className="row g-2 align-items-center">
+                <div className="col-12 col-sm-4">
+                  <div className="d-flex align-items-center justify-content-between gap-1">
+                    <label className="small text-muted mb-0 fw-semibold" style={{ fontSize: '0.75rem' }}>Qty:</label>
+                    <div className="input-group input-group-sm" style={{ width: '130px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm px-2 fw-bold"
+                        disabled={item.quantity <= 1}
+                        onClick={() => handleItemChange(idx, 'quantity', Math.max(1, Number(item.quantity || 1) - 1))}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm font-mono text-center fw-bold px-1"
+                        value={item.quantity}
+                        min="1"
+                        onChange={(e) => handleItemChange(idx, 'quantity', Math.max(1, Number(e.target.value) || 1))}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm px-2 fw-bold"
+                        onClick={() => handleItemChange(idx, 'quantity', Number(item.quantity || 0) + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-6 col-sm-4">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>Batch / Lot #</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm font-mono"
+                    placeholder="Batch #"
+                    value={item.batchNumber}
+                    onChange={(e) => handleItemChange(idx, 'batchNumber', e.target.value)}
+                  />
+                </div>
+                <div className="col-6 col-sm-4">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>Expiry Date</label>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={item.expiryDate}
+                    onChange={(e) => handleItemChange(idx, 'expiryDate', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="d-flex flex-wrap gap-2 mb-4">
+          <button type="button" className="btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={addItemRow}>
+            <i className="bi bi-plus-circle me-1"></i> Add Another Item
+          </button>
+        </div>
 
         {/* Bottom Section: Summary Card */}
         <div className="row justify-content-end">
           <div className="col-12 col-md-6">
-            <div className="card p-3 bg-light border">
+            <div className="card p-3 p-sm-4 bg-light border rounded shadow-sm" style={{ overflow: 'hidden' }}>
               <div className="d-flex justify-content-between py-1">
                 <span className="text-muted">Total Quantity Received:</span>
                 <span className="fw-bold font-mono text-dark fs-6">{totalUnits} Units</span>

@@ -1,4 +1,4 @@
-const { Customer, Invoice, Payment, JournalEntryLine } = require('../models');
+const { Customer, Invoice, Payment, JournalEntryLine, SalesReturn, CreditNote } = require('../models');
 
 // @desc    Get all customers with search & pagination
 // @route   GET /api/customers
@@ -52,6 +52,8 @@ exports.getCustomerById = async (req, res, next) => {
 
     const invoices = await Invoice.find({ businessId: req.businessId, customerId: customer._id }).sort({ invoiceDate: -1 });
     const payments = await Payment.find({ businessId: req.businessId, partyId: customer._id, paymentType: 'in' }).sort({ date: -1 });
+    const salesReturns = await SalesReturn.find({ businessId: req.businessId, customerId: customer._id }).populate('invoiceId', 'invoiceNo').sort({ date: -1 });
+    const creditNotes = await CreditNote.find({ businessId: req.businessId, customerId: customer._id }).sort({ date: -1 });
     const ledgerEntries = await JournalEntryLine.find({ businessId: req.businessId, partyId: customer._id }).sort({ date: -1 });
 
     res.status(200).json({
@@ -60,6 +62,8 @@ exports.getCustomerById = async (req, res, next) => {
         customer,
         invoices,
         payments,
+        salesReturns,
+        creditNotes,
         ledgerEntries
       }
     });

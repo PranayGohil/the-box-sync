@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const ChartOfAccounts = () => {
   const { addToast } = useToast();
@@ -166,9 +167,21 @@ export const ChartOfAccounts = () => {
             Indian Standard double-entry general ledgers, sub-accounts, and statutory classification
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0" onClick={() => setShowModal(true)}>
-            <i className="bi bi-plus-lg"></i> Create Ledger Account
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Chart_of_Accounts"
+            title="Chart of Accounts Master"
+            headers={['Account Code', 'Ledger Name', 'Group', 'Nature', 'Current Balance (Rs)']}
+            data={filteredAccounts.map((a) => [
+              a.accountCode || '-',
+              a.name,
+              a.groupId?.name || 'General',
+              a.groupId?.nature || 'Asset',
+              a.currentBalance || 0
+            ])}
+          />
+          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={() => setShowModal(true)}>
+            <i className="bi bi-plus-lg me-1"></i> Create Ledger Account
           </button>
         </div>
       </div>
@@ -345,7 +358,7 @@ export const ChartOfAccounts = () => {
                     {nat.toUpperCase()}
                   </span>
                   <span className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
-                    Double-Entry Verified
+                    Double-Entry Ledger
                   </span>
                 </div>
               </div>
@@ -357,63 +370,97 @@ export const ChartOfAccounts = () => {
       {/* Create Account Modal */}
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-              <div className="modal-header bg-light" style={{ borderBottom: '1px solid #e2e8f0' }}>
-                <h5 className="modal-title fw-bold">
-                  <i className="bi bi-diagram-3 text-primary me-2"></i>
-                  Create General Ledger Account
-                </h5>
+          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' }}>
+              <div className="modal-header bg-light px-3 px-sm-4 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <div>
+                  <h5 className="modal-title fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i className="bi bi-diagram-3 text-primary"></i>
+                    Create General Ledger Account
+                  </h5>
+                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
+                    Configure double-entry master account, code, and parent balance sheet group
+                  </div>
+                </div>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
 
               <form onSubmit={handleCreateAccount}>
                 <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc' }}>
-                  <div className="mb-3">
-                    <label className="form-label">Account Name*</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="e.g. Printing & Stationery Expenses"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      Ledger Master Details
+                    </div>
 
-                  <div className="mb-3">
-                    <label className="form-label">Account Code / Number</label>
-                    <input
-                      type="text"
-                      className="form-control font-mono"
-                      placeholder="e.g. 5010"
-                      value={formData.accountCode}
-                      onChange={(e) => setFormData({ ...formData, accountCode: e.target.value })}
-                    />
-                  </div>
+                    <div className="row g-2 g-sm-3 mb-3">
+                      <div className="col-12">
+                        <label className="form-label small fw-bold mb-1">Account Name*</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm fw-bold"
+                          placeholder="e.g. Printing & Stationery Expenses"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                        />
+                      </div>
 
-                  <div className="mb-3">
-                    <label className="form-label">Account Group / Category*</label>
-                    <select
-                      className="form-select fw-semibold"
-                      value={formData.groupId}
-                      onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
-                      required
-                    >
-                      <option value="">-- Choose Account Group --</option>
-                      {groups.map((g) => (
-                        <option key={g._id} value={g._id}>{g.name} ({g.nature})</option>
-                      ))}
-                    </select>
+                      <div className="col-12 col-sm-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Account Code / Number</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono"
+                          placeholder="e.g. 5010"
+                          value={formData.accountCode}
+                          onChange={(e) => setFormData({ ...formData, accountCode: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="col-12 col-sm-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Opening Balance (₹)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="form-control form-control-sm font-mono"
+                          placeholder="0.00"
+                          value={formData.openingBalance}
+                          onChange={(e) => setFormData({ ...formData, openingBalance: Number(e.target.value) })}
+                        />
+                      </div>
+
+                      <div className="col-12">
+                        <label className="form-label small fw-bold mb-1">Account Group / Classification*</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.groupId}
+                          onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
+                          required
+                        >
+                          <option value="">-- Choose Account Group --</option>
+                          {groups.map((g) => (
+                            <option key={g._id} value={g._id}>{g.name} ({g.nature})</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {formData.groupId && (
+                      <div className="p-2 bg-light rounded border small font-mono d-flex justify-content-between align-items-center" style={{ fontSize: '0.72rem' }}>
+                        <span className="text-muted">Classification:</span>
+                        <span className="fw-bold text-primary">
+                          {groups.find((g) => g._id === formData.groupId)?.name} ({groups.find((g) => g._id === formData.groupId)?.nature})
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="modal-footer bg-white">
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowModal(false)}>
+                <div className="modal-footer bg-white d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 p-3 border-top">
+                  <button type="button" className="btn btn-outline-secondary btn-sm w-100 w-sm-auto text-nowrap" onClick={() => setShowModal(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary-zenith btn-sm">
-                    Create Account
+                  <button type="submit" className="btn btn-primary-zenith btn-sm w-100 w-sm-auto text-nowrap fw-bold">
+                    Create Ledger Account
                   </button>
                 </div>
               </form>

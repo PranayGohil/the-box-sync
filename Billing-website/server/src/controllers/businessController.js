@@ -6,7 +6,7 @@ const AccountingService = require('../services/AccountingService');
 // @route   POST /api/businesses
 exports.createBusiness = async (req, res, next) => {
   try {
-    const { name, legalName, gstin, state, stateCode, phone, email, address, bankDetails, upiId } = req.body;
+    const { name, legalName, gstin, state, stateCode, city, phone, email, address, bankDetails, upiId } = req.body;
 
     const business = await Business.create({
       name,
@@ -14,6 +14,7 @@ exports.createBusiness = async (req, res, next) => {
       gstin,
       state,
       stateCode: stateCode || '27',
+      city: city || '',
       phone,
       email,
       address,

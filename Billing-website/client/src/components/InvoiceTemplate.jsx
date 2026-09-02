@@ -22,6 +22,16 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
     return '₹' + Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
+  const cgstVal = invoice.cgstTotal !== undefined && invoice.cgstTotal > 0
+    ? invoice.cgstTotal
+    : (!invoice.isInterState && invoice.totalTax > 0 ? invoice.totalTax / 2 : 0);
+  const sgstVal = invoice.sgstTotal !== undefined && invoice.sgstTotal > 0
+    ? invoice.sgstTotal
+    : (!invoice.isInterState && invoice.totalTax > 0 ? invoice.totalTax / 2 : 0);
+  const igstVal = invoice.igstTotal !== undefined && invoice.igstTotal > 0
+    ? invoice.igstTotal
+    : (invoice.isInterState && invoice.totalTax > 0 ? invoice.totalTax : 0);
+
   // --- THERMAL RECEIPT (80mm) ---
   if (isThermal) {
     return (
@@ -80,22 +90,22 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
             <span>Taxable Amount:</span>
             <span>{formatCurrency(invoice.taxableAmount)}</span>
           </div>
-          {invoice.cgstTotal > 0 && (
+          {cgstVal > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>CGST:</span>
-              <span>{formatCurrency(invoice.cgstTotal)}</span>
+              <span>{formatCurrency(cgstVal)}</span>
             </div>
           )}
-          {invoice.sgstTotal > 0 && (
+          {sgstVal > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>SGST:</span>
-              <span>{formatCurrency(invoice.sgstTotal)}</span>
+              <span>{formatCurrency(sgstVal)}</span>
             </div>
           )}
-          {invoice.igstTotal > 0 && (
+          {igstVal > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>IGST:</span>
-              <span>{formatCurrency(invoice.igstTotal)}</span>
+              <span>{formatCurrency(igstVal)}</span>
             </div>
           )}
           {invoice.extraCharges?.map((ch, i) => (
@@ -310,22 +320,22 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
               <span style={{ fontWeight: 600 }}>{formatCurrency(invoice.taxableAmount)}</span>
             </div>
 
-            {invoice.cgstTotal > 0 && (
+            {cgstVal > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
                 <span style={{ color: '#64748b' }}>CGST:</span>
-                <span>{formatCurrency(invoice.cgstTotal)}</span>
+                <span>{formatCurrency(cgstVal)}</span>
               </div>
             )}
-            {invoice.sgstTotal > 0 && (
+            {sgstVal > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
                 <span style={{ color: '#64748b' }}>SGST:</span>
-                <span>{formatCurrency(invoice.sgstTotal)}</span>
+                <span>{formatCurrency(sgstVal)}</span>
               </div>
             )}
-            {invoice.igstTotal > 0 && (
+            {igstVal > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
                 <span style={{ color: '#64748b' }}>IGST:</span>
-                <span>{formatCurrency(invoice.igstTotal)}</span>
+                <span>{formatCurrency(igstVal)}</span>
               </div>
             )}
             {invoice.extraCharges?.map((ch, i) => (

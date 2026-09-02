@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import api from '../../api/client';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const StockSummary = () => {
   const [balances, setBalances] = useState([]);
@@ -148,12 +149,27 @@ export const StockSummary = () => {
             Multi-warehouse physical stock balances, reserved quantities, and live inventory valuation
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <NavLink to="/inventory/transfers" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-arrow-left-right"></i> Transfer Stock
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Warehouse_Stock_Summary"
+            title="Warehouse Stock Summary Report"
+            headers={['Product Name', 'SKU', 'Warehouse', 'Avg Cost (Rs)', 'Physical Qty', 'Reserved Qty', 'Available Qty', 'Valuation (Rs)']}
+            data={filteredBalances.map((b) => [
+              b.productId?.name || '-',
+              b.productId?.sku || '-',
+              b.warehouseId?.name || 'Main Warehouse',
+              b.averageCost || b.productId?.purchasePrice || 0,
+              b.quantity || 0,
+              b.reservedQuantity || 0,
+              b.availableQuantity || 0,
+              (b.quantity || 0) * (b.averageCost || b.productId?.purchasePrice || 0)
+            ])}
+          />
+          <NavLink to="/inventory/transfers" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap">
+            <i className="bi bi-arrow-left-right me-1"></i> Transfer
           </NavLink>
-          <NavLink to="/inventory/adjustments" className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-sliders"></i> Adjust Stock
+          <NavLink to="/inventory/adjustments" className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap">
+            <i className="bi bi-sliders me-1"></i> Adjust
           </NavLink>
         </div>
       </div>
@@ -306,18 +322,27 @@ export const StockSummary = () => {
                 </div>
 
                 {/* SKU & Warehouse */}
-                <div className="mb-2">
-                  <div className="d-flex gap-2 small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
-                    <span>SKU: {bal.productId?.sku || '-'}</span>
-                    <span>• {bal.warehouseId?.name || 'Main Warehouse'}</span>
-                  </div>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
+                    SKU: {bal.productId?.sku || '-'}
+                  </span>
+                  <span className="badge bg-light text-dark border small" style={{ fontSize: '0.72rem' }}>
+                    <i className="bi bi-building me-1 text-muted"></i>
+                    {bal.warehouseId?.name || 'Main Warehouse'}
+                  </span>
+                </div>
+
+                {/* Avg Cost & Physical Stock Strip */}
+                <div className="d-flex justify-content-between text-muted font-mono py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
+                  <span>Avg Cost: <strong className="text-dark">₹{fmt(bal.averageCost || bal.productId?.purchasePrice || 0)}</strong></span>
+                  <span>Physical: <strong className="text-dark">{bal.quantity || 0}</strong></span>
                 </div>
 
                 {/* Stock Quantities Breakdown */}
                 <div className="d-flex justify-content-between align-items-center pt-2 border-top">
-                  <div className="small font-mono text-muted" style={{ fontSize: '0.75rem' }}>
-                    Total: <span className="fw-bold text-dark">{bal.quantity || 0}</span>
-                  </div>
+                  <span className="text-muted small font-mono" style={{ fontSize: '0.72rem' }}>
+                    Status
+                  </span>
                   <div className="d-flex gap-1">
                     {bal.reservedQuantity > 0 && (
                       <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style={{ fontSize: '0.68rem' }}>

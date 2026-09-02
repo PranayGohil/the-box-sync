@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const FinancialStatements = () => {
   const { addToast } = useToast();
@@ -50,6 +51,61 @@ export const FinancialStatements = () => {
     window.print();
   };
 
+  const getExportData = () => {
+    if (activeTab === 'trial_balance' && trialBalance?.rows) {
+      return {
+        filename: 'Trial_Balance_Report',
+        title: 'Trial Balance Statement',
+        headers: ['Account Code', 'Account Name', 'Group', 'Debit (Rs)', 'Credit (Rs)'],
+        data: trialBalance.rows.map((r) => [
+          r.accountCode || '-',
+          r.accountName,
+          r.groupName,
+          r.debit || 0,
+          r.credit || 0
+        ])
+      };
+    }
+    if (activeTab === 'profit_loss' && profitLoss) {
+      const inc = (profitLoss.incomes || []).map((i) => ['INCOME', i.accountName, i.amount]);
+      const exp = (profitLoss.expenses || []).map((e) => ['EXPENSE', e.accountName, e.amount]);
+      return {
+        filename: 'Profit_and_Loss_Statement',
+        title: 'Profit & Loss Statement',
+        headers: ['Category', 'Account Name', 'Amount (Rs)'],
+        data: [...inc, ...exp]
+      };
+    }
+    if (activeTab === 'balance_sheet' && balanceSheet) {
+      const ast = (balanceSheet.assets || []).map((a) => ['ASSET', a.accountName, a.amount]);
+      const lib = (balanceSheet.liabilities || []).map((l) => ['LIABILITY', l.accountName, l.amount]);
+      const eq = (balanceSheet.equities || []).map((q) => ['EQUITY', q.accountName, q.amount]);
+      return {
+        filename: 'Balance_Sheet_Report',
+        title: 'Balance Sheet Statement',
+        headers: ['Classification', 'Account Name', 'Amount (Rs)'],
+        data: [...ast, ...lib, ...eq]
+      };
+    }
+    if (activeTab === 'day_book' && dayBook?.entries) {
+      return {
+        filename: 'Day_Book_Journal',
+        title: 'Day Book Journal Entries',
+        headers: ['Entry #', 'Voucher Type', 'Narration', 'Debit (Rs)', 'Credit (Rs)'],
+        data: dayBook.entries.map((e) => [
+          `#${e.entryNo}`,
+          e.voucherType,
+          e.narration || '-',
+          e.totalDebit || 0,
+          e.totalCredit || 0
+        ])
+      };
+    }
+    return { filename: 'Financial_Statement', title: 'Financial Statement', headers: [], data: [] };
+  };
+
+  const exportConfig = getExportData();
+
   return (
     <div className="financial-statements-page-container">
       {/* 1. Header with Responsive Action Button */}
@@ -62,11 +118,17 @@ export const FinancialStatements = () => {
             Authoritative double-entry trial balance, P&L statement, balance sheet, and day book
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <button className="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0" onClick={handlePrint}>
-            <i className="bi bi-printer me-1"></i> Print / Export
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename={exportConfig.filename}
+            title={exportConfig.title}
+            headers={exportConfig.headers}
+            data={exportConfig.data}
+          />
+          <button className="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={handlePrint}>
+            <i className="bi bi-printer me-1"></i> Print / PDF
           </button>
-          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0" onClick={fetchStatements}>
+          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={fetchStatements}>
             <i className="bi bi-arrow-clockwise me-1"></i> Refresh
           </button>
         </div>

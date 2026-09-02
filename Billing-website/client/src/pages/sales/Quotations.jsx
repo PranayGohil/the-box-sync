@@ -1,15 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import api from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { DocumentModal } from '../../components/DocumentModal';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const Quotations = () => {
+  const { activeBusiness } = useAuth();
   const { addToast } = useToast();
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [datePreset, setDatePreset] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  const handleDatePresetChange = (preset) => {
+    setDatePreset(preset);
+    const now = new Date();
+    if (preset === 'today') {
+      const today = now.toISOString().split('T')[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (preset === 'this_month') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'last_month') {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+      const end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'this_fy') {
+      const startYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+      setStartDate(`${startYear}-04-01`);
+      setEndDate(`${startYear + 1}-03-31`);
+    } else {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setDatePreset('');
+    setStartDate('');
+    setEndDate('');
+  };
+
+  const hasActiveFilters = Boolean(search || statusFilter || datePreset || startDate || endDate);
 
   const fetchQuotations = async () => {
     setLoading(true);
@@ -54,7 +100,12 @@ export const Quotations = () => {
       q.quotationNo?.toLowerCase().includes(search.toLowerCase()) ||
       q.customerNameSnapshot?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = !statusFilter || q.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    let matchesDate = true;
+    if (startDate && endDate) {
+      const qDate = new Date(q.date || q.createdAt).toISOString().split('T')[0];
+      matchesDate = qDate >= startDate && qDate <= endDate;
+    }
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   // Top Metrics Calculation
@@ -114,7 +165,27 @@ export const Quotations = () => {
       header: 'Actions',
       align: 'right',
       render: (row) => (
-        <div>
+        <div className="d-flex justify-content-end gap-1">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary py-1 px-2 d-flex align-items-center gap-1"
+            title="View & Print Quotation"
+            onClick={() => {
+              setSelectedQuotation(row);
+              setShowPreviewModal(true);
+            }}
+          >
+            <i className="bi bi-eye"></i> View
+          </button>
+          {row.status !== 'converted' && row.status !== 'cancelled' && (
+            <NavLink
+              to={`/sales/quotations/${row._id}/edit`}
+              className="btn btn-sm btn-outline-primary py-1 px-2 d-flex align-items-center gap-1"
+              title="Edit Quotation"
+            >
+              <i className="bi bi-pencil"></i> Edit
+            </NavLink>
+          )}
           {row.status !== 'converted' ? (
             <button
               className="btn btn-sm btn-outline-success py-1 px-2 d-flex align-items-center gap-1"
@@ -145,12 +216,28 @@ export const Quotations = () => {
             Issue formal price estimates and convert directly to Sales Orders or GST Invoices
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Quotations_Register"
+            title="Quotations & Price Estimates"
+            subtitle={`${activeBusiness?.name || 'Business'} | Quotations`}
+            headers={['Quotation #', 'Date', 'Valid Until', 'Customer', 'Taxable Amt (Rs)', 'GST Tax (Rs)', 'Grand Total (Rs)', 'Status']}
+            data={filteredQuotes.map((q) => [
+              q.quotationNo,
+              new Date(q.date).toLocaleDateString('en-IN'),
+              q.validUntil ? new Date(q.validUntil).toLocaleDateString('en-IN') : '-',
+              q.customerNameSnapshot || q.customerId?.name || 'Walk-in',
+              q.taxableAmount || 0,
+              q.totalTax || 0,
+              q.grandTotal || 0,
+              q.status?.toUpperCase()
+            ])}
+          />
           <NavLink
             to="/sales/quotations/new"
-            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0"
+            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap text-center"
           >
-            <i className="bi bi-plus-lg"></i> Create Quotation
+            <i className="bi bi-plus-lg me-1"></i> Create Quotation
           </NavLink>
         </div>
       </div>
@@ -217,7 +304,7 @@ export const Quotations = () => {
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
         <div className="row g-2">
-          <div className="col-12 col-md-6">
+          <div className="col-12 col-md-5">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
               <input
@@ -238,7 +325,7 @@ export const Quotations = () => {
             </div>
           </div>
 
-          <div className="col-8 col-md-5">
+          <div className="col-6 col-md-3">
             <select
               className="form-select form-select-sm fw-semibold"
               value={statusFilter}
@@ -250,16 +337,60 @@ export const Quotations = () => {
             </select>
           </div>
 
-          <div className="col-4 col-md-1">
+          <div className="col-6 col-md-3">
+            <select
+              className="form-select form-select-sm fw-semibold"
+              value={datePreset}
+              onChange={(e) => handleDatePresetChange(e.target.value)}
+              title="Filter by Date Period"
+            >
+              <option value="">All Periods</option>
+              <option value="today">Today</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="this_fy">This Financial Year</option>
+            </select>
+          </div>
+
+          <div className="col-12 col-md-1">
             <button
               className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
               onClick={fetchQuotations}
               title="Refresh Quotations"
             >
-              <i className="bi bi-arrow-clockwise"></i>
+              <i className="bi bi-arrow-clockwise"></i> <span className="d-md-none">Refresh</span>
             </button>
           </div>
         </div>
+
+        {/* Active Filter Chips & Actions Row */}
+        {hasActiveFilters && (
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
+            <div className="d-flex flex-wrap align-items-center gap-1">
+              <span className="small text-muted me-1">Active filters:</span>
+              {statusFilter && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Status: {statusFilter}
+                  <i className="bi bi-x cursor-pointer" onClick={() => setStatusFilter('')}></i>
+                </span>
+              )}
+              {datePreset && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Period: {datePreset.replace('_', ' ')}
+                  <i className="bi bi-x cursor-pointer" onClick={() => handleDatePresetChange('')}></i>
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-link btn-sm text-danger p-0 text-decoration-none small fw-semibold ms-auto"
+              onClick={handleClearFilters}
+            >
+              <i className="bi bi-x-circle me-1"></i> Clear All
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 4. Desktop & Tablet View (DataTable, hidden on mobile <768px) */}
@@ -290,27 +421,43 @@ export const Quotations = () => {
             <div key={q._id} className="invoice-card-mobile">
               {/* Header Line */}
               <div className="invoice-card-mobile-header">
-                <div>
+                <div
+                  className="cursor-pointer d-flex align-items-center gap-1"
+                  onClick={() => {
+                    setSelectedQuotation(q);
+                    setShowPreviewModal(true);
+                  }}
+                  title="Click to preview quotation"
+                >
+                  <i className="bi bi-file-earmark-text text-primary"></i>
                   <span className="fw-bold font-mono text-primary fs-6">#{q.quotationNo}</span>
-                  <span className="text-muted ms-2" style={{ fontSize: '0.75rem' }}>
+                  <span className="text-muted ms-1" style={{ fontSize: '0.72rem' }}>
                     {new Date(q.date).toLocaleDateString('en-IN')}
                   </span>
                 </div>
-                <div className="fw-extrabold font-mono fs-6 text-dark">
+                <div className="fw-extrabold font-mono text-dark" style={{ fontSize: '1.05rem' }}>
                   ₹{fmt(q.grandTotal)}
                 </div>
               </div>
 
               {/* Customer Details */}
-              <div className="mb-2">
-                <div className="fw-bold text-dark small">{q.customerNameSnapshot}</div>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <div className="fw-bold text-dark small text-truncate" style={{ maxWidth: '190px' }}>
+                  {q.customerNameSnapshot}
+                </div>
                 <div className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
-                  Valid Until: {q.validUntil ? new Date(q.validUntil).toLocaleDateString('en-IN') : 'Open'}
+                  Valid: {q.validUntil ? new Date(q.validUntil).toLocaleDateString('en-IN') : 'Open'}
                 </div>
               </div>
 
+              {/* Tax Itemization Strip */}
+              <div className="d-flex justify-content-between text-muted font-mono py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
+                <span>Taxable: <strong className="text-dark">₹{fmt(q.taxableAmount || 0)}</strong></span>
+                <span>GST: <strong className="text-primary">+₹{fmt(q.totalTax || 0)}</strong></span>
+              </div>
+
               {/* Status Badge & Actions */}
-              <div className="d-flex justify-content-between align-items-center pt-2 border-top">
+              <div className="d-flex justify-content-between align-items-center pt-2 border-top gap-1 flex-wrap">
                 <span
                   className={`badge-status ${
                     q.status === 'converted' ? 'badge-paid' : 'badge-finalized'
@@ -320,25 +467,56 @@ export const Quotations = () => {
                   {q.status === 'converted' ? 'CONVERTED' : 'DRAFT'}
                 </span>
 
-                {q.status !== 'converted' ? (
+                <div className="d-flex gap-1 flex-wrap">
                   <button
                     type="button"
-                    className="btn btn-outline-success btn-sm py-1 px-3 fw-bold d-flex align-items-center gap-1"
+                    className="btn btn-outline-secondary btn-sm py-1 px-2 fw-bold d-flex align-items-center gap-1"
                     style={{ fontSize: '0.78rem' }}
-                    onClick={() => handleConvertToSO(q._id)}
+                    onClick={() => {
+                      setSelectedQuotation(q);
+                      setShowPreviewModal(true);
+                    }}
                   >
-                    <i className="bi bi-arrow-right-circle"></i> Convert to SO
+                    <i className="bi bi-eye"></i> View
                   </button>
-                ) : (
-                  <span className="text-success small fw-bold">
-                    <i className="bi bi-check2-all me-1"></i> Order Created
-                  </span>
-                )}
+                  {q.status !== 'converted' && q.status !== 'cancelled' && (
+                    <NavLink
+                      to={`/sales/quotations/${q._id}/edit`}
+                      className="btn btn-outline-primary btn-sm py-1 px-2 fw-bold d-flex align-items-center gap-1"
+                      style={{ fontSize: '0.78rem' }}
+                    >
+                      <i className="bi bi-pencil"></i> Edit
+                    </NavLink>
+                  )}
+                  {q.status !== 'converted' ? (
+                    <button
+                      type="button"
+                      className="btn btn-outline-success btn-sm py-1 px-2 fw-bold d-flex align-items-center gap-1"
+                      style={{ fontSize: '0.78rem' }}
+                      onClick={() => handleConvertToSO(q._id)}
+                    >
+                      <i className="bi bi-arrow-right-circle"></i> Convert to SO
+                    </button>
+                  ) : (
+                    <span className="text-success small fw-bold d-flex align-items-center gap-1">
+                      <i className="bi bi-check2-all"></i> Converted
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {/* Document View & Print Modal */}
+      <DocumentModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        document={selectedQuotation}
+        business={activeBusiness}
+        docType="quotation"
+      />
     </div>
   );
 };

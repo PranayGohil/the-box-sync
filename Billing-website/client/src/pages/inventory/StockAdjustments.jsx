@@ -118,12 +118,12 @@ export const StockAdjustments = () => {
             Reconcile inventory count discrepancies, write off damaged/expired goods, or log found stock
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <NavLink to="/inventory/summary" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-boxes"></i> Stock Summary
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <NavLink to="/inventory/summary" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap">
+            <i className="bi bi-boxes me-1"></i> Stock Summary
           </NavLink>
-          <NavLink to="/inventory/movements" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-arrow-left-right"></i> Movements Ledger
+          <NavLink to="/inventory/movements" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap">
+            <i className="bi bi-arrow-left-right me-1"></i> Movements Ledger
           </NavLink>
         </div>
       </div>
@@ -197,11 +197,11 @@ export const StockAdjustments = () => {
             </h5>
 
             <form onSubmit={handleSubmit}>
-              <div className="row g-3 mb-3">
+              <div className="row g-2 g-sm-3 mb-3">
                 <div className="col-12 col-md-6">
-                  <label className="form-label">Select Warehouse*</label>
+                  <label className="form-label small fw-bold mb-1">Select Warehouse*</label>
                   <select
-                    className="form-select fw-semibold"
+                    className="form-select form-select-sm fw-semibold"
                     value={warehouseId}
                     onChange={(e) => setWarehouseId(e.target.value)}
                     required
@@ -215,9 +215,9 @@ export const StockAdjustments = () => {
                 </div>
 
                 <div className="col-12 col-md-6">
-                  <label className="form-label">Select Product to Adjust*</label>
+                  <label className="form-label small fw-bold mb-1">Select Product to Adjust*</label>
                   <select
-                    className="form-select fw-bold"
+                    className="form-select form-select-sm fw-bold"
                     value={selectedProduct}
                     onChange={handleProductChange}
                     required
@@ -235,9 +235,9 @@ export const StockAdjustments = () => {
               {/* Product Info & Live Stock Badge */}
               {selectedProductObj && (
                 <div className="p-3 mb-3 bg-light border rounded">
-                  <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                  <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
                     <div>
-                      <div className="fw-bold text-dark">{selectedProductObj.name}</div>
+                      <div className="fw-bold text-dark small">{selectedProductObj.name}</div>
                       <div className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
                         SKU: {selectedProductObj.sku || '-'} | Unit: {selectedProductObj.unitId?.symbol || 'PCS'}
                       </div>
@@ -252,12 +252,12 @@ export const StockAdjustments = () => {
                 </div>
               )}
 
-              {/* Adjustment Type & Quantity */}
-              <div className="row g-3 mb-3">
+              {/* Adjustment Type & Quantity Stepper */}
+              <div className="row g-2 g-sm-3 mb-3">
                 <div className="col-12 col-sm-6">
-                  <label className="form-label">Adjustment Type*</label>
+                  <label className="form-label small fw-bold mb-1">Adjustment Type*</label>
                   <select
-                    className="form-select fw-bold"
+                    className="form-select form-select-sm fw-bold"
                     value={adjustmentType}
                     onChange={(e) => setAdjustmentType(e.target.value)}
                   >
@@ -267,23 +267,40 @@ export const StockAdjustments = () => {
                 </div>
 
                 <div className="col-12 col-sm-6">
-                  <label className="form-label">Quantity to Adjust*</label>
-                  <input
-                    type="number"
-                    className="form-control font-mono fw-bold text-center"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    min="1"
-                    required
-                  />
+                  <label className="form-label small fw-bold mb-1">Quantity to Adjust*</label>
+                  <div className="input-group input-group-sm">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary px-3 fw-bold"
+                      disabled={quantity <= 1}
+                      onClick={() => setQuantity(Math.max(1, Number(quantity || 1) - 1))}
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      className="form-control form-control-sm font-mono fw-bold text-center"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
+                      min="1"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary px-3 fw-bold"
+                      onClick={() => setQuantity(Number(quantity || 0) + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Reason Selector */}
               <div className="mb-3">
-                <label className="form-label">Adjustment Reason*</label>
+                <label className="form-label small fw-bold mb-1">Adjustment Reason*</label>
                 <select
-                  className="form-select fw-semibold"
+                  className="form-select form-select-sm fw-semibold"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                 >
@@ -297,7 +314,7 @@ export const StockAdjustments = () => {
 
               {/* Remarks */}
               <div className="mb-4">
-                <label className="form-label">Remarks / Audit Inspection Notes</label>
+                <label className="form-label small fw-bold mb-1">Remarks / Audit Inspection Notes</label>
                 <textarea
                   className="form-control"
                   rows="2"
@@ -310,7 +327,7 @@ export const StockAdjustments = () => {
               {/* Projected Stock Preview Card */}
               {selectedProductObj && (
                 <div className="p-3 mb-4 rounded border" style={{ backgroundColor: adjustmentType === 'increase' ? '#ecfdf5' : '#fef2f2' }}>
-                  <div className="d-flex justify-content-between align-items-center">
+                  <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-1">
                     <span className="small fw-semibold text-muted">Projected New Stock Balance:</span>
                     <div className="d-flex align-items-center gap-2">
                       <span className="font-mono text-muted">{currentStock}</span>
