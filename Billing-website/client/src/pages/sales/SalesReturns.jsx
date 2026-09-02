@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const SalesReturns = () => {
   const { addToast } = useToast();
@@ -178,12 +179,40 @@ export const SalesReturns = () => {
             Process customer returns, replenish inventory stock, and issue GST Credit Notes
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename={activeTab === 'returns' ? 'Sales_Returns' : 'Credit_Notes'}
+            title={activeTab === 'returns' ? 'Sales Returns Register' : 'GST Credit Notes Register'}
+            headers={activeTab === 'returns'
+              ? ['Return #', 'Date', 'Customer', 'Original Invoice', 'Taxable Amt (Rs)', 'Tax Amt (Rs)', 'Total (Rs)', 'Reason']
+              : ['Credit Note #', 'Date', 'Customer', 'Original Invoice', 'Total Amount (Rs)', 'Status']
+            }
+            data={activeTab === 'returns'
+              ? filteredReturns.map((r) => [
+                  r.returnNo,
+                  new Date(r.date).toLocaleDateString('en-IN'),
+                  r.customerNameSnapshot || r.customerId?.name || 'Walk-in',
+                  r.invoiceNo || '-',
+                  r.taxableAmount || 0,
+                  r.taxAmount || 0,
+                  r.totalAmount || 0,
+                  r.reason || '-'
+                ])
+              : filteredCreditNotes.map((cn) => [
+                  cn.creditNoteNo,
+                  new Date(cn.date).toLocaleDateString('en-IN'),
+                  cn.customerNameSnapshot || cn.customerId?.name || 'Walk-in',
+                  cn.invoiceNo || '-',
+                  cn.totalAmount || 0,
+                  cn.status?.toUpperCase()
+                ])
+            }
+          />
           <NavLink
             to="/sales/returns/new"
-            className="btn btn-danger btn-sm flex-fill flex-sm-grow-0"
+            className="btn btn-danger btn-sm flex-fill flex-sm-grow-0 text-nowrap text-center"
           >
-            <i className="bi bi-arrow-counterclockwise"></i> Process Sales Return
+            <i className="bi bi-arrow-counterclockwise me-1"></i> Process Sales Return
           </NavLink>
         </div>
       </div>
@@ -345,35 +374,43 @@ export const SalesReturns = () => {
               <div key={ret._id} className="invoice-card-mobile">
                 {/* Header */}
                 <div className="invoice-card-mobile-header">
-                  <div>
+                  <div className="d-flex align-items-center gap-1">
+                    <i className="bi bi-arrow-counterclockwise text-danger"></i>
                     <span className="fw-bold font-mono text-danger fs-6">#{ret.returnNo}</span>
-                    <span className="text-muted ms-2" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-muted ms-1" style={{ fontSize: '0.72rem' }}>
                       {new Date(ret.date).toLocaleDateString('en-IN')}
                     </span>
                   </div>
-                  <div className="fw-extrabold font-mono fs-6 text-danger">
+                  <div className="fw-extrabold font-mono text-danger" style={{ fontSize: '1.05rem' }}>
                     ₹{fmt(ret.grandTotal)}
                   </div>
                 </div>
 
                 {/* Details */}
-                <div className="mb-2">
-                  <div className="fw-bold text-dark small">{ret.customerNameSnapshot}</div>
-                  <div className="d-flex align-items-center gap-2 mt-1">
-                    <span className="badge bg-light text-primary border font-mono" style={{ fontSize: '0.68rem' }}>
-                      Inv #{ret.invoiceId?.invoiceNo || 'N/A'}
-                    </span>
-                    <span
-                      className={`badge ${
-                        ret.stockRestocked
-                          ? 'bg-success-subtle text-success border border-success-subtle'
-                          : 'bg-light text-muted border'
-                      }`}
-                      style={{ fontSize: '0.68rem' }}
-                    >
-                      {ret.stockRestocked ? '✓ Stock Restocked' : 'No Restock'}
-                    </span>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="fw-bold text-dark small text-truncate" style={{ maxWidth: '190px' }}>
+                    {ret.customerNameSnapshot}
                   </div>
+                  <span className="badge bg-light text-primary border font-mono" style={{ fontSize: '0.72rem' }}>
+                    Inv #{ret.invoiceId?.invoiceNo || 'N/A'}
+                  </span>
+                </div>
+
+                {/* Status Badges */}
+                <div className="d-flex align-items-center justify-content-between pt-2 border-top">
+                  <span
+                    className={`badge ${
+                      ret.stockRestocked
+                        ? 'bg-success-subtle text-success border border-success-subtle'
+                        : 'bg-light text-muted border'
+                    }`}
+                    style={{ fontSize: '0.68rem' }}
+                  >
+                    {ret.stockRestocked ? '✓ Stock Restocked' : 'No Restock'}
+                  </span>
+                  <span className="badge-status badge-finalized" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}>
+                    PROCESSED
+                  </span>
                 </div>
               </div>
             ))
@@ -390,28 +427,36 @@ export const SalesReturns = () => {
               <div key={cn._id} className="invoice-card-mobile">
                 {/* Header */}
                 <div className="invoice-card-mobile-header">
-                  <div>
+                  <div className="d-flex align-items-center gap-1">
+                    <i className="bi bi-journal-arrow-down text-primary"></i>
                     <span className="fw-bold font-mono text-primary fs-6">#{cn.creditNoteNo}</span>
-                    <span className="text-muted ms-2" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-muted ms-1" style={{ fontSize: '0.72rem' }}>
                       {new Date(cn.date).toLocaleDateString('en-IN')}
                     </span>
                   </div>
-                  <div className="fw-extrabold font-mono fs-6 text-success">
+                  <div className="fw-extrabold font-mono text-success" style={{ fontSize: '1.05rem' }}>
                     ₹{fmt(cn.grandTotal)}
                   </div>
                 </div>
 
                 {/* Details */}
-                <div className="mb-2">
-                  <div className="fw-bold text-dark small">{cn.customerNameSnapshot}</div>
-                  <div className="d-flex align-items-center gap-2 mt-1">
-                    <span className="badge bg-light text-muted border font-mono" style={{ fontSize: '0.68rem' }}>
-                      Against #{cn.originalInvoiceNo || 'N/A'}
-                    </span>
-                    <span className="badge-status badge-finalized" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}>
-                      FINALIZED
-                    </span>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="fw-bold text-dark small text-truncate" style={{ maxWidth: '190px' }}>
+                    {cn.customerNameSnapshot}
                   </div>
+                  <span className="badge bg-light text-muted border font-mono" style={{ fontSize: '0.72rem' }}>
+                    Against #{cn.originalInvoiceNo || 'N/A'}
+                  </span>
+                </div>
+
+                {/* Status */}
+                <div className="d-flex align-items-center justify-content-between pt-2 border-top">
+                  <span className="text-muted small" style={{ fontSize: '0.72rem' }}>
+                    Taxable: <strong className="text-dark font-mono">₹{fmt(cn.taxableAmount)}</strong>
+                  </span>
+                  <span className="badge-status badge-finalized" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}>
+                    FINALIZED
+                  </span>
                 </div>
               </div>
             ))

@@ -1,15 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import api from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { DocumentModal } from '../../components/DocumentModal';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const PurchaseOrders = () => {
+  const { activeBusiness } = useAuth();
   const { addToast } = useToast();
   const [pos, setPos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [datePreset, setDatePreset] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedPO, setSelectedPO] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  const handleDatePresetChange = (preset) => {
+    setDatePreset(preset);
+    const now = new Date();
+    if (preset === 'today') {
+      const today = now.toISOString().split('T')[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (preset === 'this_month') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'last_month') {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+      const end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'this_fy') {
+      const startYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+      setStartDate(`${startYear}-04-01`);
+      setEndDate(`${startYear + 1}-03-31`);
+    } else {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setDatePreset('');
+    setStartDate('');
+    setEndDate('');
+  };
+
+  const hasActiveFilters = Boolean(search || statusFilter || datePreset || startDate || endDate);
 
   const fetchPOs = async () => {
     setLoading(true);
@@ -61,7 +107,12 @@ export const PurchaseOrders = () => {
       p.supplierNameSnapshot?.toLowerCase().includes(term) ||
       p.warehouseId?.name?.toLowerCase().includes(term);
     const matchesStatus = !statusFilter || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    let matchesDate = true;
+    if (startDate && endDate) {
+      const pDate = new Date(p.date || p.createdAt).toISOString().split('T')[0];
+      matchesDate = pDate >= startDate && pDate <= endDate;
+    }
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   // Top Metrics Calculation
@@ -121,7 +172,27 @@ export const PurchaseOrders = () => {
       header: 'Actions',
       align: 'right',
       render: (row) => (
-        <div>
+        <div className="d-flex justify-content-end gap-1">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary py-1 px-2 d-flex align-items-center gap-1"
+            title="View & Print Purchase Order"
+            onClick={() => {
+              setSelectedPO(row);
+              setShowPreviewModal(true);
+            }}
+          >
+            <i className="bi bi-eye"></i> View
+          </button>
+          {row.status !== 'received' && row.status !== 'completed' && row.status !== 'cancelled' && (
+            <NavLink
+              to={`/purchases/orders/${row._id}/edit`}
+              className="btn btn-sm btn-outline-primary py-1 px-2 d-flex align-items-center gap-1"
+              title="Edit Purchase Order"
+            >
+              <i className="bi bi-pencil"></i> Edit
+            </NavLink>
+          )}
           {row.status !== 'received' ? (
             <button
               className="btn btn-sm btn-outline-success py-1 px-2 d-flex align-items-center gap-1"
@@ -135,6 +206,13 @@ export const PurchaseOrders = () => {
               <i className="bi bi-check2-circle me-1"></i> Stock Received
             </span>
           )}
+          <NavLink
+            to={`/purchases/bills/new?purchaseOrderId=${row._id}`}
+            className="btn btn-sm btn-outline-info py-1 px-2 d-flex align-items-center gap-1"
+            title="Create Purchase Bill from this Purchase Order"
+          >
+            <i className="bi bi-receipt"></i> Create Bill
+          </NavLink>
         </div>
       )
     }
@@ -152,12 +230,28 @@ export const PurchaseOrders = () => {
             Procure inventory from suppliers, track deliveries, and accept goods into warehouse via GRN
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Purchase_Orders"
+            title="Purchase Orders Register"
+            subtitle={`${activeBusiness?.name || 'Business'} | Purchase Orders`}
+            headers={['PO #', 'Date', 'Supplier', 'Expected Delivery', 'Taxable Amt (Rs)', 'GST Tax (Rs)', 'Total Value (Rs)', 'Status']}
+            data={filteredPOs.map((p) => [
+              p.poNo,
+              new Date(p.date).toLocaleDateString('en-IN'),
+              p.supplierNameSnapshot || p.supplierId?.name || 'Vendor',
+              p.expectedDeliveryDate ? new Date(p.expectedDeliveryDate).toLocaleDateString('en-IN') : '-',
+              p.taxableAmount || 0,
+              p.totalTax || 0,
+              p.grandTotal || 0,
+              p.status?.toUpperCase()
+            ])}
+          />
           <NavLink
             to="/purchases/orders/new"
-            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0"
+            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap text-center"
           >
-            <i className="bi bi-plus-lg"></i> Create Purchase Order
+            <i className="bi bi-plus-lg me-1"></i> Create Purchase Order
           </NavLink>
         </div>
       </div>
@@ -224,7 +318,7 @@ export const PurchaseOrders = () => {
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
         <div className="row g-2">
-          <div className="col-12 col-md-6">
+          <div className="col-12 col-md-5">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
               <input
@@ -245,7 +339,7 @@ export const PurchaseOrders = () => {
             </div>
           </div>
 
-          <div className="col-8 col-md-5">
+          <div className="col-6 col-md-3">
             <select
               className="form-select form-select-sm fw-semibold"
               value={statusFilter}
@@ -257,16 +351,60 @@ export const PurchaseOrders = () => {
             </select>
           </div>
 
-          <div className="col-4 col-md-1">
+          <div className="col-6 col-md-3">
+            <select
+              className="form-select form-select-sm fw-semibold"
+              value={datePreset}
+              onChange={(e) => handleDatePresetChange(e.target.value)}
+              title="Filter by Date Period"
+            >
+              <option value="">All Periods</option>
+              <option value="today">Today</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="this_fy">This Financial Year</option>
+            </select>
+          </div>
+
+          <div className="col-12 col-md-1">
             <button
-              className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center"
+              className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
               onClick={fetchPOs}
               title="Refresh POs"
             >
-              <i className="bi bi-arrow-clockwise"></i>
+              <i className="bi bi-arrow-clockwise"></i> <span className="d-md-none">Refresh</span>
             </button>
           </div>
         </div>
+
+        {/* Active Filter Chips & Actions Row */}
+        {hasActiveFilters && (
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
+            <div className="d-flex flex-wrap align-items-center gap-1">
+              <span className="small text-muted me-1">Active filters:</span>
+              {statusFilter && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Status: {statusFilter}
+                  <i className="bi bi-x cursor-pointer" onClick={() => setStatusFilter('')}></i>
+                </span>
+              )}
+              {datePreset && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Period: {datePreset.replace('_', ' ')}
+                  <i className="bi bi-x cursor-pointer" onClick={() => handleDatePresetChange('')}></i>
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-link btn-sm text-danger p-0 text-decoration-none small fw-semibold ms-auto"
+              onClick={handleClearFilters}
+            >
+              <i className="bi bi-x-circle me-1"></i> Clear All
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 4. Desktop & Tablet View (DataTable, hidden on mobile <768px) */}
@@ -300,57 +438,114 @@ export const PurchaseOrders = () => {
               <div key={po._id} className="invoice-card-mobile">
                 {/* Header */}
                 <div className="invoice-card-mobile-header">
-                  <div>
+                  <div
+                    className="cursor-pointer d-flex align-items-center gap-1"
+                    onClick={() => {
+                      setSelectedPO(po);
+                      setShowPreviewModal(true);
+                    }}
+                    title="Click to view purchase order"
+                  >
+                    <i className="bi bi-cart text-primary"></i>
                     <span className="fw-bold font-mono text-primary fs-6">#{po.poNo}</span>
-                    <span className="text-muted ms-2" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-muted ms-1" style={{ fontSize: '0.72rem' }}>
                       {new Date(po.date).toLocaleDateString('en-IN')}
                     </span>
                   </div>
-                  <div className="fw-extrabold font-mono fs-6 text-dark">
+                  <div className="fw-extrabold font-mono text-dark" style={{ fontSize: '1.05rem' }}>
                     ₹{fmt(po.grandTotal)}
                   </div>
                 </div>
 
                 {/* Supplier & Warehouse */}
-                <div className="mb-2">
-                  <div className="fw-bold text-dark small">{po.supplierNameSnapshot}</div>
-                  <div className="small text-muted mt-1">
-                    <i className="bi bi-building me-1"></i>
-                    {po.warehouseId?.name || 'Main Warehouse'}
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="fw-bold text-dark small text-truncate" style={{ maxWidth: '190px' }}>
+                    {po.supplierNameSnapshot}
                   </div>
+                  <span className="badge bg-light text-dark border small" style={{ fontSize: '0.72rem' }}>
+                    <i className="bi bi-building me-1 text-muted"></i>
+                    {po.warehouseId?.name || 'Main Warehouse'}
+                  </span>
+                </div>
+
+                {/* Tax Breakdown Strip */}
+                <div className="d-flex justify-content-between text-muted font-mono py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
+                  <span>Taxable: <strong className="text-dark">₹{fmt(po.taxableAmount || 0)}</strong></span>
+                  <span>GST: <strong className="text-primary">+₹{fmt(po.totalTax || 0)}</strong></span>
                 </div>
 
                 {/* Status & Actions */}
-                <div className="d-flex justify-content-between align-items-center pt-2 border-top">
-                  <span
-                    className={`badge-status ${
-                      isReceived ? 'badge-paid' : 'badge-finalized'
-                    }`}
-                    style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}
-                  >
-                    {isReceived ? 'RECEIVED' : 'ISSUED'}
-                  </span>
+                <div className="d-flex flex-column gap-2 pt-2 border-top">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span
+                      className={`badge-status ${
+                        isReceived ? 'badge-paid' : 'badge-finalized'
+                      }`}
+                      style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}
+                    >
+                      {isReceived ? 'RECEIVED (GRN)' : 'ISSUED / PENDING'}
+                    </span>
+                    {po.expectedDeliveryDate && (
+                      <span className="text-muted" style={{ fontSize: '0.72rem' }}>
+                        Due: {new Date(po.expectedDeliveryDate).toLocaleDateString('en-IN')}
+                      </span>
+                    )}
+                  </div>
 
-                  {po.status !== 'received' ? (
+                  <div className="d-flex gap-1 flex-wrap">
                     <button
                       type="button"
-                      className="btn btn-outline-success btn-sm py-1 px-3 fw-bold d-flex align-items-center gap-1"
+                      className="btn btn-outline-secondary btn-sm py-1 px-2 fw-bold d-flex align-items-center justify-content-center gap-1 flex-fill"
                       style={{ fontSize: '0.78rem' }}
-                      onClick={() => handleConvertToGRN(po._id)}
+                      onClick={() => {
+                        setSelectedPO(po);
+                        setShowPreviewModal(true);
+                      }}
                     >
-                      <i className="bi bi-box-arrow-in-down"></i> Receive GRN
+                      <i className="bi bi-eye"></i> View
                     </button>
-                  ) : (
-                    <span className="text-success small fw-bold">
-                      <i className="bi bi-check2-circle me-1"></i> Stock Inward Done
-                    </span>
-                  )}
+                    {po.status !== 'received' && po.status !== 'completed' && po.status !== 'cancelled' && (
+                      <NavLink
+                        to={`/purchases/orders/${po._id}/edit`}
+                        className="btn btn-outline-primary btn-sm py-1 px-2 fw-bold d-flex align-items-center justify-content-center gap-1 flex-fill"
+                        style={{ fontSize: '0.78rem' }}
+                      >
+                        <i className="bi bi-pencil"></i> Edit
+                      </NavLink>
+                    )}
+                    <NavLink
+                      to={`/purchases/bills/new?purchaseOrderId=${po._id}`}
+                      className="btn btn-outline-info btn-sm py-1 px-2 fw-bold d-flex align-items-center justify-content-center gap-1 flex-fill"
+                      style={{ fontSize: '0.78rem' }}
+                    >
+                      <i className="bi bi-receipt"></i> Bill
+                    </NavLink>
+                    {po.status !== 'received' && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-success btn-sm py-1 px-2 fw-bold d-flex align-items-center justify-content-center gap-1 flex-fill"
+                        style={{ fontSize: '0.78rem' }}
+                        onClick={() => handleConvertToGRN(po._id)}
+                      >
+                        <i className="bi bi-box-arrow-in-down"></i> Receive GRN
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })
         )}
       </div>
+
+      {/* Document View & Print Modal */}
+      <DocumentModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        document={selectedPO}
+        business={activeBusiness}
+        docType="purchase_order"
+      />
     </div>
   );
 };

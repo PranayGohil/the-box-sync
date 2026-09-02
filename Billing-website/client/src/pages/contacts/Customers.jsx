@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { StateSelect, CitySelect } from '../../components/StateCitySelect';
+import { INDIAN_STATES } from '../../data/indiaStatesAndCities';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const Customers = () => {
   const { addToast } = useToast();
@@ -9,6 +12,7 @@ export const Customers = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [stateFilter, setStateFilter] = useState('');
   const [balanceFilter, setBalanceFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
@@ -23,8 +27,8 @@ export const Customers = () => {
     gstin: '',
     pan: '',
     customerType: 'B2B',
-    creditLimit: 100000,
-    creditDays: 30,
+    creditLimit: 0,
+    creditDays: 0,
     billingAddress: {
       street: '',
       city: 'Pune',
@@ -61,8 +65,8 @@ export const Customers = () => {
       gstin: '',
       pan: '',
       customerType: 'B2B',
-      creditLimit: 100000,
-      creditDays: 30,
+      creditLimit: 0,
+      creditDays: 0,
       billingAddress: {
         street: 'Main Road',
         city: 'Pune',
@@ -84,8 +88,8 @@ export const Customers = () => {
       gstin: customer.gstin || '',
       pan: customer.pan || '',
       customerType: customer.customerType || 'B2B',
-      creditLimit: customer.creditLimit || 0,
-      creditDays: customer.creditDays || 30,
+      creditLimit: customer.creditLimit !== undefined && customer.creditLimit !== null ? customer.creditLimit : 0,
+      creditDays: customer.creditDays !== undefined && customer.creditDays !== null ? customer.creditDays : 0,
       billingAddress: customer.billingAddress || { street: '', city: '', state: 'Maharashtra', stateCode: '27', pincode: '' }
     });
     setShowModal(true);
@@ -136,13 +140,14 @@ export const Customers = () => {
   // Filtered Customers
   const filteredCustomers = customers.filter((c) => {
     const matchesType = !typeFilter || c.customerType === typeFilter;
+    const matchesState = !stateFilter || c.billingAddress?.state === stateFilter;
     let matchesBalance = true;
     if (balanceFilter === 'due') {
       matchesBalance = (c.currentBalance || 0) > 0;
     } else if (balanceFilter === 'zero') {
       matchesBalance = (c.currentBalance || 0) <= 0;
     }
-    return matchesType && matchesBalance;
+    return matchesType && matchesBalance && matchesState;
   });
 
   // Top Metrics Calculation
@@ -189,7 +194,7 @@ export const Customers = () => {
       )
     },
     {
-      header: 'GSTIN / State',
+      header: 'GSTIN / Location',
       accessor: 'gstin',
       render: (row) => (
         <div>
@@ -200,7 +205,10 @@ export const Customers = () => {
               UNREGISTERED / B2C
             </span>
           )}
-          <div className="small text-muted mt-1">{row.billingAddress?.state || 'Maharashtra'}</div>
+          <div className="small text-muted mt-1">
+            <i className="bi bi-geo-alt me-1 text-secondary"></i>
+            {row.billingAddress?.city ? `${row.billingAddress.city}, ` : ''}{row.billingAddress?.state || 'Maharashtra'}
+          </div>
         </div>
       )
     },
@@ -211,7 +219,7 @@ export const Customers = () => {
       render: (row) => (
         <div className="small">
           <span className="font-mono fw-semibold">₹{fmt(row.creditLimit)}</span>
-          <div className="text-muted" style={{ fontSize: '0.72rem' }}>{row.creditDays || 30} Days</div>
+          <div className="text-muted" style={{ fontSize: '0.72rem' }}>{row.creditDays ?? 0} Days</div>
         </div>
       )
     },
@@ -261,9 +269,26 @@ export const Customers = () => {
             Manage customer directories, GST tax profiles, credit limits, and individual ledger statements
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0" onClick={handleOpenAdd}>
-            <i className="bi bi-person-plus-fill"></i> Add New Customer
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Customers_Directory"
+            title="Customers & Accounts Receivable Directory"
+            headers={['Customer Name', 'Business / Trade Name', 'Mobile', 'Email', 'GSTIN', 'State', 'City', 'Credit Limit (Rs)', 'Credit Days', 'Balance Due (Rs)']}
+            data={filteredCustomers.map((c) => [
+              c.name,
+              c.businessName || '-',
+              c.phone || '-',
+              c.email || '-',
+              c.gstin || '-',
+              c.billingAddress?.state || '-',
+              c.billingAddress?.city || '-',
+              c.creditLimit || 0,
+              c.creditDays || 0,
+              c.currentBalance || 0
+            ])}
+          />
+          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={handleOpenAdd}>
+            <i className="bi bi-person-plus-fill me-1"></i> Add New Customer
           </button>
         </div>
       </div>
@@ -329,8 +354,8 @@ export const Customers = () => {
 
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
-        <div className="row g-2">
-          <div className="col-12 col-md-5">
+        <div className="row g-2 align-items-center">
+          <div className="col-12 col-md-4">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
               <input
@@ -351,13 +376,13 @@ export const Customers = () => {
             </div>
           </div>
 
-          <div className="col-6 col-md-3">
+          <div className="col-6 col-md-2">
             <select
               className="form-select form-select-sm fw-semibold"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
             >
-              <option value="">All Customer Types</option>
+              <option value="">All Types</option>
               <option value="B2B">B2B Registered</option>
               <option value="B2C">B2C Retail</option>
             </select>
@@ -366,16 +391,31 @@ export const Customers = () => {
           <div className="col-6 col-md-3">
             <select
               className="form-select form-select-sm fw-semibold"
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+            >
+              <option value="">All States / UTs</option>
+              {INDIAN_STATES.map((s) => (
+                <option key={s.code} value={s.name}>
+                  {s.name} ({s.code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-6 col-md-2">
+            <select
+              className="form-select form-select-sm fw-semibold"
               value={balanceFilter}
               onChange={(e) => setBalanceFilter(e.target.value)}
             >
               <option value="">All Balances</option>
-              <option value="due">Outstanding Due (&gt; ₹0)</option>
-              <option value="zero">Zero / Settled (₹0)</option>
+              <option value="due">Outstanding (&gt; ₹0)</option>
+              <option value="zero">Settled (₹0)</option>
             </select>
           </div>
 
-          <div className="col-12 col-md-1">
+          <div className="col-6 col-md-1">
             <button
               className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center"
               onClick={fetchCustomers}
@@ -431,7 +471,7 @@ export const Customers = () => {
                   {cust.businessName && (
                     <div className="small text-dark fw-semibold">{cust.businessName}</div>
                   )}
-                  <div className="d-flex align-items-center gap-2 mt-1">
+                  <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
                     {cust.gstin ? (
                       <span className="badge bg-light text-dark border font-mono" style={{ fontSize: '0.68rem' }}>
                         GSTIN: {cust.gstin}
@@ -446,8 +486,22 @@ export const Customers = () => {
                         <i className="bi bi-telephone me-1"></i>{cust.phone}
                       </span>
                     )}
+                    {(cust.billingAddress?.city || cust.billingAddress?.state) && (
+                      <span className="small text-muted" style={{ fontSize: '0.72rem' }}>
+                        <i className="bi bi-geo-alt me-1"></i>
+                        {cust.billingAddress?.city ? `${cust.billingAddress.city}, ` : ''}{cust.billingAddress?.state}
+                      </span>
+                    )}
                   </div>
                 </div>
+
+                {/* Credit info strip */}
+                {(cust.creditLimit > 0 || cust.creditDays > 0) && (
+                  <div className="d-flex justify-content-between font-mono small text-muted py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
+                    <span>Credit Limit: <strong className="text-dark">₹{fmt(cust.creditLimit)}</strong></span>
+                    <span>Terms: <strong className="text-dark">{cust.creditDays || 0} Days</strong></span>
+                  </div>
+                )}
 
                 {/* Mobile Actions */}
                 <div className="invoice-card-mobile-actions">
@@ -478,123 +532,130 @@ export const Customers = () => {
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)', zIndex: 1050 }}>
           <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content" style={{ borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-              <div className="modal-header bg-light" style={{ borderBottom: '1px solid #e2e8f0' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' }}>
+              <div className="modal-header bg-light px-3 px-sm-4 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <h5 className="modal-title fw-bold">
                   <i className="bi bi-person-badge text-primary me-2"></i>
-                  {editingCustomer ? 'Edit Customer Profile' : 'Add New Customer'}
+                  {editingCustomer ? 'Edit Customer Profile' : 'Add New Customer Profile'}
                 </h5>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
 
               <form onSubmit={handleSubmit}>
-                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc' }}>
-                  <div className="row g-3 mb-3">
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Contact Person / Name*</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Customer Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
+                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc', maxHeight: 'calc(80vh - 120px)' }}>
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      1. Basic Identification & Contact
                     </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Business / Trade Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="e.g. Apex Technologies"
-                        value={formData.businessName}
-                        onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="row g-3 mb-3">
-                    <div className="col-6 col-md-4">
-                      <label className="form-label">Phone Number</label>
-                      <input
-                        type="tel"
-                        className="form-control font-mono"
-                        placeholder="10-digit mobile"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-6 col-md-4">
-                      <label className="form-label">Email Address</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        placeholder="billing@customer.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-12 col-md-4">
-                      <label className="form-label">Customer Type</label>
-                      <select
-                        className="form-select fw-semibold"
-                        value={formData.customerType}
-                        onChange={(e) => setFormData({ ...formData, customerType: e.target.value })}
-                      >
-                        <option value="B2B">B2B (Registered Business)</option>
-                        <option value="B2C">B2C (Retail Consumer)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="row g-3 mb-3">
-                    <div className="col-6">
-                      <label className="form-label">GSTIN (if B2B)</label>
-                      <input
-                        type="text"
-                        className="form-control font-mono"
-                        placeholder="27AAACA1234A1Z1"
-                        value={formData.gstin}
-                        onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-6">
-                      <label className="form-label">PAN Number</label>
-                      <input
-                        type="text"
-                        className="form-control font-mono"
-                        placeholder="AAACA1234A"
-                        value={formData.pan}
-                        onChange={(e) => setFormData({ ...formData, pan: e.target.value })}
-                      />
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-12 col-md-6">
+                        <label className="form-label small fw-bold mb-1">Contact Person / Name*</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="e.g. Rajesh Sharma"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <label className="form-label small fw-bold mb-1">Business / Trade Name</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="e.g. Apex Technologies Pvt Ltd"
+                          value={formData.businessName}
+                          onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Mobile Number</label>
+                        <input
+                          type="tel"
+                          className="form-control form-control-sm font-mono"
+                          placeholder="10-digit mobile"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Email Address</label>
+                        <input
+                          type="email"
+                          className="form-control form-control-sm"
+                          placeholder="billing@company.com"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-12 col-md-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Customer Type</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.customerType}
+                          onChange={(e) => setFormData({ ...formData, customerType: e.target.value })}
+                        >
+                          <option value="B2B">B2B (Registered Business)</option>
+                          <option value="B2C">B2C (Retail Consumer)</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="row g-3 mb-3">
-                    <div className="col-6">
-                      <label className="form-label">Credit Limit (₹)</label>
-                      <input
-                        type="number"
-                        className="form-control font-mono"
-                        value={formData.creditLimit}
-                        onChange={(e) => setFormData({ ...formData, creditLimit: Number(e.target.value) })}
-                      />
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      2. GST Compliance & Credit Terms
                     </div>
-                    <div className="col-6">
-                      <label className="form-label">Credit Days (Payment Term)</label>
-                      <input
-                        type="number"
-                        className="form-control font-mono"
-                        value={formData.creditDays}
-                        onChange={(e) => setFormData({ ...formData, creditDays: Number(e.target.value) })}
-                      />
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>GSTIN (if B2B)</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono text-uppercase"
+                          placeholder="27AAACA1234A1Z1"
+                          value={formData.gstin}
+                          onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>PAN Number</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono text-uppercase"
+                          placeholder="AAACA1234A"
+                          value={formData.pan}
+                          onChange={(e) => setFormData({ ...formData, pan: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Credit Limit (₹)</label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm font-mono"
+                          value={formData.creditLimit}
+                          onChange={(e) => setFormData({ ...formData, creditLimit: Number(e.target.value) })}
+                        />
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Credit Days (Payment Term)</label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm font-mono"
+                          value={formData.creditDays}
+                          onChange={(e) => setFormData({ ...formData, creditDays: Number(e.target.value) })}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="p-3 bg-light rounded border">
-                    <h6 className="fw-bold small mb-2 text-dark">Billing Address Details:</h6>
+                  <div className="card p-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      3. Billing & Dispatch Address
+                    </div>
                     <div className="row g-2">
                       <div className="col-12">
+                        <label className="form-label small mb-1 fw-semibold" style={{ fontSize: '0.75rem' }}>Premises / Street Address</label>
                         <input
                           type="text"
                           className="form-control form-control-sm"
@@ -608,35 +669,43 @@ export const Customers = () => {
                           }
                         />
                       </div>
-                      <div className="col-4">
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          placeholder="City"
-                          value={formData.billingAddress?.city || ''}
-                          onChange={(e) =>
+                      <div className="col-12 col-md-5">
+                        <StateSelect
+                          label="State"
+                          required
+                          size="sm"
+                          value={formData.billingAddress?.state}
+                          onChange={(state, stateCode) =>
                             setFormData({
                               ...formData,
-                              billingAddress: { ...formData.billingAddress, city: e.target.value }
+                              billingAddress: {
+                                ...formData.billingAddress,
+                                state,
+                                stateCode
+                              }
                             })
                           }
                         />
                       </div>
-                      <div className="col-4">
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          placeholder="State"
-                          value={formData.billingAddress?.state || ''}
-                          onChange={(e) =>
+                      <div className="col-12 col-md-4">
+                        <CitySelect
+                          label="City"
+                          size="sm"
+                          stateName={formData.billingAddress?.state}
+                          value={formData.billingAddress?.city}
+                          onChange={(city) =>
                             setFormData({
                               ...formData,
-                              billingAddress: { ...formData.billingAddress, state: e.target.value }
+                              billingAddress: {
+                                ...formData.billingAddress,
+                                city
+                              }
                             })
                           }
                         />
                       </div>
-                      <div className="col-4">
+                      <div className="col-12 col-md-3">
+                        <label className="form-label small mb-1 fw-semibold" style={{ fontSize: '0.75rem' }}>Pincode</label>
                         <input
                           type="text"
                           className="form-control form-control-sm font-mono"
@@ -654,11 +723,11 @@ export const Customers = () => {
                   </div>
                 </div>
 
-                <div className="modal-footer bg-white">
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowModal(false)}>
+                <div className="modal-footer bg-white d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 p-3 border-top">
+                  <button type="button" className="btn btn-outline-secondary btn-sm w-100 w-sm-auto text-nowrap" onClick={() => setShowModal(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary-zenith btn-sm">
+                  <button type="submit" className="btn btn-primary-zenith btn-sm w-100 w-sm-auto text-nowrap fw-bold">
                     {editingCustomer ? 'Update Customer' : 'Save Customer Profile'}
                   </button>
                 </div>
@@ -687,30 +756,54 @@ export const Customers = () => {
               </div>
 
               <div className="modal-body p-3 p-sm-4">
+                {/* 4-Metric Summary Strip */}
                 <div className="row g-2 mb-4">
-                  <div className="col-4">
+                  <div className="col-6 col-md-3">
                     <div className="p-3 bg-light rounded border text-center">
-                      <div className="small text-muted" style={{ fontSize: '0.75rem' }}>TOTAL INVOICES</div>
+                      <div className="small text-muted" style={{ fontSize: '0.75rem' }}>TOTAL INVOICED</div>
                       <div className="fw-bold fs-5 font-mono">{selectedStatement.invoices?.length || 0}</div>
+                      <div className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
+                        ₹{fmt(selectedStatement.invoices?.reduce((sum, i) => sum + (i.grandTotal || 0), 0))}
+                      </div>
                     </div>
                   </div>
-                  <div className="col-4">
+                  <div className="col-6 col-md-3">
                     <div className="p-3 bg-light rounded border text-center">
                       <div className="small text-muted" style={{ fontSize: '0.75rem' }}>PAYMENTS RECORDED</div>
                       <div className="fw-bold fs-5 text-success font-mono">{selectedStatement.payments?.length || 0}</div>
+                      <div className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
+                        ₹{fmt(selectedStatement.payments?.reduce((sum, p) => sum + (p.amount || 0), 0))}
+                      </div>
                     </div>
                   </div>
-                  <div className="col-4">
+                  <div className="col-6 col-md-3">
                     <div className="p-3 bg-light rounded border text-center">
-                      <div className="small text-muted" style={{ fontSize: '0.75rem' }}>OUTSTANDING BALANCE</div>
+                      <div className="small text-muted" style={{ fontSize: '0.75rem' }}>SALES RETURNS</div>
+                      <div className="fw-bold fs-5 text-purple font-mono" style={{ color: '#6b21a8' }}>
+                        {selectedStatement.salesReturns?.length || 0}
+                      </div>
+                      <div className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
+                        ₹{fmt(selectedStatement.salesReturns?.reduce((sum, r) => sum + (r.grandTotal || 0), 0))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-3">
+                    <div className="p-3 bg-light rounded border text-center">
+                      <div className="small text-muted" style={{ fontSize: '0.75rem' }}>OUTSTANDING DUE</div>
                       <div className="fw-bold fs-5 text-danger font-mono">
                         ₹{fmt(selectedStatement.customer?.currentBalance)}
+                      </div>
+                      <div className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
+                        Limit: ₹{fmt(selectedStatement.customer?.creditLimit)}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <h6 className="fw-bold small mb-2 text-dark">Invoice Billing History:</h6>
+                {/* 1. Invoice Billing History */}
+                <h6 className="fw-bold small mb-2 text-dark d-flex align-items-center gap-1">
+                  <i className="bi bi-receipt text-primary"></i> Invoice Billing History:
+                </h6>
                 <div className="table-responsive border rounded mb-4">
                   <table className="table table-sm align-middle mb-0">
                     <thead className="bg-light">
@@ -720,33 +813,115 @@ export const Customers = () => {
                         <th className="text-end">Grand Total (₹)</th>
                         <th className="text-end">Paid (₹)</th>
                         <th className="text-end">Balance Due (₹)</th>
-                        <th className="text-center">Status</th>
+                        <th className="text-center">Doc Status</th>
+                        <th className="text-center">Payment Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(!selectedStatement.invoices || selectedStatement.invoices.length === 0) ? (
                         <tr>
-                          <td colSpan="6" className="text-center text-muted py-3">No invoices billed yet</td>
+                          <td colSpan="7" className="text-center text-muted py-3">No invoices billed yet</td>
                         </tr>
                       ) : (
-                        selectedStatement.invoices.map((inv) => (
-                          <tr key={inv._id}>
-                            <td className="fw-bold font-mono text-primary">#{inv.invoiceNo}</td>
-                            <td>{new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</td>
-                            <td className="font-mono text-end">₹{fmt(inv.grandTotal)}</td>
-                            <td className="font-mono text-end text-success">₹{fmt(inv.paidAmount)}</td>
-                            <td className="font-mono text-end text-danger fw-bold">₹{fmt(inv.balanceAmount)}</td>
-                            <td className="text-center">
-                              <span className="badge bg-light text-dark border">{inv.paymentStatus?.toUpperCase()}</span>
-                            </td>
-                          </tr>
-                        ))
+                        selectedStatement.invoices.map((inv) => {
+                          let docBadge = 'badge-finalized';
+                          let docLabel = inv.status?.toUpperCase();
+                          if (inv.status === 'cancelled') {
+                            docBadge = 'badge-cancelled';
+                          } else if (inv.status === 'returned') {
+                            docBadge = 'badge-returned';
+                            docLabel = 'RETURNED';
+                          } else if (inv.status === 'partially_returned') {
+                            docBadge = 'badge-partial-return';
+                            docLabel = 'PARTIAL RETURN';
+                          }
+
+                          return (
+                            <tr key={inv._id}>
+                              <td className="fw-bold font-mono text-primary">#{inv.invoiceNo}</td>
+                              <td>{new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</td>
+                              <td className="font-mono text-end">₹{fmt(inv.grandTotal)}</td>
+                              <td className="font-mono text-end text-success">₹{fmt(inv.paidAmount)}</td>
+                              <td className="font-mono text-end text-danger fw-bold">₹{fmt(inv.balanceAmount)}</td>
+                              <td className="text-center">
+                                <span className={`badge-status ${docBadge}`} style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}>
+                                  {docLabel}
+                                </span>
+                                {inv.returnedAmount > 0 && (
+                                  <div className="text-danger font-mono" style={{ fontSize: '0.65rem' }}>
+                                    Ret: ₹{fmt(inv.returnedAmount)}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="text-center">
+                                <span
+                                  className={`badge-status ${
+                                    inv.paymentStatus === 'paid'
+                                      ? 'badge-paid'
+                                      : inv.paymentStatus === 'partially_paid'
+                                      ? 'badge-partial'
+                                      : 'badge-unpaid'
+                                  }`}
+                                  style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}
+                                >
+                                  {inv.paymentStatus?.toUpperCase()}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
                 </div>
 
-                <h6 className="fw-bold small mb-2 text-dark">Payment Collection Receipts:</h6>
+                {/* 2. Sales Returns History */}
+                {selectedStatement.salesReturns && selectedStatement.salesReturns.length > 0 && (
+                  <>
+                    <h6 className="fw-bold small mb-2 text-dark d-flex align-items-center gap-1">
+                      <i className="bi bi-arrow-counterclockwise text-danger"></i> Sales Returns & Credit Notes:
+                    </h6>
+                    <div className="table-responsive border rounded mb-4">
+                      <table className="table table-sm align-middle mb-0">
+                        <thead className="bg-light">
+                          <tr style={{ fontSize: '0.75rem' }}>
+                            <th>Return #</th>
+                            <th>Date</th>
+                            <th>Original Invoice</th>
+                            <th className="text-end">Return Value (₹)</th>
+                            <th>Reason</th>
+                            <th className="text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedStatement.salesReturns.map((ret) => (
+                            <tr key={ret._id}>
+                              <td className="fw-bold font-mono text-purple" style={{ color: '#6b21a8' }}>
+                                #{ret.returnNo}
+                              </td>
+                              <td>{new Date(ret.date).toLocaleDateString('en-IN')}</td>
+                              <td className="font-mono text-primary small">
+                                {ret.invoiceId?.invoiceNo ? `#${ret.invoiceId.invoiceNo}` : '-'}
+                              </td>
+                              <td className="font-mono text-end fw-bold text-danger">₹{fmt(ret.grandTotal)}</td>
+                              <td className="small text-muted text-capitalize">{ret.reason?.replace('_', ' ')}</td>
+                              <td className="text-center">
+                                <span className="badge-status badge-returned" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}>
+                                  PROCESSED
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+
+                {/* 3. Payment Receipts */}
+                <h6 className="fw-bold small mb-2 text-dark d-flex align-items-center gap-1">
+                  <i className="bi bi-wallet2 text-success"></i> Payment Collection Receipts:
+                </h6>
                 <div className="table-responsive border rounded">
                   <table className="table table-sm align-middle mb-0">
                     <thead className="bg-light">

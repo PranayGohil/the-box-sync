@@ -156,6 +156,14 @@ export const PosBilling = () => {
   // Selected customer object
   const selectedCustomerObj = customers.find((c) => c._id === selectedCustomerId);
 
+  // GST Determination & Breakdown
+  const supplierStateCode = activeBusiness?.stateCode || '27';
+  const placeOfSupplyStateCode = selectedCustomerObj?.billingAddress?.stateCode || supplierStateCode;
+  const isInterState = String(supplierStateCode).trim() !== String(placeOfSupplyStateCode).trim();
+  const cgstAmount = isInterState ? 0 : totalTax / 2;
+  const sgstAmount = isInterState ? 0 : totalTax / 2;
+  const igstAmount = isInterState ? totalTax : 0;
+
   // Format INR currency
   const fmtCurrency = (val) => {
     return Number(val || 0).toLocaleString('en-IN', {
@@ -204,23 +212,59 @@ export const PosBilling = () => {
     }
   };
 
+  // Compute deduplicated category list with live product counts
+  const categoryList = React.useMemo(() => {
+    const map = new Map();
+    // 1. Seed categories from options endpoint
+    (categories || []).forEach((cat) => {
+      if (cat && (cat._id || cat.id)) {
+        const id = String(cat._id || cat.id);
+        map.set(id, { id, name: cat.name || 'Category', count: 0 });
+      }
+    });
+
+    // 2. Discover categories directly on loaded products and accumulate counts
+    (products || []).forEach((p) => {
+      const catObj = p.categoryId;
+      const catId = catObj?._id ? String(catObj._id) : typeof catObj === 'string' ? catObj : null;
+      const catName = catObj?.name || (typeof catObj === 'string' ? catObj : null);
+
+      if (catId) {
+        if (map.has(catId)) {
+          map.get(catId).count += 1;
+        } else if (catName) {
+          map.set(catId, { id: catId, name: catName, count: 1 });
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  }, [categories, products]);
+
   const filteredProducts = products.filter((p) => {
+    const prodCatId = p.categoryId?._id ? String(p.categoryId._id) : typeof p.categoryId === 'string' ? p.categoryId : '';
+    const prodCatName = (p.categoryId?.name || (typeof p.categoryId === 'string' ? p.categoryId : '')).toLowerCase();
+    const selectedCatStr = String(selectedCategory);
+
     const matchesCat =
       selectedCategory === 'all' ||
-      p.categoryId?._id === selectedCategory ||
-      p.categoryId === selectedCategory;
+      prodCatId === selectedCatStr ||
+      prodCatName === selectedCatStr.toLowerCase();
+
     const matchesSearch =
       !searchQuery ||
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.barcode?.includes(searchQuery) ||
-      p.sku?.toLowerCase().includes(searchQuery.toLowerCase());
+      p.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.hsnSacCode?.includes(searchQuery);
+
     return matchesCat && matchesSearch;
   });
 
   return (
     <div className="pos-wrapper">
       {/* Mobile Segmented Navigation Tabs (<992px) */}
-      <div className="d-lg-none bg-white p-2 border-bottom sticky-top shadow-sm" style={{ zIndex: 1025 }}>
+      <div className="d-lg-none bg-white p-2 border-bottom shadow-sm flex-shrink-0" style={{ zIndex: 1025 }}>
         <div className="btn-group w-100 p-1 bg-light rounded-pill border">
           <button
             type="button"
@@ -300,28 +344,30 @@ export const PosBilling = () => {
           </div>
 
           {/* Category Filter Horizontal Scrollable Pills */}
-          <div className="category-scroll-pills mb-3">
-            <button
-              type="button"
-              className={`btn btn-sm rounded-pill px-3 text-nowrap ${
-                selectedCategory === 'all' ? 'btn-primary-zenith' : 'btn-outline-secondary bg-white'
-              }`}
-              onClick={() => setSelectedCategory('all')}
-            >
-              All Items ({products.length})
-            </button>
-            {categories.map((cat) => (
+          <div className="category-scroll-container mb-3">
+            <div className="category-scroll-pills">
               <button
-                key={cat._id}
                 type="button"
-                className={`btn btn-sm rounded-pill px-3 text-nowrap ${
-                  selectedCategory === cat._id ? 'btn-primary-zenith' : 'btn-outline-secondary bg-white'
-                }`}
-                onClick={() => setSelectedCategory(cat._id)}
+                className={`category-pill ${selectedCategory === 'all' ? 'active' : ''}`}
+                onClick={() => setSelectedCategory('all')}
               >
-                {cat.name}
+                <i className="bi bi-grid-fill"></i>
+                <span>All Items</span>
+                <span className="category-pill-badge">{products.length}</span>
               </button>
-            ))}
+              {categoryList.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`category-pill ${selectedCategory === cat.id ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(cat.id)}
+                >
+                  <i className="bi bi-tag-fill opacity-75"></i>
+                  <span>{cat.name}</span>
+                  {cat.count > 0 && <span className="category-pill-badge">{cat.count}</span>}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Products Grid */}
@@ -359,13 +405,12 @@ export const PosBilling = () => {
                           </span>
                         </div>
 
-                        <h6
-                          className="fw-bold mb-1 text-truncate"
+                        <div
+                          className="pos-product-title"
                           title={product.name}
-                          style={{ fontSize: '0.86rem', color: 'var(--text-main)' }}
                         >
                           {product.name}
-                        </h6>
+                        </div>
 
                         <div className="d-flex justify-content-between align-items-center">
                           <span
@@ -422,18 +467,26 @@ export const PosBilling = () => {
           {/* 1. Cart Header: Customer Selection & Tax Mode */}
           <div className="pos-cart-header">
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="d-flex align-items-center gap-2">
-                <span className="fw-bold text-dark fs-6">
-                  <i className="bi bi-cart3 text-primary me-1"></i> Current Cart
+              <div className="d-flex align-items-center gap-1 overflow-hidden">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary d-lg-none py-1 px-2 me-1 flex-shrink-0"
+                  onClick={() => setActiveMobileTab('catalog')}
+                  title="Back to Catalog"
+                >
+                  <i className="bi bi-arrow-left me-1"></i> Catalog
+                </button>
+                <span className="fw-bold text-dark text-truncate" style={{ fontSize: '0.95rem' }}>
+                  <i className="bi bi-cart3 text-primary me-1"></i> Cart
                 </span>
-                <span className="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-mono" style={{ fontSize: '0.72rem' }}>
-                  {cart.length} Item{cart.length !== 1 ? 's' : ''} ({totalCartUnits} Units)
+                <span className="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill font-mono flex-shrink-0" style={{ fontSize: '0.7rem' }}>
+                  {cart.length} ({totalCartUnits})
                 </span>
               </div>
               {cart.length > 0 && (
                 <button
                   type="button"
-                  className="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-bold small d-flex align-items-center gap-1"
+                  className="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-bold small d-flex align-items-center gap-1 flex-shrink-0"
                   onClick={clearCart}
                 >
                   <i className="bi bi-trash3"></i> Clear
@@ -574,10 +627,23 @@ export const PosBilling = () => {
                   <span>Taxable Subtotal ({totalCartUnits} units):</span>
                   <span className="fw-bold font-mono text-dark">₹{fmtCurrency(subtotal)}</span>
                 </div>
-                <div className="d-flex justify-content-between py-1 text-muted" style={{ fontSize: '0.8rem' }}>
-                  <span>Total GST Tax {isTaxInclusive ? '(Included)' : ''}:</span>
-                  <span className="fw-bold font-mono text-primary">+₹{fmtCurrency(totalTax)}</span>
-                </div>
+                {isInterState ? (
+                  <div className="d-flex justify-content-between py-1 text-muted" style={{ fontSize: '0.8rem' }}>
+                    <span>IGST {isTaxInclusive ? '(Included)' : ''}:</span>
+                    <span className="fw-bold font-mono text-primary">+₹{fmtCurrency(igstAmount)}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="d-flex justify-content-between py-1 text-muted" style={{ fontSize: '0.8rem' }}>
+                      <span>CGST {isTaxInclusive ? '(Included)' : ''}:</span>
+                      <span className="fw-bold font-mono text-primary">+₹{fmtCurrency(cgstAmount)}</span>
+                    </div>
+                    <div className="d-flex justify-content-between py-1 text-muted" style={{ fontSize: '0.8rem' }}>
+                      <span>SGST {isTaxInclusive ? '(Included)' : ''}:</span>
+                      <span className="fw-bold font-mono text-primary">+₹{fmtCurrency(sgstAmount)}</span>
+                    </div>
+                  </>
+                )}
                 {roundOff !== 0 && (
                   <div className="d-flex justify-content-between py-1 text-muted" style={{ fontSize: '0.75rem' }}>
                     <span>Round Off:</span>

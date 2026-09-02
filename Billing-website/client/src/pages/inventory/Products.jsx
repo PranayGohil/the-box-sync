@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const Products = () => {
   const { addToast } = useToast();
@@ -230,9 +231,27 @@ export const Products = () => {
             Manage SKU barcodes, pricing, HSN tax rates, and warehouse reorder thresholds
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0" onClick={handleOpenAddModal}>
-            <i className="bi bi-plus-lg"></i> Add New Product
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Products_Inventory"
+            title="Products & Inventory Catalog"
+            headers={['Product Name', 'SKU', 'Barcode', 'HSN/SAC', 'Category', 'Brand', 'Purchase Price (Rs)', 'Selling Price (Rs)', 'GST Rate %', 'Stock Qty', 'Unit']}
+            data={products.map((p) => [
+              p.name,
+              p.sku || '-',
+              p.barcode || '-',
+              p.hsnSacCode || '-',
+              p.categoryId?.name || '-',
+              p.brandId?.name || '-',
+              p.purchasePrice || 0,
+              p.sellingPrice || 0,
+              p.taxRate || 0,
+              p.currentStock || 0,
+              p.unitId?.shortName || p.unit || 'unit'
+            ])}
+          />
+          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={handleOpenAddModal}>
+            <i className="bi bi-plus-lg me-1"></i> Add New Product
           </button>
         </div>
       </div>
@@ -408,8 +427,14 @@ export const Products = () => {
                   </div>
                 </div>
 
-                {/* Stock & GST Badges */}
-                <div className="d-flex justify-content-between align-items-center mb-2">
+                {/* Price and GST strip */}
+                <div className="d-flex justify-content-between font-mono small text-muted py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.75rem' }}>
+                  <span>Cost: <strong className="text-dark">₹{fmt(prod.purchasePrice)}</strong></span>
+                  <span>GST: <strong className="text-dark">{prod.taxRate}%</strong></span>
+                </div>
+
+                {/* Stock & Action */}
+                <div className="d-flex justify-content-between align-items-center pt-2 border-top">
                   <span
                     className={`badge ${
                       isLow
@@ -420,20 +445,13 @@ export const Products = () => {
                   >
                     Stock: {prod.currentStock} {prod.unitId?.symbol || 'PCS'} {isLow && '(Low)'}
                   </span>
-                  <span className="badge bg-light text-dark border" style={{ fontSize: '0.72rem' }}>
-                    GST: {prod.taxRate}%
-                  </span>
-                </div>
-
-                {/* Action */}
-                <div className="invoice-card-mobile-actions">
                   <button
                     type="button"
-                    className="btn btn-outline-secondary btn-sm flex-fill py-1 d-flex align-items-center justify-content-center gap-1"
+                    className="btn btn-outline-secondary btn-sm py-1 px-3 d-flex align-items-center gap-1"
                     style={{ fontSize: '0.78rem' }}
                     onClick={() => handleOpenEditModal(prod)}
                   >
-                    <i className="bi bi-pencil"></i> Edit Product
+                    <i className="bi bi-pencil"></i> Edit
                   </button>
                 </div>
               </div>
@@ -446,167 +464,202 @@ export const Products = () => {
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)', zIndex: 1050 }}>
           <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content" style={{ borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-              <div className="modal-header bg-light" style={{ borderBottom: '1px solid #e2e8f0' }}>
-                <h5 className="modal-title fw-bold">
-                  <i className="bi bi-box-seam text-primary me-2"></i>
-                  {editingProduct ? 'Edit Product Details' : 'Add New Catalog Product'}
-                </h5>
+            <div className="modal-content" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' }}>
+              <div className="modal-header bg-light px-3 px-sm-4 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <div>
+                  <h5 className="modal-title fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i className="bi bi-box-seam text-primary"></i>
+                    {editingProduct ? 'Edit Catalog Product' : 'Add New Catalog Product'}
+                  </h5>
+                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
+                    {editingProduct ? `Updating SKU #${formData.sku || 'N/A'}` : 'Configure pricing, tax slabs, and warehouse reorder threshold'}
+                  </div>
+                </div>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
 
               <form onSubmit={handleSubmit}>
-                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc' }}>
-                  <div className="row g-3 mb-3">
-                    <div className="col-12">
-                      <label className="form-label">Product Name*</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="e.g. Sony WH-1000XM5 Headphones"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
+                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc', maxHeight: 'calc(80vh - 120px)' }}>
+                  {/* Section 1: Basic Info */}
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      1. Product Identification
                     </div>
-                    <div className="col-6 col-md-4">
-                      <label className="form-label">SKU Code</label>
-                      <input
-                        type="text"
-                        className="form-control font-mono"
-                        value={formData.sku}
-                        onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-6 col-md-4">
-                      <label className="form-label">Barcode (EAN-13)</label>
-                      <input
-                        type="text"
-                        className="form-control font-mono"
-                        value={formData.barcode}
-                        onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-12 col-md-4">
-                      <label className="form-label">HSN / SAC Code</label>
-                      <input
-                        type="text"
-                        className="form-control font-mono"
-                        value={formData.hsnSacCode}
-                        onChange={(e) => setFormData({ ...formData, hsnSacCode: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="row g-3 mb-3">
-                    <div className="col-12 col-sm-4">
-                      <label className="form-label">Category</label>
-                      <select
-                        className="form-select fw-semibold"
-                        value={formData.categoryId}
-                        onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                      >
-                        <option value="">-- Choose Category --</option>
-                        {categories.map((c) => (
-                          <option key={c._id} value={c._id}>{c.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-6 col-sm-4">
-                      <label className="form-label">Brand</label>
-                      <select
-                        className="form-select fw-semibold"
-                        value={formData.brandId}
-                        onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
-                      >
-                        <option value="">-- Choose Brand --</option>
-                        {brands.map((b) => (
-                          <option key={b._id} value={b._id}>{b.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-6 col-sm-4">
-                      <label className="form-label">Unit</label>
-                      <select
-                        className="form-select fw-semibold"
-                        value={formData.unitId}
-                        onChange={(e) => setFormData({ ...formData, unitId: e.target.value })}
-                      >
-                        <option value="">-- Unit (e.g. PCS) --</option>
-                        {units.map((u) => (
-                          <option key={u._id} value={u._id}>{u.name} ({u.symbol})</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="row g-3 mb-3">
-                    <div className="col-6 col-sm-4">
-                      <label className="form-label">Purchase Cost (₹)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-control font-mono"
-                        value={formData.purchasePrice}
-                        onChange={(e) => setFormData({ ...formData, purchasePrice: Number(e.target.value) })}
-                      />
-                    </div>
-                    <div className="col-6 col-sm-4">
-                      <label className="form-label">Selling Price (₹)*</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-control font-mono fw-bold text-primary"
-                        value={formData.sellingPrice}
-                        onChange={(e) => setFormData({ ...formData, sellingPrice: Number(e.target.value) })}
-                        required
-                      />
-                    </div>
-                    <div className="col-12 col-sm-4">
-                      <label className="form-label">GST Tax Rate*</label>
-                      <select
-                        className="form-select fw-semibold"
-                        value={formData.taxRate}
-                        onChange={(e) => setFormData({ ...formData, taxRate: Number(e.target.value) })}
-                      >
-                        <option value="0">0% (Nil)</option>
-                        <option value="5">5%</option>
-                        <option value="12">12%</option>
-                        <option value="18">18%</option>
-                        <option value="28">28%</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {!editingProduct && (
-                    <div className="row g-3 p-3 bg-light rounded border">
-                      <div className="col-6">
-                        <label className="form-label">Opening Stock Quantity</label>
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-12">
+                        <label className="form-label small fw-bold mb-1">Product Name*</label>
                         <input
-                          type="number"
-                          className="form-control font-mono fw-bold"
-                          value={formData.openingStock}
-                          onChange={(e) => setFormData({ ...formData, openingStock: Number(e.target.value) })}
+                          type="text"
+                          className="form-control form-control-sm fw-bold"
+                          placeholder="e.g. Sony WH-1000XM5 Wireless Headphones"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
                         />
                       </div>
-                      <div className="col-6">
-                        <label className="form-label">Min Stock Alert Threshold</label>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>SKU Code</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono"
+                          value={formData.sku}
+                          onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Barcode (EAN-13)</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono"
+                          value={formData.barcode}
+                          onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-12 col-md-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>HSN / SAC Code</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono"
+                          placeholder="e.g. 85183000"
+                          value={formData.hsnSacCode}
+                          onChange={(e) => setFormData({ ...formData, hsnSacCode: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2: Classification & Units */}
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      2. Classification & Measurement
+                    </div>
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-12 col-sm-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Category</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.categoryId}
+                          onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                        >
+                          <option value="">-- Choose Category --</option>
+                          {categories.map((c) => (
+                            <option key={c._id} value={c._id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-6 col-sm-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Brand</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.brandId}
+                          onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
+                        >
+                          <option value="">-- Choose Brand --</option>
+                          {brands.map((b) => (
+                            <option key={b._id} value={b._id}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-6 col-sm-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Measurement Unit</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.unitId}
+                          onChange={(e) => setFormData({ ...formData, unitId: e.target.value })}
+                        >
+                          <option value="">-- Unit (e.g. PCS) --</option>
+                          {units.map((u) => (
+                            <option key={u._id} value={u._id}>{u.name} ({u.symbol})</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Pricing & Tax */}
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      3. Pricing & GST Slab
+                    </div>
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-6 col-sm-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Purchase Cost (₹)</label>
                         <input
                           type="number"
-                          className="form-control font-mono"
-                          value={formData.minStockAlert}
-                          onChange={(e) => setFormData({ ...formData, minStockAlert: Number(e.target.value) })}
+                          step="0.01"
+                          className="form-control form-control-sm font-mono"
+                          value={formData.purchasePrice}
+                          onChange={(e) => setFormData({ ...formData, purchasePrice: Number(e.target.value) })}
                         />
+                      </div>
+                      <div className="col-6 col-sm-4">
+                        <label className="form-label small fw-bold mb-1" style={{ fontSize: '0.75rem' }}>Selling Price (₹)*</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="form-control form-control-sm font-mono fw-bold text-primary"
+                          value={formData.sellingPrice}
+                          onChange={(e) => setFormData({ ...formData, sellingPrice: Number(e.target.value) })}
+                          required
+                        />
+                      </div>
+                      <div className="col-12 col-sm-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>GST Tax Rate*</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.taxRate}
+                          onChange={(e) => setFormData({ ...formData, taxRate: Number(e.target.value) })}
+                        >
+                          <option value="0">0% (Nil)</option>
+                          <option value="5">5%</option>
+                          <option value="12">12%</option>
+                          <option value="18">18%</option>
+                          <option value="28">28%</option>
+                        </select>
+                      </div>
+                    </div>
+                    {formData.sellingPrice > 0 && formData.purchasePrice > 0 && (
+                      <div className="mt-2 text-muted small font-mono" style={{ fontSize: '0.72rem' }}>
+                        Gross Margin: <strong className="text-success">₹{(formData.sellingPrice - formData.purchasePrice).toFixed(2)}</strong> ({(((formData.sellingPrice - formData.purchasePrice) / formData.purchasePrice) * 100).toFixed(1)}%)
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section 4: Inventory Thresholds */}
+                  {!editingProduct && (
+                    <div className="card p-3 border bg-white rounded-3 shadow-none">
+                      <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                        4. Opening Stock & Reorder Threshold
+                      </div>
+                      <div className="row g-2 g-sm-3">
+                        <div className="col-6">
+                          <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Opening Stock Qty</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm font-mono fw-bold text-success"
+                            value={formData.openingStock}
+                            onChange={(e) => setFormData({ ...formData, openingStock: Number(e.target.value) })}
+                          />
+                        </div>
+                        <div className="col-6">
+                          <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Min Stock Alert</label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm font-mono text-danger fw-bold"
+                            value={formData.minStockAlert}
+                            onChange={(e) => setFormData({ ...formData, minStockAlert: Number(e.target.value) })}
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="modal-footer bg-white">
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowModal(false)}>
+                <div className="modal-footer bg-white d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 p-3 border-top">
+                  <button type="button" className="btn btn-outline-secondary btn-sm w-100 w-sm-auto text-nowrap" onClick={() => setShowModal(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary-zenith btn-sm">
+                  <button type="submit" className="btn btn-primary-zenith btn-sm w-100 w-sm-auto text-nowrap fw-bold">
                     {editingProduct ? 'Update Product' : 'Save Product & Add Inventory'}
                   </button>
                 </div>

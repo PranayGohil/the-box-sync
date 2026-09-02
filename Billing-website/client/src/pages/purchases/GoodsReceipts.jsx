@@ -130,9 +130,9 @@ export const GoodsReceipts = () => {
         <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
           <NavLink
             to="/purchases/grn/new"
-            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0"
+            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap text-center"
           >
-            <i className="bi bi-plus-lg"></i> Record Goods Receipt
+            <i className="bi bi-plus-lg me-1"></i> Record Goods Receipt
           </NavLink>
         </div>
       </div>
@@ -256,51 +256,56 @@ export const GoodsReceipts = () => {
             <div className="small">Click "Record Goods Receipt" to log your first shipment.</div>
           </div>
         ) : (
-          filteredGRNs.map((grn) => (
-            <div key={grn._id} className="invoice-card-mobile">
-              {/* Header */}
-              <div className="invoice-card-mobile-header">
-                <div>
-                  <span className="fw-bold font-mono text-primary fs-6">#{grn.grnNo}</span>
-                  <span className="text-muted ms-2" style={{ fontSize: '0.75rem' }}>
-                    {new Date(grn.date).toLocaleDateString('en-IN')}
+          filteredGRNs.map((grn) => {
+            const itemCount = grn.items?.length || 0;
+            const itemUnits = grn.items?.reduce((s, i) => s + (Number(i.quantity) || 0), 0) || 0;
+
+            return (
+              <div key={grn._id} className="invoice-card-mobile">
+                {/* Header */}
+                <div className="invoice-card-mobile-header">
+                  <div className="d-flex align-items-center gap-1">
+                    <i className="bi bi-box-seam text-primary"></i>
+                    <span className="fw-bold font-mono text-primary fs-6">#{grn.grnNo}</span>
+                    <span className="text-muted ms-1" style={{ fontSize: '0.72rem' }}>
+                      {new Date(grn.date).toLocaleDateString('en-IN')}
+                    </span>
+                  </div>
+                  <span className="badge-status badge-paid" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}>
+                    RECEIVED
                   </span>
                 </div>
-                <span className="badge-status badge-paid" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}>
-                  RECEIVED
-                </span>
-              </div>
 
-              {/* Supplier & Warehouse */}
-              <div className="mb-2">
-                <div className="fw-bold text-dark small">
-                  {grn.supplierId?.name || grn.supplierNameSnapshot || 'Vendor'}
-                </div>
-                <div className="d-flex align-items-center gap-2 mt-1 small text-muted">
-                  <span>
-                    <i className="bi bi-building me-1"></i>
+                {/* Supplier & Warehouse */}
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="fw-bold text-dark small text-truncate" style={{ maxWidth: '190px' }}>
+                    {grn.supplierId?.name || grn.supplierNameSnapshot || 'Vendor'}
+                  </div>
+                  <span className="badge bg-light text-dark border small" style={{ fontSize: '0.72rem' }}>
+                    <i className="bi bi-building me-1 text-muted"></i>
                     {grn.warehouseId?.name || 'Main Warehouse'}
                   </span>
-                  {grn.deliveryChallanNo && (
-                    <span className="font-mono text-dark fw-bold">
-                      Challan: #{grn.deliveryChallanNo}
-                    </span>
-                  )}
+                </div>
+
+                {/* Challan & Units Info */}
+                <div className="d-flex justify-content-between text-muted font-mono py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
+                  <span>{grn.deliveryChallanNo ? `Challan: #${grn.deliveryChallanNo}` : 'Direct Receipt'}</span>
+                  <span>Received: <strong className="text-dark">{itemUnits} Units</strong> ({itemCount} items)</span>
+                </div>
+
+                {/* Mobile Action */}
+                <div className="pt-2 border-top">
+                  <NavLink
+                    to="/purchases/bills/new"
+                    className="btn btn-outline-primary btn-sm w-100 py-1 d-flex align-items-center justify-content-center gap-1 fw-bold"
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    <i className="bi bi-receipt"></i> Create Purchase Bill
+                  </NavLink>
                 </div>
               </div>
-
-              {/* Mobile Action */}
-              <div className="invoice-card-mobile-actions">
-                <NavLink
-                  to="/purchases/bills/new"
-                  className="btn btn-outline-primary btn-sm flex-fill py-1 d-flex align-items-center justify-content-center gap-1"
-                  style={{ fontSize: '0.78rem' }}
-                >
-                  <i className="bi bi-receipt"></i> Create Purchase Bill
-                </NavLink>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

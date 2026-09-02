@@ -1,16 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import api from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { DocumentModal } from '../../components/DocumentModal';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const DeliveryChallans = () => {
+  const { activeBusiness } = useAuth();
   const { addToast } = useToast();
   const [challans, setChallans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [policyFilter, setPolicyFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [datePreset, setDatePreset] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedChallan, setSelectedChallan] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  const handleDatePresetChange = (preset) => {
+    setDatePreset(preset);
+    const now = new Date();
+    if (preset === 'today') {
+      const today = now.toISOString().split('T')[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (preset === 'this_month') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'last_month') {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+      const end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'this_fy') {
+      const startYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+      setStartDate(`${startYear}-04-01`);
+      setEndDate(`${startYear + 1}-03-31`);
+    } else {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setPolicyFilter('');
+    setStatusFilter('');
+    setDatePreset('');
+    setStartDate('');
+    setEndDate('');
+  };
+
+  const hasActiveFilters = Boolean(search || policyFilter || statusFilter || datePreset || startDate || endDate);
 
   const fetchChallans = async () => {
     setLoading(true);
@@ -45,7 +92,12 @@ export const DeliveryChallans = () => {
       c.vehicleNo?.toLowerCase().includes(search.toLowerCase());
     const matchesPolicy = !policyFilter || c.stockPolicyApplied === policyFilter;
     const matchesStatus = !statusFilter || c.status === statusFilter;
-    return matchesSearch && matchesPolicy && matchesStatus;
+    let matchesDate = true;
+    if (startDate && endDate) {
+      const cDate = new Date(c.date || c.createdAt).toISOString().split('T')[0];
+      matchesDate = cDate >= startDate && cDate <= endDate;
+    }
+    return matchesSearch && matchesPolicy && matchesStatus && matchesDate;
   });
 
   // Top Metrics Calculation
@@ -130,8 +182,19 @@ export const DeliveryChallans = () => {
       align: 'right',
       render: (row) => (
         <div className="d-flex justify-content-end gap-1">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary py-1 px-2 d-flex align-items-center gap-1"
+            title="View & Print Challan"
+            onClick={() => {
+              setSelectedChallan(row);
+              setShowPreviewModal(true);
+            }}
+          >
+            <i className="bi bi-eye"></i> View
+          </button>
           <NavLink
-            to="/sales/invoices/new"
+            to={`/sales/invoices/new?challanId=${row._id}`}
             className="btn btn-sm btn-outline-primary py-1 px-2 d-flex align-items-center gap-1"
             title="Generate GST Invoice"
           >
@@ -154,12 +217,28 @@ export const DeliveryChallans = () => {
             Issue goods dispatch documents, manage vehicle logistics, and sync inventory stock ledgers
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Delivery_Challans"
+            title="Delivery Challans & Dispatch Register"
+            subtitle={`${activeBusiness?.name || 'Business'} | Delivery Challans`}
+            headers={['Challan #', 'Date', 'Customer', 'Dispatch Mode', 'Vehicle No', 'E-Way Bill #', 'Items Count', 'Status']}
+            data={filteredChallans.map((c) => [
+              c.challanNo,
+              new Date(c.date).toLocaleDateString('en-IN'),
+              c.customerNameSnapshot || c.customerId?.name || 'Walk-in',
+              c.transportDetails?.mode?.toUpperCase() || 'ROAD',
+              c.transportDetails?.vehicleNo || '-',
+              c.transportDetails?.ewayBillNo || '-',
+              c.items?.length || 0,
+              c.status?.toUpperCase()
+            ])}
+          />
           <NavLink
             to="/sales/challans/new"
-            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0"
+            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap text-center"
           >
-            <i className="bi bi-plus-lg"></i> Create Delivery Challan
+            <i className="bi bi-plus-lg me-1"></i> Create Delivery Challan
           </NavLink>
         </div>
       </div>
@@ -226,7 +305,7 @@ export const DeliveryChallans = () => {
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
         <div className="row g-2">
-          <div className="col-12 col-md-5">
+          <div className="col-12 col-md-4">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
               <input
@@ -247,7 +326,7 @@ export const DeliveryChallans = () => {
             </div>
           </div>
 
-          <div className="col-6 col-md-3">
+          <div className="col-6 col-md-2">
             <select
               className="form-select form-select-sm fw-semibold"
               value={policyFilter}
@@ -260,7 +339,7 @@ export const DeliveryChallans = () => {
             </select>
           </div>
 
-          <div className="col-6 col-md-3">
+          <div className="col-6 col-md-2">
             <select
               className="form-select form-select-sm fw-semibold"
               value={statusFilter}
@@ -273,7 +352,22 @@ export const DeliveryChallans = () => {
             </select>
           </div>
 
-          <div className="col-12 col-md-1">
+          <div className="col-6 col-md-3">
+            <select
+              className="form-select form-select-sm fw-semibold"
+              value={datePreset}
+              onChange={(e) => handleDatePresetChange(e.target.value)}
+              title="Filter by Date Period"
+            >
+              <option value="">All Periods</option>
+              <option value="today">Today</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="this_fy">This Financial Year</option>
+            </select>
+          </div>
+
+          <div className="col-6 col-md-1">
             <button
               className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
               onClick={fetchChallans}
@@ -283,6 +377,41 @@ export const DeliveryChallans = () => {
             </button>
           </div>
         </div>
+
+        {/* Active Filter Chips & Actions Row */}
+        {hasActiveFilters && (
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
+            <div className="d-flex flex-wrap align-items-center gap-1">
+              <span className="small text-muted me-1">Active filters:</span>
+              {policyFilter && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Policy: {policyFilter}
+                  <i className="bi bi-x cursor-pointer" onClick={() => setPolicyFilter('')}></i>
+                </span>
+              )}
+              {statusFilter && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Status: {statusFilter}
+                  <i className="bi bi-x cursor-pointer" onClick={() => setStatusFilter('')}></i>
+                </span>
+              )}
+              {datePreset && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Period: {datePreset.replace('_', ' ')}
+                  <i className="bi bi-x cursor-pointer" onClick={() => handleDatePresetChange('')}></i>
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-link btn-sm text-danger p-0 text-decoration-none small fw-semibold ms-auto"
+              onClick={handleClearFilters}
+            >
+              <i className="bi bi-x-circle me-1"></i> Clear All
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 4. Desktop & Tablet View (DataTable, hidden on mobile <768px) */}
@@ -317,9 +446,17 @@ export const DeliveryChallans = () => {
               <div key={ch._id} className="invoice-card-mobile">
                 {/* Header Line */}
                 <div className="invoice-card-mobile-header">
-                  <div>
+                  <div
+                    className="cursor-pointer d-flex align-items-center gap-1"
+                    onClick={() => {
+                      setSelectedChallan(ch);
+                      setShowPreviewModal(true);
+                    }}
+                    title="Click to preview delivery challan"
+                  >
+                    <i className="bi bi-truck text-primary"></i>
                     <span className="fw-bold font-mono text-primary fs-6">#{ch.challanNo}</span>
-                    <span className="text-muted ms-2" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-muted ms-1" style={{ fontSize: '0.72rem' }}>
                       {new Date(ch.date).toLocaleDateString('en-IN')}
                     </span>
                   </div>
@@ -340,7 +477,7 @@ export const DeliveryChallans = () => {
                 {/* Customer Details */}
                 <div className="mb-2">
                   <div className="fw-bold text-dark small">{ch.customerNameSnapshot}</div>
-                  <div className="d-flex align-items-center gap-2 mt-1 small text-muted">
+                  <div className="d-flex align-items-center gap-2 mt-1 small text-muted flex-wrap" style={{ fontSize: '0.75rem' }}>
                     <span>
                       <i className="bi bi-building me-1"></i>
                       {ch.warehouseId?.name || 'Main Warehouse'}
@@ -355,10 +492,21 @@ export const DeliveryChallans = () => {
                 </div>
 
                 {/* Status & Action */}
-                <div className="invoice-card-mobile-actions">
+                <div className="d-flex gap-1 flex-wrap pt-2 border-top">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm py-1 px-2 fw-bold d-flex align-items-center justify-content-center gap-1"
+                    style={{ fontSize: '0.78rem' }}
+                    onClick={() => {
+                      setSelectedChallan(ch);
+                      setShowPreviewModal(true);
+                    }}
+                  >
+                    <i className="bi bi-eye"></i> View
+                  </button>
                   <NavLink
-                    to="/sales/invoices/new"
-                    className="btn btn-outline-primary btn-sm flex-fill py-1 d-flex align-items-center justify-content-center gap-1"
+                    to={`/sales/invoices/new?challanId=${ch._id}`}
+                    className="btn btn-outline-primary btn-sm flex-fill py-1 d-flex align-items-center justify-content-center gap-1 fw-bold"
                     style={{ fontSize: '0.78rem' }}
                   >
                     <i className="bi bi-receipt"></i> Generate GST Invoice
@@ -369,6 +517,15 @@ export const DeliveryChallans = () => {
           })
         )}
       </div>
+
+      {/* Document View & Print Modal */}
+      <DocumentModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        document={selectedChallan}
+        business={activeBusiness}
+        docType="delivery_challan"
+      />
     </div>
   );
 };

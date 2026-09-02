@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const TDSManagement = () => {
   const { addToast } = useToast();
@@ -56,6 +57,39 @@ export const TDSManagement = () => {
     const term = search.toLowerCase();
     return s.section?.toLowerCase().includes(term) || s.name?.toLowerCase().includes(term);
   });
+
+  const getExportData = () => {
+    if (activeTab === 'summary') {
+      return {
+        filename: 'TDS_26Q_Deductions_Log',
+        title: 'Form 26Q TDS Deductions Register',
+        headers: ['Date', 'Deductee Name', 'Voucher #', 'TDS Section', 'Gross Amount (Rs)', 'TDS Rate %', 'TDS Deducted (Rs)', 'Status'],
+        data: filteredTxns.map((t) => [
+          new Date(t.date).toLocaleDateString('en-IN'),
+          t.deducteeName,
+          t.voucherNo || '-',
+          t.sectionName || 'Sec 194',
+          t.grossAmount || 0,
+          t.tdsRate || 0,
+          t.tdsAmount || 0,
+          t.status === 'deposited_to_govt' ? 'DEPOSITED' : 'PENDING'
+        ])
+      };
+    }
+    return {
+      filename: 'TDS_Statutory_Sections_Master',
+      title: 'TDS Statutory Sections & Rates Master',
+      headers: ['Section Code', 'Section Name / Description', 'Rate %', 'Exemption Threshold (Rs)'],
+      data: filteredSections.map((s) => [
+        `Sec ${s.section}`,
+        s.name,
+        `${s.rate}%`,
+        s.thresholdLimit || 0
+      ])
+    };
+  };
+
+  const exportConfig = getExportData();
 
   const sectionColumns = [
     {
@@ -146,11 +180,17 @@ export const TDSManagement = () => {
             Track Section 194C, 194J, 194I vendor deductions, Challan 281 liabilities, and Form 26Q compliance
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <button className="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0" onClick={() => window.print()}>
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename={exportConfig.filename}
+            title={exportConfig.title}
+            headers={exportConfig.headers}
+            data={exportConfig.data}
+          />
+          <button className="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={() => window.print()}>
             <i className="bi bi-printer me-1"></i> Print / 26Q
           </button>
-          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0" onClick={fetchTDS}>
+          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={fetchTDS}>
             <i className="bi bi-arrow-clockwise me-1"></i> Refresh
           </button>
         </div>

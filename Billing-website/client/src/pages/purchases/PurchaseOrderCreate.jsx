@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ExtraChargesSection, computeExtraCharges } from '../../components/ExtraChargesSection';
 
 export const PurchaseOrderCreate = () => {
+  const { id } = useParams();
+  const isEdit = Boolean(id);
   const { activeBusiness } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
@@ -15,20 +18,30 @@ export const PurchaseOrderCreate = () => {
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState('');
+  const [poNo, setPoNo] = useState('');
   const [poDate, setPoDate] = useState(new Date().toISOString().split('T')[0]);
   const [expectedDate, setExpectedDate] = useState('');
   const [isTaxInclusive, setIsTaxInclusive] = useState(false);
   const [notes, setNotes] = useState('');
   const [terms, setTerms] = useState(activeBusiness?.settings?.termsAndConditions || '');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEdit);
 
   const [items, setItems] = useState([
     { productId: '', name: '', hsnSacCode: '', quantity: 1, rate: 0, taxRate: 18, unit: 'PCS', discountPercent: 0, total: 0 }
   ]);
 
+  const [extraCharges, setExtraCharges] = useState([]);
+
   useEffect(() => {
     fetchFormData();
   }, []);
+
+  useEffect(() => {
+    if (id) {
+      fetchPoDetails();
+    }
+  }, [id]);
 
   const fetchFormData = async () => {
     try {
@@ -53,12 +66,73 @@ export const PurchaseOrderCreate = () => {
         whList = [{ _id: 'main', name: 'Main Warehouse', isDefault: true }];
       }
       setWarehouses(whList);
-      if (whList.length > 0) {
+      if (whList.length > 0 && !selectedWarehouseId) {
         setSelectedWarehouseId(whList[0]._id);
       }
     } catch (err) {
       console.error(err);
-      addToast('Failed to load suppliers and products', 'error');
+      addToast('Failed to load form prerequisites', 'error');
+    }
+  };
+
+  const fetchPoDetails = async () => {
+    try {
+      setInitialLoading(true);
+      const res = await api.get(`/purchases/orders/${id}`);
+      if (res.data.success) {
+        const po = res.data.data;
+        if (['completed', 'cancelled'].includes(po.status)) {
+          addToast(`This purchase order is ${po.status} and cannot be edited.`, 'warning');
+          navigate('/purchases/orders');
+          return;
+        }
+        setPoNo(po.poNo || '');
+        const supId = po.supplierId?._id || po.supplierId;
+        setSelectedSupplierId(supId || '');
+        setSelectedSupplier(po.supplierId || null);
+        if (po.warehouseId) {
+          const wId = po.warehouseId?._id || po.warehouseId;
+          setSelectedWarehouseId(wId);
+        }
+        if (po.date) setPoDate(new Date(po.date).toISOString().split('T')[0]);
+        if (po.expectedDeliveryDate) setExpectedDate(new Date(po.expectedDeliveryDate).toISOString().split('T')[0]);
+        setIsTaxInclusive(Boolean(po.isTaxInclusive));
+        setTerms(po.terms || '');
+        setNotes(po.notes || '');
+
+        if (po.items && po.items.length > 0) {
+          setItems(
+            po.items.map((item) => ({
+              productId: item.productId?._id || item.productId || '',
+              name: item.name || '',
+              hsnSacCode: item.hsnSacCode || '',
+              quantity: item.quantity || 1,
+              rate: item.rate || 0,
+              taxRate: item.taxRate || 18,
+              unit: item.unit || 'PCS',
+              discountPercent: item.discountPercent || 0,
+              total: item.total || 0
+            }))
+          );
+        }
+
+        if (po.extraCharges && po.extraCharges.length > 0) {
+          setExtraCharges(
+            po.extraCharges.map((ch) => ({
+              name: ch.name || '',
+              rate: ch.rate || 0,
+              type: ch.type || 'amount',
+              isDeduction: Boolean(ch.isDeduction)
+            }))
+          );
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      addToast(err.response?.data?.message || 'Failed to load purchase order details', 'error');
+      navigate('/purchases/orders');
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -68,10 +142,11 @@ export const PurchaseOrderCreate = () => {
     const found = suppliers.find((s) => s._id === supId);
     setSelectedSupplier(found || null);
 
-    // Default expected delivery: 10 days from now
-    const d = new Date();
-    d.setDate(d.getDate() + 10);
-    setExpectedDate(d.toISOString().split('T')[0]);
+    if (!expectedDate) {
+      const d = new Date();
+      d.setDate(d.getDate() + (found?.creditDays || 15));
+      setExpectedDate(d.toISOString().split('T')[0]);
+    }
   };
 
   const handleItemChange = (index, field, value) => {
@@ -112,7 +187,27 @@ export const PurchaseOrderCreate = () => {
     setItems(items.filter((_, idx) => idx !== index));
   };
 
-  // Calculations
+  const addExtraCharge = () => {
+    setExtraCharges([
+      ...extraCharges,
+      { name: '', rate: 0, type: 'amount', isDeduction: false }
+    ]);
+  };
+
+  const removeExtraCharge = (index) => {
+    setExtraCharges(extraCharges.filter((_, idx) => idx !== index));
+  };
+
+  const handleExtraChargeChange = (index, field, value) => {
+    const updated = [...extraCharges];
+    const current = { ...updated[index], [field]: value };
+    if (field === 'name' && updated[index].isDeduction === undefined) {
+      current.isDeduction = /tds|discount|less|deduct/i.test(value);
+    }
+    updated[index] = current;
+    setExtraCharges(updated);
+  };
+
   const subtotal = items.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
   const totalTax = items.reduce((sum, item) => {
     const amt = Number(item.total) || 0;
@@ -125,9 +220,25 @@ export const PurchaseOrderCreate = () => {
     }
   }, 0);
 
-  const rawGrandTotal = isTaxInclusive ? subtotal : subtotal + totalTax;
+  const {
+    calculatedExtraCharges,
+    totalExtraAdditions,
+    totalExtraDeductions,
+    validExtraCharges
+  } = computeExtraCharges(extraCharges, subtotal);
+
+  const baseAmount = isTaxInclusive ? subtotal : subtotal + totalTax;
+  const rawGrandTotal = Math.max(0, baseAmount + totalExtraAdditions - totalExtraDeductions);
   const grandTotal = Math.round(rawGrandTotal);
   const roundOff = Number((grandTotal - rawGrandTotal).toFixed(2));
+
+  // GST Determination & Breakdown
+  const myStateCode = activeBusiness?.stateCode || '27';
+  const supplierStateCode = selectedSupplier?.address?.stateCode || selectedSupplier?.billingAddress?.stateCode || myStateCode;
+  const isInterState = String(myStateCode).trim() !== String(supplierStateCode).trim();
+  const cgstAmount = isInterState ? 0 : totalTax / 2;
+  const sgstAmount = isInterState ? 0 : totalTax / 2;
+  const igstAmount = isInterState ? totalTax : 0;
 
   const fmt = (val) => {
     return Number(val || 0).toLocaleString('en-IN', {
@@ -151,55 +262,76 @@ export const PurchaseOrderCreate = () => {
 
     setLoading(true);
     try {
-      const res = await api.post('/purchases/orders', {
+      const payload = {
         supplierId: selectedSupplierId,
         warehouseId: selectedWarehouseId && selectedWarehouseId !== 'main' ? selectedWarehouseId : undefined,
         date: poDate,
-        expectedDate: expectedDate || null,
+        expectedDeliveryDate: expectedDate || null,
         items: validItems,
+        extraCharges: validExtraCharges,
         isTaxInclusive,
         terms,
         notes
-      });
+      };
 
-      if (res.data.success) {
-        addToast('Purchase Order issued successfully!', 'success');
-        navigate('/purchases/orders');
+      if (isEdit) {
+        const res = await api.put(`/purchases/orders/${id}`, payload);
+        if (res.data.success) {
+          addToast('Purchase Order updated successfully!', 'success');
+          navigate('/purchases/orders');
+        }
+      } else {
+        const res = await api.post('/purchases/orders', payload);
+        if (res.data.success) {
+          addToast('Purchase Order issued successfully!', 'success');
+          navigate('/purchases/orders');
+        }
       }
     } catch (err) {
       console.error(err);
-      addToast(err.response?.data?.message || 'Failed to create purchase order', 'error');
+      addToast(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} purchase order`, 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  if (initialLoading) {
+    return (
+      <div className="card-zenith p-5 text-center my-4">
+        <div className="spinner-border text-primary" role="status"></div>
+        <div className="mt-2 text-muted small">Loading purchase order details...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="card-zenith p-3 p-sm-4 mb-5">
-      {/* Header */}
+    <div className="card-zenith p-3 p-sm-4 mb-4">
+      {/* 1. Page Header */}
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 pb-2 border-bottom">
         <div>
           <h4 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em' }}>
-            Create Purchase Order (PO)
+            {isEdit ? `Edit Purchase Order #${poNo}` : 'Create Purchase Order (PO)'}
           </h4>
           <p className="text-muted small mb-0">
-            Issue formal procurement order to vendor with warehouse delivery scheduling
+            {isEdit
+              ? 'Update procurement order items, extra charges, and terms'
+              : 'Issue formal procurement order to vendor with warehouse delivery scheduling'}
           </p>
         </div>
         <button
           type="button"
-          className="btn btn-outline-secondary btn-sm text-nowrap"
+          className="btn btn-outline-secondary btn-sm align-self-stretch align-self-sm-auto text-nowrap"
           onClick={() => navigate('/purchases/orders')}
         >
-          <i className="bi bi-arrow-left me-1"></i> Back to Purchase Orders
+          <i className="bi bi-arrow-left me-1"></i> Back to PO List
         </button>
       </div>
 
       <form onSubmit={handleSubmit}>
         {/* Supplier & Warehouse Info */}
-        <div className="row g-3 mb-4">
-          <div className="col-12 col-md-4">
-            <label className="form-label">Select Supplier*</label>
+        <div className="row g-2 g-sm-3 mb-3">
+          <div className="col-12 col-lg-4">
+            <label className="form-label small fw-bold mb-1">Select Supplier*</label>
             <select
               className="form-select fw-bold"
               value={selectedSupplierId}
@@ -209,21 +341,21 @@ export const PurchaseOrderCreate = () => {
               <option value="">-- Choose Supplier --</option>
               {suppliers.map((s) => (
                 <option key={s._id} value={s._id}>
-                  {s.name} {s.gstin ? `[GSTIN: ${s.gstin}]` : ''} - {s.billingAddress?.state || 'State'}
+                  {s.name} {s.gstin ? `[GSTIN: ${s.gstin}]` : ''} - {s.address?.city ? `${s.address.city}, ` : ''}{s.address?.state || s.billingAddress?.state || 'State'}
                 </option>
               ))}
             </select>
             {selectedSupplier && (
-              <div className="small text-muted mt-1">
-                State: <strong>{selectedSupplier.billingAddress?.state || 'N/A'}</strong> | Balance: <strong>₹{fmt(selectedSupplier.currentBalance)}</strong>
+              <div className="small text-muted mt-1 text-truncate" style={{ fontSize: '0.75rem' }}>
+                Location: <strong>{selectedSupplier.address?.city ? `${selectedSupplier.address.city}, ` : ''}{selectedSupplier.address?.state || selectedSupplier.billingAddress?.state || 'N/A'}</strong> | Balance: <strong>₹{fmt(selectedSupplier.currentBalance)}</strong>
               </div>
             )}
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Receiving Warehouse*</label>
+          <div className="col-12 col-sm-6 col-lg-3">
+            <label className="form-label small fw-bold mb-1">Receiving Warehouse*</label>
             <select
-              className="form-select fw-semibold"
+              className="form-select form-select-sm fw-semibold"
               value={selectedWarehouseId}
               onChange={(e) => setSelectedWarehouseId(e.target.value)}
               required
@@ -236,51 +368,52 @@ export const PurchaseOrderCreate = () => {
             </select>
           </div>
 
-          <div className="col-6 col-md-2">
-            <label className="form-label">PO Date*</label>
+          <div className="col-6 col-sm-3 col-lg-2">
+            <label className="form-label small fw-bold mb-1">PO Date*</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={poDate}
               onChange={(e) => setPoDate(e.target.value)}
               required
             />
           </div>
 
-          <div className="col-6 col-md-2">
-            <label className="form-label">Expected Delivery</label>
+          <div className="col-6 col-sm-3 col-lg-2">
+            <label className="form-label small fw-bold mb-1">Expected Delivery</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={expectedDate}
               onChange={(e) => setExpectedDate(e.target.value)}
             />
           </div>
 
-          <div className="col-6 col-md-1 d-flex align-items-end">
+          <div className="col-12 col-lg-1 d-flex align-items-end">
             <button
               type="button"
               className={`btn btn-sm w-100 fw-bold ${isTaxInclusive ? 'btn-success' : 'btn-outline-secondary bg-white'}`}
               onClick={() => setIsTaxInclusive(!isTaxInclusive)}
               title="Toggle Tax Inclusive / Exclusive"
-              style={{ height: '38px' }}
+              style={{ minHeight: '31px' }}
             >
-              {isTaxInclusive ? 'Incl.' : 'Excl.'}
+              {isTaxInclusive ? 'Tax Incl.' : 'Tax Excl.'}
             </button>
           </div>
         </div>
 
-        {/* Line Items Table */}
-        <div className="table-responsive mb-3 border rounded">
+        {/* 2. Line Items Desktop Table (>= 768px) */}
+        <div className="table-responsive mb-3 border rounded d-none d-md-block">
           <table className="table table-bordered align-middle mb-0">
             <thead className="bg-light">
               <tr style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                <th style={{ width: '35%' }}>Product / Description</th>
-                <th style={{ width: '12%' }}>HSN/SAC</th>
-                <th style={{ width: '10%' }}>Qty</th>
-                <th style={{ width: '15%' }}>Cost Rate (₹)</th>
-                <th style={{ width: '12%' }}>GST %</th>
-                <th style={{ width: '13%' }}>Amount (₹)</th>
+                <th style={{ width: '32%' }}>Product / Description</th>
+                <th style={{ width: '11%' }}>HSN/SAC</th>
+                <th style={{ width: '9%' }}>Qty</th>
+                <th style={{ width: '14%' }}>Cost Rate (₹)</th>
+                <th style={{ width: '9%' }}>Disc %</th>
+                <th style={{ width: '10%' }}>GST %</th>
+                <th style={{ width: '12%' }}>Amount (₹)</th>
                 <th style={{ width: '3%' }}></th>
               </tr>
             </thead>
@@ -339,6 +472,16 @@ export const PurchaseOrderCreate = () => {
                     />
                   </td>
                   <td>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="form-control form-control-sm font-mono text-center"
+                      value={item.discountPercent || ''}
+                      placeholder="0"
+                      onChange={(e) => handleItemChange(idx, 'discountPercent', e.target.value)}
+                    />
+                  </td>
+                  <td>
                     <select
                       className="form-select form-select-sm"
                       value={item.taxRate}
@@ -370,15 +513,138 @@ export const PurchaseOrderCreate = () => {
           </table>
         </div>
 
-        <button type="button" className="btn btn-outline-primary btn-sm mb-4" onClick={addItemRow}>
-          <i className="bi bi-plus-circle me-1"></i> Add Another Item
-        </button>
+        {/* 3. Mobile Line Items Card List (< 768px) */}
+        <div className="d-md-none mb-3">
+          {items.map((item, idx) => (
+            <div key={idx} className="card p-3 mb-2 bg-light border rounded" style={{ overflow: 'hidden' }}>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="badge bg-primary text-white font-mono" style={{ fontSize: '0.72rem' }}>Item #{idx + 1}</span>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="fw-bold font-mono text-dark" style={{ fontSize: '0.95rem' }}>₹{fmt(item.total)}</span>
+                  {items.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger py-0 px-2"
+                      onClick={() => removeItemRow(idx)}
+                      title="Remove Item"
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Product Select / Name */}
+              <div className="mb-2">
+                <label className="form-label small mb-1 fw-semibold" style={{ fontSize: '0.75rem' }}>Product / Description*</label>
+                <select
+                  className="form-select form-select-sm mb-1 fw-bold"
+                  value={item.productId}
+                  onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
+                >
+                  <option value="">-- Select Product --</option>
+                  {products.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} (In Stock: {p.currentStock} {p.unitId?.symbol || 'PCS'})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Item Description"
+                  value={item.name}
+                  onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Qty, Rate, Disc, GST %, HSN in grid */}
+              <div className="row g-2">
+                <div className="col-6">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>Quantity*</label>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm font-mono text-center fw-bold"
+                    value={item.quantity}
+                    min="1"
+                    onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>Cost Rate (₹)*</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-control form-control-sm font-mono text-end fw-bold"
+                    value={item.rate}
+                    onChange={(e) => handleItemChange(idx, 'rate', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-4">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>Disc %</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    className="form-control form-control-sm font-mono text-center"
+                    value={item.discountPercent || ''}
+                    placeholder="0"
+                    onChange={(e) => handleItemChange(idx, 'discountPercent', e.target.value)}
+                  />
+                </div>
+                <div className="col-4">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>GST %</label>
+                  <select
+                    className="form-select form-select-sm"
+                    value={item.taxRate}
+                    onChange={(e) => handleItemChange(idx, 'taxRate', Number(e.target.value))}
+                  >
+                    <option value="0">0%</option>
+                    <option value="5">5%</option>
+                    <option value="12">12%</option>
+                    <option value="18">18%</option>
+                    <option value="28">28%</option>
+                  </select>
+                </div>
+                <div className="col-4">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>HSN Code</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm font-mono"
+                    placeholder="HSN"
+                    value={item.hsnSacCode}
+                    onChange={(e) => handleItemChange(idx, 'hsnSacCode', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="d-flex flex-wrap gap-2 mb-4">
+          <button type="button" className="btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={addItemRow}>
+            <i className="bi bi-plus-circle me-1"></i> Add Another Item
+          </button>
+          <button type="button" className="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={addExtraCharge}>
+            <i className="bi bi-plus-slash-minus me-1"></i> Add Extra Field / Charge
+          </button>
+        </div>
+
+        <ExtraChargesSection
+          extraCharges={extraCharges}
+          calculatedExtraCharges={calculatedExtraCharges}
+          onAdd={addExtraCharge}
+          onRemove={removeExtraCharge}
+          onChange={handleExtraChargeChange}
+        />
 
         {/* Bottom Section: Terms, Notes & Summary Calculation */}
-        <div className="row g-4">
+        <div className="row g-3 g-md-4">
           <div className="col-12 col-md-6">
             <div className="mb-3">
-              <label className="form-label">Delivery Terms & Payment Conditions</label>
+              <label className="form-label small fw-bold mb-1">Delivery Terms & Payment Conditions</label>
               <textarea
                 className="form-control"
                 rows="3"
@@ -388,7 +654,7 @@ export const PurchaseOrderCreate = () => {
               ></textarea>
             </div>
             <div className="mb-3">
-              <label className="form-label">Internal Procurement Notes</label>
+              <label className="form-label small fw-bold mb-1">Internal Procurement Notes</label>
               <textarea
                 className="form-control"
                 rows="2"
@@ -401,15 +667,44 @@ export const PurchaseOrderCreate = () => {
 
           {/* Right Calculations Totals Card */}
           <div className="col-12 col-md-6">
-            <div className="card p-3 bg-light border">
+            <div className="card p-3 p-sm-4 bg-light border rounded shadow-sm" style={{ overflow: 'hidden' }}>
               <div className="d-flex justify-content-between py-1">
                 <span className="text-muted">Taxable Subtotal:</span>
                 <span className="fw-bold font-mono text-dark">₹{fmt(subtotal)}</span>
               </div>
-              <div className="d-flex justify-content-between py-1">
-                <span className="text-muted">Estimated Inward GST:</span>
-                <span className="fw-bold font-mono text-primary">+₹{fmt(totalTax)}</span>
-              </div>
+
+              {/* GST Breakdown */}
+              {isInterState ? (
+                <div className="d-flex justify-content-between py-1">
+                  <span className="text-muted d-flex align-items-center gap-1">
+                    <span>Estimated IGST:</span>
+                    <span className="badge bg-primary-subtle text-primary border border-primary-subtle" style={{ fontSize: '0.65rem' }}>Inter-State</span>
+                  </span>
+                  <span className="fw-bold font-mono text-primary">+₹{fmt(igstAmount)}</span>
+                </div>
+              ) : (
+                <>
+                  <div className="d-flex justify-content-between py-1">
+                    <span className="text-muted d-flex align-items-center gap-1">
+                      <span>Estimated CGST:</span>
+                      <span className="badge bg-secondary-subtle text-secondary" style={{ fontSize: '0.65rem' }}>Intra-State</span>
+                    </span>
+                    <span className="fw-bold font-mono text-primary">+₹{fmt(cgstAmount)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between py-1">
+                    <span className="text-muted">Estimated SGST:</span>
+                    <span className="fw-bold font-mono text-primary">+₹{fmt(sgstAmount)}</span>
+                  </div>
+                </>
+              )}
+              {calculatedExtraCharges.filter((c) => c.name?.trim()).map((c, i) => (
+                <div key={i} className="d-flex justify-content-between py-1 small">
+                  <span className="text-muted">{c.name} {c.type === 'percentage' ? `(${c.rate}%)` : ''}:</span>
+                  <span className={`font-mono fw-semibold ${c.isDeduction ? 'text-danger' : 'text-success'}`}>
+                    {c.isDeduction ? '-' : '+'}₹{fmt(c.amount)}
+                  </span>
+                </div>
+              ))}
               {roundOff !== 0 && (
                 <div className="d-flex justify-content-between py-1">
                   <span className="text-muted">Round Off:</span>
@@ -426,7 +721,13 @@ export const PurchaseOrderCreate = () => {
                 className="btn btn-primary-zenith py-2 mt-3 w-100 justify-content-center fw-bold fs-6 shadow-sm"
                 disabled={loading}
               >
-                {loading ? 'Issuing Purchase Order...' : 'Confirm & Issue Purchase Order'}
+                {loading
+                  ? isEdit
+                    ? 'Updating Purchase Order...'
+                    : 'Issuing Purchase Order...'
+                  : isEdit
+                  ? 'Update Purchase Order'
+                  : 'Confirm & Issue Purchase Order'}
               </button>
             </div>
           </div>

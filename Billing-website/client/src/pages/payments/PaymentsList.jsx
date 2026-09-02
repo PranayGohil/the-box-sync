@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const PaymentsList = () => {
   const { addToast } = useToast();
@@ -217,18 +218,35 @@ export const PaymentsList = () => {
             Record customer receipts, vendor supplier disbursements, and track double-entry cash flow
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Payments_Register"
+            title="Payment Receipts & Outward Vouchers"
+            headers={['Payment #', 'Date', 'Type', 'Party Name', 'Party Type', 'Amount (Rs)', 'Unallocated (Rs)', 'Payment Mode', 'Reference No', 'Status']}
+            data={filteredPayments.map((p) => [
+              p.paymentNo,
+              new Date(p.date).toLocaleDateString('en-IN'),
+              p.paymentType === 'in' ? 'RECEIPT (IN)' : 'PAYMENT (OUT)',
+              p.partyNameSnapshot || p.partyId?.name || 'Party',
+              p.partyType?.toUpperCase() || '-',
+              p.amount || 0,
+              p.unallocatedAmount || 0,
+              p.paymentMode?.toUpperCase() || 'BANK',
+              p.referenceNo || '-',
+              p.status?.toUpperCase()
+            ])}
+          />
           <button
-            className="btn btn-success btn-sm flex-fill flex-sm-grow-0"
+            className="btn btn-success btn-sm flex-fill flex-sm-grow-0 text-nowrap"
             onClick={() => handleOpenModal('in')}
           >
-            <i className="bi bi-arrow-down-left-circle me-1"></i> Record Payment In
+            <i className="bi bi-arrow-down-left-circle me-1"></i> + Payment In
           </button>
           <button
-            className="btn btn-danger btn-sm flex-fill flex-sm-grow-0"
+            className="btn btn-danger btn-sm flex-fill flex-sm-grow-0 text-nowrap"
             onClick={() => handleOpenModal('out')}
           >
-            <i className="bi bi-arrow-up-right-circle me-1"></i> Record Payment Out
+            <i className="bi bi-arrow-up-right-circle me-1"></i> - Payment Out
           </button>
         </div>
       </div>
@@ -294,7 +312,7 @@ export const PaymentsList = () => {
 
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
-        <div className="row g-2">
+        <div className="row g-2 align-items-center">
           <div className="col-12 col-md-5">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
@@ -400,7 +418,7 @@ export const PaymentsList = () => {
                 {/* Party & Mode */}
                 <div className="mb-2">
                   <div className="fw-bold text-dark small">{pm.partyNameSnapshot}</div>
-                  <div className="d-flex align-items-center gap-2 mt-1">
+                  <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
                     <span className="badge bg-light text-dark border text-uppercase" style={{ fontSize: '0.68rem' }}>
                       {pm.paymentMode}
                     </span>
@@ -423,121 +441,177 @@ export const PaymentsList = () => {
       {/* Record Payment Modal */}
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-              <div className="modal-header bg-light" style={{ borderBottom: '1px solid #e2e8f0' }}>
-                <h5 className="modal-title fw-bold">
-                  <i className={`bi ${formData.paymentType === 'in' ? 'bi-arrow-down-left-circle text-success' : 'bi-arrow-up-right-circle text-danger'} me-2`}></i>
-                  {formData.paymentType === 'in' ? 'Record Payment In (Receipt)' : 'Record Payment Out (Disbursement)'}
-                </h5>
+          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' }}>
+              <div className="modal-header bg-light px-3 px-sm-4 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <div>
+                  <h5 className="modal-title fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i className={`bi ${formData.paymentType === 'in' ? 'bi-arrow-down-left-circle text-success' : 'bi-arrow-up-right-circle text-danger'}`}></i>
+                    {formData.paymentType === 'in' ? 'Record Payment In (Receipt)' : 'Record Payment Out (Disbursement)'}
+                  </h5>
+                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
+                    {formData.paymentType === 'in' ? 'Customer receivable collection receipt' : 'Vendor supplier payable disbursement voucher'}
+                  </div>
+                </div>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
 
               <form onSubmit={handleCreatePayment}>
-                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc' }}>
-                  {/* Select Customer / Supplier */}
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">
-                      {formData.paymentType === 'in' ? 'Select Customer (Payee)*' : 'Select Supplier (Vendor)*'}
-                    </label>
-                    <select
-                      className="form-select fw-bold"
-                      value={formData.partyId}
-                      onChange={(e) => setFormData({ ...formData, partyId: e.target.value })}
-                      required
-                    >
-                      <option value="">
-                        {formData.paymentType === 'in' ? '-- Choose Customer --' : '-- Choose Supplier --'}
-                      </option>
-                      {formData.paymentType === 'in'
-                        ? customers.map((c) => (
-                            <option key={c._id} value={c._id}>
-                              {c.name} {c.businessName ? `(${c.businessName})` : ''} - Due: ₹{fmt(c.currentBalance)}
-                            </option>
-                          ))
-                        : suppliers.map((s) => (
-                            <option key={s._id} value={s._id}>
-                              {s.name} {s.companyName ? `(${s.companyName})` : ''} - Payable: ₹{fmt(s.currentBalance)}
-                            </option>
-                          ))}
-                    </select>
-                  </div>
-
-                  {/* Amount & Mode */}
-                  <div className="row g-3 mb-3">
-                    <div className="col-6">
-                      <label className="form-label fw-bold">Payment Amount (₹)*</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-control font-mono fw-bold text-primary"
-                        placeholder="0.00"
-                        value={formData.amount}
-                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                        required
-                      />
+                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc', maxHeight: 'calc(80vh - 120px)' }}>
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      1. Party & Settlement Amount
                     </div>
-                    <div className="col-6">
-                      <label className="form-label fw-bold">Payment Mode*</label>
+
+                    {/* Select Customer / Supplier */}
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold mb-1">
+                        {formData.paymentType === 'in' ? 'Select Customer (Payee)*' : 'Select Supplier (Vendor)*'}
+                      </label>
                       <select
-                        className="form-select fw-semibold"
-                        value={formData.paymentMode}
-                        onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
+                        className="form-select form-select-sm fw-bold"
+                        value={formData.partyId}
+                        onChange={(e) => setFormData({ ...formData, partyId: e.target.value })}
                         required
                       >
-                        <option value="bank">Bank Transfer / NEFT</option>
-                        <option value="upi">UPI / QR</option>
-                        <option value="cash">Cash</option>
-                        <option value="cheque">Cheque</option>
-                        <option value="card">Card</option>
+                        <option value="">
+                          {formData.paymentType === 'in' ? '-- Choose Customer --' : '-- Choose Supplier --'}
+                        </option>
+                        {formData.paymentType === 'in'
+                          ? customers.map((c) => (
+                              <option key={c._id} value={c._id}>
+                                {c.name} {c.businessName ? `(${c.businessName})` : ''} - Due: ₹{fmt(c.currentBalance)}
+                              </option>
+                            ))
+                          : suppliers.map((s) => (
+                              <option key={s._id} value={s._id}>
+                                {s.name} {s.companyName ? `(${s.companyName})` : ''} - Payable: ₹{fmt(s.currentBalance)}
+                              </option>
+                            ))}
                       </select>
                     </div>
+
+                    {/* Party Balance Callout */}
+                    {(() => {
+                      const selectedParty = formData.paymentType === 'in'
+                        ? customers.find((c) => c._id === formData.partyId)
+                        : suppliers.find((s) => s._id === formData.partyId);
+
+                      if (selectedParty) {
+                        const currentBal = selectedParty.currentBalance || 0;
+                        const payAmt = Number(formData.amount) || 0;
+                        const projectedBal = Math.max(0, currentBal - payAmt);
+
+                        return (
+                          <div className="p-2 mb-3 bg-light rounded border small font-mono d-flex justify-content-between align-items-center flex-wrap gap-2" style={{ fontSize: '0.75rem' }}>
+                            <div>
+                              <span className="text-muted">Current Balance:</span>{' '}
+                              <strong className={currentBal > 0 ? 'text-danger' : 'text-success'}>₹{fmt(currentBal)}</strong>
+                            </div>
+                            {currentBal > 0 && (
+                              <button
+                                type="button"
+                                className="btn btn-xs btn-outline-primary py-0 px-2 fw-semibold"
+                                style={{ fontSize: '0.72rem' }}
+                                onClick={() => setFormData({ ...formData, amount: currentBal })}
+                              >
+                                Settle Full (₹{fmt(currentBal)})
+                              </button>
+                            )}
+                            {payAmt > 0 && (
+                              <div className="w-100 pt-1 border-top text-muted d-flex justify-content-between">
+                                <span>Projected Balance:</span>
+                                <strong className="text-dark">₹{fmt(projectedBal)}</strong>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Amount & Mode */}
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-6">
+                        <label className="form-label small fw-bold mb-1">Payment Amount (₹)*</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="form-control form-control-sm font-mono fw-bold text-primary"
+                          placeholder="0.00"
+                          value={formData.amount}
+                          onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label small fw-bold mb-1">Payment Mode*</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.paymentMode}
+                          onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
+                          required
+                        >
+                          <option value="bank">Bank Transfer / NEFT</option>
+                          <option value="upi">UPI / QR</option>
+                          <option value="cash">Cash</option>
+                          <option value="cheque">Cheque</option>
+                          <option value="card">Card</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Date & Ref */}
-                  <div className="row g-3 mb-3">
-                    <div className="col-6">
-                      <label className="form-label">Transaction Date*</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={formData.date}
-                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                        required
-                      />
+                  <div className="card p-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      2. Date & References
                     </div>
-                    <div className="col-6">
-                      <label className="form-label">Reference / UTR #</label>
-                      <input
-                        type="text"
-                        className="form-control font-mono"
-                        placeholder="e.g. UTR-98214"
-                        value={formData.referenceNo}
-                        onChange={(e) => setFormData({ ...formData, referenceNo: e.target.value })}
-                      />
-                    </div>
-                  </div>
 
-                  {/* Notes */}
-                  <div className="mb-2">
-                    <label className="form-label">Remarks / Notes</label>
-                    <textarea
-                      className="form-control"
-                      rows="2"
-                      placeholder="Payment settlement details, invoice references..."
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    ></textarea>
+                    {/* Date & Ref */}
+                    <div className="row g-2 g-sm-3 mb-3">
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Transaction Date*</label>
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          value={formData.date}
+                          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Reference / UTR #</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono"
+                          placeholder="e.g. UTR-98214"
+                          value={formData.referenceNo}
+                          onChange={(e) => setFormData({ ...formData, referenceNo: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Remarks / Notes</label>
+                      <textarea
+                        className="form-control form-control-sm"
+                        rows="2"
+                        placeholder="Payment settlement details, invoice references..."
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      ></textarea>
+                    </div>
                   </div>
                 </div>
 
-                <div className="modal-footer bg-white">
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowModal(false)}>
+                <div className="modal-footer bg-white d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 p-3 border-top">
+                  <button type="button" className="btn btn-outline-secondary btn-sm w-100 w-sm-auto text-nowrap" onClick={() => setShowModal(false)}>
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className={`btn btn-sm fw-bold ${formData.paymentType === 'in' ? 'btn-success' : 'btn-danger'}`}
+                    className={`btn btn-sm w-100 w-sm-auto text-nowrap fw-bold ${formData.paymentType === 'in' ? 'btn-success' : 'btn-danger'}`}
                     disabled={submitting}
                   >
                     {submitting

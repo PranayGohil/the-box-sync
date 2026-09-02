@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { StateSelect, CitySelect } from '../../components/StateCitySelect';
 
 export const BusinessSettings = () => {
   const { refreshProfile } = useAuth();
@@ -12,6 +13,7 @@ export const BusinessSettings = () => {
   const [formData, setFormData] = useState({
     name: '',
     legalName: '',
+    logoUrl: '',
     gstin: '',
     pan: '',
     phone: '',
@@ -19,6 +21,7 @@ export const BusinessSettings = () => {
     address: '',
     city: '',
     state: '',
+    stateCode: '27',
     pincode: '',
     upiId: '',
     bankDetails: {
@@ -34,6 +37,26 @@ export const BusinessSettings = () => {
     }
   });
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      addToast('Logo image must be under 2MB', 'warning');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      setFormData((prev) => ({
+        ...prev,
+        logoUrl: uploadEvent.target.result
+      }));
+      addToast('Logo loaded! Click "Save Settings" to apply.', 'info');
+    };
+    reader.readAsDataURL(file);
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       setFetching(true);
@@ -44,6 +67,7 @@ export const BusinessSettings = () => {
           setFormData({
             name: biz.name || '',
             legalName: biz.legalName || '',
+            logoUrl: biz.logoUrl || '',
             gstin: biz.gstin || '',
             pan: biz.pan || '',
             phone: biz.phone || '',
@@ -51,6 +75,7 @@ export const BusinessSettings = () => {
             address: biz.address || '',
             city: biz.city || '',
             state: biz.state || '',
+            stateCode: biz.stateCode || '27',
             pincode: biz.pincode || '',
             upiId: biz.upiId || '',
             bankDetails: biz.bankDetails || { bankName: '', accountNo: '', ifsc: '', branch: '' },
@@ -99,7 +124,7 @@ export const BusinessSettings = () => {
           <button
             type="submit"
             form="business-settings-form"
-            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 d-flex align-items-center justify-content-center gap-2"
+            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 d-flex align-items-center justify-content-center gap-2 text-nowrap fw-bold"
             disabled={loading}
           >
             {loading ? (
@@ -139,7 +164,7 @@ export const BusinessSettings = () => {
             <div className="overflow-hidden">
               <div className="text-muted small text-truncate" style={{ fontSize: '0.72rem' }}>BANK ACCOUNT</div>
               <div className="fw-bold font-mono text-truncate text-primary" style={{ fontSize: '0.95rem' }}>
-                {formData.bankDetails?.bankName || 'NOT CONFIGURED'}
+                {formData.bankDetails?.bankName || 'NOT SET'}
               </div>
             </div>
           </div>
@@ -181,17 +206,76 @@ export const BusinessSettings = () => {
         </div>
       ) : (
         <form id="business-settings-form" onSubmit={handleSubmit}>
+          {/* Section 0: Brand Logo */}
+          <div className="card-zenith p-3 p-sm-4 mb-3">
+            <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+              <i className="bi bi-image"></i> Business Brand Logo
+            </h6>
+            <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
+              <div
+                className="d-flex align-items-center justify-content-center border rounded p-2 bg-light shadow-sm flex-shrink-0"
+                style={{ width: '130px', height: '80px', overflow: 'hidden' }}
+              >
+                {formData.logoUrl ? (
+                  <img
+                    src={formData.logoUrl}
+                    alt="Brand Logo"
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                  />
+                ) : (
+                  <div className="text-center text-muted">
+                    <i className="bi bi-building fs-3 d-block"></i>
+                    <span style={{ fontSize: '0.68rem' }}>No Logo Set</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-grow-1 w-100">
+                <div className="d-flex flex-wrap gap-2 mb-2">
+                  <label className="btn btn-outline-primary btn-sm mb-0 cursor-pointer d-flex align-items-center gap-1">
+                    <i className="bi bi-upload"></i> Upload Logo Image
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/svg+xml, image/webp"
+                      className="d-none"
+                      onChange={handleLogoChange}
+                    />
+                  </label>
+                  {formData.logoUrl && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1"
+                      onClick={() => setFormData((prev) => ({ ...prev, logoUrl: '' }))}
+                    >
+                      <i className="bi bi-trash"></i> Remove Logo
+                    </button>
+                  )}
+                </div>
+                <div className="small text-muted mb-2" style={{ fontSize: '0.75rem' }}>
+                  Recommended: PNG or SVG with transparent background (Max 2MB). Printed on Invoices & Quotations.
+                </div>
+                <input
+                  type="url"
+                  className="form-control form-control-sm font-mono"
+                  placeholder="Or paste external logo image URL (https://...)"
+                  value={formData.logoUrl}
+                  onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Section 1: General Information */}
-          <div className="card-zenith p-3 p-sm-4 mb-4">
+          <div className="card-zenith p-3 p-sm-4 mb-3">
             <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
               <i className="bi bi-building"></i> General Entity Information
             </h6>
-            <div className="row g-3">
+            <div className="row g-2 g-sm-3">
               <div className="col-12 col-md-6">
-                <label className="form-label">Trade / Display Name*</label>
+                <label className="form-label small fw-bold mb-1">Trade / Display Name*</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm fw-semibold"
                   placeholder="Brand / Shop Name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -199,20 +283,20 @@ export const BusinessSettings = () => {
                 />
               </div>
               <div className="col-12 col-md-6">
-                <label className="form-label">Legal Name (As registered with GST)</label>
+                <label className="form-label small fw-bold mb-1">Legal Name (As registered with GST)</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   placeholder="Official entity name"
                   value={formData.legalName}
                   onChange={(e) => setFormData({ ...formData, legalName: e.target.value })}
                 />
               </div>
               <div className="col-6 col-md-4">
-                <label className="form-label">GSTIN*</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>GSTIN*</label>
                 <input
                   type="text"
-                  className="form-control font-mono fw-bold text-primary"
+                  className="form-control form-control-sm font-mono fw-bold text-primary text-uppercase"
                   placeholder="27AAAAA1111A1Z1"
                   value={formData.gstin}
                   onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
@@ -220,40 +304,40 @@ export const BusinessSettings = () => {
                 />
               </div>
               <div className="col-6 col-md-4">
-                <label className="form-label">PAN Number</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>PAN Number</label>
                 <input
                   type="text"
-                  className="form-control font-mono"
+                  className="form-control form-control-sm font-mono text-uppercase"
                   placeholder="AAAAA1111A"
                   value={formData.pan}
                   onChange={(e) => setFormData({ ...formData, pan: e.target.value })}
                 />
               </div>
               <div className="col-12 col-md-4">
-                <label className="form-label">UPI ID (For Invoice Payment QR)</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>UPI ID (For Invoice Payment QR)</label>
                 <input
                   type="text"
-                  className="form-control font-mono text-success fw-bold"
+                  className="form-control form-control-sm font-mono text-success fw-bold"
                   placeholder="e.g. yourname@hdfcbank"
                   value={formData.upiId}
                   onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
                 />
               </div>
               <div className="col-6">
-                <label className="form-label">Official Phone</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Official Phone</label>
                 <input
                   type="tel"
-                  className="form-control font-mono"
+                  className="form-control form-control-sm font-mono"
                   placeholder="+91 98765 43210"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
               </div>
               <div className="col-6">
-                <label className="form-label">Official Email</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Official Email</label>
                 <input
                   type="email"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   placeholder="billing@company.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -263,46 +347,43 @@ export const BusinessSettings = () => {
           </div>
 
           {/* Section 2: Address Details */}
-          <div className="card-zenith p-3 p-sm-4 mb-4">
+          <div className="card-zenith p-3 p-sm-4 mb-3">
             <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
               <i className="bi bi-geo-alt"></i> Registered Business Address
             </h6>
-            <div className="row g-3">
+            <div className="row g-2 g-sm-3">
               <div className="col-12">
-                <label className="form-label">Premises / Street Address</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Premises / Street Address</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   placeholder="Plot/Shop No, Industrial Estate, Locality"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 />
               </div>
-              <div className="col-4">
-                <label className="form-label">City</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Pune"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                />
-              </div>
-              <div className="col-4">
-                <label className="form-label">State</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Maharashtra"
+              <div className="col-12 col-md-4">
+                <StateSelect
+                  label="State"
+                  size="sm"
                   value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onChange={(state, stateCode) => setFormData(prev => ({ ...prev, state, stateCode }))}
                 />
               </div>
-              <div className="col-4">
-                <label className="form-label">Pincode</label>
+              <div className="col-12 col-md-4">
+                <CitySelect
+                  label="City"
+                  size="sm"
+                  stateName={formData.state}
+                  value={formData.city}
+                  onChange={(city) => setFormData(prev => ({ ...prev, city }))}
+                />
+              </div>
+              <div className="col-12 col-md-4">
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Pincode</label>
                 <input
                   type="text"
-                  className="form-control font-mono"
+                  className="form-control form-control-sm font-mono"
                   placeholder="411001"
                   value={formData.pincode}
                   onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
@@ -312,16 +393,16 @@ export const BusinessSettings = () => {
           </div>
 
           {/* Section 3: Bank Account for Invoices */}
-          <div className="card-zenith p-3 p-sm-4 mb-4">
+          <div className="card-zenith p-3 p-sm-4 mb-3">
             <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
               <i className="bi bi-bank"></i> Bank Settlement Details (Printed on Invoices)
             </h6>
-            <div className="row g-3">
+            <div className="row g-2 g-sm-3">
               <div className="col-6 col-md-3">
-                <label className="form-label">Bank Name</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Bank Name</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   placeholder="e.g. HDFC Bank Ltd"
                   value={formData.bankDetails?.bankName || ''}
                   onChange={(e) =>
@@ -333,10 +414,10 @@ export const BusinessSettings = () => {
                 />
               </div>
               <div className="col-6 col-md-3">
-                <label className="form-label">Account Number</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Account Number</label>
                 <input
                   type="text"
-                  className="form-control font-mono fw-bold"
+                  className="form-control form-control-sm font-mono fw-bold"
                   placeholder="50200000000000"
                   value={formData.bankDetails?.accountNo || ''}
                   onChange={(e) =>
@@ -348,10 +429,10 @@ export const BusinessSettings = () => {
                 />
               </div>
               <div className="col-6 col-md-3">
-                <label className="form-label">IFSC Code</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>IFSC Code</label>
                 <input
                   type="text"
-                  className="form-control font-mono"
+                  className="form-control form-control-sm font-mono text-uppercase"
                   placeholder="HDFC0001234"
                   value={formData.bankDetails?.ifsc || ''}
                   onChange={(e) =>
@@ -363,10 +444,10 @@ export const BusinessSettings = () => {
                 />
               </div>
               <div className="col-6 col-md-3">
-                <label className="form-label">Branch Name</label>
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Branch Name</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   placeholder="e.g. Shivaji Nagar Branch"
                   value={formData.bankDetails?.branch || ''}
                   onChange={(e) =>
@@ -385,11 +466,11 @@ export const BusinessSettings = () => {
             <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
               <i className="bi bi-printer"></i> Billing & Print Configurations
             </h6>
-            <div className="row g-3">
+            <div className="row g-2 g-sm-3">
               <div className="col-12 col-md-6">
-                <label className="form-label">Default Invoice Print Template</label>
+                <label className="form-label small fw-bold mb-1">Default Invoice Print Template</label>
                 <select
-                  className="form-select fw-semibold"
+                  className="form-select form-select-sm fw-semibold"
                   value={formData.settings?.invoiceTemplate || 'modern'}
                   onChange={(e) =>
                     setFormData({
@@ -407,9 +488,9 @@ export const BusinessSettings = () => {
               </div>
 
               <div className="col-12 col-md-6">
-                <label className="form-label">Delivery Challan Stock Policy</label>
+                <label className="form-label small fw-bold mb-1">Delivery Challan Stock Policy</label>
                 <select
-                  className="form-select fw-semibold"
+                  className="form-select form-select-sm fw-semibold"
                   value={formData.settings?.dcStockPolicy || 'DEDUCT'}
                   onChange={(e) =>
                     setFormData({
@@ -425,9 +506,9 @@ export const BusinessSettings = () => {
               </div>
 
               <div className="col-12">
-                <label className="form-label">Default Terms & Conditions on Invoices</label>
+                <label className="form-label small fw-bold mb-1">Default Terms & Conditions on Invoices</label>
                 <textarea
-                  className="form-control"
+                  className="form-control form-control-sm"
                   rows="3"
                   placeholder="1. Goods once sold will not be taken back.&#10;2. Interest @ 18% p.a. will be charged after due date.&#10;3. Subject to local jurisdiction."
                   value={formData.settings?.termsAndConditions || ''}
@@ -443,10 +524,10 @@ export const BusinessSettings = () => {
           </div>
 
           {/* Save Action Footer */}
-          <div className="d-flex justify-content-end mb-5">
+          <div className="d-flex justify-content-end mb-4">
             <button
               type="submit"
-              className="btn btn-primary-zenith py-2 px-4 fw-bold w-100 w-sm-auto"
+              className="btn btn-primary-zenith py-2 px-4 fw-bold w-100 w-sm-auto text-nowrap"
               disabled={loading}
             >
               {loading ? (

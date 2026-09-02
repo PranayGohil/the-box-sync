@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ShippingAddressSection } from '../../components/ShippingAddressSection';
 
 export const DeliveryChallanCreate = () => {
   const { activeBusiness } = useAuth();
@@ -23,6 +24,16 @@ export const DeliveryChallanCreate = () => {
   const [notes, setNotes] = useState('');
   const [terms, setTerms] = useState(activeBusiness?.settings?.termsAndConditions || '');
   const [loading, setLoading] = useState(false);
+
+  const [shippingAddress, setShippingAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    stateCode: '',
+    pincode: '',
+    country: 'India'
+  });
+  const [sameAsBilling, setSameAsBilling] = useState(true);
 
   const [items, setItems] = useState([
     { productId: '', name: '', hsnSacCode: '', quantity: 1, rate: 0, unit: 'PCS', total: 0 }
@@ -74,6 +85,28 @@ export const DeliveryChallanCreate = () => {
     setSelectedCustomerId(custId);
     const found = customers.find((c) => c._id === custId);
     setSelectedCustomer(found || null);
+
+    if (found?.shippingAddress && (found.shippingAddress.street || found.shippingAddress.city)) {
+      setShippingAddress({
+        street: found.shippingAddress.street || '',
+        city: found.shippingAddress.city || '',
+        state: found.shippingAddress.state || found.billingAddress?.state || '',
+        stateCode: found.shippingAddress.stateCode || found.billingAddress?.stateCode || '',
+        pincode: found.shippingAddress.pincode || '',
+        country: found.shippingAddress.country || 'India'
+      });
+      setSameAsBilling(false);
+    } else if (found?.billingAddress) {
+      setShippingAddress({
+        street: found.billingAddress.street || '',
+        city: found.billingAddress.city || '',
+        state: found.billingAddress.state || '',
+        stateCode: found.billingAddress.stateCode || '',
+        pincode: found.billingAddress.pincode || '',
+        country: found.billingAddress.country || 'India'
+      });
+      setSameAsBilling(true);
+    }
   };
 
   const handleItemChange = (index, field, value) => {
@@ -141,6 +174,7 @@ export const DeliveryChallanCreate = () => {
         date: challanDate,
         items: validItems,
         stockPolicyApplied: stockPolicy,
+        shippingAddress: sameAsBilling ? (selectedCustomer?.billingAddress || shippingAddress) : shippingAddress,
         transporterDetails: {
           transporterName,
           vehicleNo,
@@ -163,8 +197,8 @@ export const DeliveryChallanCreate = () => {
   };
 
   return (
-    <div className="card-zenith p-3 p-sm-4 mb-5">
-      {/* Header */}
+    <div className="card-zenith p-3 p-sm-4 mb-4">
+      {/* 1. Page Header */}
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 pb-2 border-bottom">
         <div>
           <h4 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em' }}>
@@ -176,7 +210,7 @@ export const DeliveryChallanCreate = () => {
         </div>
         <button
           type="button"
-          className="btn btn-outline-secondary btn-sm text-nowrap"
+          className="btn btn-outline-secondary btn-sm align-self-stretch align-self-sm-auto text-nowrap"
           onClick={() => navigate('/sales/challans')}
         >
           <i className="bi bi-arrow-left me-1"></i> Back to Challans
@@ -185,9 +219,9 @@ export const DeliveryChallanCreate = () => {
 
       <form onSubmit={handleSubmit}>
         {/* Customer & Warehouse Info */}
-        <div className="row g-3 mb-4">
-          <div className="col-12 col-md-5">
-            <label className="form-label">Select Customer / Consignee*</label>
+        <div className="row g-2 g-sm-3 mb-3">
+          <div className="col-12 col-lg-5">
+            <label className="form-label small fw-bold mb-1">Select Customer / Consignee*</label>
             <select
               className="form-select fw-bold"
               value={selectedCustomerId}
@@ -197,21 +231,21 @@ export const DeliveryChallanCreate = () => {
               <option value="">-- Choose Customer --</option>
               {customers.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name} {c.gstin ? `[GSTIN: ${c.gstin}]` : ''} - {c.billingAddress?.state || 'State'}
+                  {c.name} {c.gstin ? `[GSTIN: ${c.gstin}]` : ''} - {c.billingAddress?.city ? `${c.billingAddress.city}, ` : ''}{c.billingAddress?.state || 'State'}
                 </option>
               ))}
             </select>
             {selectedCustomer && (
-              <div className="small text-muted mt-1">
+              <div className="small text-muted mt-1 text-truncate" style={{ fontSize: '0.75rem' }}>
                 Ship to: <strong>{selectedCustomer.shippingAddress?.address || selectedCustomer.billingAddress?.address || 'Same as billing'}</strong>
               </div>
             )}
           </div>
 
-          <div className="col-6 col-md-4">
-            <label className="form-label">Dispatch Warehouse*</label>
+          <div className="col-12 col-sm-6 col-lg-4">
+            <label className="form-label small fw-bold mb-1">Dispatch Warehouse*</label>
             <select
-              className="form-select fw-semibold"
+              className="form-select form-select-sm fw-semibold"
               value={selectedWarehouseId}
               onChange={(e) => setSelectedWarehouseId(e.target.value)}
               required
@@ -224,11 +258,11 @@ export const DeliveryChallanCreate = () => {
             </select>
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Challan Date*</label>
+          <div className="col-12 col-sm-6 col-lg-3">
+            <label className="form-label small fw-bold mb-1">Challan Date*</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={challanDate}
               onChange={(e) => setChallanDate(e.target.value)}
               required
@@ -236,10 +270,22 @@ export const DeliveryChallanCreate = () => {
           </div>
         </div>
 
+        {/* Shipping Address Section */}
+        {selectedCustomer && (
+          <ShippingAddressSection
+            billingAddress={selectedCustomer.billingAddress}
+            shippingAddress={shippingAddress}
+            onChange={setShippingAddress}
+            sameAsBilling={sameAsBilling}
+            setSameAsBilling={setSameAsBilling}
+            title="Destination / Delivery Address"
+          />
+        )}
+
         {/* Transportation & Logistics Row */}
-        <div className="row g-3 mb-4 p-3 bg-light border rounded">
+        <div className="row g-2 g-sm-3 mb-3 p-3 bg-light border rounded">
           <div className="col-12 col-sm-4">
-            <label className="form-label small">Transporter / Courier Name</label>
+            <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Transporter / Courier Name</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -250,7 +296,7 @@ export const DeliveryChallanCreate = () => {
           </div>
 
           <div className="col-6 col-sm-4">
-            <label className="form-label small">Vehicle / Truck Number</label>
+            <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Vehicle / Truck Number</label>
             <input
               type="text"
               className="form-control form-control-sm font-mono text-uppercase"
@@ -261,7 +307,7 @@ export const DeliveryChallanCreate = () => {
           </div>
 
           <div className="col-6 col-sm-4">
-            <label className="form-label small">E-Way Bill Number (Optional)</label>
+            <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>E-Way Bill Number (Optional)</label>
             <input
               type="text"
               className="form-control form-control-sm font-mono"
@@ -273,11 +319,11 @@ export const DeliveryChallanCreate = () => {
         </div>
 
         {/* Stock Policy Selector */}
-        <div className="row g-3 mb-4 align-items-center">
+        <div className="row g-2 g-sm-3 mb-3 align-items-center">
           <div className="col-12 col-md-6">
-            <label className="form-label fw-bold">Inventory Stock Policy</label>
+            <label className="form-label small fw-bold mb-1">Inventory Stock Policy</label>
             <select
-              className="form-select fw-semibold"
+              className="form-select form-select-sm fw-semibold"
               value={stockPolicy}
               onChange={(e) => setStockPolicy(e.target.value)}
             >
@@ -287,7 +333,7 @@ export const DeliveryChallanCreate = () => {
             </select>
           </div>
           <div className="col-12 col-md-6">
-            <div className="small text-muted p-2 bg-light border rounded mt-2 mt-md-4">
+            <div className="small text-muted p-2 bg-light border rounded mt-1 mt-md-3" style={{ fontSize: '0.75rem' }}>
               {stockPolicy === 'DEDUCT' && '✓ Automatically posts outward movement in inventory stock ledger.'}
               {stockPolicy === 'RESERVE' && 'ℹ️ Keeps physical stock reserved to prevent overselling on POS.'}
               {stockPolicy === 'NONE' && '⚠️ Inventory quantities will not be adjusted on save.'}
@@ -295,8 +341,8 @@ export const DeliveryChallanCreate = () => {
           </div>
         </div>
 
-        {/* Line Items Table */}
-        <div className="table-responsive mb-3 border rounded">
+        {/* 2. Line Items Desktop Table (>= 768px) */}
+        <div className="table-responsive mb-3 border rounded d-none d-md-block">
           <table className="table table-bordered align-middle mb-0">
             <thead className="bg-light">
               <tr style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -380,15 +426,101 @@ export const DeliveryChallanCreate = () => {
           </table>
         </div>
 
-        <button type="button" className="btn btn-outline-primary btn-sm mb-4" onClick={addItemRow}>
-          <i className="bi bi-plus-circle me-1"></i> Add Another Item
-        </button>
+        {/* 3. Mobile Line Items Card List (< 768px) */}
+        <div className="d-md-none mb-3">
+          {items.map((item, idx) => (
+            <div key={idx} className="card p-3 mb-2 bg-light border rounded" style={{ overflow: 'hidden' }}>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="badge bg-primary text-white font-mono" style={{ fontSize: '0.72rem' }}>Item #{idx + 1}</span>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="fw-bold font-mono text-dark" style={{ fontSize: '0.95rem' }}>₹{fmt(item.total)}</span>
+                  {items.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger py-0 px-2"
+                      onClick={() => removeItemRow(idx)}
+                      title="Remove Item"
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Product Select / Name */}
+              <div className="mb-2">
+                <label className="form-label small mb-1 fw-semibold" style={{ fontSize: '0.75rem' }}>Product / Description*</label>
+                <select
+                  className="form-select form-select-sm mb-1 fw-bold"
+                  value={item.productId}
+                  onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
+                >
+                  <option value="">-- Select Product --</option>
+                  {products.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} (Stock: {p.currentStock} {p.unitId?.symbol || 'PCS'})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Item Description"
+                  value={item.name}
+                  onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Qty, Rate, HSN in 2x2 grid */}
+              <div className="row g-2">
+                <div className="col-6">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>Dispatched Qty*</label>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm font-mono text-center fw-bold"
+                    value={item.quantity}
+                    min="1"
+                    onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>Unit Price (₹)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-control form-control-sm font-mono text-end fw-bold"
+                    value={item.rate}
+                    onChange={(e) => handleItemChange(idx, 'rate', e.target.value)}
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label small mb-1" style={{ fontSize: '0.75rem' }}>HSN/SAC Code</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm font-mono"
+                    placeholder="HSN"
+                    value={item.hsnSacCode}
+                    onChange={(e) => handleItemChange(idx, 'hsnSacCode', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="d-flex flex-wrap gap-2 mb-4">
+          <button type="button" className="btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={addItemRow}>
+            <i className="bi bi-plus-circle me-1"></i> Add Another Item
+          </button>
+        </div>
 
         {/* Bottom Section: Remarks & Summary Card */}
-        <div className="row g-4">
+        <div className="row g-3 g-md-4">
           <div className="col-12 col-md-6">
             <div className="mb-3">
-              <label className="form-label">Dispatch Remarks / Instructions</label>
+              <label className="form-label small fw-bold mb-1">Dispatch Remarks / Instructions</label>
               <textarea
                 className="form-control"
                 rows="3"
@@ -401,7 +533,7 @@ export const DeliveryChallanCreate = () => {
 
           {/* Right Calculation Totals Card */}
           <div className="col-12 col-md-6">
-            <div className="card p-3 bg-light border">
+            <div className="card p-3 p-sm-4 bg-light border rounded shadow-sm" style={{ overflow: 'hidden' }}>
               <div className="d-flex justify-content-between py-1">
                 <span className="text-muted">Total Quantity Dispatched:</span>
                 <span className="fw-bold font-mono text-dark">{totalUnits} Units</span>

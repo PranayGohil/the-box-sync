@@ -57,50 +57,117 @@ export const MainLayout = () => {
     }
   };
 
-  const navItems = [
+  const topDirectLinks = [
     { title: 'Dashboard', path: '/dashboard', icon: 'bi-grid-1x2-fill' },
-    { title: 'POS Fast Billing', path: '/pos', icon: 'bi-lightning-charge-fill', badge: 'Fast' },
-
-    { section: 'Sales Suite' },
-    { title: 'GST Invoices', path: '/sales/invoices', icon: 'bi-receipt', perm: ['invoices', 'view'] },
-    { title: 'Quotations', path: '/sales/quotations', icon: 'bi-file-earmark-text', perm: ['quotations', 'view'] },
-    { title: 'Sales Orders', path: '/sales/orders', icon: 'bi-cart-check', perm: ['sales_orders', 'view'] },
-    { title: 'Delivery Challans', path: '/sales/challans', icon: 'bi-truck', perm: ['delivery_challans', 'view'] },
-    { title: 'Sales Returns & CN', path: '/sales/returns', icon: 'bi-arrow-counterclockwise', perm: ['sales_returns', 'view'] },
-
-    { section: 'Purchases' },
-    { title: 'Purchase Bills', path: '/purchases/bills', icon: 'bi-receipt-cutoff', perm: ['purchase_bills', 'view'] },
-    { title: 'Purchase Orders', path: '/purchases/orders', icon: 'bi-file-earmark-plus', perm: ['purchase_orders', 'view'] },
-    { title: 'Goods Receipt (GRN)', path: '/purchases/grn', icon: 'bi-box-arrow-in-down', perm: ['goods_receipt', 'view'] },
-    { title: 'Debit Notes & Returns', path: '/purchases/returns', icon: 'bi-journal-arrow-down', perm: ['debit_notes', 'view'] },
-
-    { section: 'Inventory & Stock' },
-    { title: 'Products Master', path: '/inventory/products', icon: 'bi-box-seam', perm: ['products', 'view'] },
-    { title: 'Stock Summary', path: '/inventory/summary', icon: 'bi-boxes', perm: ['inventory', 'view'] },
-    { title: 'Stock Movements', path: '/inventory/movements', icon: 'bi-arrow-left-right', perm: ['inventory', 'view'] },
-    { title: 'Stock Adjustments', path: '/inventory/adjustments', icon: 'bi-sliders', perm: ['inventory', 'create'] },
-    { title: 'Warehouse Transfers', path: '/inventory/transfers', icon: 'bi-arrow-left-right', perm: ['inventory', 'create'] },
-
-    { section: 'Contacts' },
-    { title: 'Customers CRM', path: '/contacts/customers', icon: 'bi-people', perm: ['customers', 'view'] },
-    { title: 'Suppliers CRM', path: '/contacts/suppliers', icon: 'bi-building', perm: ['suppliers', 'view'] },
-
-    { section: 'Accounting & Banking' },
-    { title: 'Chart of Accounts', path: '/accounting/chart-of-accounts', icon: 'bi-diagram-3', perm: ['accounting', 'view'] },
-    { title: 'Financial Statements', path: '/accounting/statements', icon: 'bi-journal-bookmark-fill', perm: ['accounting', 'view'] },
-    { title: 'Payment Receipts & Out', path: '/payments', icon: 'bi-wallet2', perm: ['payments', 'view'] },
-    { title: 'Expenses & TDS', path: '/payments/expenses', icon: 'bi-cash-stack', perm: ['expenses', 'view'] },
-
-    { section: 'Tax & Compliance' },
-    { title: 'GST Summary & GSTR-1', path: '/tax/gst', icon: 'bi-calculator', perm: ['tax_gst', 'view'] },
-    { title: 'TDS Management', path: '/tax/tds', icon: 'bi-file-earmark-ruled', perm: ['tax_tds', 'view'] },
-
-    { section: 'Analytics & Settings' },
-    { title: 'Reports Hub', path: '/reports', icon: 'bi-bar-chart-line-fill', perm: ['reports', 'view'] },
-    { title: 'Business Profile', path: '/settings/business', icon: 'bi-gear-fill', perm: ['settings', 'view'] },
-    { title: 'Team & RBAC', path: '/settings/members', icon: 'bi-shield-lock-fill', perm: ['settings', 'view'] },
-    { title: 'Audit Logs', path: '/settings/audit-logs', icon: 'bi-activity', perm: ['audit_logs', 'view'] }
+    { title: 'POS Fast Billing', path: '/pos', icon: 'bi-lightning-charge-fill', badge: 'Fast' }
   ];
+
+  const menuGroups = [
+    {
+      id: 'sales',
+      title: 'Sales Suite',
+      icon: 'bi-receipt-cutoff',
+      items: [
+        { title: 'GST Invoices', path: '/sales/invoices', icon: 'bi-receipt', perm: ['invoices', 'view'] },
+        { title: 'Quotations', path: '/sales/quotations', icon: 'bi-file-earmark-text', perm: ['quotations', 'view'] },
+        { title: 'Sales Orders', path: '/sales/orders', icon: 'bi-cart-check', perm: ['sales_orders', 'view'] },
+        { title: 'Delivery Challans', path: '/sales/challans', icon: 'bi-truck', perm: ['delivery_challans', 'view'] },
+        { title: 'Sales Returns & CN', path: '/sales/returns', icon: 'bi-arrow-counterclockwise', perm: ['sales_returns', 'view'] }
+      ]
+    },
+    {
+      id: 'purchases',
+      title: 'Purchases',
+      icon: 'bi-bag-check',
+      items: [
+        { title: 'Purchase Bills', path: '/purchases/bills', icon: 'bi-receipt-cutoff', perm: ['purchase_bills', 'view'] },
+        { title: 'Purchase Orders', path: '/purchases/orders', icon: 'bi-file-earmark-plus', perm: ['purchase_orders', 'view'] },
+        { title: 'Goods Receipt (GRN)', path: '/purchases/grn', icon: 'bi-box-arrow-in-down', perm: ['goods_receipt', 'view'] },
+        { title: 'Debit Notes & Returns', path: '/purchases/returns', icon: 'bi-journal-arrow-down', perm: ['debit_notes', 'view'] }
+      ]
+    },
+    {
+      id: 'inventory',
+      title: 'Inventory & Stock',
+      icon: 'bi-boxes',
+      items: [
+        { title: 'Products Master', path: '/inventory/products', icon: 'bi-box-seam', perm: ['products', 'view'] },
+        { title: 'Stock Summary', path: '/inventory/summary', icon: 'bi-boxes', perm: ['inventory', 'view'] },
+        { title: 'Stock Movements', path: '/inventory/movements', icon: 'bi-arrow-left-right', perm: ['inventory', 'view'] },
+        { title: 'Stock Adjustments', path: '/inventory/adjustments', icon: 'bi-sliders', perm: ['inventory', 'create'] },
+        { title: 'Warehouse Transfers', path: '/inventory/transfers', icon: 'bi-arrow-left-right', perm: ['inventory', 'create'] }
+      ]
+    },
+    {
+      id: 'contacts',
+      title: 'Contacts CRM',
+      icon: 'bi-people',
+      items: [
+        { title: 'Customers CRM', path: '/contacts/customers', icon: 'bi-person-badge', perm: ['customers', 'view'] },
+        { title: 'Suppliers CRM', path: '/contacts/suppliers', icon: 'bi-building', perm: ['suppliers', 'view'] }
+      ]
+    },
+    {
+      id: 'accounting',
+      title: 'Accounting & Banking',
+      icon: 'bi-bank',
+      items: [
+        { title: 'Chart of Accounts', path: '/accounting/chart-of-accounts', icon: 'bi-diagram-3', perm: ['accounting', 'view'] },
+        { title: 'Financial Statements', path: '/accounting/statements', icon: 'bi-journal-bookmark-fill', perm: ['accounting', 'view'] },
+        { title: 'Payment Receipts & Out', path: '/payments', icon: 'bi-wallet2', perm: ['payments', 'view'] },
+        { title: 'Expenses & TDS', path: '/payments/expenses', icon: 'bi-cash-stack', perm: ['expenses', 'view'] }
+      ]
+    },
+    {
+      id: 'tax',
+      title: 'Tax & Compliance',
+      icon: 'bi-calculator',
+      items: [
+        { title: 'GST Summary & GSTR-1', path: '/tax/gst', icon: 'bi-calculator', perm: ['tax_gst', 'view'] },
+        { title: 'TDS Management', path: '/tax/tds', icon: 'bi-file-earmark-ruled', perm: ['tax_tds', 'view'] }
+      ]
+    },
+    {
+      id: 'settings',
+      title: 'Analytics & Settings',
+      icon: 'bi-gear',
+      items: [
+        { title: 'Reports Hub', path: '/reports', icon: 'bi-bar-chart-line-fill', perm: ['reports', 'view'] },
+        { title: 'Business Profile', path: '/settings/business', icon: 'bi-gear-fill', perm: ['settings', 'view'] },
+        { title: 'Team & RBAC', path: '/settings/members', icon: 'bi-shield-lock-fill', perm: ['settings', 'view'] },
+        { title: 'Audit Logs', path: '/settings/audit-logs', icon: 'bi-activity', perm: ['audit_logs', 'view'] }
+      ]
+    }
+  ];
+
+  // Helper to determine active category group based on pathname
+  const findActiveGroup = (pathname) => {
+    for (const group of menuGroups) {
+      if (group.items.some((item) => pathname.startsWith(item.path))) {
+        return group.id;
+      }
+    }
+    return null;
+  };
+
+  const [openCategory, setOpenCategory] = useState(() => findActiveGroup(location.pathname));
+
+  useEffect(() => {
+    // When route changes, auto-open active group
+    const activeId = findActiveGroup(location.pathname);
+    if (activeId) {
+      setOpenCategory(activeId);
+    }
+    setShowMobileSidebar(false);
+    setShowUserMenu(false);
+    setShowNotifications(false);
+    setSearchResults(null);
+  }, [location.pathname]);
+
+  const handleToggleCategory = (groupId) => {
+    // Single-expand accordion: clicking opened category closes it, clicking another opens it & closes previous
+    setOpenCategory((prev) => (prev === groupId ? null : groupId));
+  };
 
   return (
     <div className="app-container">
@@ -115,9 +182,33 @@ export const MainLayout = () => {
 
       {/* Sidebar Navigation */}
       <aside className={`app-sidebar ${showMobileSidebar ? 'd-flex' : 'd-none d-lg-flex'}`}>
+        {/* Top Sidebar Header: Active Company Brand / Logo */}
         <div className="d-flex justify-content-between align-items-center sidebar-brand">
-          <NavLink to="/dashboard" className="d-flex align-items-center text-decoration-none text-white gap-2">
-            <img src="/logo-blue.svg" alt="TheBox" style={{ height: '34px', maxWidth: '150px', objectFit: 'contain' }} />
+          <NavLink to="/dashboard" className="d-flex align-items-center text-decoration-none text-white gap-2 overflow-hidden flex-grow-1">
+            {activeBusiness?.logoUrl ? (
+              <img
+                src={activeBusiness.logoUrl}
+                alt={activeBusiness.name || 'Company Logo'}
+                style={{ maxHeight: '38px', maxWidth: '160px', objectFit: 'contain' }}
+              />
+            ) : (
+              <div className="d-flex align-items-center gap-2 overflow-hidden">
+                <div
+                  className="d-flex align-items-center justify-content-center fw-extrabold text-white rounded shadow-sm flex-shrink-0"
+                  style={{ width: '32px', height: '32px', fontSize: '0.92rem', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}
+                >
+                  {(activeBusiness?.name || 'C').charAt(0).toUpperCase()}
+                </div>
+                <div className="overflow-hidden">
+                  <div className="fw-bold text-white text-truncate" style={{ fontSize: '0.88rem', letterSpacing: '-0.01em', lineHeight: '1.2' }}>
+                    {activeBusiness?.name || 'My Company'}
+                  </div>
+                  <div className="text-muted text-truncate" style={{ fontSize: '0.68rem' }}>
+                    {activeBusiness?.city ? `${activeBusiness.city}, ` : ''}{activeBusiness?.state || 'GST Billing'}
+                  </div>
+                </div>
+              </div>
+            )}
           </NavLink>
           {/* Close button for mobile drawer */}
           <button
@@ -129,78 +220,139 @@ export const MainLayout = () => {
           </button>
         </div>
 
-        <ul className="sidebar-menu">
-          {navItems.map((item, idx) => {
-            if (item.section) {
-              return (
-                <li key={idx} className="nav-section-title">
-                  {item.section}
-                </li>
-              );
-            }
+        <div className="sidebar-menu">
+          {/* 1. Direct Links (Dashboard & POS) */}
+          <div className="mb-2">
+            {topDirectLinks.map((item, idx) => (
+              <NavLink
+                key={idx}
+                to={item.path}
+                className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+              >
+                <i className={`bi ${item.icon}`}></i>
+                <span style={{ flex: 1 }}>{item.title}</span>
+                {item.badge && (
+                  <span className="badge bg-warning text-dark fw-bold" style={{ fontSize: '0.65rem' }}>
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            ))}
+          </div>
 
-            if (item.perm && !hasPermission(item.perm[0], item.perm[1])) {
-              return null;
-            }
+          <div className="nav-section-title px-2 pb-1 pt-2">
+            Workspace Modules
+          </div>
+
+          {/* 2. Collapsible Accordion Groups */}
+          {menuGroups.map((group) => {
+            const visibleItems = group.items.filter(
+              (item) => !item.perm || hasPermission(item.perm[0], item.perm[1])
+            );
+            if (visibleItems.length === 0) return null;
+
+            const isOpen = openCategory === group.id;
+            const isAnyChildActive = visibleItems.some((item) => location.pathname.startsWith(item.path));
 
             return (
-              <li key={idx}>
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+              <div key={group.id} className="sidebar-accordion-group mb-1">
+                <button
+                  type="button"
+                  className={`sidebar-category-btn ${isOpen ? 'open' : ''} ${isAnyChildActive ? 'active-category' : ''}`}
+                  onClick={() => handleToggleCategory(group.id)}
                 >
-                  <i className={`bi ${item.icon}`}></i>
-                  <span style={{ flex: 1 }}>{item.title}</span>
-                  {item.badge && (
-                    <span className="badge bg-warning text-dark font-weight-bold" style={{ fontSize: '0.65rem' }}>
-                      {item.badge}
-                    </span>
-                  )}
-                </NavLink>
-              </li>
+                  <div className="d-flex align-items-center gap-2 overflow-hidden">
+                    <i className={`bi ${group.icon} ${isAnyChildActive ? 'text-primary' : 'text-muted'}`}></i>
+                    <span className="text-truncate">{group.title}</span>
+                  </div>
+                  <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                    <i className="bi bi-chevron-down chevron-icon"></i>
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <ul className="sidebar-submenu">
+                    {visibleItems.map((subItem, subIdx) => (
+                      <li key={subIdx}>
+                        <NavLink
+                          to={subItem.path}
+                          className={({ isActive }) => `sidebar-subnav-link ${isActive ? 'active' : ''}`}
+                        >
+                          <i className={`bi ${subItem.icon}`}></i>
+                          <span>{subItem.title}</span>
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             );
           })}
-        </ul>
+        </div>
 
-        {/* Sidebar Footer User Info & Explicit Logout Button */}
-        <div style={{ padding: '0.85rem 1rem', background: '#020617', borderTop: '1px solid #1e293b' }}>
-          <div className="d-flex align-items-center justify-content-between">
-            <div className="d-flex align-items-center gap-2 overflow-hidden">
-              <div
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  borderRadius: '50%',
-                  background: 'var(--primary)',
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  flexShrink: 0
-                }}
+        {/* Fixed Pinned Sidebar Footer */}
+        <div className="sidebar-footer">
+          {/* User Profile & Explicit Logout Button */}
+          <div className="p-2 px-3 border-bottom border-secondary border-opacity-25">
+            <div className="d-flex align-items-center justify-content-between gap-2">
+              <div className="d-flex align-items-center gap-2 overflow-hidden flex-grow-1" title={`${user?.name || 'User'} (${user?.email || ''})`}>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    flexShrink: 0
+                  }}
+                >
+                  {user?.name?.charAt(0) || 'U'}
+                </div>
+                <div className="overflow-hidden">
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {user?.name || 'User'}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: '#94a3b8', textTransform: 'capitalize' }}>
+                    {activeBusiness?.role || 'Admin'}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={logout}
+                className="btn btn-sm btn-outline-danger py-1 px-2 d-flex align-items-center gap-1 flex-shrink-0"
+                title="Log Out of System"
+                style={{ fontSize: '0.75rem', fontWeight: 600 }}
               >
-                {user?.name?.charAt(0) || 'U'}
-              </div>
-              <div className="overflow-hidden">
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {user?.name || 'User'}
-                </div>
-                <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'capitalize' }}>
-                  {activeBusiness?.role || 'Member'}
-                </div>
-              </div>
+                <i className="bi bi-box-arrow-right"></i>
+                <span className="d-none d-sm-inline">Logout</span>
+              </button>
             </div>
-            <button
-              onClick={logout}
-              className="btn btn-sm btn-outline-danger py-1 px-2 d-flex align-items-center gap-1"
-              title="Log Out of TheBox"
-              style={{ fontSize: '0.78rem' }}
-            >
-              <i className="bi bi-box-arrow-right"></i>
-              <span className="d-none d-sm-inline">Logout</span>
-            </button>
+          </div>
+
+          {/* Bottom Powered by TheBox */}
+          <div
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#01040f',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <span style={{ fontSize: '0.62rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+              Powered by
+            </span>
+            <img
+              src="/logo-blue.svg"
+              alt="TheBox"
+              style={{ height: '18px', maxWidth: '90px', objectFit: 'contain' }}
+            />
           </div>
         </div>
       </aside>
@@ -449,10 +601,10 @@ export const MainLayout = () => {
               )}
             </div>
 
-            {/* Direct Instant Logout Button on Topbar */}
+            {/* Direct Instant Logout Button on Topbar (Desktop/Tablet) */}
             <button
               onClick={logout}
-              className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 p-2"
+              className="btn btn-outline-danger btn-sm d-none d-sm-flex align-items-center gap-1 p-2"
               title="Quick Log Out"
             >
               <i className="bi bi-box-arrow-right"></i>

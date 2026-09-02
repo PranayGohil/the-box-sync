@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import api from '../../api/client';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const StockMovements = () => {
   const [movements, setMovements] = useState([]);
@@ -150,12 +151,28 @@ export const StockMovements = () => {
             Immutable audit log of all inventory inward receipts, sales dispatches, transfers, and adjustments
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <NavLink to="/inventory/transfers" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-arrow-left-right"></i> Transfer Stock
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Stock_Movement_Ledger"
+            title="Stock Movement Ledger Report"
+            headers={['Date', 'Product Name', 'SKU', 'Voucher Ref', 'Voucher Type', 'Warehouse', 'Movement', 'Quantity', 'Balance After']}
+            data={filteredMovements.map((m) => [
+              new Date(m.date).toLocaleDateString('en-IN'),
+              m.productId?.name || '-',
+              m.productId?.sku || '-',
+              m.voucherNo || '-',
+              m.voucherType?.replace(/_/g, ' ') || '-',
+              m.warehouseId?.name || 'Main Warehouse',
+              m.movementType === 'IN' ? '+ INWARD' : '- OUTWARD',
+              m.quantity || 0,
+              m.balanceStockAfter ?? '-'
+            ])}
+          />
+          <NavLink to="/inventory/transfers" className="btn btn-outline-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap">
+            <i className="bi bi-arrow-left-right me-1"></i> Transfer
           </NavLink>
-          <NavLink to="/inventory/adjustments" className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0">
-            <i className="bi bi-sliders"></i> Adjust Stock
+          <NavLink to="/inventory/adjustments" className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap">
+            <i className="bi bi-sliders me-1"></i> Adjust
           </NavLink>
         </div>
       </div>
@@ -321,21 +338,31 @@ export const StockMovements = () => {
                 <div className="invoice-card-mobile-header">
                   <div>
                     <span className="font-mono fw-bold text-primary fs-6">#{mov.voucherNo}</span>
-                    <span className="text-muted ms-2" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-muted ms-2" style={{ fontSize: '0.72rem' }}>
                       {new Date(mov.date).toLocaleDateString('en-IN')}
                     </span>
                   </div>
-                  <div className={`fw-extrabold font-mono fs-6 ${isIn ? 'text-success' : 'text-danger'}`}>
+                  <span
+                    className={`badge ${
+                      isIn
+                        ? 'bg-success-subtle text-success border border-success-subtle'
+                        : 'bg-danger-subtle text-danger border border-danger-subtle'
+                    } fw-bold font-mono`}
+                    style={{ fontSize: '0.72rem' }}
+                  >
                     {isIn ? '+' : '-'}{mov.quantity} Units
-                  </div>
+                  </span>
                 </div>
 
-                {/* Product & Warehouse */}
+                {/* Product & SKU */}
                 <div className="mb-2">
-                  <div className="fw-bold text-dark small">{mov.productId?.name}</div>
-                  <div className="d-flex align-items-center gap-2 mt-1 small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
+                  <div className="fw-bold text-dark small text-truncate">{mov.productId?.name}</div>
+                  <div className="d-flex justify-content-between align-items-center mt-1 small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
                     <span>SKU: {mov.productId?.sku || '-'}</span>
-                    <span>• {mov.warehouseId?.name || 'Main Warehouse'}</span>
+                    <span className="badge bg-light text-dark border">
+                      <i className="bi bi-building me-1 text-muted"></i>
+                      {mov.warehouseId?.name || 'Main Warehouse'}
+                    </span>
                   </div>
                 </div>
 

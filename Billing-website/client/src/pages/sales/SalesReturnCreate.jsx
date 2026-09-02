@@ -131,8 +131,8 @@ export const SalesReturnCreate = () => {
   };
 
   return (
-    <div className="card-zenith p-3 p-sm-4 mb-5">
-      {/* Header */}
+    <div className="card-zenith p-3 p-sm-4 mb-4">
+      {/* 1. Page Header */}
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 pb-2 border-bottom">
         <div>
           <h4 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em' }}>
@@ -144,7 +144,7 @@ export const SalesReturnCreate = () => {
         </div>
         <button
           type="button"
-          className="btn btn-outline-secondary btn-sm text-nowrap"
+          className="btn btn-outline-secondary btn-sm align-self-stretch align-self-sm-auto text-nowrap"
           onClick={() => navigate('/sales/returns')}
         >
           <i className="bi bi-arrow-left me-1"></i> Back to Sales Returns
@@ -153,9 +153,9 @@ export const SalesReturnCreate = () => {
 
       <form onSubmit={handleSubmit}>
         {/* Invoice & Return Reason Row */}
-        <div className="row g-3 mb-4">
-          <div className="col-12 col-md-5">
-            <label className="form-label">Select Original Finalized Invoice*</label>
+        <div className="row g-2 g-sm-3 mb-3">
+          <div className="col-12 col-lg-5">
+            <label className="form-label small fw-bold mb-1">Select Original Finalized Invoice*</label>
             <select
               className="form-select fw-bold"
               value={selectedInvoiceId}
@@ -170,27 +170,27 @@ export const SalesReturnCreate = () => {
               ))}
             </select>
             {selectedInvoice && (
-              <div className="small text-muted mt-1">
-                Customer: <strong>{selectedInvoice.customerNameSnapshot}</strong> | Invoice Date: <strong>{new Date(selectedInvoice.invoiceDate).toLocaleDateString('en-IN')}</strong>
+              <div className="small text-muted mt-1 text-truncate" style={{ fontSize: '0.75rem' }}>
+                Customer: <strong>{selectedInvoice.customerNameSnapshot}</strong> | Date: <strong>{new Date(selectedInvoice.invoiceDate).toLocaleDateString('en-IN')}</strong>
               </div>
             )}
           </div>
 
-          <div className="col-6 col-md-3">
-            <label className="form-label">Return Date*</label>
+          <div className="col-12 col-sm-6 col-lg-3">
+            <label className="form-label small fw-bold mb-1">Return Date*</label>
             <input
               type="date"
-              className="form-control"
+              className="form-control form-control-sm"
               value={returnDate}
               onChange={(e) => setReturnDate(e.target.value)}
               required
             />
           </div>
 
-          <div className="col-6 col-md-4">
-            <label className="form-label">Return Reason*</label>
+          <div className="col-12 col-sm-6 col-lg-4">
+            <label className="form-label small fw-bold mb-1">Return Reason*</label>
             <select
-              className="form-select fw-semibold"
+              className="form-select form-select-sm fw-semibold"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             >
@@ -203,7 +203,7 @@ export const SalesReturnCreate = () => {
         </div>
 
         {/* Restock Inventory Banner */}
-        <div className="p-2 mb-3 bg-light border rounded d-flex align-items-center justify-content-between">
+        <div className="p-3 mb-3 bg-light border rounded d-flex align-items-center justify-content-between flex-wrap gap-2">
           <div className="d-flex align-items-center gap-2">
             <i className="bi bi-box-arrow-in-down text-success fs-5"></i>
             <div>
@@ -224,8 +224,8 @@ export const SalesReturnCreate = () => {
           </div>
         </div>
 
-        {/* Line Items Table from Selected Invoice */}
-        <div className="table-responsive mb-3 border rounded">
+        {/* 2. Line Items Desktop Table (>= 768px) */}
+        <div className="table-responsive mb-3 border rounded d-none d-md-block">
           <table className="table table-bordered align-middle mb-0">
             <thead className="bg-light">
               <tr style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -288,11 +288,87 @@ export const SalesReturnCreate = () => {
           </table>
         </div>
 
+        {/* 3. Mobile Line Items Card List (< 768px) */}
+        <div className="d-md-none mb-3">
+          {items.length === 0 ? (
+            <div className="card p-4 text-center text-muted bg-light border rounded">
+              <i className="bi bi-receipt fs-3 d-block mb-1 opacity-50"></i>
+              Please select a finalized invoice above to view returnable items.
+            </div>
+          ) : (
+            items.map((item, idx) => (
+              <div
+                key={idx}
+                className={`card p-3 mb-2 border rounded ${item.selected ? 'bg-white border-primary' : 'bg-light opacity-75'}`}
+                style={{ overflow: 'hidden' }}
+              >
+                {/* Header with Checkbox & Total */}
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="d-flex align-items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="form-check-input mt-0"
+                      checked={item.selected}
+                      onChange={() => handleToggleItem(idx)}
+                      style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                    />
+                    <span className="fw-bold text-dark small">{item.name}</span>
+                  </div>
+                  <div className="fw-bold font-mono text-danger" style={{ fontSize: '0.95rem' }}>
+                    ₹{fmt(item.selected ? item.total : 0)}
+                  </div>
+                </div>
+
+                {/* Info & Quantity row */}
+                <div className="row g-2 align-items-center">
+                  <div className="col-12 col-sm-6">
+                    <span className="small text-muted d-block" style={{ fontSize: '0.75rem' }}>
+                      Invoiced: <strong>{item.maxQuantity} {item.unit}</strong> @ ₹{fmt(item.rate)} (GST: {item.taxRate}%)
+                    </span>
+                  </div>
+                  <div className="col-12 col-sm-6">
+                    <div className="d-flex align-items-center gap-2 justify-content-between justify-content-sm-end mt-1 mt-sm-0">
+                      <label className="small text-muted mb-0 fw-semibold" style={{ fontSize: '0.75rem' }}>Return Qty:</label>
+                      <div className="input-group input-group-sm" style={{ width: '130px' }}>
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary btn-sm px-2 fw-bold"
+                          disabled={!item.selected || item.quantity <= 0}
+                          onClick={() => handleItemQuantityChange(idx, item.quantity - 1)}
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm font-mono text-center fw-bold px-1"
+                          value={item.quantity}
+                          min="0"
+                          max={item.maxQuantity}
+                          disabled={!item.selected}
+                          onChange={(e) => handleItemQuantityChange(idx, e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary btn-sm px-2 fw-bold"
+                          disabled={!item.selected || item.quantity >= item.maxQuantity}
+                          onClick={() => handleItemQuantityChange(idx, item.quantity + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
         {/* Bottom Section: Remarks & Summary Calculation */}
-        <div className="row g-4">
+        <div className="row g-3 g-md-4">
           <div className="col-12 col-md-6">
             <div className="mb-3">
-              <label className="form-label">Return Notes & Inspection Remarks</label>
+              <label className="form-label small fw-bold mb-1">Return Notes & Inspection Remarks</label>
               <textarea
                 className="form-control"
                 rows="3"
@@ -305,7 +381,7 @@ export const SalesReturnCreate = () => {
 
           {/* Right Calculation Totals Card */}
           <div className="col-12 col-md-6">
-            <div className="card p-3 bg-light border">
+            <div className="card p-3 p-sm-4 bg-light border rounded shadow-sm" style={{ overflow: 'hidden' }}>
               <div className="d-flex justify-content-between py-1">
                 <span className="text-muted">Return Taxable Subtotal:</span>
                 <span className="fw-bold font-mono text-dark">₹{fmt(subtotal)}</span>

@@ -104,6 +104,28 @@ exports.createSalesReturn = async (req, res, next) => {
     salesReturn.creditNoteId = creditNote._id;
     await salesReturn.save();
 
+    // 3.1 Update Original Invoice status, returnedAmount, balanceAmount, and paymentStatus
+    const existingReturns = await SalesReturn.find({ businessId: req.businessId, invoiceId: invoice._id });
+    const totalReturnedAmount = existingReturns.reduce((sum, r) => sum + (r.grandTotal || 0), 0);
+    invoice.returnedAmount = totalReturnedAmount;
+
+    if (totalReturnedAmount >= invoice.grandTotal) {
+      invoice.status = 'returned';
+      invoice.returnStatus = 'full';
+    } else {
+      invoice.status = 'partially_returned';
+      invoice.returnStatus = 'partial';
+    }
+
+    invoice.balanceAmount = Math.max(0, invoice.balanceAmount - taxCalc.grandTotal);
+    if (invoice.balanceAmount === 0 && invoice.paidAmount > 0) {
+      invoice.paymentStatus = 'paid';
+    } else if (invoice.balanceAmount === 0 && invoice.paidAmount === 0 && invoice.status === 'returned') {
+      invoice.paymentStatus = 'paid';
+    }
+
+    await invoice.save();
+
     // 4. Post Credit Note into Double-Entry Ledgers (Debits Sales/Output Tax, Credits Customer)
     const debtorsAcc = await AccountingService.getAccountByType(req.businessId, 'customer');
     const salesReturnAcc = await AccountingService.getAccountByType(req.businessId, 'sales_return');

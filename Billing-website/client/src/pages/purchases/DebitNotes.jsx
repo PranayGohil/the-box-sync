@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const DebitNotes = () => {
   const { addToast } = useToast();
@@ -127,12 +128,27 @@ export const DebitNotes = () => {
             Record supplier purchase returns, reverse input tax credits (ITC), and adjust accounts payable
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Debit_Notes"
+            title="Debit Notes & Purchase Returns Register"
+            headers={['Debit Note #', 'Date', 'Supplier', 'Original Bill', 'Taxable Amt (Rs)', 'Tax Amt (Rs)', 'Total (Rs)', 'Status']}
+            data={filteredNotes.map((dn) => [
+              dn.debitNoteNo,
+              new Date(dn.date).toLocaleDateString('en-IN'),
+              dn.supplierNameSnapshot || dn.supplierId?.name || 'Vendor',
+              dn.originalPurchaseBillNo || '-',
+              dn.taxableAmount || 0,
+              dn.totalTax || 0,
+              dn.grandTotal || 0,
+              dn.status?.toUpperCase()
+            ])}
+          />
           <NavLink
             to="/purchases/returns/new"
-            className="btn btn-danger btn-sm flex-fill flex-sm-grow-0"
+            className="btn btn-danger btn-sm flex-fill flex-sm-grow-0 text-nowrap"
           >
-            <i className="bi bi-journal-arrow-down"></i> Issue Debit Note
+            <i className="bi bi-journal-arrow-down me-1"></i> Issue Debit Note
           </NavLink>
         </div>
       </div>
@@ -262,7 +278,7 @@ export const DebitNotes = () => {
               <div className="invoice-card-mobile-header">
                 <div>
                   <span className="fw-bold font-mono text-danger fs-6">#{dn.debitNoteNo}</span>
-                  <span className="text-muted ms-2" style={{ fontSize: '0.75rem' }}>
+                  <span className="text-muted ms-2" style={{ fontSize: '0.72rem' }}>
                     {new Date(dn.date).toLocaleDateString('en-IN')}
                   </span>
                 </div>
@@ -272,16 +288,28 @@ export const DebitNotes = () => {
               </div>
 
               {/* Supplier & Bill Ref */}
-              <div className="mb-2">
-                <div className="fw-bold text-dark small">{dn.supplierNameSnapshot}</div>
-                <div className="d-flex align-items-center gap-2 mt-1">
-                  <span className="badge bg-light text-primary border font-mono" style={{ fontSize: '0.68rem' }}>
-                    Against #{dn.originalPurchaseBillNo || 'N/A'}
-                  </span>
-                  <span className="badge-status badge-finalized" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}>
-                    FINALIZED
-                  </span>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <div className="fw-bold text-dark small text-truncate" style={{ maxWidth: '190px' }}>
+                  {dn.supplierNameSnapshot || 'Vendor'}
                 </div>
+                <span className="badge bg-light text-primary border font-mono small" style={{ fontSize: '0.72rem' }}>
+                  Against #{dn.originalPurchaseBillNo || 'N/A'}
+                </span>
+              </div>
+
+              {/* Taxable & ITC Strip */}
+              <div className="d-flex justify-content-between text-muted font-mono py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
+                <span>Taxable: <strong className="text-dark">₹{fmt(dn.taxableAmount)}</strong></span>
+                <span>ITC Rev: <strong className="text-danger">₹{fmt(dn.totalTax)}</strong></span>
+              </div>
+
+              <div className="d-flex justify-content-between align-items-center pt-2 border-top">
+                <span className="badge-status badge-finalized" style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}>
+                  FINALIZED
+                </span>
+                <span className="text-muted small font-mono" style={{ fontSize: '0.72rem' }}>
+                  {dn.items?.length || 0} Item(s) Returned
+                </span>
               </div>
             </div>
           ))

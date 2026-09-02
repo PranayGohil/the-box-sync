@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const Expenses = () => {
   const { addToast } = useToast();
@@ -62,8 +63,10 @@ export const Expenses = () => {
   }, []);
 
   const handleOpenAdd = () => {
+    const firstCat = categories[0];
     setFormData({
-      categoryName: categories[0]?.name || 'Office Rent',
+      categoryId: firstCat?._id || '',
+      categoryName: firstCat?.name || 'Office Rent',
       vendorName: '',
       vendorGSTIN: '',
       amount: 5000,
@@ -198,9 +201,27 @@ export const Expenses = () => {
             Record overhead operating expenditures, track vendor payouts, and automate Section 194 TDS deductions
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0" onClick={handleOpenAdd}>
-            <i className="bi bi-plus-lg"></i> Record Expense
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Expenses_Register"
+            title="Business Expenses & Operating Costs"
+            headers={['Expense #', 'Date', 'Category', 'Vendor', 'Gross Amount (Rs)', 'GST Rate %', 'Tax Amt (Rs)', 'TDS Amt (Rs)', 'Net Paid (Rs)', 'Payment Mode', 'Reference No']}
+            data={filteredExpenses.map((exp) => [
+              exp.expenseNo,
+              new Date(exp.date).toLocaleDateString('en-IN'),
+              exp.categoryName,
+              exp.vendorName || 'Direct Overhead',
+              exp.amount || 0,
+              exp.taxRate || 0,
+              exp.taxAmount || 0,
+              exp.tdsAmount || 0,
+              exp.netPayable || 0,
+              exp.paymentMode?.toUpperCase() || 'CASH',
+              exp.referenceNo || '-'
+            ])}
+          />
+          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={handleOpenAdd}>
+            <i className="bi bi-plus-lg me-1"></i> Record Expense
           </button>
         </div>
       </div>
@@ -266,7 +287,7 @@ export const Expenses = () => {
 
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
-        <div className="row g-2">
+        <div className="row g-2 align-items-center">
           <div className="col-12 col-md-5">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
@@ -368,14 +389,14 @@ export const Expenses = () => {
 
               {/* Category & Vendor */}
               <div className="mb-2">
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center gap-2 flex-wrap">
                   <span className="badge bg-light text-dark border">{exp.categoryName}</span>
                   <span className="small text-dark fw-semibold">{exp.vendorName || 'Direct Expense'}</span>
                 </div>
               </div>
 
               {/* Amounts Breakdown */}
-              <div className="d-flex justify-content-between align-items-center pt-2 border-top font-mono small">
+              <div className="d-flex justify-content-between align-items-center pt-2 border-top font-mono small flex-wrap gap-1">
                 <div className="text-muted">
                   Gross: <span className="text-dark fw-bold">₹{fmt(exp.amount)}</span>
                 </div>
@@ -397,130 +418,194 @@ export const Expenses = () => {
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)', zIndex: 1050 }}>
           <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content" style={{ borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-              <div className="modal-header bg-light" style={{ borderBottom: '1px solid #e2e8f0' }}>
-                <h5 className="modal-title fw-bold">
-                  <i className="bi bi-cash-coin text-danger me-2"></i>
-                  Record Business Expenditure
-                </h5>
+            <div className="modal-content" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' }}>
+              <div className="modal-header bg-light px-3 px-sm-4 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <div>
+                  <h5 className="modal-title fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i className="bi bi-cash-coin text-danger"></i>
+                    Record Business Expenditure
+                  </h5>
+                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
+                    Overhead cost logging with automatic Section 194 TDS & double-entry posting
+                  </div>
+                </div>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
 
               <form onSubmit={handleCreateExpense}>
-                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc' }}>
-                  <div className="row g-3 mb-3">
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Expense Category*</label>
-                      <select
-                        className="form-select fw-bold"
-                        value={formData.categoryName}
-                        onChange={(e) => setFormData({ ...formData, categoryName: e.target.value })}
-                        required
-                      >
-                        {categories.map((c) => (
-                          <option key={c._id} value={c.name}>{c.name}</option>
-                        ))}
-                      </select>
+                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc', maxHeight: 'calc(80vh - 120px)' }}>
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      1. Classification & Vendor
                     </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Vendor / Service Provider Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="e.g. Landlord, Electricity Board, Airtel"
-                        value={formData.vendorName}
-                        onChange={(e) => setFormData({ ...formData, vendorName: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="row g-3 mb-3">
-                    <div className="col-6 col-md-4">
-                      <label className="form-label">Expense Amount (₹)*</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-control font-mono fw-bold text-danger"
-                        value={formData.amount}
-                        onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
-                        required
-                      />
-                    </div>
-                    <div className="col-6 col-md-4">
-                      <label className="form-label">GST Tax Rate %</label>
-                      <select
-                        className="form-select fw-semibold"
-                        value={formData.taxRate}
-                        onChange={(e) => setFormData({ ...formData, taxRate: Number(e.target.value) })}
-                      >
-                        <option value="0">0% (No GST)</option>
-                        <option value="5">5%</option>
-                        <option value="12">12%</option>
-                        <option value="18">18%</option>
-                        <option value="28">28%</option>
-                      </select>
-                    </div>
-                    <div className="col-12 col-md-4">
-                      <label className="form-label">TDS Section (Optional)</label>
-                      <select
-                        className="form-select fw-semibold"
-                        value={formData.tdsSectionId}
-                        onChange={(e) => setFormData({ ...formData, tdsSectionId: e.target.value })}
-                      >
-                        <option value="">No TDS Deduction</option>
-                        {tdsSections.map((s) => (
-                          <option key={s._id} value={s._id}>
-                            {s.section} - {s.name} ({s.rate}%)
-                          </option>
-                        ))}
-                      </select>
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-12 col-md-6">
+                        <label className="form-label small fw-bold mb-1">Expense Category*</label>
+                        <select
+                          className="form-select form-select-sm fw-bold"
+                          value={formData.categoryId || formData.categoryName}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const found = categories.find((c) => c._id === val || c.name === val);
+                            setFormData({
+                              ...formData,
+                              categoryId: found?._id || '',
+                              categoryName: found?.name || val
+                            });
+                          }}
+                          required
+                        >
+                          {categories.map((c) => (
+                            <option key={c._id} value={c._id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <label className="form-label small fw-bold mb-1">Vendor / Service Provider Name</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="e.g. Landlord, Electricity Board, Airtel"
+                          value={formData.vendorName}
+                          onChange={(e) => setFormData({ ...formData, vendorName: e.target.value })}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="row g-3 mb-3">
-                    <div className="col-6">
-                      <label className="form-label">Payment Mode*</label>
-                      <select
-                        className="form-select fw-semibold"
-                        value={formData.paymentMode}
-                        onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
-                        required
-                      >
-                        <option value="bank">Bank Transfer / NEFT</option>
-                        <option value="upi">UPI / QR</option>
-                        <option value="cash">Cash</option>
-                        <option value="card">Card</option>
-                      </select>
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      2. Amount, Tax & Statutory TDS
                     </div>
-                    <div className="col-6">
-                      <label className="form-label">Transaction / Cheque Ref</label>
-                      <input
-                        type="text"
-                        className="form-control font-mono"
-                        placeholder="Ref No / UTR"
-                        value={formData.referenceNo}
-                        onChange={(e) => setFormData({ ...formData, referenceNo: e.target.value })}
-                      />
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-6 col-md-4">
+                        <label className="form-label small fw-bold mb-1">Expense Amount (₹)*</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="form-control form-control-sm font-mono fw-bold text-danger"
+                          value={formData.amount}
+                          onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+                          required
+                        />
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label small fw-bold mb-1">GST Tax Rate %</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.taxRate}
+                          onChange={(e) => setFormData({ ...formData, taxRate: Number(e.target.value) })}
+                        >
+                          <option value="0">0% (No GST)</option>
+                          <option value="5">5%</option>
+                          <option value="12">12%</option>
+                          <option value="18">18%</option>
+                          <option value="28">28%</option>
+                        </select>
+                      </div>
+                      <div className="col-12 col-md-4">
+                        <label className="form-label small fw-bold mb-1">TDS Section (Optional)</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.tdsSectionId}
+                          onChange={(e) => setFormData({ ...formData, tdsSectionId: e.target.value })}
+                        >
+                          <option value="">No TDS Deduction</option>
+                          {tdsSections.map((s) => (
+                            <option key={s._id} value={s._id}>
+                              {s.section} - {s.name} ({s.rate}%)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mb-2">
-                    <label className="form-label">Notes / Purpose Description</label>
-                    <textarea
-                      className="form-control"
-                      rows="2"
-                      placeholder="Expense justification, invoice ref..."
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    ></textarea>
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      3. Payment Mode & References
+                    </div>
+                    <div className="row g-2 g-sm-3 mb-3">
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Payment Mode*</label>
+                        <select
+                          className="form-select form-select-sm fw-semibold"
+                          value={formData.paymentMode}
+                          onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
+                          required
+                        >
+                          <option value="bank">Bank Transfer / NEFT</option>
+                          <option value="upi">UPI / QR</option>
+                          <option value="cash">Cash</option>
+                          <option value="card">Card</option>
+                        </select>
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Transaction / Cheque Ref</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono"
+                          placeholder="Ref No / UTR"
+                          value={formData.referenceNo}
+                          onChange={(e) => setFormData({ ...formData, referenceNo: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Notes / Purpose Description</label>
+                      <textarea
+                        className="form-control form-control-sm"
+                        rows="2"
+                        placeholder="Expense justification, invoice ref..."
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      ></textarea>
+                    </div>
                   </div>
+
+                  {/* Live Calculation Summary */}
+                  {Number(formData.amount) > 0 && (
+                    <div className="p-3 bg-white border rounded shadow-none">
+                      <div className="d-flex justify-content-between py-1 small font-mono">
+                        <span className="text-muted">Gross Base Amount:</span>
+                        <span className="fw-bold">₹{fmt(formData.amount)}</span>
+                      </div>
+                      {Number(formData.taxRate) > 0 && (
+                        <div className="d-flex justify-content-between py-1 small font-mono">
+                          <span className="text-muted">GST Tax ({formData.taxRate}%):</span>
+                          <span className="fw-bold text-primary">+₹{fmt((Number(formData.amount) * Number(formData.taxRate)) / 100)}</span>
+                        </div>
+                      )}
+                      {formData.tdsSectionId && (
+                        <div className="d-flex justify-content-between py-1 small font-mono">
+                          <span className="text-muted">
+                            TDS Deduction ({tdsSections.find((s) => s._id === formData.tdsSectionId)?.rate || 0}%):
+                          </span>
+                          <span className="fw-bold text-danger">
+                            -₹{fmt((Number(formData.amount) * (Number(tdsSections.find((s) => s._id === formData.tdsSectionId)?.rate) || 0)) / 100)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="d-flex justify-content-between py-1 border-top mt-1 fw-bold font-mono">
+                        <span>Net Payable Outflow:</span>
+                        <span className="text-danger fs-6">
+                          ₹{fmt(
+                            Number(formData.amount) +
+                              (Number(formData.taxRate) > 0 ? (Number(formData.amount) * Number(formData.taxRate)) / 100 : 0) -
+                              (formData.tdsSectionId ? (Number(formData.amount) * (Number(tdsSections.find((s) => s._id === formData.tdsSectionId)?.rate) || 0)) / 100 : 0)
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="modal-footer bg-white">
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowModal(false)}>
+                <div className="modal-footer bg-white d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 p-3 border-top">
+                  <button type="button" className="btn btn-outline-secondary btn-sm w-100 w-sm-auto text-nowrap" onClick={() => setShowModal(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-danger btn-sm fw-bold" disabled={submitting}>
+                  <button type="submit" className="btn btn-danger btn-sm w-100 w-sm-auto text-nowrap fw-bold" disabled={submitting}>
                     {submitting ? 'Posting...' : 'Post Expense & Ledger Entry'}
                   </button>
                 </div>

@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { StateSelect, CitySelect } from '../../components/StateCitySelect';
+import { INDIAN_STATES } from '../../data/indiaStatesAndCities';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const Suppliers = () => {
   const { addToast } = useToast();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [stateFilter, setStateFilter] = useState('');
   const [balanceFilter, setBalanceFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
@@ -114,12 +118,14 @@ export const Suppliers = () => {
 
   // Filtered Suppliers
   const filteredSuppliers = suppliers.filter((s) => {
+    const matchesState = !stateFilter || s.address?.state === stateFilter;
+    let matchesBalance = true;
     if (balanceFilter === 'due') {
-      return (s.currentBalance || 0) > 0;
+      matchesBalance = (s.currentBalance || 0) > 0;
     } else if (balanceFilter === 'zero') {
-      return (s.currentBalance || 0) <= 0;
+      matchesBalance = (s.currentBalance || 0) <= 0;
     }
-    return true;
+    return matchesBalance && matchesState;
   });
 
   // Top Metrics Calculation
@@ -166,7 +172,7 @@ export const Suppliers = () => {
       )
     },
     {
-      header: 'GSTIN / State',
+      header: 'GSTIN / Location',
       accessor: 'gstin',
       render: (row) => (
         <div>
@@ -177,7 +183,10 @@ export const Suppliers = () => {
               UNREGISTERED
             </span>
           )}
-          <div className="small text-muted mt-1">{row.address?.state || 'Maharashtra'}</div>
+          <div className="small text-muted mt-1">
+            <i className="bi bi-geo-alt me-1 text-secondary"></i>
+            {row.address?.city ? `${row.address.city}, ` : ''}{row.address?.state || 'Maharashtra'}
+          </div>
         </div>
       )
     },
@@ -228,9 +237,26 @@ export const Suppliers = () => {
             Vendor relationship directory, GSTIN verification, credit payment terms, and payable balances
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0" onClick={handleOpenAdd}>
-            <i className="bi bi-building-add"></i> Add New Supplier
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Suppliers_Directory"
+            title="Suppliers & Accounts Payable Directory"
+            headers={['Supplier Name', 'Company Name', 'Mobile', 'Email', 'GSTIN', 'PAN', 'State', 'City', 'Credit Days', 'Payable Balance (Rs)']}
+            data={filteredSuppliers.map((s) => [
+              s.name,
+              s.companyName || '-',
+              s.phone || '-',
+              s.email || '-',
+              s.gstin || '-',
+              s.pan || '-',
+              s.address?.state || '-',
+              s.address?.city || '-',
+              s.creditDays || 0,
+              s.currentBalance || 0
+            ])}
+          />
+          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={handleOpenAdd}>
+            <i className="bi bi-person-plus-fill me-1"></i> Add New Supplier
           </button>
         </div>
       </div>
@@ -296,8 +322,8 @@ export const Suppliers = () => {
 
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
-        <div className="row g-2">
-          <div className="col-12 col-md-7">
+        <div className="row g-2 align-items-center">
+          <div className="col-12 col-md-5">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
               <input
@@ -318,7 +344,22 @@ export const Suppliers = () => {
             </div>
           </div>
 
-          <div className="col-10 col-md-4">
+          <div className="col-6 col-md-3">
+            <select
+              className="form-select form-select-sm fw-semibold"
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+            >
+              <option value="">All States / UTs</option>
+              {INDIAN_STATES.map((s) => (
+                <option key={s.code} value={s.name}>
+                  {s.name} ({s.code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-6 col-md-3">
             <select
               className="form-select form-select-sm fw-semibold"
               value={balanceFilter}
@@ -330,13 +371,13 @@ export const Suppliers = () => {
             </select>
           </div>
 
-          <div className="col-2 col-md-1">
+          <div className="col-12 col-md-1">
             <button
               className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center"
               onClick={fetchSuppliers}
               title="Refresh Suppliers"
             >
-              <i className="bi bi-arrow-clockwise"></i>
+              <i className="bi bi-arrow-clockwise"></i> <span className="d-md-none ms-1">Refresh</span>
             </button>
           </div>
         </div>
@@ -386,7 +427,7 @@ export const Suppliers = () => {
                   {sup.companyName && (
                     <div className="small text-dark fw-semibold">{sup.companyName}</div>
                   )}
-                  <div className="d-flex align-items-center gap-2 mt-1">
+                  <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
                     {sup.gstin ? (
                       <span className="badge bg-light text-dark border font-mono" style={{ fontSize: '0.68rem' }}>
                         GSTIN: {sup.gstin}
@@ -401,8 +442,22 @@ export const Suppliers = () => {
                         <i className="bi bi-telephone me-1"></i>{sup.phone}
                       </span>
                     )}
+                    {(sup.address?.city || sup.address?.state) && (
+                      <span className="small text-muted" style={{ fontSize: '0.72rem' }}>
+                        <i className="bi bi-geo-alt me-1"></i>
+                        {sup.address?.city ? `${sup.address.city}, ` : ''}{sup.address?.state}
+                      </span>
+                    )}
                   </div>
                 </div>
+
+                {/* Credit info strip */}
+                {sup.creditDays > 0 && (
+                  <div className="d-flex justify-content-between font-mono small text-muted py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
+                    <span>Payment Terms:</span>
+                    <strong className="text-dark">{sup.creditDays} Days</strong>
+                  </div>
+                )}
 
                 {/* Mobile Actions */}
                 <div className="invoice-card-mobile-actions">
@@ -425,100 +480,110 @@ export const Suppliers = () => {
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)', zIndex: 1050 }}>
           <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content" style={{ borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-              <div className="modal-header bg-light" style={{ borderBottom: '1px solid #e2e8f0' }}>
+            <div className="modal-content" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' }}>
+              <div className="modal-header bg-light px-3 px-sm-4 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <h5 className="modal-title fw-bold">
                   <i className="bi bi-building text-primary me-2"></i>
-                  {editingSupplier ? 'Edit Supplier Details' : 'Add New Supplier'}
+                  {editingSupplier ? 'Edit Supplier Details' : 'Add New Supplier Profile'}
                 </h5>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
 
               <form onSubmit={handleSubmit}>
-                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc' }}>
-                  <div className="row g-3 mb-3">
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Contact Person Name*</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Supplier Contact"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
+                <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc', maxHeight: 'calc(80vh - 120px)' }}>
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      1. Basic Identification & Contact
                     </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Company / Entity Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="e.g. Sony Distributorship Ltd"
-                        value={formData.companyName}
-                        onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="row g-3 mb-3">
-                    <div className="col-6 col-md-4">
-                      <label className="form-label">Phone Number</label>
-                      <input
-                        type="tel"
-                        className="form-control font-mono"
-                        placeholder="Phone number"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-6 col-md-4">
-                      <label className="form-label">Email Address</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        placeholder="orders@supplier.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-12 col-md-4">
-                      <label className="form-label">Credit Days (Payment Terms)</label>
-                      <input
-                        type="number"
-                        className="form-control font-mono"
-                        value={formData.creditDays}
-                        onChange={(e) => setFormData({ ...formData, creditDays: Number(e.target.value) })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="row g-3 mb-3">
-                    <div className="col-6">
-                      <label className="form-label">GSTIN</label>
-                      <input
-                        type="text"
-                        className="form-control font-mono"
-                        placeholder="27AAAAA1111A1Z1"
-                        value={formData.gstin}
-                        onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-6">
-                      <label className="form-label">PAN Number</label>
-                      <input
-                        type="text"
-                        className="form-control font-mono"
-                        placeholder="AAAAA1111A"
-                        value={formData.pan}
-                        onChange={(e) => setFormData({ ...formData, pan: e.target.value })}
-                      />
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-12 col-md-6">
+                        <label className="form-label small fw-bold mb-1">Contact Person Name*</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="e.g. Ramesh Patel"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <label className="form-label small fw-bold mb-1">Company / Entity Name</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="e.g. Sony Distributorship Pvt Ltd"
+                          value={formData.companyName}
+                          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Phone Number</label>
+                        <input
+                          type="tel"
+                          className="form-control form-control-sm font-mono"
+                          placeholder="10-digit phone"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-6 col-md-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Email Address</label>
+                        <input
+                          type="email"
+                          className="form-control form-control-sm"
+                          placeholder="orders@supplier.com"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-12 col-md-4">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Credit Days (Payment Terms)</label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm font-mono"
+                          value={formData.creditDays}
+                          onChange={(e) => setFormData({ ...formData, creditDays: Number(e.target.value) })}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="p-3 bg-light rounded border">
-                    <h6 className="fw-bold small mb-2 text-dark">Supplier Address:</h6>
+                  <div className="card p-3 mb-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      2. GST Compliance & Tax Identifiers
+                    </div>
+                    <div className="row g-2 g-sm-3">
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>GSTIN</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono text-uppercase"
+                          placeholder="27AAAAA1111A1Z1"
+                          value={formData.gstin}
+                          onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
+                        />
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>PAN Number</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm font-mono text-uppercase"
+                          placeholder="AAAAA1111A"
+                          value={formData.pan}
+                          onChange={(e) => setFormData({ ...formData, pan: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="card p-3 border bg-white rounded-3 shadow-none">
+                    <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+                      3. Supplier Office & Dispatch Address
+                    </div>
                     <div className="row g-2">
                       <div className="col-12">
+                        <label className="form-label small mb-1 fw-semibold" style={{ fontSize: '0.75rem' }}>Premises / Street Address</label>
                         <input
                           type="text"
                           className="form-control form-control-sm"
@@ -532,35 +597,43 @@ export const Suppliers = () => {
                           }
                         />
                       </div>
-                      <div className="col-4">
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          placeholder="City"
-                          value={formData.address?.city || ''}
-                          onChange={(e) =>
+                      <div className="col-12 col-md-5">
+                        <StateSelect
+                          label="State"
+                          required
+                          size="sm"
+                          value={formData.address?.state}
+                          onChange={(state, stateCode) =>
                             setFormData({
                               ...formData,
-                              address: { ...formData.address, city: e.target.value }
+                              address: {
+                                ...formData.address,
+                                state,
+                                stateCode
+                              }
                             })
                           }
                         />
                       </div>
-                      <div className="col-4">
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          placeholder="State"
-                          value={formData.address?.state || ''}
-                          onChange={(e) =>
+                      <div className="col-12 col-md-4">
+                        <CitySelect
+                          label="City"
+                          size="sm"
+                          stateName={formData.address?.state}
+                          value={formData.address?.city}
+                          onChange={(city) =>
                             setFormData({
                               ...formData,
-                              address: { ...formData.address, state: e.target.value }
+                              address: {
+                                ...formData.address,
+                                city
+                              }
                             })
                           }
                         />
                       </div>
-                      <div className="col-4">
+                      <div className="col-12 col-md-3">
+                        <label className="form-label small mb-1 fw-semibold" style={{ fontSize: '0.75rem' }}>Pincode</label>
                         <input
                           type="text"
                           className="form-control form-control-sm font-mono"
@@ -578,12 +651,12 @@ export const Suppliers = () => {
                   </div>
                 </div>
 
-                <div className="modal-footer bg-white">
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowModal(false)}>
+                <div className="modal-footer bg-white d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 p-3 border-top">
+                  <button type="button" className="btn btn-outline-secondary btn-sm w-100 w-sm-auto text-nowrap" onClick={() => setShowModal(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary-zenith btn-sm">
-                    {editingSupplier ? 'Update Supplier' : 'Save Supplier'}
+                  <button type="submit" className="btn btn-primary-zenith btn-sm w-100 w-sm-auto text-nowrap fw-bold">
+                    {editingSupplier ? 'Update Supplier' : 'Save Supplier Profile'}
                   </button>
                 </div>
               </form>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const GSTOverview = () => {
   const { addToast } = useToast();
@@ -69,6 +70,54 @@ export const GSTOverview = () => {
     window.print();
   };
 
+  const getExportData = () => {
+    if (activeTab === 'summary' && data?.gstr3b) {
+      return {
+        filename: 'GSTR3B_Summary_Report',
+        title: 'GSTR-3B Tax Liability & ITC Summary',
+        headers: ['Component', 'IGST (Rs)', 'CGST (Rs)', 'SGST (Rs)', 'Total Tax (Rs)'],
+        data: [
+          ['3.1 Outward Taxable Supplies', data.gstr3b.igstOutput || 0, data.gstr3b.cgstOutput || 0, data.gstr3b.sgstOutput || 0, data.gstr3b.outputTaxTotal || 0],
+          ['4. Eligible ITC', data.gstr3b.igstInput || 0, data.gstr3b.cgstInput || 0, data.gstr3b.sgstInput || 0, data.gstr3b.inputITCTotal || 0],
+          ['Net Cash Payable', '-', '-', '-', data.gstr3b.netGstPayable || 0]
+        ]
+      };
+    }
+    if (activeTab === 'gstr1' && data?.gstr1?.hsnSummary) {
+      return {
+        filename: 'GSTR1_HSN_Summary',
+        title: 'GSTR-1 Table 12 HSN/SAC Summary',
+        headers: ['HSN/SAC Code', 'Description', 'UQC', 'Total Quantity', 'Taxable Value (Rs)', 'Total Tax (Rs)'],
+        data: data.gstr1.hsnSummary.map((h) => [
+          h.hsnSacCode,
+          h.description,
+          h.uqc,
+          h.totalQuantity || 0,
+          h.totalTaxableValue || 0,
+          h.totalTax || 0
+        ])
+      };
+    }
+    if (activeTab === 'reconcile' && reconciliationResult?.items) {
+      return {
+        filename: 'GSTR2B_Reconciliation_Report',
+        title: 'GSTR-2B vs Purchase Register Reconciliation',
+        headers: ['Supplier GSTIN', 'Invoice #', 'Taxable Value (Rs)', 'Total Tax (Rs)', 'Status', 'Remarks'],
+        data: reconciliationResult.items.map((it) => [
+          it.gstin,
+          it.invoiceNo,
+          it.taxableValue || 0,
+          it.totalTax || 0,
+          it.status,
+          it.discrepancyDetails || 'Fully reconciled'
+        ])
+      };
+    }
+    return { filename: 'GST_Compliance_Report', title: 'GST Compliance Report', headers: [], data: [] };
+  };
+
+  const exportConfig = getExportData();
+
   return (
     <div className="gst-compliance-page-container">
       {/* 1. Header with Responsive Action Buttons */}
@@ -81,11 +130,17 @@ export const GSTOverview = () => {
             Live Output GST vs Input ITC calculations, B2B/B2C schedules, HSN summaries, and 2B reconciliation
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-          <button className="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0" onClick={handlePrint}>
-            <i className="bi bi-printer me-1"></i> Print / Export
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename={exportConfig.filename}
+            title={exportConfig.title}
+            headers={exportConfig.headers}
+            data={exportConfig.data}
+          />
+          <button className="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={handlePrint}>
+            <i className="bi bi-printer me-1"></i> Print / PDF
           </button>
-          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0" onClick={fetchGST}>
+          <button className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 text-nowrap" onClick={fetchGST}>
             <i className="bi bi-arrow-clockwise me-1"></i> Refresh
           </button>
         </div>

@@ -118,7 +118,7 @@ export const InvoiceModal = ({ isOpen, onClose, invoice, business, upiQRCode }) 
           </div>
 
           {/* Modal Body with Scrollable Invoice Canvas */}
-          <div className="modal-body p-4" style={{ background: '#f8fafc', overflowY: 'auto' }}>
+          <div className="modal-body p-2 p-sm-4" style={{ background: '#f8fafc', overflowY: 'auto' }}>
             <InvoiceTemplate
               ref={printComponentRef}
               invoice={invoice}

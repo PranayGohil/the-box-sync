@@ -41,6 +41,7 @@ class DocConversionService {
       isInterState: quote.isInterState,
       sourceDocumentId: quote._id,
       items: quote.items,
+      extraCharges: quote.extraCharges || [],
       subtotal: quote.subtotal,
       totalDiscount: quote.totalDiscount,
       taxableAmount: quote.taxableAmount,

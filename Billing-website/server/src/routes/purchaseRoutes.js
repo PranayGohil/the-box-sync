@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const {
   getPurchaseOrders,
+  getPurchaseOrderById,
   createPurchaseOrder,
+  updatePurchaseOrder,
   convertPOToGRN,
   getGoodsReceipts,
   getPurchaseBills,
@@ -21,7 +23,9 @@ router.use(tenantContext);
 
 // Purchase Orders
 router.get('/orders', requirePermission('purchase_orders', 'view'), getPurchaseOrders);
+router.get('/orders/:id', requirePermission('purchase_orders', 'view'), getPurchaseOrderById);
 router.post('/orders', requirePermission('purchase_orders', 'create'), checkFinancialYearLock, createPurchaseOrder);
+router.put('/orders/:id', requirePermission('purchase_orders', 'edit'), checkFinancialYearLock, updatePurchaseOrder);
 router.post('/orders/:id/convert-grn', requirePermission('goods_receipt', 'create'), convertPOToGRN);
 
 // GRN

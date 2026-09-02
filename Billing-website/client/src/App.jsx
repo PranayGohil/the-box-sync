@@ -104,10 +104,13 @@ export const App = () => {
         {/* Sales Suite */}
         <Route path="sales/invoices" element={<Invoices />} />
         <Route path="sales/invoices/new" element={<InvoiceCreate />} />
+        <Route path="sales/invoices/:id/edit" element={<InvoiceCreate />} />
         <Route path="sales/quotations" element={<Quotations />} />
         <Route path="sales/quotations/new" element={<QuotationCreate />} />
+        <Route path="sales/quotations/:id/edit" element={<QuotationCreate />} />
         <Route path="sales/orders" element={<SalesOrders />} />
         <Route path="sales/orders/new" element={<SalesOrderCreate />} />
+        <Route path="sales/orders/:id/edit" element={<SalesOrderCreate />} />
         <Route path="sales/challans" element={<DeliveryChallans />} />
         <Route path="sales/challans/new" element={<DeliveryChallanCreate />} />
         <Route path="sales/returns" element={<SalesReturns />} />
@@ -118,6 +121,7 @@ export const App = () => {
         <Route path="purchases/bills/new" element={<PurchaseBillCreate />} />
         <Route path="purchases/orders" element={<PurchaseOrders />} />
         <Route path="purchases/orders/new" element={<PurchaseOrderCreate />} />
+        <Route path="purchases/orders/:id/edit" element={<PurchaseOrderCreate />} />
         <Route path="purchases/grn" element={<GoodsReceipts />} />
         <Route path="purchases/grn/new" element={<GoodsReceiptCreate />} />
         <Route path="purchases/returns" element={<DebitNotes />} />

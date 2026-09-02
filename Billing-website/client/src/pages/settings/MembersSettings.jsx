@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { DataTable } from '../../components/DataTable';
+import { ExportButtons } from '../../components/ExportButtons';
 
 export const MembersSettings = () => {
   const { addToast } = useToast();
@@ -142,9 +143,21 @@ export const MembersSettings = () => {
             Manage authorized users, role assignments, module permissions, and branch/warehouse access control
           </p>
         </div>
-        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
+        <div className="d-flex gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end align-items-center flex-wrap">
+          <ExportButtons
+            filename="Team_Members_Register"
+            title="Team Members & RBAC Permissions Register"
+            headers={['Name', 'Email', 'Assigned Role', 'Branch Scope', 'Status']}
+            data={filteredMembers.map((m) => [
+              m.userId?.name || 'Authorized Member',
+              m.userId?.email || '-',
+              m.role?.toUpperCase() || 'MEMBER',
+              m.isAllBranches ? 'All Branches' : 'Assigned Only',
+              m.status?.toUpperCase() || 'ACTIVE'
+            ])}
+          />
           <button
-            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 d-flex align-items-center justify-content-center gap-1"
+            className="btn btn-primary-zenith btn-sm flex-fill flex-sm-grow-0 d-flex align-items-center justify-content-center gap-1 text-nowrap"
             onClick={() => setShowModal(true)}
           >
             <i className="bi bi-person-plus-fill"></i> Add Team Member
@@ -213,7 +226,7 @@ export const MembersSettings = () => {
 
       {/* 3. Search & Role Filter Bar */}
       <div className="card-zenith p-3 mb-3">
-        <div className="row g-2">
+        <div className="row g-2 align-items-center">
           <div className="col-12 col-md-7">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
@@ -320,36 +333,41 @@ export const MembersSettings = () => {
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-              <div className="modal-header bg-light" style={{ borderBottom: '1px solid #e2e8f0' }}>
-                <h5 className="modal-title fw-bold">
-                  <i className="bi bi-person-plus text-primary me-2"></i>
-                  Invite Team Member
-                </h5>
+            <div className="modal-content" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' }}>
+              <div className="modal-header bg-light px-3 px-sm-4 py-3" style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <div>
+                  <h5 className="modal-title fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i className="bi bi-person-plus text-primary"></i>
+                    Invite Team Member
+                  </h5>
+                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
+                    Assign granular access control & role privileges
+                  </div>
+                </div>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
               </div>
 
               <form onSubmit={handleAddMember}>
                 <div className="modal-body p-3 p-sm-4" style={{ background: '#f8fafc' }}>
                   <div className="mb-3">
-                    <label className="form-label">User Email Address*</label>
+                    <label className="form-label small fw-bold mb-1">User Email Address*</label>
                     <input
                       type="email"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       placeholder="colleague@company.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       required
                     />
-                    <div className="form-text small text-muted">
+                    <div className="form-text small text-muted" style={{ fontSize: '0.75rem' }}>
                       An invitation will be linked to this user's registered email.
                     </div>
                   </div>
 
-                  <div className="mb-3">
-                    <label className="form-label">Role & Privilege Assignment*</label>
+                  <div className="mb-2">
+                    <label className="form-label small fw-bold mb-1">Role & Privilege Assignment*</label>
                     <select
-                      className="form-select fw-semibold"
+                      className="form-select form-select-sm fw-semibold"
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     >
@@ -362,11 +380,11 @@ export const MembersSettings = () => {
                   </div>
                 </div>
 
-                <div className="modal-footer bg-white">
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowModal(false)}>
+                <div className="modal-footer bg-white d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 p-3 border-top">
+                  <button type="button" className="btn btn-outline-secondary btn-sm w-100 w-sm-auto text-nowrap" onClick={() => setShowModal(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary-zenith btn-sm" disabled={submitting}>
+                  <button type="submit" className="btn btn-primary-zenith btn-sm w-100 w-sm-auto text-nowrap fw-bold" disabled={submitting}>
                     {submitting ? 'Adding...' : 'Add Team Member'}
                   </button>
                 </div>

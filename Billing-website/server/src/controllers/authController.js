@@ -13,7 +13,25 @@ const generateToken = (userId) => {
 // @route   POST /api/auth/register
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, mobile, password, businessName, state, stateCode, gstin } = req.body;
+    const {
+      name,
+      email,
+      mobile,
+      password,
+      businessName,
+      legalName,
+      logoUrl,
+      state,
+      stateCode,
+      city,
+      address,
+      pincode,
+      gstin,
+      pan,
+      businessType,
+      taxType,
+      upiId
+    } = req.body;
 
     if (!name || !email || !password || !businessName || !state) {
       return res.status(400).json({
@@ -39,11 +57,20 @@ exports.register = async (req, res, next) => {
 
     const business = await Business.create({
       name: businessName,
-      legalName: businessName,
+      legalName: legalName || businessName,
+      logoUrl: logoUrl || '',
       state,
       stateCode: stateCode || '27',
-      gstin: gstin || '',
-      taxType: gstin ? 'regular' : 'unregistered',
+      city: city || '',
+      address: address || '',
+      pincode: pincode || '',
+      gstin: gstin ? gstin.toUpperCase() : '',
+      pan: pan ? pan.toUpperCase() : (gstin && gstin.length >= 12 ? gstin.substring(2, 12).toUpperCase() : ''),
+      businessType: businessType || 'Retail / Wholesale',
+      taxType: taxType || (gstin ? 'regular' : 'unregistered'),
+      upiId: upiId || '',
+      email: email.toLowerCase(),
+      phone: mobile || '',
       currentFinancialYear: '2026-27',
       createdBy: user._id
     });
