@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* ── Light Theme Base ── */
+  --bg-base:        #f1f4f9;
+  --bg-surface:     #ffffff;
+  --bg-elevated:    #f8fafc;
+  --bg-panel:       #ffffff;
+  --bg-sidebar:     #ffffff;
+  --bg-topbar:      #ffffff;
+
+  /* ── Card & Panel Surfaces ── */
+  --card-bg:        #ffffff;
+  --card-border:    #e2e8f0;
+  --card-shadow:    0 2px 12px rgba(15, 23, 42, 0.07);
+  --card-shadow-hover: 0 8px 28px rgba(15, 23, 42, 0.13);
+  --card-radius:    14px;
+
+  /* ── Accent Colours ── */
+  --accent-primary: #4f6ef7;
+  --accent-violet:  #7c6ef7;
+  --accent-pink:    #e879a3;
+  --accent-emerald: #10b981;
+  --accent-amber:   #f59e0b;
+  --accent-cyan:    #06b6d4;
+  --accent-red:     #ef4444;
+
+  /* ── Gradient ── */
+  --prism-gradient: linear-gradient(135deg, #4f6ef7 0%, #7c6ef7 45%, #e879a3 100%);
+  --prism-glow:     0 4px 20px rgba(79, 110, 247, 0.4);
+
+  /* ── Typography ── */
+  --font-main:      'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+  --text-on-dark:   #f8fafc;
+
+  /* ── Status ── */
+  --status-submitted-bg:   #eff6ff; --status-submitted-fg:   #1d4ed8; --status-submitted-border: #bfdbfe;
+  --status-scrutiny-bg:    #f5f3ff; --status-scrutiny-fg:    #6d28d9; --status-scrutiny-border: #ddd6fe;
+  --status-query-bg:       #fffbeb; --status-query-fg:       #b45309; --status-query-border: #fde68a;
+  --status-approved-bg:    #ecfdf5; --status-approved-fg:    #065f46; --status-approved-border: #a7f3d0;
+  --status-rejected-bg:    #fef2f2; --status-rejected-fg:    #b91c1c; --status-rejected-border: #fecaca;
+  --status-rajachitthi-bg: #ecfeff; --status-rajachitthi-fg: #0e7490; --status-rajachitthi-border:#a5f3fc;
+
+  /* ── Sidebar Specific ── */
+  --sidebar-width:           260px;
+  --sidebar-collapsed-width: 70px;
+  --topbar-height:           62px;
+}
