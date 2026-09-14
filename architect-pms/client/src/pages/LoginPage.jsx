@@ -9,12 +9,14 @@ import {
   Mail,
   Eye,
   EyeOff,
-  CheckCircle2,
   Sparkles,
-  ArrowRight,
   Layers,
   CalendarCheck,
   FileSpreadsheet,
+  AlertCircle,
+  X,
+  User,
+  KeyRound,
 } from 'lucide-react';
 
 const DEMO_ACCOUNTS = [
@@ -36,15 +38,33 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (error) setError('');
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (error) setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
     try {
-      const user = await login(email, password);
+      const user = await login(email.trim(), password);
       navigate(user.role === 'client' ? '/client-portal/dashboard' : '/dashboard');
     } catch (err) {
-      setError(err.message || 'Login failed. Please verify your email and password.');
+      const msg = err.message || '';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Network Error')) {
+        setError('Unable to reach the server. Please check your network connection or verify the server is active.');
+      } else if (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('unauthorized') || msg.includes('401')) {
+        setError('Invalid email address or password. Please verify your credentials and try again.');
+      } else {
+        setError(msg || 'Authentication failed. Please check your credentials and try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -61,7 +81,7 @@ const LoginPage = () => {
         overflowY: 'auto',
       }}
     >
-      {/* ── Left Branding Panel (Desktop) ── */}
+      {/* ── Left Branding Panel (Desktop Only) ── */}
       <div
         className="d-none d-lg-flex flex-column justify-content-between"
         style={{
@@ -226,21 +246,22 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* ── Right Login Form Panel ── */}
+      {/* ── Right Login Form Panel (Mobile & Desktop Responsive) ── */}
       <div
         style={{
           flex: '1',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '2.5rem 1.5rem',
+          padding: '1.5rem 1rem',
           position: 'relative',
           zIndex: 1,
+          width: '100%',
         }}
       >
         <div style={{ width: '100%', maxWidth: '440px' }}>
           {/* Mobile Header */}
-          <div className="d-lg-none text-center" style={{ marginBottom: '2rem' }}>
+          <div className="d-lg-none text-center" style={{ marginBottom: '1.5rem' }}>
             <div
               style={{
                 display: 'inline-flex',
@@ -248,19 +269,19 @@ const LoginPage = () => {
                 justifyContent: 'center',
                 width: 52,
                 height: 52,
-                borderRadius: '14px',
+                borderRadius: '16px',
                 background: 'var(--prism-gradient)',
                 boxShadow: '0 6px 20px rgba(79,110,247,0.35)',
-                marginBottom: '0.75rem',
+                marginBottom: '0.65rem',
               }}
             >
               <Building2 size={26} color="#fff" />
             </div>
-            <h2 style={{ fontWeight: 800, fontSize: '1.4rem', color: 'var(--text-primary)', margin: 0 }}>
+            <h2 style={{ fontWeight: 900, fontSize: '1.35rem', color: 'var(--text-primary)', margin: 0, letterSpacing: '0.02em' }}>
               Architect PMS
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '4px 0 0' }}>
-              Municipal Building Permissions
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', margin: '3px 0 0', fontWeight: 500 }}>
+              Municipal Building Permissions Platform
             </p>
           </div>
 
@@ -270,55 +291,81 @@ const LoginPage = () => {
               background: '#ffffff',
               border: '1.5px solid #e2e8f0',
               borderRadius: '20px',
-              padding: '2.5rem 2.25rem',
-              boxShadow: '0 20px 50px rgba(15,23,42,0.08)',
+              padding: 'clamp(1.35rem, 5vw, 2.25rem)',
+              boxShadow: '0 20px 45px rgba(15,23,42,0.06)',
             }}
           >
-            <div style={{ marginBottom: '1.75rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
               <h2
                 style={{
                   fontWeight: 800,
-                  fontSize: '1.45rem',
+                  fontSize: 'clamp(1.25rem, 4vw, 1.45rem)',
                   color: 'var(--text-primary)',
-                  margin: '0 0 0.4rem',
+                  margin: '0 0 0.35rem',
                   lineHeight: 1.2,
                 }}
               >
                 Sign in to your account
               </h2>
-              <p style={{ fontSize: '0.865rem', color: 'var(--text-muted)', margin: 0 }}>
+              <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', margin: 0 }}>
                 Enter your credentials to access the workspace
               </p>
             </div>
 
+            {/* Error Notification Alert */}
             {error && (
               <div
                 style={{
-                  background: '#fef2f2',
+                  background: '#fff5f5',
                   border: '1.5px solid #fecaca',
+                  borderLeft: '4px solid #ef4444',
                   borderRadius: '10px',
-                  padding: '0.75rem 1rem',
-                  color: '#dc2626',
-                  fontSize: '0.84rem',
+                  padding: '0.75rem 0.9rem',
+                  color: '#991b1b',
+                  fontSize: '0.82rem',
                   fontWeight: 600,
+                  lineHeight: 1.4,
                   marginBottom: '1.25rem',
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                  boxShadow: '0 4px 12px rgba(239,68,68,0.08)',
                 }}
               >
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#dc2626', flexShrink: 0 }} />
-                <span>{error}</span>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <AlertCircle size={17} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span>{error}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setError('')}
+                  title="Dismiss error"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: '2px',
+                    color: '#991b1b',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    opacity: 0.8,
+                  }}
+                >
+                  <X size={15} />
+                </button>
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
               {/* Email Address */}
-              <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ marginBottom: '1.15rem' }}>
                 <label
                   style={{
                     display: 'block',
-                    fontSize: '0.76rem',
+                    fontSize: '0.74rem',
                     fontWeight: 700,
                     color: 'var(--text-secondary)',
                     marginBottom: '0.4rem',
@@ -333,7 +380,7 @@ const LoginPage = () => {
                     size={16}
                     style={{
                       position: 'absolute',
-                      left: '13px',
+                      left: '14px',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       color: '#94a3b8',
@@ -345,17 +392,17 @@ const LoginPage = () => {
                     type="email"
                     placeholder="name@firm.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
                     required
                     style={{
                       width: '100%',
-                      height: '42px',
+                      height: '46px',
                       background: '#f8fafc',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '10px',
-                      paddingLeft: '40px',
+                      border: error ? '1.5px solid #f87171' : '1.5px solid #e2e8f0',
+                      borderRadius: '11px',
+                      paddingLeft: '42px',
                       paddingRight: '14px',
-                      fontSize: '0.885rem',
+                      fontSize: '0.89rem',
                       color: '#0f172a',
                       fontFamily: 'var(--font-main)',
                       outline: 'none',
@@ -367,7 +414,7 @@ const LoginPage = () => {
                       e.target.style.background = '#ffffff';
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.borderColor = error ? '#f87171' : '#e2e8f0';
                       e.target.style.boxShadow = 'none';
                       e.target.style.background = '#f8fafc';
                     }}
@@ -376,7 +423,7 @@ const LoginPage = () => {
               </div>
 
               {/* Password */}
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ marginBottom: '1.4rem' }}>
                 <div
                   style={{
                     display: 'flex',
@@ -388,7 +435,7 @@ const LoginPage = () => {
                   <label
                     style={{
                       margin: 0,
-                      fontSize: '0.76rem',
+                      fontSize: '0.74rem',
                       fontWeight: 700,
                       color: 'var(--text-secondary)',
                       textTransform: 'uppercase',
@@ -410,7 +457,7 @@ const LoginPage = () => {
                     style={{
                       background: 'none',
                       border: 'none',
-                      fontSize: '0.78rem',
+                      fontSize: '0.76rem',
                       color: 'var(--accent-primary)',
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -425,7 +472,7 @@ const LoginPage = () => {
                     size={16}
                     style={{
                       position: 'absolute',
-                      left: '13px',
+                      left: '14px',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       color: '#94a3b8',
@@ -437,17 +484,17 @@ const LoginPage = () => {
                     type={showPass ? 'text' : 'password'}
                     placeholder="••••••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={handlePasswordChange}
                     required
                     style={{
                       width: '100%',
-                      height: '42px',
+                      height: '46px',
                       background: '#f8fafc',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '10px',
-                      paddingLeft: '40px',
-                      paddingRight: '42px',
-                      fontSize: '0.885rem',
+                      border: error ? '1.5px solid #f87171' : '1.5px solid #e2e8f0',
+                      borderRadius: '11px',
+                      paddingLeft: '42px',
+                      paddingRight: '44px',
+                      fontSize: '0.89rem',
                       color: '#0f172a',
                       fontFamily: 'var(--font-main)',
                       outline: 'none',
@@ -459,7 +506,7 @@ const LoginPage = () => {
                       e.target.style.background = '#ffffff';
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.borderColor = error ? '#f87171' : '#e2e8f0';
                       e.target.style.boxShadow = 'none';
                       e.target.style.background = '#f8fafc';
                     }}
@@ -469,14 +516,14 @@ const LoginPage = () => {
                     onClick={() => setShowPass(!showPass)}
                     style={{
                       position: 'absolute',
-                      right: '12px',
+                      right: '10px',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
                       color: '#94a3b8',
-                      padding: '4px',
+                      padding: '6px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -494,15 +541,16 @@ const LoginPage = () => {
                 className="prism-btn-primary"
                 style={{
                   width: '100%',
-                  height: '44px',
-                  fontSize: '0.92rem',
-                  borderRadius: '10px',
+                  height: '48px',
+                  fontSize: '0.93rem',
+                  borderRadius: '11px',
                   justifyContent: 'center',
                   fontWeight: 700,
-                  boxShadow: '0 4px 14px rgba(79,110,247,0.35)',
+                  boxShadow: '0 6px 18px rgba(79,110,247,0.3)',
+                  cursor: loading ? 'wait' : 'pointer',
                 }}
               >
-                <ShieldCheck size={18} />
+                <ShieldCheck size={19} />
                 <span>{loading ? 'Verifying Credentials...' : 'Sign In to Workspace'}</span>
               </button>
             </form>
@@ -510,14 +558,14 @@ const LoginPage = () => {
             {/* Quick Demo Autofill Section */}
             <div
               style={{
-                marginTop: '1.75rem',
+                marginTop: '1.5rem',
                 borderTop: '1px solid #f1f5f9',
-                paddingTop: '1.25rem',
+                paddingTop: '1.15rem',
               }}
             >
               <div
                 style={{
-                  fontSize: '0.7rem',
+                  fontSize: '0.68rem',
                   fontWeight: 800,
                   color: 'var(--text-muted)',
                   textTransform: 'uppercase',
@@ -530,10 +578,9 @@ const LoginPage = () => {
               </div>
               <div
                 style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(105px, 1fr))',
                   gap: '0.45rem',
-                  justifyContent: 'center',
                 }}
               >
                 {DEMO_ACCOUNTS.map((a) => (
@@ -543,17 +590,22 @@ const LoginPage = () => {
                     onClick={() => {
                       setEmail(a.email);
                       setPassword('Password@123');
+                      if (error) setError('');
                     }}
                     style={{
                       background: a.bg,
                       border: `1.5px solid ${a.border}`,
-                      borderRadius: '8px',
+                      borderRadius: '9px',
                       color: a.color,
-                      fontSize: '0.75rem',
+                      fontSize: '0.74rem',
                       fontWeight: 700,
-                      padding: '5px 11px',
+                      padding: '8px 10px',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-1px)';
@@ -574,9 +626,9 @@ const LoginPage = () => {
           <div
             style={{
               textAlign: 'center',
-              fontSize: '0.74rem',
+              fontSize: '0.72rem',
               color: '#94a3b8',
-              marginTop: '1.5rem',
+              marginTop: '1.25rem',
             }}
           >
             Architect PMS · Enterprise Municipal Permissions Platform

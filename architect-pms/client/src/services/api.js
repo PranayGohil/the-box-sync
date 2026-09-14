@@ -1,4 +1,19 @@
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+
+export const getFileUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  let serverBase = import.meta.env.VITE_SERVER_BASE_URL;
+  if (!serverBase && API_BASE.startsWith('http')) {
+    try {
+      const url = new URL(API_BASE);
+      serverBase = url.origin;
+    } catch (e) {
+      serverBase = '';
+    }
+  }
+  return `${serverBase || ''}${path.startsWith('/') ? '' : '/'}${path}`;
+};
 
 export const fetchAPI = async (endpoint, options = {}) => {
   const token = localStorage.getItem('pms_token');
@@ -26,3 +41,12 @@ export const fetchAPI = async (endpoint, options = {}) => {
 
   return data;
 };
+
+export const fetchFormDataAPI = async (endpoint, method = 'POST', formData) => {
+  return fetchAPI(endpoint, {
+    method,
+    body: formData,
+  });
+};
+
+

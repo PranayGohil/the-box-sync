@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchAPI } from '../services/api';
+import { fetchAPI, getFileUrl } from '../services/api';
 import { useModal } from '../context/ModalContext';
 import StatusBadge from '../components/StatusBadge';
 import LoadingGlass from '../components/LoadingGlass';
@@ -429,7 +429,7 @@ const ProjectDetailPage = () => {
                     <td style={{ padding: '0.8rem 0.75rem', fontSize: '0.83rem', color: 'var(--text-muted)' }}>{formatDate(doc.uploadedAt)}</td>
                     <td style={{ padding: '0.8rem 0.75rem', fontSize: '0.83rem', color: 'var(--text-secondary)' }}>{doc.uploadedBy}</td>
                     <td style={{ padding: '0.8rem 0.75rem', textAlign: 'right' }}>
-                      <a href={doc.fileUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 10px', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                      <a href={getFileUrl(doc.fileUrl)} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 10px', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', textDecoration: 'none' }}>
                         <ExternalLink size={12} /> Open
                       </a>
                     </td>
