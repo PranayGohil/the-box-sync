@@ -3,7 +3,59 @@ class TaxDeterminationService {
    * Determine GST Tax Structure (CGST+SGST vs IGST) and calculate itemized taxes
    * @param {Object} options - { supplierStateCode, customerStateCode, isInterState, isTaxInclusive, items }
    */
-  static calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive = false) {
+  static calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive = false, isWithoutGst = false) {
+    if (isWithoutGst) {
+      let subtotal = 0;
+      let totalDiscount = 0;
+      const calculatedItems = (items || []).map(item => {
+        const quantity = Number(item.quantity) || 1;
+        const rate = Number(item.rate) || 0;
+        const grossAmount = quantity * rate;
+        let discountAmount = 0;
+        if (item.discountPercent && Number(item.discountPercent) > 0) {
+          discountAmount = (grossAmount * Number(item.discountPercent)) / 100;
+        } else if (item.discountAmount && Number(item.discountAmount) > 0) {
+          discountAmount = Number(item.discountAmount);
+        }
+        const taxableValue = Math.max(0, grossAmount - discountAmount);
+        subtotal += grossAmount;
+        totalDiscount += discountAmount;
+        return {
+          ...item,
+          quantity,
+          rate,
+          discountPercent: Number(item.discountPercent) || 0,
+          discountAmount: Number(discountAmount.toFixed(2)),
+          taxableValue: Number(taxableValue.toFixed(2)),
+          taxRate: 0,
+          cgstRate: 0,
+          cgstAmount: 0,
+          sgstRate: 0,
+          sgstAmount: 0,
+          igstRate: 0,
+          igstAmount: 0,
+          cessRate: 0,
+          cessAmount: 0,
+          total: Number(taxableValue.toFixed(2))
+        };
+      });
+      const taxableAmount = subtotal - totalDiscount;
+      return {
+        items: calculatedItems,
+        isInterState: false,
+        subtotal: Number(subtotal.toFixed(2)),
+        totalDiscount: Number(totalDiscount.toFixed(2)),
+        taxableAmount: Number(taxableAmount.toFixed(2)),
+        cgstTotal: 0,
+        sgstTotal: 0,
+        igstTotal: 0,
+        cessTotal: 0,
+        totalTax: 0,
+        roundOff: 0,
+        grandTotal: Math.round(taxableAmount)
+      };
+    }
+
     const isInterState = String(supplierStateCode).trim() !== String(placeOfSupplyStateCode).trim();
 
     let subtotal = 0;

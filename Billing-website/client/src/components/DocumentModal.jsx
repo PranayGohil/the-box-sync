@@ -19,8 +19,12 @@ export const DocumentTemplate = React.forwardRef(({ document: doc, business, doc
     });
   };
 
+  const currency = doc.currency || business.currency || 'INR';
+  const currencySymbol = doc.currencySymbol || business.currencySymbol || (currency === 'USD' ? '$' : '₹');
+  const currencyLocale = currency === 'USD' ? 'en-US' : 'en-IN';
+
   const formatCurrency = (val) => {
-    return '₹' + Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return currencySymbol + ' ' + Number(val || 0).toLocaleString(currencyLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   // Determine doc metadata
@@ -32,9 +36,11 @@ export const DocumentTemplate = React.forwardRef(({ document: doc, business, doc
   let secondaryDate = '';
   let isPurchase = false;
 
+  const isWithoutGst = Boolean(doc.isWithoutGst || (doc.totalTax === 0 && (!doc.items || doc.items.every(i => !i.taxRate || i.taxRate === 0))));
+
   switch (docType) {
     case 'quotation':
-      docTitle = 'QUOTATION / PRICE ESTIMATE';
+      docTitle = isWithoutGst ? 'QUOTATION / PRICE ESTIMATE (NON-GST)' : 'QUOTATION / PRICE ESTIMATE';
       docNoLabel = 'Quotation #';
       docNo = doc.quotationNo;
       dateLabel = 'Quotation Date';
@@ -44,7 +50,7 @@ export const DocumentTemplate = React.forwardRef(({ document: doc, business, doc
       }
       break;
     case 'sales_order':
-      docTitle = 'SALES ORDER';
+      docTitle = isWithoutGst ? 'SALES ORDER (NON-GST)' : 'SALES ORDER';
       docNoLabel = 'Order #';
       docNo = doc.orderNo;
       dateLabel = 'Order Date';
@@ -54,7 +60,7 @@ export const DocumentTemplate = React.forwardRef(({ document: doc, business, doc
       }
       break;
     case 'purchase_order':
-      docTitle = 'PURCHASE ORDER';
+      docTitle = isWithoutGst ? 'PURCHASE ORDER (NON-GST)' : 'PURCHASE ORDER';
       docNoLabel = 'PO #';
       docNo = doc.poNo;
       dateLabel = 'PO Date';
@@ -71,7 +77,7 @@ export const DocumentTemplate = React.forwardRef(({ document: doc, business, doc
       dateLabel = 'Challan Date';
       break;
     case 'purchase_bill':
-      docTitle = 'PURCHASE BILL';
+      docTitle = isWithoutGst ? 'PURCHASE BILL (NON-GST)' : 'PURCHASE BILL';
       docNoLabel = 'Bill #';
       docNo = doc.billNo;
       dateLabel = 'Bill Date';
@@ -100,15 +106,15 @@ export const DocumentTemplate = React.forwardRef(({ document: doc, business, doc
   const items = doc.items || [];
   const extraCharges = doc.extraCharges || [];
 
-  const cgstVal = doc.cgstTotal !== undefined && doc.cgstTotal > 0
+  const cgstVal = isWithoutGst ? 0 : (doc.cgstTotal !== undefined && doc.cgstTotal > 0
     ? doc.cgstTotal
-    : (!doc.isInterState && doc.totalTax > 0 ? doc.totalTax / 2 : 0);
-  const sgstVal = doc.sgstTotal !== undefined && doc.sgstTotal > 0
+    : (!doc.isInterState && doc.totalTax > 0 ? doc.totalTax / 2 : 0));
+  const sgstVal = isWithoutGst ? 0 : (doc.sgstTotal !== undefined && doc.sgstTotal > 0
     ? doc.sgstTotal
-    : (!doc.isInterState && doc.totalTax > 0 ? doc.totalTax / 2 : 0);
-  const igstVal = doc.igstTotal !== undefined && doc.igstTotal > 0
+    : (!doc.isInterState && doc.totalTax > 0 ? doc.totalTax / 2 : 0));
+  const igstVal = isWithoutGst ? 0 : (doc.igstTotal !== undefined && doc.igstTotal > 0
     ? doc.igstTotal
-    : (doc.isInterState && doc.totalTax > 0 ? doc.totalTax : 0);
+    : (doc.isInterState && doc.totalTax > 0 ? doc.totalTax : 0));
 
   return (
     <div
@@ -241,10 +247,10 @@ export const DocumentTemplate = React.forwardRef(({ document: doc, business, doc
             <th style={{ padding: '10px 12px', textAlign: 'left' }}>Item Description</th>
             <th style={{ padding: '10px 12px', textAlign: 'center', width: '90px' }}>HSN/SAC</th>
             <th style={{ padding: '10px 12px', textAlign: 'center', width: '70px' }}>Qty</th>
-            <th style={{ padding: '10px 12px', textAlign: 'right', width: '90px' }}>Rate (₹)</th>
-            <th style={{ padding: '10px 12px', textAlign: 'right', width: '90px' }}>Taxable</th>
-            <th style={{ padding: '10px 12px', textAlign: 'center', width: '70px' }}>GST%</th>
-            <th style={{ padding: '10px 12px', textAlign: 'right', width: '90px' }}>Total (₹)</th>
+            <th style={{ padding: '10px 12px', textAlign: 'right', width: '90px' }}>Rate ({currencySymbol})</th>
+            <th style={{ padding: '10px 12px', textAlign: 'right', width: '90px' }}>{isWithoutGst ? 'Amount' : 'Taxable'}</th>
+            <th style={{ padding: '10px 12px', textAlign: 'center', width: '70px' }}>{isWithoutGst ? 'Tax' : 'GST%'}</th>
+            <th style={{ padding: '10px 12px', textAlign: 'right', width: '90px' }}>Total ({currencySymbol})</th>
           </tr>
         </thead>
         <tbody>
@@ -275,7 +281,7 @@ export const DocumentTemplate = React.forwardRef(({ document: doc, business, doc
                   {Number(taxable).toFixed(2)}
                 </td>
                 <td style={{ padding: '10px 12px', textAlign: 'center', color: '#475569' }}>
-                  {taxRate}%
+                  {isWithoutGst ? '0%' : `${taxRate}%`}
                 </td>
                 <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, fontFamily: 'monospace', color: '#0f172a' }}>
                   {Number(total).toFixed(2)}
@@ -315,7 +321,7 @@ export const DocumentTemplate = React.forwardRef(({ document: doc, business, doc
         <div style={{ width: '310px' }}>
           <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ color: '#64748b' }}>Taxable Amount:</span>
+              <span style={{ color: '#64748b' }}>{isWithoutGst ? 'Subtotal:' : 'Taxable Amount:'}</span>
               <span style={{ fontWeight: 600, fontFamily: 'monospace' }}>
                 {formatCurrency(doc.taxableAmount || doc.subtotal)}
               </span>

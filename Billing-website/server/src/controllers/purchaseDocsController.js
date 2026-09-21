@@ -65,14 +65,18 @@ exports.getPurchaseOrders = async (req, res, next) => {
 
 exports.createPurchaseOrder = async (req, res, next) => {
   try {
-    const { supplierId, warehouseId, items, isTaxInclusive, expectedDeliveryDate, terms, notes } = req.body;
+    const { supplierId, warehouseId, items, isTaxInclusive, isWithoutGst, currency, currencySymbol, expectedDeliveryDate, terms, notes } = req.body;
     const supplier = await Supplier.findOne({ _id: supplierId, businessId: req.businessId });
     if (!supplier) return res.status(404).json({ success: false, message: 'Supplier not found' });
 
     const supplierStateCode = supplier.address?.stateCode || '27';
     const placeOfSupplyStateCode = req.business.stateCode || '27';
 
-    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive);
+    const withoutGstFlag = Boolean(isWithoutGst);
+    const docCurrency = currency || req.business.currency || 'INR';
+    const docCurrencySymbol = currencySymbol || (docCurrency === 'USD' ? '$' : '₹');
+
+    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive, withoutGstFlag);
     const poNo = await SequenceService.getNextDocumentNumber(req.businessId, 'purchase_order', req.financialYear);
 
     const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
@@ -119,6 +123,9 @@ exports.createPurchaseOrder = async (req, res, next) => {
       supplierAddressSnapshot: supplier.address,
       placeOfSupply: req.business.state,
       isInterState: taxCalc.isInterState,
+      isWithoutGst: withoutGstFlag,
+      currency: docCurrency,
+      currencySymbol: docCurrencySymbol,
       items: taxCalc.items,
       extraCharges: processedExtraCharges,
       subtotal: taxCalc.subtotal,
@@ -157,7 +164,7 @@ exports.getPurchaseOrderById = async (req, res, next) => {
 
 exports.updatePurchaseOrder = async (req, res, next) => {
   try {
-    const { supplierId, warehouseId, items, isTaxInclusive, expectedDeliveryDate, terms, notes } = req.body;
+    const { supplierId, warehouseId, items, isTaxInclusive, isWithoutGst, currency, currencySymbol, expectedDeliveryDate, terms, notes } = req.body;
     const po = await PurchaseOrder.findOne({ _id: req.params.id, businessId: req.businessId });
     if (!po) {
       return res.status(404).json({ success: false, message: 'Purchase Order not found' });
@@ -172,7 +179,11 @@ exports.updatePurchaseOrder = async (req, res, next) => {
     const supplierStateCode = supplier.address?.stateCode || '27';
     const placeOfSupplyStateCode = req.business.stateCode || '27';
 
-    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive);
+    const withoutGstFlag = isWithoutGst !== undefined ? Boolean(isWithoutGst) : Boolean(po.isWithoutGst);
+    const docCurrency = currency || po.currency || req.business.currency || 'INR';
+    const docCurrencySymbol = currencySymbol || (docCurrency === 'USD' ? '$' : '₹');
+
+    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive, withoutGstFlag);
 
     const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
       const rate = Number(ch.rate) || 0;
@@ -211,6 +222,9 @@ exports.updatePurchaseOrder = async (req, res, next) => {
     po.supplierAddressSnapshot = supplier.address;
     po.placeOfSupply = req.business.state;
     po.isInterState = taxCalc.isInterState;
+    po.isWithoutGst = withoutGstFlag;
+    po.currency = docCurrency;
+    po.currencySymbol = docCurrencySymbol;
     if (warehouseId) po.warehouseId = warehouseId;
     if (req.body.date) po.date = req.body.date;
     if (expectedDeliveryDate !== undefined) po.expectedDeliveryDate = expectedDeliveryDate;
@@ -333,7 +347,11 @@ exports.createPurchaseBill = async (req, res, next) => {
       dueDate,
       items,
       isTaxInclusive = false,
+      isWithoutGst = false,
+      currency,
+      currencySymbol,
       notes,
+      terms,
       skipStockAddition = false
     } = req.body;
 
@@ -353,7 +371,11 @@ exports.createPurchaseBill = async (req, res, next) => {
     const supplierStateCode = supplier.address?.stateCode || '27';
     const placeOfSupplyStateCode = req.business.stateCode || '27';
 
-    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive);
+    const withoutGstFlag = Boolean(isWithoutGst);
+    const docCurrency = currency || req.business.currency || 'INR';
+    const docCurrencySymbol = currencySymbol || (docCurrency === 'USD' ? '$' : '₹');
+
+    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive, withoutGstFlag);
     const billNo = await SequenceService.getNextDocumentNumber(req.businessId, 'purchase_bill', req.financialYear);
 
     const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
@@ -404,6 +426,10 @@ exports.createPurchaseBill = async (req, res, next) => {
       placeOfSupply: req.business.state,
       placeOfSupplyStateCode,
       isInterState: taxCalc.isInterState,
+      isWithoutGst: withoutGstFlag,
+      currency: docCurrency,
+      currencySymbol: docCurrencySymbol,
+      terms,
       items: taxCalc.items,
       extraCharges: processedExtraCharges,
       subtotal: taxCalc.subtotal,
