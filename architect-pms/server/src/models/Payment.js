@@ -11,12 +11,37 @@ const paymentSchema = new mongoose.Schema(
     amountDue: { type: Number, required: true, default: 0 },
     amountPaid: { type: Number, required: true, default: 0 },
     dueDate: { type: Date, default: null },
+    isEmi: { type: Boolean, default: false },
+    emiPlan: {
+      totalEmis: { type: Number, default: 1 },
+      frequency: {
+        type: String,
+        enum: ['monthly', 'quarterly', 'milestone', 'custom'],
+        default: 'monthly',
+      },
+      installments: [
+        {
+          installmentNo: { type: Number, required: true },
+          name: { type: String, default: '' },
+          amount: { type: Number, required: true },
+          dueDate: { type: Date, default: null },
+          paidAmount: { type: Number, default: 0 },
+          status: {
+            type: String,
+            enum: ['pending', 'paid', 'partially_paid'],
+            default: 'pending',
+          },
+          paidDate: { type: Date, default: null },
+        },
+      ],
+    },
     paymentHistory: [
       {
         amount: { type: Number, required: true },
         date: { type: Date, default: Date.now },
         method: { type: String, default: 'bank_transfer' },
         remark: { type: String, default: '' },
+        installmentNo: { type: Number, default: null },
       },
     ],
   },

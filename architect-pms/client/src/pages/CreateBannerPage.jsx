@@ -28,6 +28,7 @@ const CreateBannerPage = () => {
   const [selectedProjectId, setSelectedProjectId] = useState(id || "");
   const [banner, setBanner] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
     fetchAPI("/projects?limit=200")
@@ -52,6 +53,25 @@ const CreateBannerPage = () => {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [selectedProjectId]);
+
+  useEffect(() => {
+    const handleBefore = () => setIsPrinting(true);
+    const handleAfter = () => setIsPrinting(false);
+    window.addEventListener("beforeprint", handleBefore);
+    window.addEventListener("afterprint", handleAfter);
+    return () => {
+      window.removeEventListener("beforeprint", handleBefore);
+      window.removeEventListener("afterprint", handleAfter);
+    };
+  }, []);
+
+  const handlePrint = () => {
+    setIsPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setIsPrinting(false);
+    }, 60);
+  };
 
   return (
     <div>
@@ -127,7 +147,7 @@ const CreateBannerPage = () => {
         <LoadingGlass message="Rendering Site Banner..." />
       ) : (
         <>
-          <ResponsiveBannerContainer banner={banner} />
+          <ResponsiveBannerContainer banner={banner} isPrinting={isPrinting} />
 
           {/* Bottom Action Button (below banner, hidden on print) */}
           <div
@@ -143,7 +163,7 @@ const CreateBannerPage = () => {
               variant="primary"
               size="lg"
               icon={Printer}
-              onClick={() => window.print()}
+              onClick={handlePrint}
             >
               Print / Save PDF
             </PrismButton>
@@ -157,13 +177,14 @@ const CreateBannerPage = () => {
 /* ──────────────────────────────────────────────
    Responsive Banner Scaler (Fits single screen without horizontal scroll)
    ────────────────────────────────────────────── */
-const ResponsiveBannerContainer = ({ banner }) => {
+const ResponsiveBannerContainer = ({ banner, isPrinting }) => {
   const wrapperRef = useRef(null);
   const boardRef = useRef(null);
   const [scale, setScale] = useState(1);
   const [boardHeight, setBoardHeight] = useState(0);
 
   useLayoutEffect(() => {
+    if (isPrinting) return;
     const handleResize = () => {
       if (wrapperRef.current && boardRef.current) {
         const wrapperWidth = wrapperRef.current.getBoundingClientRect().width;
@@ -186,7 +207,9 @@ const ResponsiveBannerContainer = ({ banner }) => {
     if (boardRef.current) resizeObserver.observe(boardRef.current);
 
     return () => resizeObserver.disconnect();
-  }, [banner]);
+  }, [banner, isPrinting]);
+
+  const activeScale = isPrinting ? 1 : scale;
 
   return (
     <div
@@ -196,17 +219,18 @@ const ResponsiveBannerContainer = ({ banner }) => {
         width: "100%",
         maxWidth: "900px",
         margin: "0 auto",
-        height: scale < 1 && boardHeight > 0 ? `${boardHeight * scale}px` : "auto",
-        overflow: "hidden",
+        height: !isPrinting && activeScale < 1 && boardHeight > 0 ? `${boardHeight * activeScale}px` : "auto",
+        overflow: isPrinting ? "visible" : "hidden",
         position: "relative",
       }}
     >
       <div
+        className="site-banner-scale-container"
         style={{
           width: "900px",
-          transform: `scale(${scale})`,
+          transform: isPrinting ? "none" : `scale(${activeScale})`,
           transformOrigin: "top left",
-          transition: "transform 0.15s ease-out",
+          transition: isPrinting ? "none" : "transform 0.15s ease-out",
         }}
       >
         <div ref={boardRef}>

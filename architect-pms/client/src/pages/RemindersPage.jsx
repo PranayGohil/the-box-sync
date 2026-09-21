@@ -194,9 +194,16 @@ const RemindersPage = () => {
                           <Calendar size={20} />
                         )}
                       </div>
-                      <div className="reminder-card-title">{r.title}</div>
+                      <div className="reminder-card-content">
+                        <div className="reminder-status-mobile">
+                          <StatusBadge status={r.status} />
+                        </div>
+                        <div className="reminder-card-title">{r.title}</div>
+                      </div>
                     </div>
-                    <StatusBadge status={r.status} />
+                    <div className="reminder-status-desktop">
+                      <StatusBadge status={r.status} />
+                    </div>
                   </div>
 
                   {/* Body: Description */}

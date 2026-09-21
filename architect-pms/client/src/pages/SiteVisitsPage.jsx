@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchAPI } from "../services/api";
 import { useModal } from "../context/ModalContext";
 import CalendarView from "../components/CalendarView";
@@ -15,6 +16,10 @@ import {
   CheckCircle2,
   X,
   Clock,
+  Building2,
+  UserCheck,
+  ExternalLink,
+  FileCheck,
 } from "lucide-react";
 import { Modal } from "react-bootstrap";
 
@@ -46,6 +51,7 @@ const onB = (e) => {
 };
 
 const SiteVisitsPage = () => {
+  const navigate = useNavigate();
   const { showAlert } = useModal();
   const [visits, setVisits] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -54,6 +60,7 @@ const SiteVisitsPage = () => {
   const [viewMode, setViewMode] = useState("calendar"); // 'calendar' or 'list'
 
   const [showModal, setShowModal] = useState(false);
+  const [selectedVisit, setSelectedVisit] = useState(null);
   const [formData, setFormData] = useState({
     projectId: "",
     scheduledDate: new Date().toISOString().split("T")[0],
@@ -121,6 +128,12 @@ const SiteVisitsPage = () => {
     }
   };
 
+  const handleUpdateStatusModal = async (status) => {
+    if (!selectedVisit?._id) return;
+    await handleUpdateStatus(selectedVisit._id, status);
+    setSelectedVisit((prev) => (prev ? { ...prev, status } : null));
+  };
+
   if (loading)
     return <LoadingGlass message="Loading Site Visit Schedules..." />;
 
@@ -132,58 +145,6 @@ const SiteVisitsPage = () => {
         subtitle="Track site inspections and stage validations across projects"
         icon={CalendarCheck}
       >
-        <div
-          style={{
-            display: "flex",
-            background: "#fff",
-            border: "1.5px solid #e2e8f0",
-            borderRadius: "9px",
-            padding: "3px",
-          }}
-        >
-          <button
-            onClick={() => setViewMode("calendar")}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-              padding: "0.35rem 0.85rem",
-              borderRadius: "7px",
-              border: "none",
-              background:
-                viewMode === "calendar"
-                  ? "var(--accent-primary)"
-                  : "transparent",
-              color: viewMode === "calendar" ? "#fff" : "var(--text-secondary)",
-              fontSize: "0.8rem",
-              fontWeight: viewMode === "calendar" ? 700 : 500,
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-          >
-            <CalendarIcon size={14} /> Calendar
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-              padding: "0.35rem 0.85rem",
-              borderRadius: "7px",
-              border: "none",
-              background:
-                viewMode === "list" ? "var(--accent-primary)" : "transparent",
-              color: viewMode === "list" ? "#fff" : "var(--text-secondary)",
-              fontSize: "0.8rem",
-              fontWeight: viewMode === "list" ? 700 : 500,
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-          >
-            <List size={14} /> List
-          </button>
-        </div>
         <PrismButton
           variant="primary"
           icon={Plus}
@@ -192,9 +153,30 @@ const SiteVisitsPage = () => {
           Schedule Visit
         </PrismButton>
       </PageHeader>
+      <div className="mb-2">
+        <div className="view-toggle-pill-group">
+          <button
+            type="button"
+            onClick={() => setViewMode("calendar")}
+            className={`view-toggle-pill-btn ${viewMode === "calendar" ? "active" : ""}`}
+          >
+            <CalendarIcon size={14} /> Calendar
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("list")}
+            className={`view-toggle-pill-btn ${viewMode === "list" ? "active" : ""}`}
+          >
+            <List size={14} /> List
+          </button>
+        </div>
+      </div>
 
       {viewMode === "calendar" ? (
-        <CalendarView visits={visits} />
+        <CalendarView
+          visits={visits}
+          onSelectVisit={(v) => setSelectedVisit(v)}
+        />
       ) : (
         <div className="responsive-card-view">
           <div
@@ -719,6 +701,257 @@ const SiteVisitsPage = () => {
               </button>
             </div>
           </form>
+        </div>
+      </Modal>
+
+      {/* Case Details Modal (Exact Twin of DataEntryPage.jsx Modal Design) */}
+      <Modal
+        show={Boolean(selectedVisit)}
+        onHide={() => setSelectedVisit(null)}
+        centered
+      >
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "18px",
+            overflow: "hidden",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+          }}
+        >
+          {/* Header matching DataEntryPage.jsx */}
+          <div
+            style={{
+              padding: "1.25rem 1.5rem",
+              borderBottom: "1px solid #f1f5f9",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <h3
+              style={{
+                fontWeight: 700,
+                fontSize: "1.05rem",
+                color: "var(--text-primary)",
+                margin: 0,
+              }}
+            >
+              Site Visit Inspection Details
+            </h3>
+            <button
+              onClick={() => setSelectedVisit(null)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#94a3b8",
+                cursor: "pointer",
+                padding: "4px",
+              }}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Body matching DataEntryPage.jsx */}
+          <div style={{ padding: "1.25rem 1.5rem" }}>
+            <div style={{ marginBottom: "1rem" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  color: "var(--text-muted)",
+                  textTransform: "uppercase",
+                  marginBottom: "0.35rem",
+                }}
+              >
+                Project Case Name
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={`${selectedVisit?.projectId?.projectName || "N/A"} (Case: ${selectedVisit?.projectId?.caseNo || "N/A"})`}
+                style={{ ...inpStyle, cursor: "default" }}
+              />
+            </div>
+
+            <div className="row g-2" style={{ marginBottom: "1rem" }}>
+              <div className="col-12 col-md-6">
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    color: "var(--text-muted)",
+                    textTransform: "uppercase",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  Inspection Status
+                </label>
+                <select
+                  value={selectedVisit?.status || "scheduled"}
+                  onChange={(e) => {
+                    const newStatus = e.target.value;
+                    handleUpdateStatusModal(newStatus);
+                  }}
+                  style={{ ...inpStyle, cursor: "pointer" }}
+                  onFocus={onF}
+                  onBlur={onB}
+                >
+                  <option value="scheduled">Scheduled</option>
+                  <option value="completed">Completed</option>
+                  <option value="missed">Missed</option>
+                </select>
+              </div>
+
+              <div className="col-12 col-md-6">
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    color: "var(--text-muted)",
+                    textTransform: "uppercase",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  Scheduled Date
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  value={formatDate(selectedVisit?.scheduledDate)}
+                  style={{ ...inpStyle, cursor: "default" }}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "1rem" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  color: "var(--text-muted)",
+                  textTransform: "uppercase",
+                  marginBottom: "0.35rem",
+                }}
+              >
+                Assigned Inspector / Staff
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={
+                  selectedVisit?.assignedTo?.name
+                    ? `${selectedVisit.assignedTo.name} (${selectedVisit.assignedTo.role || "Staff"})`
+                    : "Unassigned"
+                }
+                style={{ ...inpStyle, cursor: "default" }}
+              />
+            </div>
+
+            <div style={{ marginBottom: selectedVisit?.notes ? "1rem" : "0" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  color: "var(--text-muted)",
+                  textTransform: "uppercase",
+                  marginBottom: "0.35rem",
+                }}
+              >
+                Inspection Purpose / Objective
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={selectedVisit?.purpose || ""}
+                style={{ ...inpStyle, cursor: "default" }}
+              />
+            </div>
+
+            {selectedVisit?.notes && (
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    color: "var(--text-muted)",
+                    textTransform: "uppercase",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  Notes & Instructions
+                </label>
+                <textarea
+                  rows="2"
+                  readOnly
+                  value={selectedVisit.notes}
+                  style={{
+                    ...inpStyle,
+                    height: "auto",
+                    padding: "0.5rem 0.8rem",
+                    resize: "none",
+                    cursor: "default",
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Unified Form Footer with Quick Status Actions */}
+          <div className="form-footer form-footer-inspection-modal">
+            {selectedVisit?.status === "scheduled" ? (
+              <div className="modal-status-actions-row">
+                <button
+                  type="button"
+                  className="btn-status-complete"
+                  onClick={() => handleUpdateStatusModal("completed")}
+                >
+                  <CheckCircle2 size={15} />
+                  Mark Complete
+                </button>
+                <button
+                  type="button"
+                  className="btn-status-missed"
+                  onClick={() => handleUpdateStatusModal("missed")}
+                >
+                  <X size={15} />
+                  Missed
+                </button>
+              </div>
+            ) : (
+              <div />
+            )}
+
+            <div className="modal-nav-actions-row">
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setSelectedVisit(null)}
+              >
+                Close
+              </button>
+              {selectedVisit?.projectId?._id && (
+                <button
+                  type="button"
+                  className="prism-btn prism-btn-primary prism-btn-md"
+                  onClick={() => {
+                    const projectId = selectedVisit.projectId._id;
+                    setSelectedVisit(null);
+                    navigate(`/projects/${projectId}`);
+                  }}
+                >
+                  View Case Project
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </Modal>
     </div>

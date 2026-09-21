@@ -10,6 +10,7 @@ import {
   Search, Filter, Download, FolderPlus, Eye,
   RotateCcw, MapPin, UserCheck, FileText,
   ChevronLeft, ChevronRight, SlidersHorizontal,
+  ChevronDown, X,
 } from 'lucide-react';
 
 const ZONES = ['West Zone', 'East Zone', 'North Zone', 'South Zone', 'Central Zone'];
@@ -63,6 +64,13 @@ const ProjectListPage = () => {
 
   const [appliedFilters, setAppliedFilters] = useState({ ...filters });
 
+  const [isFilterOpen, setIsFilterOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 992;
+    }
+    return false;
+  });
+
   const loadProjects = async (f = appliedFilters, pg = page) => {
     setLoading(true);
     try {
@@ -81,11 +89,22 @@ const ProjectListPage = () => {
 
   useEffect(() => { loadProjects(appliedFilters, page); }, [page]);
 
+  const handleQuickSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    const updated = { ...appliedFilters, search: filters.search };
+    setAppliedFilters(updated);
+    setPage(1);
+    loadProjects(updated, 1);
+  };
+
   const handleApply = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setAppliedFilters({ ...filters });
     setPage(1);
     loadProjects(filters, 1);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsFilterOpen(false);
+    }
   };
 
   const handleReset = () => {
@@ -96,8 +115,39 @@ const ProjectListPage = () => {
     loadProjects(blank, 1);
   };
 
+  const handleRemoveFilter = (filterKey) => {
+    const updatedFilters = { ...filters, [filterKey]: '' };
+    const updatedApplied = { ...appliedFilters, [filterKey]: '' };
+    setFilters(updatedFilters);
+    setAppliedFilters(updatedApplied);
+    setPage(1);
+    loadProjects(updatedApplied, 1);
+  };
+
   const totalPages = Math.ceil(total / LIMIT);
-  const activeFilterCount = Object.values(appliedFilters).filter(Boolean).length;
+
+  const activeFilterChips = [];
+  if (appliedFilters.search) {
+    activeFilterChips.push({ key: 'search', label: 'Keyword', display: `"${appliedFilters.search}"` });
+  }
+  if (appliedFilters.caseNo) {
+    activeFilterChips.push({ key: 'caseNo', label: 'Case No', display: appliedFilters.caseNo });
+  }
+  if (appliedFilters.zone) {
+    activeFilterChips.push({ key: 'zone', label: 'Zone', display: appliedFilters.zone });
+  }
+  if (appliedFilters.status) {
+    const sObj = STATUSES.find(s => s.value === appliedFilters.status);
+    activeFilterChips.push({ key: 'status', label: 'Status', display: sObj ? sObj.label : appliedFilters.status });
+  }
+  if (appliedFilters.fromDate) {
+    activeFilterChips.push({ key: 'fromDate', label: 'From', display: formatDate(appliedFilters.fromDate) });
+  }
+  if (appliedFilters.toDate) {
+    activeFilterChips.push({ key: 'toDate', label: 'To', display: formatDate(appliedFilters.toDate) });
+  }
+
+  const activeFilterCount = activeFilterChips.length;
 
   return (
     <div>
@@ -123,148 +173,183 @@ const ProjectListPage = () => {
         </PrismButton>
       </PageHeader>
 
-      {/* ── Filter Panel ── */}
-      <div style={{
-        background: '#fff', border: '1px solid #e2e8f0', borderRadius: '14px',
-        padding: '1.25rem 1.5rem', marginBottom: '1.25rem',
-        boxShadow: '0 2px 12px rgba(15,23,42,0.06)',
-      }}>
-        {/* Filter header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: 32, height: 32, borderRadius: '8px', background: '#eff1fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <SlidersHorizontal size={16} color="var(--accent-primary)" />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Search Filters</span>
-            {activeFilterCount > 0 && (
-              <span style={{
-                background: 'var(--accent-primary)', color: '#fff',
-                borderRadius: '99px', fontSize: '0.68rem', fontWeight: 800,
-                padding: '2px 8px', lineHeight: 1.6,
-              }}>
-                {activeFilterCount} active
-              </span>
+      {/* ── Search & Filter Control Bar ── */}
+      <div className="registry-filter-card">
+        {/* Top Quick Search Row */}
+        <form onSubmit={handleQuickSearchSubmit} className="registry-search-row">
+          <div className="registry-search-input-wrapper">
+            <Search size={15} className="registry-search-icon" />
+            <input
+              type="text"
+              placeholder="Search by owner, project name, or case..."
+              value={filters.search}
+              onChange={e => setFilters({ ...filters, search: e.target.value })}
+              className="registry-search-input"
+            />
+            {filters.search && (
+              <button
+                type="button"
+                onClick={() => {
+                  const updatedFilters = { ...filters, search: '' };
+                  const updatedApplied = { ...appliedFilters, search: '' };
+                  setFilters(updatedFilters);
+                  setAppliedFilters(updatedApplied);
+                  setPage(1);
+                  loadProjects(updatedApplied, 1);
+                }}
+                className="registry-search-clear-btn"
+                title="Clear search"
+              >
+                <X size={13} />
+              </button>
             )}
           </div>
-        </div>
 
-        <form onSubmit={handleApply}>
-          {/* Row 1 — Main filters */}
-          <div className="filter-grid">
+          <button
+            type="submit"
+            className="registry-search-btn"
+            title="Search cases"
+          >
+            Search
+          </button>
 
-            {/* Keyword search */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Keyword Search
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+          <button
+            type="button"
+            onClick={() => setIsFilterOpen(prev => !prev)}
+            className={`registry-filter-toggle-btn ${isFilterOpen ? 'active' : ''} ${activeFilterCount > 0 ? 'has-active' : ''}`}
+            aria-expanded={isFilterOpen}
+          >
+            <SlidersHorizontal size={15} />
+            <span className="registry-filter-toggle-text">Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="registry-filter-badge">
+                {activeFilterCount}
+              </span>
+            )}
+            <ChevronDown
+              size={15}
+              className={`registry-chevron-icon ${isFilterOpen ? 'expanded' : ''}`}
+            />
+          </button>
+        </form>
+
+        {/* Active Filter Chips */}
+        {activeFilterChips.length > 0 && (
+          <div className="active-filter-chips-wrapper">
+            <span className="filter-chips-label">Active:</span>
+            {activeFilterChips.map(chip => (
+              <span key={chip.key} className="filter-chip">
+                <span><strong>{chip.label}:</strong> {chip.display}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFilter(chip.key)}
+                  className="filter-chip-remove"
+                  title={`Remove ${chip.label} filter`}
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={handleReset}
+              className="filter-chip-clear-all"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+
+        {/* Collapsible Advanced Filters Panel */}
+        {isFilterOpen && (
+          <form onSubmit={handleApply} className="registry-collapsible-panel">
+            <div className="filter-grid">
+              {/* Case No */}
+              <div>
+                <label className="filter-field-label">Case Number</label>
                 <input
                   type="text"
-                  placeholder="Owner, project name..."
-                  value={filters.search}
-                  onChange={e => setFilters({ ...filters, search: e.target.value })}
-                  style={{ ...inputStyle, paddingLeft: '30px' }}
+                  placeholder="BP/2026/..."
+                  value={filters.caseNo}
+                  onChange={e => setFilters({ ...filters, caseNo: e.target.value })}
+                  style={inputStyle}
+                  onFocus={focusStyle} onBlur={blurStyle}
+                />
+              </div>
+
+              {/* Zone */}
+              <div>
+                <label className="filter-field-label">Municipal Zone</label>
+                <select
+                  value={filters.zone}
+                  onChange={e => setFilters({ ...filters, zone: e.target.value })}
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                  onFocus={focusStyle} onBlur={blurStyle}
+                >
+                  <option value="">All Zones</option>
+                  {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
+                </select>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="filter-field-label">Status Stage</label>
+                <select
+                  value={filters.status}
+                  onChange={e => setFilters({ ...filters, status: e.target.value })}
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                  onFocus={focusStyle} onBlur={blurStyle}
+                >
+                  <option value="">All Statuses</option>
+                  {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              </div>
+
+              {/* From Date */}
+              <div>
+                <label className="filter-field-label">From Date</label>
+                <input
+                  type="date"
+                  value={filters.fromDate}
+                  onChange={e => setFilters({ ...filters, fromDate: e.target.value })}
+                  style={inputStyle}
+                  onFocus={focusStyle} onBlur={blurStyle}
+                />
+              </div>
+
+              {/* To Date */}
+              <div>
+                <label className="filter-field-label">To Date</label>
+                <input
+                  type="date"
+                  value={filters.toDate}
+                  onChange={e => setFilters({ ...filters, toDate: e.target.value })}
+                  style={inputStyle}
                   onFocus={focusStyle} onBlur={blurStyle}
                 />
               </div>
             </div>
 
-            {/* Case No */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Case Number
-              </label>
-              <input
-                type="text"
-                placeholder="BP/2026/..."
-                value={filters.caseNo}
-                onChange={e => setFilters({ ...filters, caseNo: e.target.value })}
-                style={inputStyle}
-                onFocus={focusStyle} onBlur={blurStyle}
-              />
-            </div>
-
-            {/* Zone */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Municipal Zone
-              </label>
-              <select
-                value={filters.zone}
-                onChange={e => setFilters({ ...filters, zone: e.target.value })}
-                style={{ ...inputStyle, cursor: 'pointer' }}
-                onFocus={focusStyle} onBlur={blurStyle}
+            {/* Actions */}
+            <div className="filter-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', paddingTop: '0.75rem', borderTop: '1px solid #f1f5f9' }}>
+              <PrismButton
+                type="button"
+                variant="secondary"
+                icon={RotateCcw}
+                onClick={handleReset}
               >
-                <option value="">All Zones</option>
-                {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
-              </select>
-            </div>
-
-            {/* Status */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Status Stage
-              </label>
-              <select
-                value={filters.status}
-                onChange={e => setFilters({ ...filters, status: e.target.value })}
-                style={{ ...inputStyle, cursor: 'pointer' }}
-                onFocus={focusStyle} onBlur={blurStyle}
+                Reset All
+              </PrismButton>
+              <PrismButton
+                type="submit"
+                variant="primary"
+                icon={Search}
               >
-                <option value="">All Statuses</option>
-                {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+                Apply Filters
+              </PrismButton>
             </div>
-
-            {/* From Date */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                From Date
-              </label>
-              <input
-                type="date"
-                value={filters.fromDate}
-                onChange={e => setFilters({ ...filters, fromDate: e.target.value })}
-                style={inputStyle}
-                onFocus={focusStyle} onBlur={blurStyle}
-              />
-            </div>
-
-            {/* To Date */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                To Date
-              </label>
-              <input
-                type="date"
-                value={filters.toDate}
-                onChange={e => setFilters({ ...filters, toDate: e.target.value })}
-                style={inputStyle}
-                onFocus={focusStyle} onBlur={blurStyle}
-              />
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="filter-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', paddingTop: '0.75rem', borderTop: '1px solid #f1f5f9' }}>
-            <PrismButton
-              type="button"
-              variant="secondary"
-              icon={RotateCcw}
-              onClick={handleReset}
-            >
-              Reset
-            </PrismButton>
-            <PrismButton
-              type="submit"
-              variant="primary"
-              icon={Search}
-            >
-              Apply Filters
-            </PrismButton>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
 
       {/* ── Results Count ── */}
