@@ -213,12 +213,13 @@ code, pre, .font-mono {
   padding: 1rem 0.75rem 0.4rem;
 }
 
+/* Sidebar Navigation Links & Icons */
 .sidebar-nav-link {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.625rem 0.875rem;
-  color: #94a3b8;
+  color: #cbd5e1;
   font-weight: 500;
   font-size: 0.9rem;
   border-radius: var(--radius-md);
@@ -241,6 +242,11 @@ code, pre, .font-mono {
 
 .sidebar-nav-link i {
   font-size: 1.15rem;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Collapsible Accordion Sidebar */
@@ -250,7 +256,7 @@ code, pre, .font-mono {
   align-items: center;
   justify-content: space-between;
   padding: 0.6rem 0.85rem;
-  color: #94a3b8;
+  color: #e2e8f0;
   font-weight: 600;
   font-size: 0.88rem;
   border-radius: var(--radius-md);
@@ -269,23 +275,34 @@ code, pre, .font-mono {
 
 .sidebar-category-btn.open {
   color: #ffffff;
-  background: rgba(79, 70, 229, 0.12);
+  background: rgba(79, 70, 229, 0.15);
 }
 
 .sidebar-category-btn.active-category {
-  color: #a5b4fc;
-  border-left: 3px solid #6366f1;
+  color: #ffffff;
+  border-left: 3px solid #818cf8;
+}
+
+.sidebar-category-btn i {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-category-btn .chevron-icon {
   font-size: 0.75rem;
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #64748b;
+  color: #ffffff !important;
+  opacity: 0.85;
 }
 
 .sidebar-category-btn.open .chevron-icon {
   transform: rotate(180deg);
-  color: #a5b4fc;
+  color: #ffffff !important;
+  opacity: 1;
 }
 
 .sidebar-submenu {
@@ -315,7 +332,7 @@ code, pre, .font-mono {
   align-items: center;
   gap: 0.6rem;
   padding: 0.45rem 0.75rem;
-  color: #94a3b8;
+  color: #cbd5e1;
   font-weight: 500;
   font-size: 0.84rem;
   border-radius: var(--radius-sm);
@@ -337,7 +354,20 @@ code, pre, .font-mono {
 
 .sidebar-subnav-link i {
   font-size: 0.95rem;
-  opacity: 0.85;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Global App Sidebar Icon visibility safeguard */
+.app-sidebar i,
+.app-sidebar .bi,
+.app-sidebar .sidebar-menu i,
+.app-sidebar .sidebar-brand i,
+.app-sidebar .sidebar-footer i {
+  color: #ffffff !important;
 }
 
 /* Topbar Styling */
