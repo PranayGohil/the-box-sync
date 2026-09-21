@@ -27,6 +27,9 @@ export const InvoiceCreate = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState('');
+  const [currency, setCurrency] = useState(activeBusiness?.currency || 'INR');
+  const [currencySymbol, setCurrencySymbol] = useState(activeBusiness?.currencySymbol || (activeBusiness?.currency === 'USD' ? '$' : '₹'));
+  const [isWithoutGst, setIsWithoutGst] = useState(false);
   const [isTaxInclusive, setIsTaxInclusive] = useState(false);
   const [paidAmount, setPaidAmount] = useState(0);
   const [paymentMode, setPaymentMode] = useState('cash');
@@ -80,6 +83,11 @@ export const InvoiceCreate = () => {
         setSelectedCustomerId(custId || '');
         setSelectedCustomer(inv.customerId || null);
 
+        if (inv.currency) {
+          setCurrency(inv.currency);
+          setCurrencySymbol(inv.currencySymbol || (inv.currency === 'USD' ? '$' : '₹'));
+        }
+        setIsWithoutGst(Boolean(inv.isWithoutGst));
         if (inv.invoiceDate) setInvoiceDate(new Date(inv.invoiceDate).toISOString().split('T')[0]);
         if (inv.dueDate) setDueDate(new Date(inv.dueDate).toISOString().split('T')[0]);
         setIsTaxInclusive(Boolean(inv.isTaxInclusive));
@@ -173,6 +181,14 @@ export const InvoiceCreate = () => {
           setDueDate(d.toISOString().split('T')[0]);
         }
 
+        if (so.currency) {
+          setCurrency(so.currency);
+          setCurrencySymbol(so.currencySymbol || (so.currency === 'USD' ? '$' : '₹'));
+        }
+        if (so.isWithoutGst !== undefined) {
+          setIsWithoutGst(Boolean(so.isWithoutGst));
+        }
+
         setIsTaxInclusive(Boolean(so.isTaxInclusive));
         if (so.terms) setTerms(so.terms);
         setNotes(so.notes ? `Order Ref: #${so.orderNo} - ${so.notes}` : `Order Ref: #${so.orderNo}`);
@@ -247,6 +263,14 @@ export const InvoiceCreate = () => {
           const d = new Date();
           d.setDate(d.getDate() + q.customerId.creditDays);
           setDueDate(d.toISOString().split('T')[0]);
+        }
+
+        if (q.currency) {
+          setCurrency(q.currency);
+          setCurrencySymbol(q.currencySymbol || (q.currency === 'USD' ? '$' : '₹'));
+        }
+        if (q.isWithoutGst !== undefined) {
+          setIsWithoutGst(Boolean(q.isWithoutGst));
         }
 
         setIsTaxInclusive(Boolean(q.isTaxInclusive));
@@ -423,9 +447,14 @@ export const InvoiceCreate = () => {
     setExtraCharges(updated);
   };
 
+  const sym = currencySymbol || (currency === 'USD' ? '$' : '₹');
+  const locale = currency === 'USD' ? 'en-US' : 'en-IN';
+  const fmt = (val) => Number(val || 0).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const withoutGstFlag = Boolean(isWithoutGst);
+
   // Calculations
   const subtotal = items.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
-  const totalTax = items.reduce((sum, item) => {
+  const totalTax = withoutGstFlag ? 0 : items.reduce((sum, item) => {
     const amt = Number(item.total) || 0;
     const rate = Number(item.taxRate) || 0;
     if (isTaxInclusive) {
@@ -436,7 +465,7 @@ export const InvoiceCreate = () => {
     }
   }, 0);
 
-  const baseAmount = isTaxInclusive ? subtotal : subtotal + totalTax;
+  const baseAmount = isTaxInclusive || withoutGstFlag ? subtotal : subtotal + totalTax;
 
   const {
     calculatedExtraCharges,
@@ -449,9 +478,9 @@ export const InvoiceCreate = () => {
   const supplierStateCode = activeBusiness?.stateCode || '27';
   const placeOfSupplyStateCode = (sameAsBilling ? selectedCustomer?.billingAddress?.stateCode : shippingAddress?.stateCode) || selectedCustomer?.billingAddress?.stateCode || supplierStateCode;
   const isInterState = String(supplierStateCode).trim() !== String(placeOfSupplyStateCode).trim();
-  const cgstAmount = isInterState ? 0 : totalTax / 2;
-  const sgstAmount = isInterState ? 0 : totalTax / 2;
-  const igstAmount = isInterState ? totalTax : 0;
+  const cgstAmount = withoutGstFlag ? 0 : (isInterState ? 0 : totalTax / 2);
+  const sgstAmount = withoutGstFlag ? 0 : (isInterState ? 0 : totalTax / 2);
+  const igstAmount = withoutGstFlag ? 0 : (isInterState ? totalTax : 0);
 
   const rawGrandTotal = baseAmount + totalExtraAdditions - totalExtraDeductions;
   const grandTotal = Math.max(0, Math.round(rawGrandTotal));
@@ -479,6 +508,9 @@ export const InvoiceCreate = () => {
         items: validItems,
         extraCharges: validExtraCharges,
         isTaxInclusive,
+        isWithoutGst: withoutGstFlag,
+        currency,
+        currencySymbol: sym,
         paidAmount: Number(paidAmount) || 0,
         paymentMode,
         terms,
@@ -564,9 +596,78 @@ export const InvoiceCreate = () => {
       )}
 
       <form onSubmit={handleSubmit}>
+        {/* Document Configuration Bar: Currency & Tax Application */}
+        <div className="card p-3 mb-3 border bg-white rounded-3 shadow-sm">
+          <div className="row g-2 align-items-center">
+            <div className="col-12 col-sm-6 col-md-4">
+              <label className="form-label small fw-bold mb-1 text-primary d-flex align-items-center gap-1">
+                <i className="bi bi-currency-exchange"></i> Invoice Currency
+              </label>
+              <select
+                className="form-select form-select-sm fw-bold border-primary"
+                value={currency}
+                onChange={(e) => {
+                  const curr = e.target.value;
+                  setCurrency(curr);
+                  setCurrencySymbol(curr === 'USD' ? '$' : '₹');
+                }}
+              >
+                <option value="INR">₹ INR - Indian Rupee (₹)</option>
+                <option value="USD">$ USD - US Dollar ($)</option>
+              </select>
+            </div>
+
+            <div className="col-12 col-sm-6 col-md-5">
+              <label className="form-label small fw-bold mb-1 text-secondary d-flex align-items-center gap-1">
+                <i className="bi bi-receipt-cutoff"></i> Tax Application (GST / Export / Non-GST)
+              </label>
+              <div className="btn-group w-100" role="group">
+                <button
+                  type="button"
+                  className={`btn btn-sm ${!isWithoutGst ? 'btn-primary' : 'btn-outline-secondary'} fw-semibold`}
+                  onClick={() => setIsWithoutGst(false)}
+                >
+                  <i className="bi bi-check2-circle me-1"></i> Apply GST
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-sm ${isWithoutGst ? 'btn-warning' : 'btn-outline-secondary'} fw-semibold`}
+                  onClick={() => setIsWithoutGst(true)}
+                >
+                  <i className="bi bi-slash-circle me-1"></i> Without GST {currency === 'USD' ? '(Export / 0%)' : '(Non-GST)'}
+                </button>
+              </div>
+            </div>
+
+            <div className="col-12 col-md-3">
+              <label className="form-label small fw-bold mb-1 d-none d-md-block text-secondary">Price Calculation</label>
+              <button
+                type="button"
+                className={`btn btn-sm w-100 fw-bold d-flex align-items-center justify-content-center ${
+                  isTaxInclusive ? 'btn-success' : 'btn-outline-secondary'
+                }`}
+                style={{ height: '31px' }}
+                onClick={() => setIsTaxInclusive(!isTaxInclusive)}
+                disabled={isWithoutGst}
+                title={isWithoutGst ? 'Tax mode not applicable for 0% tax documents' : 'Toggle Tax Inclusive / Exclusive'}
+              >
+                {isWithoutGst ? '0% Tax Mode' : isTaxInclusive ? '✓ Tax Inclusive' : 'Tax Exclusive'}
+              </button>
+            </div>
+          </div>
+          {isWithoutGst && (
+            <div className="mt-2 small text-warning-emphasis bg-warning-subtle p-2 rounded border border-warning-subtle d-flex align-items-center gap-2" style={{ fontSize: '0.78rem' }}>
+              <i className="bi bi-info-circle-fill fs-6"></i>
+              <span>
+                <strong>Without GST Mode Active:</strong> All items on this invoice will be generated with <strong>0% Tax</strong> (ideal for exports, dollar transactions, SEZ, or non-taxable supplies).
+              </span>
+            </div>
+          )}
+        </div>
+
         {/* Customer & Invoice Date Info */}
         <div className="row g-2 g-sm-3 mb-3">
-          <div className="col-12 col-lg-5">
+          <div className="col-12 col-lg-6">
             <label className="form-label small fw-bold mb-1">Select Customer*</label>
             <select
               className="form-select fw-bold"
@@ -583,7 +684,7 @@ export const InvoiceCreate = () => {
             </select>
             {selectedCustomer && (
               <div className="small text-muted mt-1 text-truncate" style={{ fontSize: '0.75rem' }}>
-                Location: <strong>{selectedCustomer.billingAddress?.city ? `${selectedCustomer.billingAddress.city}, ` : ''}{selectedCustomer.billingAddress?.state}</strong> | Type: <strong>{selectedCustomer.customerType}</strong> | Bal: <strong>₹{selectedCustomer.currentBalance?.toFixed(2)}</strong>
+                Location: <strong>{selectedCustomer.billingAddress?.city ? `${selectedCustomer.billingAddress.city}, ` : ''}{selectedCustomer.billingAddress?.state}</strong> | Type: <strong>{selectedCustomer.customerType}</strong> | Bal: <strong>{sym}{selectedCustomer.currentBalance?.toFixed(2)}</strong>
               </div>
             )}
           </div>
@@ -599,7 +700,7 @@ export const InvoiceCreate = () => {
             />
           </div>
 
-          <div className="col-12 col-sm-6 col-lg-2">
+          <div className="col-12 col-sm-6 col-lg-3">
             <label className="form-label small fw-bold mb-1">Due Date</label>
             <input
               type="date"
@@ -607,21 +708,6 @@ export const InvoiceCreate = () => {
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
             />
-          </div>
-
-          <div className="col-12 col-lg-2 d-flex flex-column justify-content-end">
-            <label className="form-label small fw-bold mb-1 d-none d-lg-block">Tax Mode</label>
-            <button
-              type="button"
-              className={`btn btn-sm w-100 fw-bold d-flex align-items-center justify-content-center ${
-                isTaxInclusive ? 'btn-success' : 'btn-outline-secondary'
-              }`}
-              style={{ height: '34px' }}
-              onClick={() => setIsTaxInclusive(!isTaxInclusive)}
-              title="Toggle Tax Inclusive / Exclusive"
-            >
-              {isTaxInclusive ? '✓ Tax Inclusive' : 'Tax Exclusive'}
-            </button>
           </div>
         </div>
 
@@ -644,9 +730,9 @@ export const InvoiceCreate = () => {
                 <th style={{ width: '35%' }}>Product / Item</th>
                 <th style={{ width: '12%' }}>HSN/SAC</th>
                 <th style={{ width: '10%' }}>Qty</th>
-                <th style={{ width: '15%' }}>Rate (₹)</th>
-                <th style={{ width: '12%' }}>GST %</th>
-                <th style={{ width: '13%' }}>Amount (₹)</th>
+                <th style={{ width: '15%' }}>Rate ({sym})</th>
+                <th style={{ width: '12%' }}>{withoutGstFlag ? 'Tax' : 'GST %'}</th>
+                <th style={{ width: '13%' }}>Amount ({sym})</th>
                 <th style={{ width: '3%' }}></th>
               </tr>
             </thead>
@@ -705,20 +791,30 @@ export const InvoiceCreate = () => {
                     />
                   </td>
                   <td>
-                    <select
-                      className="form-select form-select-sm"
-                      value={item.taxRate}
-                      onChange={(e) => handleItemChange(idx, 'taxRate', Number(e.target.value))}
-                    >
-                      <option value="0">0%</option>
-                      <option value="5">5%</option>
-                      <option value="12">12%</option>
-                      <option value="18">18%</option>
-                      <option value="28">28%</option>
-                    </select>
+                    {withoutGstFlag ? (
+                      <input
+                        type="text"
+                        className="form-control form-control-sm bg-light text-center font-mono text-muted"
+                        value="0% (Non-GST)"
+                        disabled
+                        readOnly
+                      />
+                    ) : (
+                      <select
+                        className="form-select form-select-sm"
+                        value={item.taxRate}
+                        onChange={(e) => handleItemChange(idx, 'taxRate', Number(e.target.value))}
+                      >
+                        <option value="0">0%</option>
+                        <option value="5">5%</option>
+                        <option value="12">12%</option>
+                        <option value="18">18%</option>
+                        <option value="28">28%</option>
+                      </select>
+                    )}
                   </td>
                   <td className="text-end fw-bold font-mono">
-                    ₹{item.total?.toFixed(2)}
+                    {sym}{item.total?.toFixed(2)}
                   </td>
                   <td className="text-center">
                     <button
@@ -743,7 +839,7 @@ export const InvoiceCreate = () => {
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="badge bg-primary text-white font-mono">Item #{idx + 1}</span>
                 <div className="d-flex align-items-center gap-2">
-                  <span className="fw-bold font-mono text-dark fs-6">₹{Number(item.total || 0).toFixed(2)}</span>
+                  <span className="fw-bold font-mono text-dark fs-6">{sym}{Number(item.total || 0).toFixed(2)}</span>
                   {items.length > 1 && (
                     <button
                       type="button"
@@ -859,7 +955,8 @@ export const InvoiceCreate = () => {
               <label className="form-label">Terms & Conditions</label>
               <textarea
                 className="form-control"
-                rows="2"
+                rows="5"
+                style={{ minHeight: '130px' }}
                 value={terms}
                 onChange={(e) => setTerms(e.target.value)}
               ></textarea>
@@ -879,7 +976,7 @@ export const InvoiceCreate = () => {
               <h6 className="fw-bold small mb-2">Record Immediate Payment Receipt (Optional)</h6>
               <div className="row g-2">
                 <div className="col-6">
-                  <label className="small text-muted">Paid Amount (₹)</label>
+                  <label className="small text-muted">Paid Amount ({sym})</label>
                   <input
                     type="number"
                     step="0.01"
@@ -910,17 +1007,25 @@ export const InvoiceCreate = () => {
             <div className="card p-3 bg-light border">
               <div className="d-flex justify-content-between py-1">
                 <span className="text-muted">Taxable Subtotal:</span>
-                <span className="fw-bold font-mono">₹{subtotal.toFixed(2)}</span>
+                <span className="fw-bold font-mono">{sym}{fmt(subtotal)}</span>
               </div>
 
               {/* GST Breakdown */}
-              {isInterState ? (
+              {withoutGstFlag ? (
+                <div className="d-flex justify-content-between py-1">
+                  <span className="text-muted d-flex align-items-center gap-1">
+                    <span>Tax / GST:</span>
+                    <span className="badge bg-secondary-subtle text-secondary" style={{ fontSize: '0.65rem' }}>Non-GST / Export (0%)</span>
+                  </span>
+                  <span className="fw-bold font-mono text-muted">{sym}0.00</span>
+                </div>
+              ) : isInterState ? (
                 <div className="d-flex justify-content-between py-1">
                   <span className="text-muted d-flex align-items-center gap-1">
                     <span>IGST (Integrated Tax):</span>
                     <span className="badge bg-primary-subtle text-primary border border-primary-subtle" style={{ fontSize: '0.65rem' }}>Inter-State</span>
                   </span>
-                  <span className="fw-bold font-mono text-primary">+₹{igstAmount.toFixed(2)}</span>
+                  <span className="fw-bold font-mono text-primary">+{sym}{fmt(igstAmount)}</span>
                 </div>
               ) : (
                 <>
@@ -929,11 +1034,11 @@ export const InvoiceCreate = () => {
                       <span>CGST (Central Tax):</span>
                       <span className="badge bg-secondary-subtle text-secondary" style={{ fontSize: '0.65rem' }}>Intra-State</span>
                     </span>
-                    <span className="fw-bold font-mono text-primary">+₹{cgstAmount.toFixed(2)}</span>
+                    <span className="fw-bold font-mono text-primary">+{sym}{fmt(cgstAmount)}</span>
                   </div>
                   <div className="d-flex justify-content-between py-1">
                     <span className="text-muted">SGST (State Tax):</span>
-                    <span className="fw-bold font-mono text-primary">+₹{sgstAmount.toFixed(2)}</span>
+                    <span className="fw-bold font-mono text-primary">+{sym}{fmt(sgstAmount)}</span>
                   </div>
                 </>
               )}
@@ -943,7 +1048,7 @@ export const InvoiceCreate = () => {
                 <div key={i} className="d-flex justify-content-between py-1">
                   <span className="text-muted">{c.name} {c.type === 'percentage' ? `(${c.rate}%)` : ''}:</span>
                   <span className={`fw-bold font-mono ${c.isDeduction ? 'text-danger' : 'text-success'}`}>
-                    {c.isDeduction ? '-' : '+'}₹{c.amount.toFixed(2)}
+                    {c.isDeduction ? '-' : '+'}{sym}{fmt(c.amount)}
                   </span>
                 </div>
               ))}
@@ -951,17 +1056,17 @@ export const InvoiceCreate = () => {
               {roundOff !== 0 && (
                 <div className="d-flex justify-content-between py-1">
                   <span className="text-muted">Round Off:</span>
-                  <span className="font-mono">₹{roundOff.toFixed(2)}</span>
+                  <span className="font-mono">{roundOff > 0 ? `+${sym}${fmt(roundOff)}` : `-${sym}${fmt(Math.abs(roundOff))}`}</span>
                 </div>
               )}
               <div className="d-flex justify-content-between py-2 border-top border-bottom my-2">
                 <span className="fw-extrabold fs-5">GRAND TOTAL:</span>
-                <span className="fw-extrabold fs-5 text-primary font-mono">₹{grandTotal.toLocaleString('en-IN')}</span>
+                <span className="fw-extrabold fs-5 text-primary font-mono">{sym}{fmt(grandTotal)}</span>
               </div>
               {paidAmount > 0 && (
                 <div className="d-flex justify-content-between py-1 text-danger fw-bold">
                   <span>Balance Due:</span>
-                  <span className="font-mono">₹{Math.max(0, grandTotal - paidAmount).toFixed(2)}</span>
+                  <span className="font-mono">{sym}{fmt(Math.max(0, grandTotal - paidAmount))}</span>
                 </div>
               )}
 
@@ -975,8 +1080,8 @@ export const InvoiceCreate = () => {
                     ? 'Updating Invoice...'
                     : 'Creating & Finalizing Invoice...'
                   : isEdit
-                  ? 'Update GST Invoice'
-                  : 'Save & Finalize GST Invoice'}
+                  ? (withoutGstFlag ? 'Update Invoice' : 'Update GST Invoice')
+                  : (withoutGstFlag ? 'Save & Finalize Invoice' : 'Save & Finalize GST Invoice')}
               </button>
             </div>
           </div>

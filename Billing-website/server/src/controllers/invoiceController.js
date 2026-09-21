@@ -164,6 +164,9 @@ exports.createInvoice = async (req, res, next) => {
       warehouseId,
       items,
       isTaxInclusive = false,
+      isWithoutGst = false,
+      currency,
+      currencySymbol,
       invoiceDate,
       dueDate,
       invoiceType = 'tax_invoice',
@@ -200,12 +203,17 @@ exports.createInvoice = async (req, res, next) => {
     const supplierStateCode = req.business.stateCode || '27';
     const placeOfSupplyStateCode = customer.billingAddress?.stateCode || supplierStateCode;
 
+    const docCurrency = currency || req.business.currency || 'INR';
+    const docCurrencySymbol = currencySymbol || (docCurrency === 'USD' ? '$' : '₹');
+    const withoutGstFlag = Boolean(isWithoutGst);
+
     // 1. Calculate Tax Breakdown (CGST+SGST vs IGST)
     const taxCalc = TaxDeterminationService.calculateItemTaxes(
       items,
       supplierStateCode,
       placeOfSupplyStateCode,
-      isTaxInclusive
+      isTaxInclusive,
+      withoutGstFlag
     );
 
     // 1.1 Process Extra Charges / Custom Fields (e.g. TDS, Courier charges, Freight, etc.)
@@ -277,6 +285,9 @@ exports.createInvoice = async (req, res, next) => {
       placeOfSupply: customer.billingAddress?.state || req.business.state,
       placeOfSupplyStateCode,
       isInterState: taxCalc.isInterState,
+      isWithoutGst: withoutGstFlag,
+      currency: docCurrency,
+      currencySymbol: docCurrencySymbol,
       reverseCharge: false,
       sourceDocumentType,
       sourceDocumentId,
@@ -454,6 +465,9 @@ exports.updateInvoice = async (req, res, next) => {
       customerId,
       items,
       isTaxInclusive,
+      isWithoutGst,
+      currency,
+      currencySymbol,
       invoiceDate,
       dueDate,
       paidAmount,
@@ -472,12 +486,17 @@ exports.updateInvoice = async (req, res, next) => {
     const supplierStateCode = req.business.stateCode || '27';
     const placeOfSupplyStateCode = customer.billingAddress?.stateCode || supplierStateCode;
 
+    const withoutGstFlag = isWithoutGst !== undefined ? Boolean(isWithoutGst) : Boolean(invoice.isWithoutGst);
+    const docCurrency = currency || invoice.currency || req.business.currency || 'INR';
+    const docCurrencySymbol = currencySymbol || (docCurrency === 'USD' ? '$' : '₹');
+
     // Calculate Tax Breakdown
     const taxCalc = TaxDeterminationService.calculateItemTaxes(
       items || invoice.items,
       supplierStateCode,
       placeOfSupplyStateCode,
-      isTaxInclusive !== undefined ? isTaxInclusive : invoice.isTaxInclusive
+      isTaxInclusive !== undefined ? isTaxInclusive : invoice.isTaxInclusive,
+      withoutGstFlag
     );
 
     let totalExtraAdditions = 0;
@@ -531,6 +550,9 @@ exports.updateInvoice = async (req, res, next) => {
     if (invoiceDate) invoice.invoiceDate = new Date(invoiceDate);
     if (dueDate) invoice.dueDate = new Date(dueDate);
     invoice.isTaxInclusive = Boolean(isTaxInclusive);
+    invoice.isWithoutGst = withoutGstFlag;
+    invoice.currency = docCurrency;
+    invoice.currencySymbol = docCurrencySymbol;
     invoice.items = taxCalc.items;
     invoice.extraCharges = processedExtraCharges;
     invoice.subtotal = taxCalc.subtotal;

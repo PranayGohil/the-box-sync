@@ -520,6 +520,17 @@ export const DeliveryChallanCreate = () => {
         <div className="row g-3 g-md-4">
           <div className="col-12 col-md-6">
             <div className="mb-3">
+              <label className="form-label small fw-bold mb-1">Terms & Conditions</label>
+              <textarea
+                className="form-control"
+                rows="5"
+                style={{ minHeight: '130px' }}
+                placeholder="Delivery acknowledgment terms, return policies..."
+                value={terms}
+                onChange={(e) => setTerms(e.target.value)}
+              ></textarea>
+            </div>
+            <div className="mb-3">
               <label className="form-label small fw-bold mb-1">Dispatch Remarks / Instructions</label>
               <textarea
                 className="form-control"

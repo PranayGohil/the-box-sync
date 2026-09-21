@@ -18,19 +18,25 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
     });
   };
 
+  const currency = invoice.currency || business.currency || 'INR';
+  const currencySymbol = invoice.currencySymbol || business.currencySymbol || (currency === 'USD' ? '$' : '₹');
+  const currencyLocale = currency === 'USD' ? 'en-US' : 'en-IN';
+
   const formatCurrency = (val) => {
-    return '₹' + Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return currencySymbol + ' ' + Number(val || 0).toLocaleString(currencyLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  const cgstVal = invoice.cgstTotal !== undefined && invoice.cgstTotal > 0
+  const isWithoutGst = Boolean(invoice.isWithoutGst || (invoice.totalTax === 0 && invoice.items?.every(i => !i.taxRate || i.taxRate === 0)));
+
+  const cgstVal = isWithoutGst ? 0 : (invoice.cgstTotal !== undefined && invoice.cgstTotal > 0
     ? invoice.cgstTotal
-    : (!invoice.isInterState && invoice.totalTax > 0 ? invoice.totalTax / 2 : 0);
-  const sgstVal = invoice.sgstTotal !== undefined && invoice.sgstTotal > 0
+    : (!invoice.isInterState && invoice.totalTax > 0 ? invoice.totalTax / 2 : 0));
+  const sgstVal = isWithoutGst ? 0 : (invoice.sgstTotal !== undefined && invoice.sgstTotal > 0
     ? invoice.sgstTotal
-    : (!invoice.isInterState && invoice.totalTax > 0 ? invoice.totalTax / 2 : 0);
-  const igstVal = invoice.igstTotal !== undefined && invoice.igstTotal > 0
+    : (!invoice.isInterState && invoice.totalTax > 0 ? invoice.totalTax / 2 : 0));
+  const igstVal = isWithoutGst ? 0 : (invoice.igstTotal !== undefined && invoice.igstTotal > 0
     ? invoice.igstTotal
-    : (invoice.isInterState && invoice.totalTax > 0 ? invoice.totalTax : 0);
+    : (invoice.isInterState && invoice.totalTax > 0 ? invoice.totalTax : 0));
 
   // --- THERMAL RECEIPT (80mm) ---
   if (isThermal) {
@@ -57,7 +63,7 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
         </div>
 
         <div style={{ borderTop: '1px dashed #000', borderBottom: '1px dashed #000', padding: '6px 0', margin: '8px 0' }}>
-          <div><strong>TAX INVOICE</strong></div>
+          <div><strong>{isWithoutGst ? 'INVOICE' : 'TAX INVOICE'}</strong></div>
           <div>Invoice No: <strong>{invoice.invoiceNo}</strong></div>
           <div>Date: {formatDate(invoice.invoiceDate)}</div>
           <div>Customer: {invoice.customerNameSnapshot}</div>
@@ -90,23 +96,32 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
             <span>Taxable Amount:</span>
             <span>{formatCurrency(invoice.taxableAmount)}</span>
           </div>
-          {cgstVal > 0 && (
+          {isWithoutGst ? (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>CGST:</span>
-              <span>{formatCurrency(cgstVal)}</span>
+              <span>Tax / GST:</span>
+              <span>{currencySymbol} 0.00 (0%)</span>
             </div>
-          )}
-          {sgstVal > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>SGST:</span>
-              <span>{formatCurrency(sgstVal)}</span>
-            </div>
-          )}
-          {igstVal > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>IGST:</span>
-              <span>{formatCurrency(igstVal)}</span>
-            </div>
+          ) : (
+            <>
+              {cgstVal > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>CGST:</span>
+                  <span>{formatCurrency(cgstVal)}</span>
+                </div>
+              )}
+              {sgstVal > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>SGST:</span>
+                  <span>{formatCurrency(sgstVal)}</span>
+                </div>
+              )}
+              {igstVal > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>IGST:</span>
+                  <span>{formatCurrency(igstVal)}</span>
+                </div>
+              )}
+            </>
           )}
           {invoice.extraCharges?.map((ch, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: ch.isDeduction ? '#b91c1c' : '#15803d' }}>
@@ -206,7 +221,7 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
               marginBottom: '10px'
             }}
           >
-            TAX INVOICE
+            {isWithoutGst ? 'INVOICE' : 'TAX INVOICE'}
           </div>
           <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Invoice #: <span className="font-mono">{invoice.invoiceNo}</span></div>
           <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Date: {formatDate(invoice.invoiceDate)}</div>
@@ -256,10 +271,10 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
             <th style={{ padding: '10px 12px', textAlign: 'left' }}>Item Description</th>
             <th style={{ padding: '10px 12px', textAlign: 'center', width: '90px' }}>HSN/SAC</th>
             <th style={{ padding: '10px 12px', textAlign: 'center', width: '70px' }}>Qty</th>
-            <th style={{ padding: '10px 12px', textAlign: 'right', width: '90px' }}>Rate (₹)</th>
+            <th style={{ padding: '10px 12px', textAlign: 'right', width: '90px' }}>Rate ({currencySymbol})</th>
             <th style={{ padding: '10px 12px', textAlign: 'right', width: '90px' }}>Taxable</th>
-            <th style={{ padding: '10px 12px', textAlign: 'center', width: '70px' }}>GST</th>
-            <th style={{ padding: '10px 12px', textAlign: 'right', width: '110px' }}>Total (₹)</th>
+            <th style={{ padding: '10px 12px', textAlign: 'center', width: '70px' }}>{isWithoutGst ? 'Tax' : 'GST'}</th>
+            <th style={{ padding: '10px 12px', textAlign: 'right', width: '110px' }}>Total ({currencySymbol})</th>
           </tr>
         </thead>
         <tbody>
@@ -273,8 +288,8 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
               <td style={{ padding: '10px 12px', textAlign: 'center', fontFamily: 'monospace', fontSize: '0.82rem' }}>{item.hsnSacCode || '-'}</td>
               <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600 }}>{item.quantity} {item.unit || 'PCS'}</td>
               <td style={{ padding: '10px 12px', textAlign: 'right' }}>{Number(item.rate).toFixed(2)}</td>
-              <td style={{ padding: '10px 12px', textAlign: 'right' }}>{Number(item.taxableValue).toFixed(2)}</td>
-              <td style={{ padding: '10px 12px', textAlign: 'center', fontSize: '0.82rem' }}>{item.taxRate}%</td>
+              <td style={{ padding: '10px 12px', textAlign: 'right' }}>{Number(item.taxableValue || item.total).toFixed(2)}</td>
+              <td style={{ padding: '10px 12px', textAlign: 'center', fontSize: '0.82rem' }}>{isWithoutGst ? '0%' : `${item.taxRate}%`}</td>
               <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700 }}>{Number(item.total).toFixed(2)}</td>
             </tr>
           ))}
@@ -320,23 +335,32 @@ export const InvoiceTemplate = React.forwardRef(({ invoice, business, template =
               <span style={{ fontWeight: 600 }}>{formatCurrency(invoice.taxableAmount)}</span>
             </div>
 
-            {cgstVal > 0 && (
+            {isWithoutGst ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
-                <span style={{ color: '#64748b' }}>CGST:</span>
-                <span>{formatCurrency(cgstVal)}</span>
+                <span style={{ color: '#64748b' }}>Tax / GST:</span>
+                <span style={{ color: '#64748b' }}>{currencySymbol} 0.00 (Non-GST)</span>
               </div>
-            )}
-            {sgstVal > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
-                <span style={{ color: '#64748b' }}>SGST:</span>
-                <span>{formatCurrency(sgstVal)}</span>
-              </div>
-            )}
-            {igstVal > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
-                <span style={{ color: '#64748b' }}>IGST:</span>
-                <span>{formatCurrency(igstVal)}</span>
-              </div>
+            ) : (
+              <>
+                {cgstVal > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
+                    <span style={{ color: '#64748b' }}>CGST:</span>
+                    <span>{formatCurrency(cgstVal)}</span>
+                  </div>
+                )}
+                {sgstVal > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
+                    <span style={{ color: '#64748b' }}>SGST:</span>
+                    <span>{formatCurrency(sgstVal)}</span>
+                  </div>
+                )}
+                {igstVal > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
+                    <span style={{ color: '#64748b' }}>IGST:</span>
+                    <span>{formatCurrency(igstVal)}</span>
+                  </div>
+                )}
+              </>
             )}
             {invoice.extraCharges?.map((ch, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem', color: ch.isDeduction ? '#dc2626' : '#16a34a' }}>

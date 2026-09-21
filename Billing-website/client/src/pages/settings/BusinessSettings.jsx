@@ -24,6 +24,8 @@ export const BusinessSettings = () => {
     stateCode: '27',
     pincode: '',
     upiId: '',
+    currency: 'INR',
+    currencySymbol: '₹',
     bankDetails: {
       bankName: '',
       accountNo: '',
@@ -78,6 +80,8 @@ export const BusinessSettings = () => {
             stateCode: biz.stateCode || '27',
             pincode: biz.pincode || '',
             upiId: biz.upiId || '',
+            currency: biz.currency || 'INR',
+            currencySymbol: biz.currencySymbol || (biz.currency === 'USD' ? '$' : '₹'),
             bankDetails: biz.bankDetails || { bankName: '', accountNo: '', ifsc: '', branch: '' },
             settings: biz.settings || { dcStockPolicy: 'DEDUCT', invoiceTemplate: 'modern', termsAndConditions: '' }
           });
@@ -464,10 +468,34 @@ export const BusinessSettings = () => {
           {/* Section 4: Billing & Print Settings */}
           <div className="card-zenith p-3 p-sm-4 mb-4">
             <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
-              <i className="bi bi-printer"></i> Billing & Print Configurations
+              <i className="bi bi-printer"></i> Billing, Currency & Print Configurations
             </h6>
             <div className="row g-2 g-sm-3">
-              <div className="col-12 col-md-6">
+              <div className="col-12 col-md-4">
+                <label className="form-label small fw-bold mb-1">
+                  <i className="bi bi-currency-exchange me-1 text-primary"></i> Operating Currency (Symbol)
+                </label>
+                <select
+                  className="form-select form-select-sm fw-semibold"
+                  value={formData.currency || 'INR'}
+                  onChange={(e) => {
+                    const curr = e.target.value;
+                    setFormData({
+                      ...formData,
+                      currency: curr,
+                      currencySymbol: curr === 'USD' ? '$' : '₹'
+                    });
+                  }}
+                >
+                  <option value="INR">₹ Indian Rupee (INR - ₹)</option>
+                  <option value="USD">$ US Dollar (USD - $)</option>
+                </select>
+                <div className="small text-muted mt-1" style={{ fontSize: '0.72rem' }}>
+                  Symbol: <strong>{formData.currencySymbol || (formData.currency === 'USD' ? '$' : '₹')}</strong> on documents, invoices & reports
+                </div>
+              </div>
+
+              <div className="col-12 col-md-4">
                 <label className="form-label small fw-bold mb-1">Default Invoice Print Template</label>
                 <select
                   className="form-select form-select-sm fw-semibold"
@@ -487,7 +515,7 @@ export const BusinessSettings = () => {
                 </select>
               </div>
 
-              <div className="col-12 col-md-6">
+              <div className="col-12 col-md-4">
                 <label className="form-label small fw-bold mb-1">Delivery Challan Stock Policy</label>
                 <select
                   className="form-select form-select-sm fw-semibold"
@@ -509,7 +537,8 @@ export const BusinessSettings = () => {
                 <label className="form-label small fw-bold mb-1">Default Terms & Conditions on Invoices</label>
                 <textarea
                   className="form-control form-control-sm"
-                  rows="3"
+                  rows="5"
+                  style={{ minHeight: '130px' }}
                   placeholder="1. Goods once sold will not be taken back.&#10;2. Interest @ 18% p.a. will be charged after due date.&#10;3. Subject to local jurisdiction."
                   value={formData.settings?.termsAndConditions || ''}
                   onChange={(e) =>

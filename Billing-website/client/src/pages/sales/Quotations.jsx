@@ -14,6 +14,7 @@ export const Quotations = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [taxTypeFilter, setTaxTypeFilter] = useState('');
   const [datePreset, setDatePreset] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -50,12 +51,13 @@ export const Quotations = () => {
   const handleClearFilters = () => {
     setSearch('');
     setStatusFilter('');
+    setTaxTypeFilter('');
     setDatePreset('');
     setStartDate('');
     setEndDate('');
   };
 
-  const hasActiveFilters = Boolean(search || statusFilter || datePreset || startDate || endDate);
+  const hasActiveFilters = Boolean(search || statusFilter || taxTypeFilter || datePreset || startDate || endDate);
 
   const fetchQuotations = async () => {
     setLoading(true);
@@ -100,12 +102,17 @@ export const Quotations = () => {
       q.quotationNo?.toLowerCase().includes(search.toLowerCase()) ||
       q.customerNameSnapshot?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = !statusFilter || q.status === statusFilter;
+    const isNoGst = Boolean(q.isWithoutGst || (q.totalTax === 0 && (!q.cgstTotal && !q.sgstTotal && !q.igstTotal)));
+    const matchesTaxType =
+      !taxTypeFilter ||
+      (taxTypeFilter === 'without_gst' && isNoGst) ||
+      (taxTypeFilter === 'with_gst' && !isNoGst);
     let matchesDate = true;
     if (startDate && endDate) {
       const qDate = new Date(q.date || q.createdAt).toISOString().split('T')[0];
       matchesDate = qDate >= startDate && qDate <= endDate;
     }
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch && matchesStatus && matchesTaxType && matchesDate;
   });
 
   // Top Metrics Calculation
@@ -120,12 +127,26 @@ export const Quotations = () => {
     {
       header: 'Quote #',
       accessor: 'quotationNo',
-      render: (row) => (
-        <div>
-          <span className="fw-bold font-mono text-primary">#{row.quotationNo}</span>
-          <div className="small text-muted">{new Date(row.date).toLocaleDateString('en-IN')}</div>
-        </div>
-      )
+      render: (row) => {
+        const isNoGst = Boolean(row.isWithoutGst || (row.totalTax === 0 && (!row.cgstTotal && !row.sgstTotal && !row.igstTotal)));
+        return (
+          <div>
+            <div className="d-flex align-items-center gap-1 flex-wrap">
+              <span className="fw-bold font-mono text-primary">#{row.quotationNo}</span>
+              {isNoGst ? (
+                <span className="badge bg-warning-subtle text-dark border border-warning-subtle" style={{ fontSize: '0.65rem' }}>
+                  Without GST
+                </span>
+              ) : (
+                <span className="badge bg-primary-subtle text-primary border border-primary-subtle" style={{ fontSize: '0.65rem' }}>
+                  GST
+                </span>
+              )}
+            </div>
+            <div className="small text-muted">{new Date(row.date).toLocaleDateString('en-IN')}</div>
+          </div>
+        );
+      }
     },
     {
       header: 'Customer',
@@ -221,17 +242,21 @@ export const Quotations = () => {
             filename="Quotations_Register"
             title="Quotations & Price Estimates"
             subtitle={`${activeBusiness?.name || 'Business'} | Quotations`}
-            headers={['Quotation #', 'Date', 'Valid Until', 'Customer', 'Taxable Amt (Rs)', 'GST Tax (Rs)', 'Grand Total (Rs)', 'Status']}
-            data={filteredQuotes.map((q) => [
-              q.quotationNo,
-              new Date(q.date).toLocaleDateString('en-IN'),
-              q.validUntil ? new Date(q.validUntil).toLocaleDateString('en-IN') : '-',
-              q.customerNameSnapshot || q.customerId?.name || 'Walk-in',
-              q.taxableAmount || 0,
-              q.totalTax || 0,
-              q.grandTotal || 0,
-              q.status?.toUpperCase()
-            ])}
+            headers={['Quotation #', 'Tax Type', 'Date', 'Valid Until', 'Customer', 'Subtotal (Rs)', 'GST Tax (Rs)', 'Grand Total (Rs)', 'Status']}
+            data={filteredQuotes.map((q) => {
+              const isNoGst = Boolean(q.isWithoutGst || (q.totalTax === 0 && (!q.cgstTotal && !q.sgstTotal && !q.igstTotal)));
+              return [
+                q.quotationNo,
+                isNoGst ? 'Without GST' : 'With GST',
+                new Date(q.date).toLocaleDateString('en-IN'),
+                q.validUntil ? new Date(q.validUntil).toLocaleDateString('en-IN') : '-',
+                q.customerNameSnapshot || q.customerId?.name || 'Walk-in',
+                q.taxableAmount || q.subtotal || 0,
+                q.totalTax || 0,
+                q.grandTotal || 0,
+                q.status?.toUpperCase()
+              ];
+            })}
           />
           <NavLink
             to="/sales/quotations/new"
@@ -304,7 +329,7 @@ export const Quotations = () => {
       {/* 3. Search & Filter Bar */}
       <div className="card-zenith p-3 mb-3">
         <div className="row g-2">
-          <div className="col-12 col-md-5">
+          <div className="col-12 col-md-4">
             <div className="position-relative">
               <i className="bi bi-search position-absolute text-muted" style={{ left: '12px', top: '10px' }}></i>
               <input
@@ -325,6 +350,19 @@ export const Quotations = () => {
             </div>
           </div>
 
+          <div className="col-6 col-md-2">
+            <select
+              className="form-select form-select-sm fw-semibold"
+              value={taxTypeFilter}
+              onChange={(e) => setTaxTypeFilter(e.target.value)}
+              title="Filter by Tax Type"
+            >
+              <option value="">All Tax Types</option>
+              <option value="with_gst">With GST</option>
+              <option value="without_gst">Without GST (Non-GST)</option>
+            </select>
+          </div>
+
           <div className="col-6 col-md-3">
             <select
               className="form-select form-select-sm fw-semibold"
@@ -337,7 +375,7 @@ export const Quotations = () => {
             </select>
           </div>
 
-          <div className="col-6 col-md-3">
+          <div className="col-6 col-md-2">
             <select
               className="form-select form-select-sm fw-semibold"
               value={datePreset}
@@ -352,7 +390,7 @@ export const Quotations = () => {
             </select>
           </div>
 
-          <div className="col-12 col-md-1">
+          <div className="col-6 col-md-1">
             <button
               className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
               onClick={fetchQuotations}
@@ -368,6 +406,12 @@ export const Quotations = () => {
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
             <div className="d-flex flex-wrap align-items-center gap-1">
               <span className="small text-muted me-1">Active filters:</span>
+              {taxTypeFilter && (
+                <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                  Tax: {taxTypeFilter === 'without_gst' ? 'Without GST' : 'With GST'}
+                  <i className="bi bi-x cursor-pointer" onClick={() => setTaxTypeFilter('')}></i>
+                </span>
+              )}
               {statusFilter && (
                 <span className="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
                   Status: {statusFilter}
@@ -417,95 +461,107 @@ export const Quotations = () => {
             <div className="small">Click "Create Quotation" to generate your first estimate.</div>
           </div>
         ) : (
-          filteredQuotes.map((q) => (
-            <div key={q._id} className="invoice-card-mobile">
-              {/* Header Line */}
-              <div className="invoice-card-mobile-header">
-                <div
-                  className="cursor-pointer d-flex align-items-center gap-1"
-                  onClick={() => {
-                    setSelectedQuotation(q);
-                    setShowPreviewModal(true);
-                  }}
-                  title="Click to preview quotation"
-                >
-                  <i className="bi bi-file-earmark-text text-primary"></i>
-                  <span className="fw-bold font-mono text-primary fs-6">#{q.quotationNo}</span>
-                  <span className="text-muted ms-1" style={{ fontSize: '0.72rem' }}>
-                    {new Date(q.date).toLocaleDateString('en-IN')}
-                  </span>
-                </div>
-                <div className="fw-extrabold font-mono text-dark" style={{ fontSize: '1.05rem' }}>
-                  ₹{fmt(q.grandTotal)}
-                </div>
-              </div>
-
-              {/* Customer Details */}
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <div className="fw-bold text-dark small text-truncate" style={{ maxWidth: '190px' }}>
-                  {q.customerNameSnapshot}
-                </div>
-                <div className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
-                  Valid: {q.validUntil ? new Date(q.validUntil).toLocaleDateString('en-IN') : 'Open'}
-                </div>
-              </div>
-
-              {/* Tax Itemization Strip */}
-              <div className="d-flex justify-content-between text-muted font-mono py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
-                <span>Taxable: <strong className="text-dark">₹{fmt(q.taxableAmount || 0)}</strong></span>
-                <span>GST: <strong className="text-primary">+₹{fmt(q.totalTax || 0)}</strong></span>
-              </div>
-
-              {/* Status Badge & Actions */}
-              <div className="d-flex justify-content-between align-items-center pt-2 border-top gap-1 flex-wrap">
-                <span
-                  className={`badge-status ${
-                    q.status === 'converted' ? 'badge-paid' : 'badge-finalized'
-                  }`}
-                  style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}
-                >
-                  {q.status === 'converted' ? 'CONVERTED' : 'DRAFT'}
-                </span>
-
-                <div className="d-flex gap-1 flex-wrap">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm py-1 px-2 fw-bold d-flex align-items-center gap-1"
-                    style={{ fontSize: '0.78rem' }}
+          filteredQuotes.map((q) => {
+            const isNoGst = Boolean(q.isWithoutGst || (q.totalTax === 0 && (!q.cgstTotal && !q.sgstTotal && !q.igstTotal)));
+            return (
+              <div key={q._id} className="invoice-card-mobile">
+                {/* Header Line */}
+                <div className="invoice-card-mobile-header">
+                  <div
+                    className="cursor-pointer d-flex align-items-center gap-1 flex-wrap"
                     onClick={() => {
                       setSelectedQuotation(q);
                       setShowPreviewModal(true);
                     }}
+                    title="Click to preview quotation"
                   >
-                    <i className="bi bi-eye"></i> View
-                  </button>
-                  {q.status !== 'converted' && q.status !== 'cancelled' && (
-                    <NavLink
-                      to={`/sales/quotations/${q._id}/edit`}
-                      className="btn btn-outline-primary btn-sm py-1 px-2 fw-bold d-flex align-items-center gap-1"
-                      style={{ fontSize: '0.78rem' }}
-                    >
-                      <i className="bi bi-pencil"></i> Edit
-                    </NavLink>
-                  )}
-                  {q.status !== 'converted' ? (
+                    <i className="bi bi-file-earmark-text text-primary"></i>
+                    <span className="fw-bold font-mono text-primary fs-6">#{q.quotationNo}</span>
+                    {isNoGst ? (
+                      <span className="badge bg-warning-subtle text-dark border border-warning-subtle" style={{ fontSize: '0.62rem' }}>
+                        Without GST
+                      </span>
+                    ) : (
+                      <span className="badge bg-primary-subtle text-primary border border-primary-subtle" style={{ fontSize: '0.62rem' }}>
+                        GST
+                      </span>
+                    )}
+                    <span className="text-muted ms-1" style={{ fontSize: '0.72rem' }}>
+                      {new Date(q.date).toLocaleDateString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="fw-extrabold font-mono text-dark" style={{ fontSize: '1.05rem' }}>
+                    ₹{fmt(q.grandTotal)}
+                  </div>
+                </div>
+
+                {/* Customer Details */}
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="fw-bold text-dark small text-truncate" style={{ maxWidth: '190px' }}>
+                    {q.customerNameSnapshot}
+                  </div>
+                  <div className="small text-muted font-mono" style={{ fontSize: '0.72rem' }}>
+                    Valid: {q.validUntil ? new Date(q.validUntil).toLocaleDateString('en-IN') : 'Open'}
+                  </div>
+                </div>
+
+                {/* Tax Itemization Strip */}
+                <div className="d-flex justify-content-between text-muted font-mono py-1 px-2 mb-2 bg-light rounded border" style={{ fontSize: '0.72rem' }}>
+                  <span>Subtotal: <strong className="text-dark">₹{fmt(q.taxableAmount || q.subtotal || 0)}</strong></span>
+                  <span>GST: <strong className={isNoGst ? 'text-muted' : 'text-primary'}>{isNoGst ? '₹0.00 (Exempt)' : `+₹${fmt(q.totalTax || 0)}`}</strong></span>
+                </div>
+
+                {/* Status Badge & Actions */}
+                <div className="d-flex justify-content-between align-items-center pt-2 border-top gap-1 flex-wrap">
+                  <span
+                    className={`badge-status ${
+                      q.status === 'converted' ? 'badge-paid' : 'badge-finalized'
+                    }`}
+                    style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}
+                  >
+                    {q.status === 'converted' ? 'CONVERTED' : 'DRAFT'}
+                  </span>
+
+                  <div className="d-flex gap-1 flex-wrap">
                     <button
                       type="button"
-                      className="btn btn-outline-success btn-sm py-1 px-2 fw-bold d-flex align-items-center gap-1"
+                      className="btn btn-outline-secondary btn-sm py-1 px-2 fw-bold d-flex align-items-center gap-1"
                       style={{ fontSize: '0.78rem' }}
-                      onClick={() => handleConvertToSO(q._id)}
+                      onClick={() => {
+                        setSelectedQuotation(q);
+                        setShowPreviewModal(true);
+                      }}
                     >
-                      <i className="bi bi-arrow-right-circle"></i> Convert to SO
+                      <i className="bi bi-eye"></i> View
                     </button>
-                  ) : (
-                    <span className="text-success small fw-bold d-flex align-items-center gap-1">
-                      <i className="bi bi-check2-all"></i> Converted
-                    </span>
-                  )}
+                    {q.status !== 'converted' && q.status !== 'cancelled' && (
+                      <NavLink
+                        to={`/sales/quotations/${q._id}/edit`}
+                        className="btn btn-outline-primary btn-sm py-1 px-2 fw-bold d-flex align-items-center gap-1"
+                        style={{ fontSize: '0.78rem' }}
+                      >
+                        <i className="bi bi-pencil"></i> Edit
+                      </NavLink>
+                    )}
+                    {q.status !== 'converted' ? (
+                      <button
+                        type="button"
+                        className="btn btn-outline-success btn-sm py-1 px-2 fw-bold d-flex align-items-center gap-1"
+                        style={{ fontSize: '0.78rem' }}
+                        onClick={() => handleConvertToSO(q._id)}
+                      >
+                        <i className="bi bi-arrow-right-circle"></i> Convert to SO
+                      </button>
+                    ) : (
+                      <span className="text-success small fw-bold d-flex align-items-center gap-1">
+                        <i className="bi bi-check2-all"></i> Converted
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

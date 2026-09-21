@@ -3,8 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export const Login = () => {
-  const [email, setEmail] = useState('owner@demo.local');
-  const [password, setPassword] = useState('Demo@12345');
+  const [email, setEmail] = useState('owner@theboxsync.com');
+  const [password, setPassword] = useState('Password@123');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -22,7 +22,7 @@ export const Login = () => {
 
   const handleDemoFill = (roleEmail) => {
     setEmail(roleEmail);
-    setPassword('Demo@12345');
+    setPassword('Password@123');
   };
 
   return (
@@ -102,44 +102,47 @@ export const Login = () => {
           </div>
         </form>
 
-        {/* Quick Demo Credentials Autofill Helper */}
+        {/* Quick Role Credentials Autofill Helper */}
         <div className="border-top pt-3 text-center">
           <div className="text-uppercase text-muted fw-bold mb-2" style={{ fontSize: '0.68rem', letterSpacing: '0.05em' }}>
-            ⚡ 1-Click Instant Demo Access:
+            ⚡ 1-Click Instant Role Access:
           </div>
           <div className="d-flex flex-wrap gap-2 justify-content-center">
             <button
               type="button"
-              className="btn btn-outline-primary btn-sm px-2 py-1 flex-fill flex-sm-grow-0"
+              className={`btn btn-sm px-2 py-1 flex-fill flex-sm-grow-0 ${email === 'owner@theboxsync.com' ? 'btn-primary text-white' : 'btn-outline-primary'}`}
               style={{ fontSize: '0.75rem' }}
-              onClick={() => handleDemoFill('owner@demo.local')}
+              onClick={() => handleDemoFill('owner@theboxsync.com')}
             >
               👑 Owner
             </button>
             <button
               type="button"
-              className="btn btn-outline-success btn-sm px-2 py-1 flex-fill flex-sm-grow-0"
+              className={`btn btn-sm px-2 py-1 flex-fill flex-sm-grow-0 ${email === 'accountant@theboxsync.com' ? 'btn-success text-white' : 'btn-outline-success'}`}
               style={{ fontSize: '0.75rem' }}
-              onClick={() => handleDemoFill('accountant@demo.local')}
+              onClick={() => handleDemoFill('accountant@theboxsync.com')}
             >
               📊 Accountant
             </button>
             <button
               type="button"
-              className="btn btn-outline-warning btn-sm px-2 py-1 text-dark flex-fill flex-sm-grow-0"
+              className={`btn btn-sm px-2 py-1 flex-fill flex-sm-grow-0 ${email === 'billing@theboxsync.com' ? 'btn-warning text-dark' : 'btn-outline-warning text-dark'}`}
               style={{ fontSize: '0.75rem' }}
-              onClick={() => handleDemoFill('billing@demo.local')}
+              onClick={() => handleDemoFill('billing@theboxsync.com')}
             >
               ⚡ Billing Staff
             </button>
             <button
               type="button"
-              className="btn btn-outline-info btn-sm px-2 py-1 text-dark flex-fill flex-sm-grow-0"
+              className={`btn btn-sm px-2 py-1 flex-fill flex-sm-grow-0 ${email === 'inventory@theboxsync.com' ? 'btn-info text-dark' : 'btn-outline-info text-dark'}`}
               style={{ fontSize: '0.75rem' }}
-              onClick={() => handleDemoFill('inventory@demo.local')}
+              onClick={() => handleDemoFill('inventory@theboxsync.com')}
             >
               📦 Inventory Mgr
             </button>
+          </div>
+          <div className="mt-2 text-muted" style={{ fontSize: '0.72rem' }}>
+            Password: <code className="bg-light px-1 py-0.5 rounded text-dark font-mono">Password@123</code>
           </div>
         </div>
       </div>

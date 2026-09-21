@@ -32,19 +32,74 @@ exports.getQuotations = async (req, res, next) => {
 
 exports.createQuotation = async (req, res, next) => {
   try {
-    const { customerId, items, isTaxInclusive, validUntil, terms, notes, salespersonId } = req.body;
+    const { customerId, items, isTaxInclusive, isWithoutGst, validUntil, terms, notes, salespersonId } = req.body;
     const customer = await Customer.findOne({ _id: customerId, businessId: req.businessId });
     if (!customer) return res.status(404).json({ success: false, message: 'Customer not found' });
 
     const supplierStateCode = req.business.stateCode || '27';
     const placeOfSupplyStateCode = customer.billingAddress?.stateCode || supplierStateCode;
 
-    const taxCalc = TaxDeterminationService.calculateItemTaxes(
-      items,
-      supplierStateCode,
-      placeOfSupplyStateCode,
-      isTaxInclusive
-    );
+    let taxCalc;
+    const withoutGstFlag = Boolean(isWithoutGst);
+
+    if (withoutGstFlag) {
+      let subtotal = 0;
+      let totalDiscount = 0;
+      const calculatedItems = (items || []).map(item => {
+        const quantity = Number(item.quantity) || 1;
+        const rate = Number(item.rate) || 0;
+        const grossAmount = quantity * rate;
+        let discountAmount = 0;
+        if (item.discountPercent && Number(item.discountPercent) > 0) {
+          discountAmount = (grossAmount * Number(item.discountPercent)) / 100;
+        } else if (item.discountAmount && Number(item.discountAmount) > 0) {
+          discountAmount = Number(item.discountAmount);
+        }
+        const taxableValue = Math.max(0, grossAmount - discountAmount);
+        subtotal += grossAmount;
+        totalDiscount += discountAmount;
+        return {
+          ...item,
+          quantity,
+          rate,
+          discountPercent: Number(item.discountPercent) || 0,
+          discountAmount: Number(discountAmount.toFixed(2)),
+          taxableValue: Number(taxableValue.toFixed(2)),
+          taxRate: 0,
+          cgstRate: 0,
+          cgstAmount: 0,
+          sgstRate: 0,
+          sgstAmount: 0,
+          igstRate: 0,
+          igstAmount: 0,
+          cessRate: 0,
+          cessAmount: 0,
+          total: Number(taxableValue.toFixed(2))
+        };
+      });
+      const taxableAmount = subtotal - totalDiscount;
+      taxCalc = {
+        items: calculatedItems,
+        isInterState: false,
+        subtotal: Number(subtotal.toFixed(2)),
+        totalDiscount: Number(totalDiscount.toFixed(2)),
+        taxableAmount: Number(taxableAmount.toFixed(2)),
+        cgstTotal: 0,
+        sgstTotal: 0,
+        igstTotal: 0,
+        cessTotal: 0,
+        totalTax: 0,
+        roundOff: 0,
+        grandTotal: Math.round(taxableAmount)
+      };
+    } else {
+      taxCalc = TaxDeterminationService.calculateItemTaxes(
+        items,
+        supplierStateCode,
+        placeOfSupplyStateCode,
+        isTaxInclusive
+      );
+    }
 
     const quotationNo = await SequenceService.getNextDocumentNumber(req.businessId, 'quotation', req.financialYear);
 
@@ -79,6 +134,9 @@ exports.createQuotation = async (req, res, next) => {
 
     const finalGrandTotal = Math.max(0, taxCalc.grandTotal + totalExtraAdditions - totalExtraDeductions);
 
+    const docCurrency = req.body.currency || req.business.currency || 'INR';
+    const docCurrencySymbol = req.body.currencySymbol || (docCurrency === 'USD' ? '$' : '₹');
+
     const quotation = await Quotation.create({
       businessId: req.businessId,
       branchId: req.body.branchId || null,
@@ -92,6 +150,9 @@ exports.createQuotation = async (req, res, next) => {
       shippingAddressSnapshot: req.body.shippingAddress || customer.shippingAddress || customer.billingAddress,
       placeOfSupply: customer.billingAddress?.state || req.business.state,
       isInterState: taxCalc.isInterState,
+      isWithoutGst: withoutGstFlag,
+      currency: docCurrency,
+      currencySymbol: docCurrencySymbol,
       salespersonId,
       items: taxCalc.items,
       extraCharges: processedExtraCharges,
@@ -132,7 +193,7 @@ exports.getQuotationById = async (req, res, next) => {
 
 exports.updateQuotation = async (req, res, next) => {
   try {
-    const { customerId, items, isTaxInclusive, validUntil, terms, notes, salespersonId } = req.body;
+    const { customerId, items, isTaxInclusive, isWithoutGst, validUntil, terms, notes, salespersonId } = req.body;
     const quotation = await Quotation.findOne({ _id: req.params.id, businessId: req.businessId });
     if (!quotation) {
       return res.status(404).json({ success: false, message: 'Quotation not found' });
@@ -147,12 +208,67 @@ exports.updateQuotation = async (req, res, next) => {
     const supplierStateCode = req.business.stateCode || '27';
     const placeOfSupplyStateCode = customer.billingAddress?.stateCode || supplierStateCode;
 
-    const taxCalc = TaxDeterminationService.calculateItemTaxes(
-      items,
-      supplierStateCode,
-      placeOfSupplyStateCode,
-      isTaxInclusive
-    );
+    let taxCalc;
+    const withoutGstFlag = isWithoutGst !== undefined ? Boolean(isWithoutGst) : Boolean(quotation.isWithoutGst);
+
+    if (withoutGstFlag) {
+      let subtotal = 0;
+      let totalDiscount = 0;
+      const calculatedItems = (items || []).map(item => {
+        const quantity = Number(item.quantity) || 1;
+        const rate = Number(item.rate) || 0;
+        const grossAmount = quantity * rate;
+        let discountAmount = 0;
+        if (item.discountPercent && Number(item.discountPercent) > 0) {
+          discountAmount = (grossAmount * Number(item.discountPercent)) / 100;
+        } else if (item.discountAmount && Number(item.discountAmount) > 0) {
+          discountAmount = Number(item.discountAmount);
+        }
+        const taxableValue = Math.max(0, grossAmount - discountAmount);
+        subtotal += grossAmount;
+        totalDiscount += discountAmount;
+        return {
+          ...item,
+          quantity,
+          rate,
+          discountPercent: Number(item.discountPercent) || 0,
+          discountAmount: Number(discountAmount.toFixed(2)),
+          taxableValue: Number(taxableValue.toFixed(2)),
+          taxRate: 0,
+          cgstRate: 0,
+          cgstAmount: 0,
+          sgstRate: 0,
+          sgstAmount: 0,
+          igstRate: 0,
+          igstAmount: 0,
+          cessRate: 0,
+          cessAmount: 0,
+          total: Number(taxableValue.toFixed(2))
+        };
+      });
+      const taxableAmount = subtotal - totalDiscount;
+      taxCalc = {
+        items: calculatedItems,
+        isInterState: false,
+        subtotal: Number(subtotal.toFixed(2)),
+        totalDiscount: Number(totalDiscount.toFixed(2)),
+        taxableAmount: Number(taxableAmount.toFixed(2)),
+        cgstTotal: 0,
+        sgstTotal: 0,
+        igstTotal: 0,
+        cessTotal: 0,
+        totalTax: 0,
+        roundOff: 0,
+        grandTotal: Math.round(taxableAmount)
+      };
+    } else {
+      taxCalc = TaxDeterminationService.calculateItemTaxes(
+        items,
+        supplierStateCode,
+        placeOfSupplyStateCode,
+        isTaxInclusive
+      );
+    }
 
     const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
       const rate = Number(ch.rate) || 0;
@@ -185,6 +301,9 @@ exports.updateQuotation = async (req, res, next) => {
 
     const finalGrandTotal = Math.max(0, taxCalc.grandTotal + totalExtraAdditions - totalExtraDeductions);
 
+    const docCurrency = req.body.currency || quotation.currency || req.business.currency || 'INR';
+    const docCurrencySymbol = req.body.currencySymbol || (docCurrency === 'USD' ? '$' : '₹');
+
     quotation.customerId = customer._id;
     quotation.customerNameSnapshot = customer.name;
     quotation.customerGSTINSnapshot = customer.gstin;
@@ -192,6 +311,9 @@ exports.updateQuotation = async (req, res, next) => {
     quotation.shippingAddressSnapshot = req.body.shippingAddress || customer.shippingAddress || quotation.shippingAddressSnapshot || customer.billingAddress;
     quotation.placeOfSupply = customer.billingAddress?.state || req.business.state;
     quotation.isInterState = taxCalc.isInterState;
+    quotation.isWithoutGst = withoutGstFlag;
+    quotation.currency = docCurrency;
+    quotation.currencySymbol = docCurrencySymbol;
     if (req.body.date) quotation.date = req.body.date;
     if (validUntil !== undefined) quotation.validUntil = validUntil;
     if (salespersonId !== undefined) quotation.salespersonId = salespersonId;
@@ -260,14 +382,18 @@ exports.getSalesOrders = async (req, res, next) => {
 
 exports.createSalesOrder = async (req, res, next) => {
   try {
-    const { customerId, warehouseId, items, isTaxInclusive, deliveryDate, terms, notes, reserveStock = false } = req.body;
+    const { customerId, warehouseId, items, isTaxInclusive, isWithoutGst, deliveryDate, terms, notes, reserveStock = false } = req.body;
     const customer = await Customer.findOne({ _id: customerId, businessId: req.businessId });
     if (!customer) return res.status(404).json({ success: false, message: 'Customer not found' });
 
     const supplierStateCode = req.business.stateCode || '27';
     const placeOfSupplyStateCode = customer.billingAddress?.stateCode || supplierStateCode;
 
-    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive);
+    const withoutGstFlag = Boolean(isWithoutGst);
+    const docCurrency = req.body.currency || req.business.currency || 'INR';
+    const docCurrencySymbol = req.body.currencySymbol || (docCurrency === 'USD' ? '$' : '₹');
+
+    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive, withoutGstFlag);
     const orderNo = await SequenceService.getNextDocumentNumber(req.businessId, 'sales_order', req.financialYear);
 
     const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
@@ -315,6 +441,9 @@ exports.createSalesOrder = async (req, res, next) => {
       shippingAddressSnapshot: req.body.shippingAddress || customer.shippingAddress || customer.billingAddress,
       placeOfSupply: customer.billingAddress?.state || req.business.state,
       isInterState: taxCalc.isInterState,
+      isWithoutGst: withoutGstFlag,
+      currency: docCurrency,
+      currencySymbol: docCurrencySymbol,
       items: taxCalc.items,
       extraCharges: processedExtraCharges,
       subtotal: taxCalc.subtotal,
@@ -359,7 +488,7 @@ exports.getSalesOrderById = async (req, res, next) => {
 
 exports.updateSalesOrder = async (req, res, next) => {
   try {
-    const { customerId, warehouseId, items, isTaxInclusive, deliveryDate, terms, notes } = req.body;
+    const { customerId, warehouseId, items, isTaxInclusive, isWithoutGst, deliveryDate, terms, notes } = req.body;
     const salesOrder = await SalesOrder.findOne({ _id: req.params.id, businessId: req.businessId });
     if (!salesOrder) {
       return res.status(404).json({ success: false, message: 'Sales Order not found' });
@@ -374,7 +503,11 @@ exports.updateSalesOrder = async (req, res, next) => {
     const supplierStateCode = req.business.stateCode || '27';
     const placeOfSupplyStateCode = customer.billingAddress?.stateCode || supplierStateCode;
 
-    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive);
+    const withoutGstFlag = isWithoutGst !== undefined ? Boolean(isWithoutGst) : Boolean(salesOrder.isWithoutGst);
+    const docCurrency = req.body.currency || salesOrder.currency || req.business.currency || 'INR';
+    const docCurrencySymbol = req.body.currencySymbol || (docCurrency === 'USD' ? '$' : '₹');
+
+    const taxCalc = TaxDeterminationService.calculateItemTaxes(items, supplierStateCode, placeOfSupplyStateCode, isTaxInclusive, withoutGstFlag);
 
     const processedExtraCharges = (req.body.extraCharges || []).filter(c => c && c.name && String(c.name).trim() !== '').map(ch => {
       const rate = Number(ch.rate) || 0;
@@ -414,6 +547,9 @@ exports.updateSalesOrder = async (req, res, next) => {
     salesOrder.shippingAddressSnapshot = req.body.shippingAddress || customer.shippingAddress || salesOrder.shippingAddressSnapshot || customer.billingAddress;
     salesOrder.placeOfSupply = customer.billingAddress?.state || req.business.state;
     salesOrder.isInterState = taxCalc.isInterState;
+    salesOrder.isWithoutGst = withoutGstFlag;
+    salesOrder.currency = docCurrency;
+    salesOrder.currencySymbol = docCurrencySymbol;
     if (warehouseId) salesOrder.warehouseId = warehouseId;
     if (req.body.date) salesOrder.date = req.body.date;
     if (deliveryDate !== undefined) salesOrder.deliveryDate = deliveryDate;

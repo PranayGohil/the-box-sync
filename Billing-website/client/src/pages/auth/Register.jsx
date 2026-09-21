@@ -13,7 +13,9 @@ export const Register = () => {
     state: 'Maharashtra',
     stateCode: '27',
     city: 'Pune',
-    gstin: ''
+    gstin: '',
+    currency: 'INR',
+    currencySymbol: '₹'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -84,7 +86,26 @@ export const Register = () => {
                   onChange={(city) => setFormData(prev => ({ ...prev, city }))}
                 />
               </div>
-              <div className="col-12">
+              <div className="col-6">
+                <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>Currency</label>
+                <select
+                  name="currency"
+                  className="form-select form-select-sm fw-semibold"
+                  value={formData.currency}
+                  onChange={(e) => {
+                    const curr = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      currency: curr,
+                      currencySymbol: curr === 'USD' ? '$' : '₹'
+                    }));
+                  }}
+                >
+                  <option value="INR">₹ INR (Rupees)</option>
+                  <option value="USD">$ USD (Dollar)</option>
+                </select>
+              </div>
+              <div className="col-6">
                 <label className="form-label small fw-semibold mb-1" style={{ fontSize: '0.75rem' }}>GSTIN (Optional)</label>
                 <input
                   type="text"

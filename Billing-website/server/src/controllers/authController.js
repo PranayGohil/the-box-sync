@@ -69,6 +69,8 @@ exports.register = async (req, res, next) => {
       businessType: businessType || 'Retail / Wholesale',
       taxType: taxType || (gstin ? 'regular' : 'unregistered'),
       upiId: upiId || '',
+      currency: req.body.currency || 'INR',
+      currencySymbol: req.body.currency === 'USD' ? '$' : (req.body.currencySymbol || '₹'),
       email: email.toLowerCase(),
       phone: mobile || '',
       currentFinancialYear: '2026-27',
