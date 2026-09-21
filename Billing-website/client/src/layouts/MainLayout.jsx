@@ -262,11 +262,11 @@ export const MainLayout = () => {
                   onClick={() => handleToggleCategory(group.id)}
                 >
                   <div className="d-flex align-items-center gap-2 overflow-hidden">
-                    <i className={`bi ${group.icon} ${isAnyChildActive ? 'text-primary' : 'text-muted'}`}></i>
+                    <i className={`bi ${group.icon} text-white`}></i>
                     <span className="text-truncate">{group.title}</span>
                   </div>
                   <div className="d-flex align-items-center gap-2 flex-shrink-0">
-                    <i className="bi bi-chevron-down chevron-icon"></i>
+                    <i className="bi bi-chevron-down chevron-icon text-white"></i>
                   </div>
                 </button>
 
