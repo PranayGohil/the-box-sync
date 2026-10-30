@@ -274,7 +274,8 @@ const EditItemModal = ({ show, handleClose, data, fetchCatalogData, catalogData 
           formData.append('item_img', values.item_img);
         }
 
-        await axios.put(`${process.env.REACT_APP_API}/catalog/update`, formData, {
+        const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
+        await axios.put(`${apiBase}/catalog/update`, formData, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'multipart/form-data',

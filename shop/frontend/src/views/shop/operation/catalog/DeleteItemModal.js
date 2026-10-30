@@ -40,7 +40,8 @@ const DeleteItemModal = ({ show, handleClose, data, fetchCatalogData }) => {
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await axios.delete(`${process.env.REACT_APP_API}/catalog/delete/${data._id}`, {
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
+      await axios.delete(`${apiBase}/catalog/delete/${data._id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

@@ -22,7 +22,7 @@ const CatalogGrid = ({
 }) => {
   const totalItems = filteredCatalogData.reduce((acc, cat) => acc + cat.items.length, 0);
   const activeLabel = selectedCategory || (showSpecial ? 'Specials' : showParcelCharge ? 'Parcel' : 'All Items');
-  const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads';
+  const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5003/uploads';
 
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
   const [selectedCustomizeDish, setSelectedCustomizeDish] = useState(null);

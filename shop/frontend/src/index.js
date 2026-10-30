@@ -1,7 +1,47 @@
 // cra imports
 import React, { useMemo } from 'react';
 import ReactDOM from 'react-dom';
+import axios from 'axios';
 import reportWebVitals from 'reportWebVitals.js';
+
+// Fallback environment settings for Shop
+if (!process.env.REACT_APP_API) {
+  process.env.REACT_APP_API = 'http://localhost:5003/api';
+}
+if (!process.env.REACT_APP_API_URL) {
+  process.env.REACT_APP_API_URL = 'http://localhost:5003';
+}
+if (!process.env.REACT_APP_UPLOAD_DIR) {
+  process.env.REACT_APP_UPLOAD_DIR = 'http://localhost:5003/uploads';
+}
+
+const SHOP_API_BASE = 'http://localhost:5003/api';
+
+// Redirect any request with undefined or legacy ports in URL directly to the shop backend
+axios.interceptors.request.use((config) => {
+  if (config.url && typeof config.url === 'string') {
+    if (config.url.includes('undefined/')) {
+      config.url = config.url.replace(/.*undefined\//, `${SHOP_API_BASE}/`);
+    } else if (config.url.includes('localhost:5000/api')) {
+      config.url = config.url.replace('localhost:5000/api', 'localhost:5003/api');
+    } else if (config.url.includes('localhost:5001/api')) {
+      config.url = config.url.replace('localhost:5001/api', 'localhost:5003/api');
+    }
+  }
+
+  // Ensure Authorization header is populated if token exists in localStorage
+  const token = localStorage.getItem('token');
+  if (token && token !== 'null' && token !== 'undefined') {
+    if (!config.headers) {
+      config.headers = {};
+    }
+    if (!config.headers.Authorization || config.headers.Authorization === 'Bearer null' || config.headers.Authorization === 'Bearer undefined') {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  return config;
+});
 
 // import redux requirements
 import { Provider } from 'react-redux';

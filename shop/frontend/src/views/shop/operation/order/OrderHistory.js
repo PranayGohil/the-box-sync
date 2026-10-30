@@ -109,7 +109,8 @@ const OrderHistory = () => {
         params.to = filters.toDate;
       }
 
-      const { data: resData } = await axios.get(`${process.env.REACT_APP_API}/order/get-orders`, {
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
+      const { data: resData } = await axios.get(`${apiBase}/order/get-orders`, {
         params,
         headers: {
           'Content-Type': 'application/json',

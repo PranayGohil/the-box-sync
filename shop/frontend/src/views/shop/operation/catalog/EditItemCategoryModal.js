@@ -146,12 +146,14 @@ const EditItemCategoryModal = ({ show, handleClose, data, fetchCatalogData, stor
     useEffect(() => {
         const fetchCounters = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API}/catalog/get-counter-options`, {
+                const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
+                const response = await axios.get(`${apiBase}/catalog/get-counter-options`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
                 });
-                const options = response.data.data.map((counter) => ({
+                const counters = Array.isArray(response.data?.data) ? response.data.data : [];
+                const options = counters.map((counter) => ({
                     value: counter,
                     label: counter,
                 }));
@@ -187,8 +189,9 @@ const EditItemCategoryModal = ({ show, handleClose, data, fetchCatalogData, stor
                     payload.is_food_category = values.is_food_category;
                 }
 
+                const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
                 await axios.put(
-                    `${process.env.REACT_APP_API}/catalog/update/category/${data.id || data._id}`,
+                    `${apiBase}/catalog/update/category/${data.id || data._id}`,
                     payload,
                     {
                         headers: {

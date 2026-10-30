@@ -19,98 +19,13 @@ const PaymentModal = ({
   orderId,
   orderNo,
   handlePrint,
-  canSeeAccounting,
   history,
   taxRates,
 }) => {
   const [printing, setPrinting] = useState(false);
-  const [isGstInvoice, setIsGstInvoice] = useState(true);
-
-  useEffect(() => {
-    if (showPaymentModal) {
-      if (canSeeAccounting) {
-        setIsGstInvoice(true);
-        const sub = parseFloat(paymentData.subTotal) || 0;
-        const disc = parseFloat(paymentData.discountAmount) || 0;
-        const cgst = taxRates?.cgst || 0;
-        const sgst = taxRates?.sgst || 0;
-        const vat = taxRates?.vat || 0;
-        const cgstAmt = (sub * cgst) / 100;
-        const sgstAmt = (sub * sgst) / 100;
-        const vatAmt = (sub * vat) / 100;
-        const newTotal = Math.max(0, sub + cgstAmt + sgstAmt + vatAmt - disc);
-        setPaymentData(prev => {
-          if (
-            prev.cgstPercent === cgst &&
-            prev.sgstPercent === sgst &&
-            prev.vatPercent === vat &&
-            parseFloat(prev.total) === parseFloat(newTotal)
-          ) {
-            return prev;
-          }
-          return {
-            ...prev,
-            cgstPercent: cgst,
-            cgstAmount: cgstAmt.toFixed(2),
-            sgstPercent: sgst,
-            sgstAmount: sgstAmt.toFixed(2),
-            vatPercent: vat,
-            vatAmount: vatAmt.toFixed(2),
-            total: newTotal.toFixed(2),
-            paidAmount: newTotal.toFixed(2),
-            waveoffAmount: "0.00"
-          };
-        });
-      } else {
-        setIsGstInvoice(parseFloat(paymentData.cgstPercent) > 0 || parseFloat(paymentData.sgstPercent) > 0);
-      }
-    }
-  }, [showPaymentModal, canSeeAccounting, taxRates]);
-
-  const handleGstToggle = (checked) => {
-    setIsGstInvoice(checked);
-    const sub = parseFloat(paymentData.subTotal) || 0;
-    const disc = parseFloat(paymentData.discountAmount) || 0;
-    
-    if (checked) {
-      const cgst = taxRates?.cgst || 0;
-      const sgst = taxRates?.sgst || 0;
-      const vat = taxRates?.vat || 0;
-      const cgstAmt = (sub * cgst) / 100;
-      const sgstAmt = (sub * sgst) / 100;
-      const vatAmt = (sub * vat) / 100;
-      const newTotal = Math.max(0, sub + cgstAmt + sgstAmt + vatAmt - disc);
-      setPaymentData(prev => ({
-        ...prev,
-        cgstPercent: cgst,
-        cgstAmount: cgstAmt.toFixed(2),
-        sgstPercent: sgst,
-        sgstAmount: sgstAmt.toFixed(2),
-        vatPercent: vat,
-        vatAmount: vatAmt.toFixed(2),
-        total: newTotal.toFixed(2),
-        waveoffAmount: (newTotal - (parseFloat(prev.paidAmount) || 0)).toFixed(2)
-      }));
-    } else {
-      const newTotal = Math.max(0, sub - disc);
-      setPaymentData(prev => ({
-        ...prev,
-        cgstPercent: 0,
-        cgstAmount: "0.00",
-        sgstPercent: 0,
-        sgstAmount: "0.00",
-        vatPercent: 0,
-        vatAmount: "0.00",
-        total: newTotal.toFixed(2),
-        waveoffAmount: (newTotal - (parseFloat(prev.paidAmount) || 0)).toFixed(2)
-      }));
-    }
-  };
 
   const handlePrintBill = () => {
-    if (canSeeAccounting && isGstInvoice) {
-      printModalA4Invoice({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
-    } else if (handlePrint) {
+    if (handlePrint) {
       handlePrint(orderId);
     } else {
       printModalBill({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
@@ -393,86 +308,7 @@ const PaymentModal = ({
                 <span className="fw-bold">₹{paymentData.subTotal}</span>
               </div>
 
-              {canSeeAccounting && (
-                <div className="d-flex justify-content-between align-items-center pt-2 mt-2 border-top mb-2">
-                  <span className="fw-bold text-muted small">Generate GST Invoice</span>
-                  <Form.Check
-                    type="switch"
-                    id="gst-invoice-switch"
-                    checked={isGstInvoice}
-                    onChange={(e) => handleGstToggle(e.target.checked)}
-                    style={{ fontSize: '14px' }}
-                  />
-                </div>
-              )}
-
-              {canSeeAccounting && isGstInvoice ? (
-                <div className="pt-2 mt-2 border-top">
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <span className="text-muted small fw-semibold">CGST (%)</span>
-                    <Form.Control
-                      type="number"
-                      size="sm"
-                      style={{ maxWidth: '80px', textAlign: 'right', borderRadius: '8px' }}
-                      value={paymentData.cgstPercent || 0}
-                      onChange={(e) => {
-                        const cgst = e.target.value;
-                        const sub = parseFloat(paymentData.subTotal) || 0;
-                        const cgstAmt = (sub * (parseFloat(cgst) || 0)) / 100;
-                        const sgstAmt = parseFloat(paymentData.sgstAmount) || 0;
-                        const disc = parseFloat(paymentData.discountAmount) || 0;
-                        const newTotal = Math.max(0, sub + cgstAmt + sgstAmt - disc);
-                        setPaymentData(prev => ({
-                          ...prev,
-                          cgstPercent: cgst,
-                          cgstAmount: cgstAmt.toFixed(2),
-                          total: newTotal.toFixed(2),
-                          waveoffAmount: (newTotal - (parseFloat(prev.paidAmount) || 0)).toFixed(2)
-                        }));
-                      }}
-                    />
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <span className="text-muted small fw-semibold">SGST (%)</span>
-                    <Form.Control
-                      type="number"
-                      size="sm"
-                      style={{ maxWidth: '80px', textAlign: 'right', borderRadius: '8px' }}
-                      value={paymentData.sgstPercent || 0}
-                      onChange={(e) => {
-                        const sgst = e.target.value;
-                        const sub = parseFloat(paymentData.subTotal) || 0;
-                        const cgstAmt = parseFloat(paymentData.cgstAmount) || 0;
-                        const sgstAmt = (sub * (parseFloat(sgst) || 0)) / 100;
-                        const disc = parseFloat(paymentData.discountAmount) || 0;
-                        const newTotal = Math.max(0, sub + cgstAmt + sgstAmt - disc);
-                        setPaymentData(prev => ({
-                          ...prev,
-                          sgstPercent: sgst,
-                          sgstAmount: sgstAmt.toFixed(2),
-                          total: newTotal.toFixed(2),
-                          waveoffAmount: (newTotal - (parseFloat(prev.paidAmount) || 0)).toFixed(2)
-                        }));
-                      }}
-                    />
-                  </div>
-                  {customerInfo && (
-                    <div className="d-flex justify-content-between align-items-center mb-2">
-                      <span className="text-muted small fw-semibold">Customer GSTIN</span>
-                      <Form.Control
-                        type="text"
-                        size="sm"
-                        placeholder="GSTIN No"
-                        style={{ maxWidth: '140px', borderRadius: '8px', fontSize: '11px' }}
-                        value={customerInfo.gst_no || ''}
-                        onChange={(e) => {
-                          customerInfo.gst_no = e.target.value;
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ) : (!canSeeAccounting && (parseFloat(paymentData.cgstAmount) > 0 || parseFloat(paymentData.sgstAmount) > 0 || parseFloat(paymentData.vatAmount) > 0)) && (
+              {(parseFloat(paymentData.cgstAmount) > 0 || parseFloat(paymentData.sgstAmount) > 0 || parseFloat(paymentData.vatAmount) > 0) && (
                 <div className="pt-2 mt-2 border-top">
                   {parseFloat(paymentData.cgstAmount) > 0 && (
                     <div className="d-flex justify-content-between mb-1">
@@ -601,9 +437,9 @@ const PaymentModal = ({
           <CsLineIcons icon="close" size="14" />
           Cancel
         </Button>
-        <Button variant="none" className={(canSeeAccounting && isGstInvoice) ? 'payment-gst-btn' : 'payment-print-btn'} onClick={handlePrintBill} disabled={printing || isLoading}>
-          <CsLineIcons icon={(canSeeAccounting && isGstInvoice) ? 'file-text' : 'print'} size="14" />
-          {printing ? 'Printing...' : (canSeeAccounting && isGstInvoice) ? 'Print GST Invoice' : 'Print Bill'}
+        <Button variant="none" className="payment-print-btn" onClick={handlePrintBill} disabled={printing || isLoading}>
+          <CsLineIcons icon="print" size="14" />
+          {printing ? 'Printing...' : 'Print Bill'}
         </Button>
         <Button variant="none" className="payment-submit-btn" onClick={handlePayment} disabled={isLoading}>
           {isLoading ? 'Processing...' : 'Complete Payment'}

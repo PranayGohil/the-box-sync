@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { ALLOWED_ACCOUNTING_SHOP_TYPES, isAccountingShopType } from 'constants.js';
 import { useWindowSize } from 'hooks/useWindowSize';
 import { Button, Row, Col, Card, Form, Badge } from 'react-bootstrap';
 import axios from 'axios';
@@ -17,7 +16,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import { useSocket } from 'contexts/SocketContext';
 import { AuthContext } from 'contexts/AuthContext';
 import { toast } from 'react-toastify';
-import { openPrintWindow, printKOTSlip, printModalBill, printModalA4Invoice, printModalA4Quotation } from 'utils/printUtils';
+import { openPrintWindow, printModalBill, printKOTSlip } from 'utils/printUtils';
 import DatePicker from 'react-datepicker';
 import CatalogGrid from './components/CatalogGrid';
 import OrderCartTable from './components/OrderCartTable';
@@ -121,10 +120,9 @@ const UnifiedOrder = () => {
   const tableId = urlParams.get('tableId');
   const mode = urlParams.get('mode'); // 'new' | 'edit'
 
-  const { activePlans, currentUser } = useContext(AuthContext);
-  const shopType = currentUser?.shop_type;
-  const canSeeAccounting = isAccountingShopType(shopType);
-
+  const { activePlans } = useContext(AuthContext);
+  const backPath = '/operations/sales-history';
+  const availableTypes = ORDER_TYPES;
   const canKOT = false;
 
   // Default type from URL path
@@ -514,6 +512,15 @@ const UnifiedOrder = () => {
     return () => unblock();
   }, [isDirty, orderNo, orderStatus, orderItems, history]);
 
+  const handleNavigation = (path) => {
+    if (isDirty) {
+      setNextLocation(path);
+      setShowLeaveModal(true);
+    } else {
+      history.push(path);
+    }
+  };
+
   // ── KOT Delta ─────────────────────────────────────────────────────────────
   const computeKOTDelta = (currentItems, snapshotItems) => {
     const delta = [];
@@ -758,10 +765,6 @@ const UnifiedOrder = () => {
     );
   };
 
-  const handleQuotation = () => {
-    printModalA4Quotation({ paymentData, orderItems, customerInfo, orderType, orderId, orderNo }, setPrinting);
-  };
-
   // ── Save / Cancel / Pay ───────────────────────────────────────────────────
   const handleSaveOrder = async (status = 'Save', redirectPath = null) => {
     if (!validateOrder()) return false;
@@ -899,22 +902,85 @@ const UnifiedOrder = () => {
       {/* POS Wrapper */}
       <div className="pos-wrapper">
         {/* Top Bar */}
-        <div className="pos-topbar">
-          {tokenNumber && (
-            <div
-              style={{
-                border: '1.5px solid #23b3f4',
-                borderRadius: '50px',
-                padding: '3px 12px',
-                color: '#23b3f4',
-                fontWeight: 700,
-                fontSize: '12px',
-                flexShrink: 0,
-              }}
-            >
-              Token #{tokenNumber}
+        <div className="pos-topbar d-flex align-items-center justify-content-between flex-nowrap gap-2">
+          <div className="d-flex align-items-center gap-2 overflow-hidden flex-grow-1 order-1 order-md-2">
+            <div className="pos-title text-truncate">
+              {title}
             </div>
-          )}
+            {tokenNumber && (
+              <div
+                style={{
+                  border: '1.5px solid #23b3f4',
+                  borderRadius: '50px',
+                  padding: '3px 12px',
+                  color: '#23b3f4',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  flexShrink: 0,
+                }}
+              >
+                Token #{tokenNumber}
+              </div>
+            )}
+            {orderStatus && (
+              <div
+                style={{
+                  border: '1.5px solid #6c757d',
+                  borderRadius: '50px',
+                  padding: '3px 12px',
+                  color: '#6c757d',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  flexShrink: 0,
+                }}
+              >
+                {orderStatus}
+              </div>
+            )}
+          </div>
+          <Button
+            className="custom-btn-outline order-2 order-md-1 pos-back-btn"
+            style={{ padding: '0.35rem 1rem', flexShrink: 0 }}
+            onClick={() => handleNavigation(backPath)}
+          >
+            <CsLineIcons icon="arrow-left" size="13" className="me-md-1" />
+            <span className="d-none d-md-inline">Back</span>
+          </Button>
+          <Form.Select
+            size="sm"
+            className="d-none d-md-inline-block order-md-3"
+            value={orderType}
+            onChange={(e) => handleOrderTypeChange(e.target.value)}
+            disabled={isEditMode}
+            style={{
+              maxWidth: '130px',
+              borderRadius: '50px',
+              borderColor: 'rgba(35,179,244,0.35)',
+              color: '#23b3f4',
+              fontWeight: 700,
+              fontSize: '13px',
+              flexShrink: 0,
+            }}
+          >
+            {availableTypes.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </Form.Select>
+          <div className="d-none d-md-flex align-items-center gap-1 order-md-4" style={{ flexShrink: 0 }}>
+            <span className="text-muted small fw-semibold">Date:</span>
+            <DatePicker
+              showTimeSelect
+              timeFormat="hh:mm a"
+              timeIntervals={15}
+              timeCaption="Time"
+              dateFormat="dd/MM/yyyy hh:mm a"
+              selected={orderDate ? new Date(orderDate) : new Date()}
+              onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
+              customInput={<CustomDateInput />}
+            />
+          </div>
         </div>
 
         {/* POS Body */}
@@ -941,83 +1007,7 @@ const UnifiedOrder = () => {
 
           {/* Order Panel */}
           <div className="pos-order-panel d-none d-xl-flex">
-            <div className="pos-order-header">
-              {/* Row 1: Title, Token, Date Picker */}
-              <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                <div className="fw-bold d-flex align-items-center gap-2" style={{ color: '#23b3f4', fontSize: '14px' }}>
-                  <span>{orderType === 'Dine In' && (tableInfo.table_no || customerInfo.table_no) ? `Table ${tableInfo.table_no || customerInfo.table_no}` : 'Billing'}</span>
-                  <span className="badge bg-primary rounded-pill" style={{ fontSize: '10px', padding: '3px 8px' }}>{orderItems.length} items</span>
-                  {tokenNumber && (
-                    <span className="badge bg-info text-white rounded-pill" style={{ fontSize: '10px', padding: '3px 8px' }}>#{tokenNumber}</span>
-                  )}
-                </div>
-                <div className="d-flex align-items-center gap-1">
-                  <span className="text-muted small fw-semibold" style={{ fontSize: '11px' }}>Date:</span>
-                  <DatePicker
-                    showTimeSelect
-                    timeFormat="hh:mm a"
-                    timeIntervals={15}
-                    timeCaption="Time"
-                    dateFormat="dd/MM/yyyy hh:mm a"
-                    selected={orderDate ? new Date(orderDate) : new Date()}
-                    onChange={(date) => setOrderDate(getLocalDateTimeString(date))}
-                    customInput={<CustomDateInput />}
-                  />
-                </div>
-              </div>
-
-              {/* Row 2: Accounting Shortcuts */}
-              {canSeeAccounting && (
-                <div className="d-flex flex-wrap gap-1 align-items-center border-top pt-2 mt-1">
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => {
-                      allowNavigationRef.current = true;
-                      history.push('/accounting/create-invoice', { items: orderItems, customer: customerInfo });
-                    }}
-                    style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', fontFamily: 'inherit' }}
-                  >
-                    <CsLineIcons icon="file-text" size="12" className="me-1" /> GST Invoice
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => {
-                      allowNavigationRef.current = true;
-                      history.push('/accounting/create-sales-order', { items: orderItems, customer: customerInfo });
-                    }}
-                    style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', fontFamily: 'inherit' }}
-                  >
-                    <CsLineIcons icon="cart" size="12" className="me-1" /> Sales Order
-                  </Button>
-                  <Button
-                    variant="outline-info"
-                    size="sm"
-                    onClick={() => {
-                      allowNavigationRef.current = true;
-                      history.push('/accounting/create-purchase-order', { items: orderItems, customer: customerInfo });
-                    }}
-                    style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', fontFamily: 'inherit' }}
-                  >
-                    <CsLineIcons icon="plus" size="12" className="me-1" /> PO
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => {
-                      allowNavigationRef.current = true;
-                      history.push('/accounting/create-note', { items: orderItems, customer: customerInfo });
-                    }}
-                    style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', fontFamily: 'inherit' }}
-                  >
-                    <CsLineIcons icon="file-text" size="12" className="me-1" /> Note
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            <div className="pos-customer-section d-none d-xl-block">
+            <div className="pos-customer-section">
               <CustomerInfoForm
                 customerInfo={customerInfo}
                 setCustomerInfo={setCustomerInfo}
@@ -1044,19 +1034,9 @@ const UnifiedOrder = () => {
                 orderId={orderId}
                 handleSaveOrder={handleSaveOrder}
                 handleOpenPaymentModal={handleOpenPaymentModal}
-                setShowCancelModal={setShowCancelModal}
                 handlePrint={handlePrint}
-                handleQuotation={handleQuotation}
-                canSeeAccounting={canSeeAccounting}
-                history={history}
-                setShowCartSheet={setShowCartSheet}
-                onKotAndPrint={undefined}
-                kotPrinting={false}
-                kotHistory={[]}
-                onReprintKOT={undefined}
                 paymentHistory={paymentHistory}
                 alreadyPaid={parseFloat(initialStateRef.current?.paid_amount) || 0}
-                canKOT={false}
                 orderType={orderType}
               />
             </div>
@@ -1082,7 +1062,6 @@ const UnifiedOrder = () => {
         orderNo={orderNo}
         alreadyPaid={parseFloat(initialStateRef.current.paid_amount) || 0}
         handlePrint={handlePrint}
-        canSeeAccounting={canSeeAccounting}
         history={history}
         taxRates={taxRates}
       />
@@ -1132,65 +1111,6 @@ const UnifiedOrder = () => {
         paymentHistory={paymentHistory}
         orderType={orderType}
       >
-        {canSeeAccounting && (
-          <div className="mb-3">
-            <h6 className="mb-2 fw-bold text-muted border-bottom pb-2">Accounting Options</h6>
-            <div className="d-flex flex-wrap gap-2">
-              <Button
-                variant="outline-primary"
-                size="sm"
-                className="flex-grow-1"
-                onClick={() => {
-                  allowNavigationRef.current = true;
-                  setShowCartSheet(false);
-                  history.push('/accounting/create-invoice', { items: orderItems, customer: customerInfo });
-                }}
-                style={{ fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', fontFamily: 'inherit' }}
-              >
-                <CsLineIcons icon="file-text" size="13" className="me-1" /> GST Invoice
-              </Button>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                className="flex-grow-1"
-                onClick={() => {
-                  allowNavigationRef.current = true;
-                  setShowCartSheet(false);
-                  history.push('/accounting/create-sales-order', { items: orderItems, customer: customerInfo });
-                }}
-                style={{ fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', fontFamily: 'inherit' }}
-              >
-                <CsLineIcons icon="cart" size="13" className="me-1" /> Sales Order
-              </Button>
-              <Button
-                variant="outline-info"
-                size="sm"
-                className="flex-grow-1"
-                onClick={() => {
-                  allowNavigationRef.current = true;
-                  setShowCartSheet(false);
-                  history.push('/accounting/create-purchase-order', { items: orderItems, customer: customerInfo });
-                }}
-                style={{ fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', fontFamily: 'inherit' }}
-              >
-                <CsLineIcons icon="plus" size="13" className="me-1" /> PO
-              </Button>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                className="flex-grow-1"
-                onClick={() => {
-                  allowNavigationRef.current = true;
-                  setShowCartSheet(false);
-                  history.push('/accounting/create-note', { items: orderItems, customer: customerInfo });
-                }}
-                style={{ fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', fontFamily: 'inherit' }}
-              >
-                <CsLineIcons icon="file-text" size="13" className="me-1" /> Note
-              </Button>
-            </div>
-          </div>
-        )}
 
         <h6 className="mb-2 fw-bold text-muted border-bottom pb-2">Customer Details</h6>
 

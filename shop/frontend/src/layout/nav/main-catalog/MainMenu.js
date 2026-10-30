@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
-import { MENU_PLACEMENT, MENU_BEHAVIOUR, ALLOWED_ACCOUNTING_SHOP_TYPES, isAccountingShopType } from 'constants.js';
+import { MENU_PLACEMENT, MENU_BEHAVIOUR } from 'constants.js';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import { getMenuItems } from 'routing/helper';
 import { useWindowSize } from 'hooks/useWindowSize';
@@ -45,20 +45,7 @@ const MainMenu = () => {
       }
     }
 
-    // Filter Accounting feature based on shop type
-    const shopType = currentUser?.shop_type;
-    const canSeeAccounting = isAccountingShopType(shopType);
 
-    if (!canSeeAccounting) {
-      if (Array.isArray(routesToFilter)) {
-        routesToFilter = routesToFilter.filter(route => route.label !== 'Accounting');
-      } else if (routesToFilter.mainMenuItems) {
-        routesToFilter = {
-          ...routesToFilter,
-          mainMenuItems: routesToFilter.mainMenuItems.filter(route => route.label !== 'Accounting')
-        };
-      }
-    }
 
     return routesToFilter;
   }, [attrMobile, useSidebar, activePlans, currentUser]);

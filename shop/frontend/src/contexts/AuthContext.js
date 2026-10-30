@@ -16,8 +16,9 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUserSubscriptions = async () => {
     try {
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
       const response = await axios.get(
-        `${process.env.REACT_APP_API}/subscription/get`,
+        `${apiBase}/subscription/get`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -36,10 +37,10 @@ export const AuthProvider = ({ children }) => {
   // Load user from token on initial load
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log(token);
-    if (token) {
+    if (token && token !== 'null' && token !== 'undefined') {
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
       axios
-        .get(`${process.env.REACT_APP_API}/user/get`, {
+        .get(`${apiBase}/user/get`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -50,16 +51,20 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('token');
             setCurrentUser(null);
             setIsLogin(false);
+            return;
           }
           const userObj = res.data?.user || res.data;
           setCurrentUser(userObj);
           dispatch(setReduxUser(userObj));
           setIsLogin(true);
         })
-        .catch(() => {
-          localStorage.removeItem('token');
-          setCurrentUser(null);
-          setIsLogin(false);
+        .catch((err) => {
+          console.error('Auth verification error:', err);
+          if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+            localStorage.removeItem('token');
+            setCurrentUser(null);
+            setIsLogin(false);
+          }
         })
         .finally(() => setLoading(false));
       fetchUserSubscriptions();

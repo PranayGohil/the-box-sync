@@ -539,7 +539,7 @@ export const printFullBill = (ord, userData, items, subTotal) => {
   const qrCodeUrl = (addQrCode && qrTargetUrl) ? `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrTargetUrl)}` : '';
 
   return `
-    <div class="receipt-container" style="page-break-after: always;">
+    <div class="receipt-container">
       <!-- Shop Header -->
       <div class="receipt-header">
         ${logoUrl ? `
@@ -1003,13 +1003,6 @@ export const openPrintWindow = async (order_id, setPrinting) => {
       const order = orderRes.data.data;
       const userData = userRes.data;
 
-      const groupedByCounter = {};
-      order.order_items.forEach(item => {
-        const counterName = item.counter || 'Default';
-        if (!groupedByCounter[counterName]) groupedByCounter[counterName] = [];
-        groupedByCounter[counterName].push(item);
-      });
-
       let printFrame = document.getElementById('print-frame');
       if (!printFrame) {
         printFrame = document.createElement('iframe');
@@ -1046,16 +1039,13 @@ export const openPrintWindow = async (order_id, setPrinting) => {
       const paperWidth = printSettings.paperWidth || '58mm';
       const maxContainerWidth = paperWidth === '80mm' ? '390px' : '290px';
 
-      const isAccounting = isAccountingShopType(userData?.shop_type);
+      const isAccounting = false;
 
       let allBillsHTML = '';
       if (isAccounting) {
         allBillsHTML = printA4InvoiceHTML(order, userData, order.order_items, order.sub_total);
       } else {
         allBillsHTML = printFullBill(order, userData, order.order_items, order.sub_total);
-        Object.entries(groupedByCounter).forEach(([counterName, items]) => {
-          allBillsHTML += printCounterBill(order, userData, counterName, items);
-        });
       }
 
       if (isAccounting) {
@@ -1113,7 +1103,7 @@ export const openPrintWindow = async (order_id, setPrinting) => {
         printWindow.document.write(`
           <html>
           <head>
-            <title>Print Bills</title>
+            <title>Print Bill</title>
             <style>
               @page {
                 margin: 0;

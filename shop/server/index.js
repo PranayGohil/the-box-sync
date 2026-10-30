@@ -38,8 +38,8 @@ const PORT = process.env.PORT;
 
 const app = express();
 
-// create HTTP server and pass to socket
-const server = http.createServer(app);
+// create HTTP server and pass to socket with increased maxHeaderSize (128 KB)
+const server = http.createServer({ maxHeaderSize: 131072 }, app);
 
 const io = new Server(server, {
   cors: {

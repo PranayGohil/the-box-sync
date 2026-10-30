@@ -54,16 +54,18 @@ const ManageCatalog = () => {
   const fetchCatalogData = async () => {
     try {
       setLoading(true);
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
       const [res, userRes] = await Promise.all([
-        axios.get(`${process.env.REACT_APP_API}/catalog/get`, {
+        axios.get(`${apiBase}/catalog/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }),
-        axios.get(`${process.env.REACT_APP_API}/user/get`, {
+        axios.get(`${apiBase}/user/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         })
       ]);
 
-      const transformedMenu = res.data.data.map(({ _id, ...rest }) => ({
+      const items = Array.isArray(res.data?.data) ? res.data.data : [];
+      const transformedMenu = items.map(({ _id, ...rest }) => ({
         ...rest,
         id: _id,
       }));

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API;
+const API_URL = process.env.REACT_APP_API || 'http://localhost:5003/api';
 
 export const createOrUpdateDineInOrder = (payload, token) => {
   return axios.post(`${API_URL}/order/dine-in`, payload, {

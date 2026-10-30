@@ -11,7 +11,7 @@ const Login = () => {
   const title = 'Login — The Box';
   const description = 'Secure admin login to The Box management panel.';
 
-  const apiBase = process.env.REACT_APP_API || 'http://localhost:5001/api';
+  const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
 
   const { login } = useContext(AuthContext);
 

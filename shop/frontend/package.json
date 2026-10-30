@@ -2,7 +2,7 @@
   "name": "shop",
   "version": "1.0.1",
   "private": true,
-  "proxy": "http://localhost:3000",
+  "proxy": "http://localhost:5003",
   "dependencies": {
     "@fullcalendar/bootstrap": "^5.9.0",
     "@fullcalendar/daygrid": "^5.9.0",
@@ -81,10 +81,11 @@
     "yup": "^0.32.9"
   },
   "scripts": {
+    "dev": "npm start",
     "start-js": "cross-env HOST=0.0.0.0 react-scripts start",
     "start-css": "sass --style=compressed --watch src/sass/styles.scss:public/css/styles.css",
-    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider concurrently \"npm run start-js\" \"npm run start-css\"",
-    "build-js": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts build --prod",
+    "start": "concurrently \"npm run start-js\" \"npm run start-css\"",
+    "build-js": "react-scripts build",
     "build-css": "sass --style=compressed --no-source-map src/sass/styles.scss:public/css/styles.css",
     "build": "concurrently \"npm run build-css\" \"npm run build-js\"",
     "test": "react-scripts test",

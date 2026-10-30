@@ -199,15 +199,17 @@ const AddItems = () => {
   const getCatalogCategories = async () => {
     try {
       setLoadingCategories(true);
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
       const [catRes, userRes] = await Promise.all([
-        axios.get(`${process.env.REACT_APP_API}/catalog/get`, {
+        axios.get(`${apiBase}/catalog/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }),
-        axios.get(`${process.env.REACT_APP_API}/user/get`, {
+        axios.get(`${apiBase}/user/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         })
       ]);
-      setSuggestions((prev) => ({ ...prev, categories: catRes.data.data || [], items: [] }));
+      const categories = Array.isArray(catRes.data?.data) ? catRes.data.data : [];
+      setSuggestions((prev) => ({ ...prev, categories, items: [] }));
       setStorePreferences(userRes.data?.user?.item_type_setting || userRes.data?.item_type_setting || 'optional');
       setShopType(userRes.data?.user?.shop_type || 'Other');
     } catch (error) {
@@ -220,10 +222,12 @@ const AddItems = () => {
 
   const getCounters = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/catalog/get-counter-options`, {
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
+      const response = await axios.get(`${apiBase}/catalog/get-counter-options`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setCounterOptions(response.data.data.map((counter) => ({ value: counter, label: counter })));
+      const counters = Array.isArray(response.data?.data) ? response.data.data : [];
+      setCounterOptions(counters.map((counter) => ({ value: counter, label: counter })));
     } catch (err) {
       console.error('Error fetching counters:', err);
     }
@@ -269,10 +273,12 @@ const AddItems = () => {
 
   const fetchFullMenuData = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API}/catalog/get`, {
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
+      const res = await axios.get(`${apiBase}/catalog/get`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      const transformedMenu = res.data.data.map(({ _id, ...rest }) => ({
+      const items = Array.isArray(res.data?.data) ? res.data.data : [];
+      const transformedMenu = items.map(({ _id, ...rest }) => ({
         ...rest,
         id: _id,
       }));
@@ -288,10 +294,12 @@ const AddItems = () => {
       return;
     }
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API}/catalog/get-items-by-category?category=${category}`, {
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
+      const response = await axios.get(`${apiBase}/catalog/get-items-by-category?category=${category}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setSuggestions((prev) => ({ ...prev, items: response.data.data }));
+      const items = Array.isArray(response.data?.data) ? response.data.data : [];
+      setSuggestions((prev) => ({ ...prev, items }));
     } catch (error) {
       console.error('Error fetching items:', error);
     }
@@ -456,7 +464,8 @@ const AddItems = () => {
         };
       });
       formData.append('items', JSON.stringify(dishData));
-      const res = await axios.post(`${process.env.REACT_APP_API}/catalog/add`, formData, {
+      const apiBase = process.env.REACT_APP_API || 'http://localhost:5003/api';
+      const res = await axios.post(`${apiBase}/catalog/add`, formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       toast.success(res.data.message || 'Catalog saved successfully!');
