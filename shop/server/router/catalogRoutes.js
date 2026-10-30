@@ -22,7 +22,7 @@ catalogRouter
   .route("/add")
   .post(
     authMiddleware,
-    upload.fields([{ name: "item_img", maxCount: 10 }]),
+    upload.any(),
     addCatalog
   );
 catalogRouter.route("/get").get(authMiddleware, getCatalogData);

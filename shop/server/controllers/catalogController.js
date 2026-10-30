@@ -10,6 +10,8 @@ const addCatalog = async (req, res) => {
     const user_id = req.user._id;
     let { category, counter, hide_on_kot, items, is_food_category } = req.body;
 
+    category = (category && String(category).trim() !== "") ? String(category).trim() : "General";
+
     let parsedDishes;
 
     if (typeof items === "string") {
@@ -29,20 +31,27 @@ const addCatalog = async (req, res) => {
       });
     }
 
-    if (
-      !category ||
-      !Array.isArray(parsedDishes) ||
-      parsedDishes.length === 0
-    ) {
+    if (!Array.isArray(parsedDishes) || parsedDishes.length === 0) {
       return res
         .status(400)
-        .json({ success: false, message: "Missing required fields" });
+        .json({ success: false, message: "Please provide at least one item." });
     }
 
-    const uploadedImages = req.files?.item_img || [];
-    uploadedImages.forEach((file, index) => {
-      if (parsedDishes[index]) {
-        parsedDishes[index].item_img = "/catalog/items/" + file.filename;
+    // Process uploaded images (handles upload.any() and indexed files like item_img_0, item_img_1)
+    const files = req.files || [];
+    const fileList = Array.isArray(files) ? files : Object.values(files).flat();
+
+    fileList.forEach((file, fIdx) => {
+      const match = file.fieldname.match(/item_img_(\d+)/);
+      if (match) {
+        const idx = parseInt(match[1], 10);
+        if (parsedDishes[idx]) {
+          parsedDishes[idx].item_img = "/catalog/items/" + file.filename;
+        }
+      } else if (file.fieldname === "item_img") {
+        if (parsedDishes[fIdx]) {
+          parsedDishes[fIdx].item_img = "/catalog/items/" + file.filename;
+        }
       }
     });
 
@@ -73,35 +82,50 @@ const addCatalog = async (req, res) => {
         }
       }
 
+      const effectivePrice =
+        Array.isArray(parsedVariants) && parsedVariants[0] && parsedVariants[0].price != null && parsedVariants[0].price !== ""
+          ? Number(parsedVariants[0].price)
+          : Number(item.item_price != null && item.item_price !== "" ? item.item_price : (item.price != null && item.price !== "" ? item.price : 0));
+
+      const effectiveStock =
+        Array.isArray(parsedVariants) && parsedVariants[0] && parsedVariants[0].stock_quantity != null && parsedVariants[0].stock_quantity !== ""
+          ? Number(parsedVariants[0].stock_quantity)
+          : (item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : null);
+
+      const effectiveInitialStock =
+        Array.isArray(parsedVariants) && parsedVariants[0] && parsedVariants[0].stock_quantity != null && parsedVariants[0].stock_quantity !== ""
+          ? Number(parsedVariants[0].stock_quantity)
+          : (item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : 0);
+
+      const effectiveBarcode = item.barcode || (Array.isArray(parsedVariants) && parsedVariants[0] ? parsedVariants[0].barcode : null) || Math.floor(100000000000 + Math.random() * 900000000000).toString();
+
       return {
         ...item,
         type: item.type || "veg",
-        barcode: item.barcode || (Array.isArray(parsedVariants) && parsedVariants[0] ? parsedVariants[0].barcode : null),
-        item_price:
-          Array.isArray(parsedVariants) && parsedVariants[0]
-            ? Number(parsedVariants[0].price)
-            : Number(item.item_price || 0),
-        stock_quantity:
-          Array.isArray(parsedVariants) && parsedVariants[0] && parsedVariants[0].stock_quantity != null && parsedVariants[0].stock_quantity !== ""
-            ? Number(parsedVariants[0].stock_quantity)
-            : (item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : null),
-        initial_stock:
-          Array.isArray(parsedVariants) && parsedVariants[0] && parsedVariants[0].stock_quantity != null && parsedVariants[0].stock_quantity !== ""
-            ? Number(parsedVariants[0].stock_quantity)
-            : (item.stock_quantity != null && item.stock_quantity !== "" ? Number(item.stock_quantity) : 0),
-        has_variants:
-          Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
-        variants: Array.isArray(parsedVariants)
+        barcode: effectiveBarcode,
+        item_price: effectivePrice,
+        stock_quantity: effectiveStock,
+        initial_stock: effectiveInitialStock,
+        has_variants: Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
+        variants: Array.isArray(parsedVariants) && parsedVariants.length > 0
           ? parsedVariants.map((v) => ({
-            size_name: v.size_name,
-            price: v.price != null && v.price !== "" ? Number(v.price) : 0,
-            extra: v.extra,
-            barcode: v.barcode || null,
+            size_name: v.size_name || "Regular",
+            price: v.price != null && v.price !== "" ? Number(v.price) : effectivePrice,
+            extra: v.extra || "",
+            barcode: v.barcode || effectiveBarcode,
             is_available: v.is_available !== false,
-            stock_quantity: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : null,
-            initial_stock: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : 0,
+            stock_quantity: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : effectiveStock,
+            initial_stock: v.stock_quantity != null && v.stock_quantity !== "" ? Number(v.stock_quantity) : effectiveInitialStock,
           }))
-          : undefined,
+          : [{
+            size_name: "Regular",
+            price: effectivePrice,
+            extra: "",
+            barcode: effectiveBarcode,
+            is_available: true,
+            stock_quantity: effectiveStock,
+            initial_stock: effectiveInitialStock,
+          }],
         addons: Array.isArray(parsedAddons)
           ? parsedAddons.map((a) => ({
             addon_name: a.addon_name,

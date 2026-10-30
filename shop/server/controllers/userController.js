@@ -341,11 +341,15 @@ const register = async (req, res) => {
       </p>
       `;
 
-    await sendEmail({
-      to: email,
-      subject: "Successful Registration Confirmation for Your TheBox Account",
-      html: regEmail,
-    });
+        try {
+      await sendEmail({
+        to: email,
+        subject: "Successful Registration Confirmation for Your TheBox Account",
+        html: regEmail,
+      });
+    } catch (mailErr) {
+      console.error("Failed to send registration confirmation email:", mailErr?.message || mailErr);
+    }
 
     res.json({
       message: "Registered",

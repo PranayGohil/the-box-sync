@@ -89,7 +89,6 @@ const userSchema = new Schema({
   ],
   restaurant_token: {
     type: String,
-    default: null,
   },
   feedbacks: [
     {
@@ -179,7 +178,10 @@ userSchema.index({ country: 1, state: 1, createdAt: -1 });
 // userSchema.index({ mobile: 1 }, { sparse: true });
 
 // Optional: if you use restaurant_token in links
-userSchema.index({ restaurant_token: 1 }, { unique: true, sparse: true });
+userSchema.index(
+  { restaurant_token: 1 },
+  { unique: true, partialFilterExpression: { restaurant_token: { $type: "string" } } }
+);
 
 userSchema.pre("save", async function (next) {
   const user = this;
