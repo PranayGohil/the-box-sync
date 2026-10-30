@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Card, Col, Row, Form, Spinner, Alert, Button, Badge, Dropdown, Collapse } from 'react-bootstrap';
+import { Card, Col, Row, Form, Spinner, Alert, Button, Badge, Dropdown, Collapse, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import CsLineIcons from 'cs-line-icons/CsLineIcons';
 
@@ -12,7 +12,6 @@ import EditItemModal from './EditItemModal';
 import EditItemCategoryModal from './EditItemCategoryModal';
 import DeleteItemModal from './DeleteItemModal';
 
-
 const ManageCatalog = () => {
   const title = 'Manage Items';
   const description = 'Dynamic item catalog with search and pagination';
@@ -24,7 +23,8 @@ const ManageCatalog = () => {
   ];
 
   const history = useHistory();
-  const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5001/uploads';
+  const uploadDir = process.env.REACT_APP_UPLOAD_DIR || 'http://localhost:5003/uploads';
+  const [previewModalItem, setPreviewModalItem] = useState(null);
 
   const [editMenuModalShow, setEditMenuModalShow] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -43,13 +43,11 @@ const ManageCatalog = () => {
   const [expandedCategories, setExpandedCategories] = useState({});
 
   const toggleCategory = (catId) => {
-    setExpandedCategories(prev => ({
+    setExpandedCategories((prev) => ({
       ...prev,
-      [catId]: !prev[catId]
+      [catId]: !prev[catId],
     }));
   };
-
-
 
   const fetchCatalogData = async () => {
     try {
@@ -61,7 +59,7 @@ const ManageCatalog = () => {
         }),
         axios.get(`${apiBase}/user/get`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        })
+        }),
       ]);
 
       const items = Array.isArray(res.data?.data) ? res.data.data : [];
@@ -98,7 +96,7 @@ const ManageCatalog = () => {
       filtered = filtered
         .map((item) => ({
           ...item,
-          items: item.items.filter((childItem) => status === 'available' ? childItem.is_available : !childItem.is_available),
+          items: item.items.filter((childItem) => (status === 'available' ? childItem.is_available : !childItem.is_available)),
         }))
         .filter((item) => item.items.length > 0);
     }
@@ -133,8 +131,6 @@ const ManageCatalog = () => {
 
   const handleFilter = async (key, value) => {
     const newFilters = { ...filters, [key]: value };
-
-
 
     setFilters(newFilters);
     applyFilters({ ...newFilters, searchText: searchTerm });
@@ -177,10 +173,7 @@ const ManageCatalog = () => {
             <BreadcrumbList items={breadcrumbs} />
           </Col>
           <Col xs="12" md="5" className="d-flex flex-column flex-sm-row justify-content-md-end gap-2 mt-3 mt-md-0">
-            <Button
-              onClick={() => history.push('/operations/add-item')}
-              className="manage-catalog-custom-btn-outline shadow-sm border-0"
-            >
+            <Button onClick={() => history.push('/operations/add-item')} className="manage-catalog-custom-btn-outline shadow-sm border-0">
               <CsLineIcons icon="plus" size="18" className="me-2" style={{ color: '#23b3f4' }} />
               Add New Item
             </Button>
@@ -212,7 +205,11 @@ const ManageCatalog = () => {
                 { value: 'available', label: 'Available' },
                 { value: 'unavailable', label: 'Out of Stock' },
               ]}
-              value={filters.status ? { value: filters.status, label: filters.status === 'available' ? 'Available' : 'Out of Stock' } : { value: '', label: 'All Statuses' }}
+              value={
+                filters.status
+                  ? { value: filters.status, label: filters.status === 'available' ? 'Available' : 'Out of Stock' }
+                  : { value: '', label: 'All Statuses' }
+              }
               onChange={(selected) => handleFilter('status', selected ? selected.value : '')}
               placeholder="Status"
               styles={{
@@ -239,7 +236,7 @@ const ManageCatalog = () => {
           <Col xs={12} sm={6} md={3}>
             <Select
               classNamePrefix="react-select"
-              options={[{ value: '', label: 'All Categories' }, ...categoryOptions.map(cat => ({ value: cat, label: cat }))]}
+              options={[{ value: '', label: 'All Categories' }, ...categoryOptions.map((cat) => ({ value: cat, label: cat }))]}
               value={filters.category ? { value: filters.category, label: filters.category } : { value: '', label: 'All Categories' }}
               onChange={(selected) => handleFilter('category', selected ? selected.value : '')}
               placeholder="Category"
@@ -299,9 +296,14 @@ const ManageCatalog = () => {
                   >
                     <CsLineIcons icon="folder" size="16" />
                   </div>
-                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '100%' }}>{category.category}</h2>
+                  <h2 className="h5 mb-0 fw-bold text-dark text-truncate" style={{ maxWidth: '100%' }}>
+                    {category.category}
+                  </h2>
                 </div>
-                <div className="d-flex align-items-center justify-content-between justify-content-sm-end gap-2 w-100 w-sm-auto mt-2 mt-sm-0 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="d-flex align-items-center justify-content-between justify-content-sm-end gap-2 w-100 w-sm-auto mt-2 mt-sm-0 flex-shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Badge
                     bg="none"
                     className="rounded-pill px-2 px-sm-3 py-2 flex-shrink-0"
@@ -314,7 +316,10 @@ const ManageCatalog = () => {
                       variant="light"
                       size="sm"
                       className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 flex-shrink-0"
-                      onClick={() => { setSelectedCategory(category); setEditCategoryModalShow(true); }}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setEditCategoryModalShow(true);
+                      }}
                       title="Edit Category"
                     >
                       <CsLineIcons icon="edit" size="15" />
@@ -323,7 +328,14 @@ const ManageCatalog = () => {
                       variant="light"
                       size="sm"
                       className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-primary flex-shrink-0"
-                      onClick={() => history.push('/operations/add-item', { category: category.category, counter: category.counter, hide_on_kot: category.hide_on_kot, fromManageCatalog: true })}
+                      onClick={() =>
+                        history.push('/operations/add-item', {
+                          category: category.category,
+                          counter: category.counter,
+                          hide_on_kot: category.hide_on_kot,
+                          fromManageCatalog: true,
+                        })
+                      }
                       title="Add Item to Category"
                     >
                       <CsLineIcons icon="plus" size="15" />
@@ -340,19 +352,27 @@ const ManageCatalog = () => {
                       <Col xs={12} sm={6} md={4} lg={3} xxl={2} key={item.id || item._id}>
                         <div className="pos-catalog-card h-100 position-relative">
                           {/* Type-type dot — identical to CatalogGrid */}
-                          <div className={`pos-type-dot ${(item.type || 'veg') === 'veg' ? 'veg-dot' : (item.type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'}`} style={{ left: '8px' }} />
+                          {shopType === 'Restaurant' && (
+                            <div
+                              className={`pos-type-dot ${
+                                (item.type || 'veg') === 'veg' ? 'veg-dot' : (item.type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'
+                              }`}
+                              style={{ left: '8px' }}
+                            />
+                          )}
 
                           {/* Management buttons — absolute top-right overlay, icon-only, ManageTable link style */}
-                          <div
-                            className="position-absolute d-flex gap-1"
-                            style={{ top: '6px', right: '6px', zIndex: 2 }}
-                          >
+                          <div className="position-absolute d-flex gap-1" style={{ top: '6px', right: '6px', zIndex: 2 }}>
                             <Button
                               variant="link"
                               size="sm"
                               className="btn-icon btn-icon-only shadow-sm rounded-circle border-0"
                               style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
-                              onClick={() => { setSelectedItem(item); setEditMenuModalShow(true); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedItem(item);
+                                setEditMenuModalShow(true);
+                              }}
                               title="Edit Item"
                             >
                               <CsLineIcons icon="edit" size="14" />
@@ -362,7 +382,11 @@ const ManageCatalog = () => {
                               size="sm"
                               className="btn-icon btn-icon-only shadow-sm rounded-circle border-0 text-danger"
                               style={{ background: 'rgba(255,255,255,0.82)', borderRadius: '7px', lineHeight: 1 }}
-                              onClick={() => { setItemToDelete(item); setDeleteItemModalShow(true); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setItemToDelete(item);
+                                setDeleteItemModalShow(true);
+                              }}
                               title="Delete Item"
                             >
                               <CsLineIcons icon="bin" size="14" />
@@ -370,17 +394,62 @@ const ManageCatalog = () => {
                           </div>
 
                           {/* Image — square crop */}
-                          <div className="pos-catalog-img-wrap" style={{ aspectRatio: '1 / 1', overflow: 'hidden' }}>
+                          <div
+                            className="pos-catalog-img-wrap"
+                            style={{
+                              height: '160px',
+                              background: '#f8fafc',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '8px',
+                              cursor: item.item_img ? 'pointer' : 'default',
+                              position: 'relative',
+                              overflow: 'hidden',
+                            }}
+                            onClick={() => {
+                              if (item.item_img) setPreviewModalItem(item);
+                            }}
+                            title={item.item_img ? 'Click to view full image' : ''}
+                          >
                             {item.item_img ? (
-                              <img
-                                src={`${uploadDir}/${item.item_img}`}
-                                alt={item.item_name}
-                                className="pos-catalog-img"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                              />
+                              <>
+                                <img
+                                  src={`${uploadDir}/${item.item_img}`}
+                                  alt={item.item_name}
+                                  className="pos-catalog-img"
+                                  style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '100%',
+                                    width: 'auto',
+                                    height: 'auto',
+                                    objectFit: 'contain',
+                                    objectPosition: 'center',
+                                  }}
+                                />
+                                <div
+                                  className="pos-img-zoom-hint position-absolute"
+                                  style={{
+                                    bottom: '6px',
+                                    right: '6px',
+                                    background: 'rgba(15, 23, 42, 0.7)',
+                                    color: '#fff',
+                                    borderRadius: '50%',
+                                    width: '24px',
+                                    height: '24px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                                  }}
+                                  title="View full image"
+                                >
+                                  <CsLineIcons icon="eye" size="12" />
+                                </div>
+                              </>
                             ) : (
                               <div className="d-flex align-items-center justify-content-center h-100 text-muted">
-                                <CsLineIcons icon="cupcake" size="30" opacity="0.3" />
+                                <CsLineIcons icon="box" size="32" opacity="0.3" />
                               </div>
                             )}
                           </div>
@@ -389,31 +458,40 @@ const ManageCatalog = () => {
                           <div className="pos-catalog-details">
                             {item.is_special && (
                               <div className="pos-special-star">
-                                <span role="img" aria-label="special">⭐</span>
+                                <span role="img" aria-label="special">
+                                  ⭐
+                                </span>
                               </div>
                             )}
-                            <div className="pos-item-name">
-                              {item.item_name}
-                            </div>
+                            <div className="pos-item-name">{item.item_name}</div>
 
                             {/* Price: range for variants, flat otherwise */}
                             <div className="pos-item-price">
                               {item.has_variants && Array.isArray(item.variants) && item.variants.length > 0
                                 ? (() => {
-                                  const prices = item.variants.map((v) => Number(v.price) || 0);
-                                  const min = Math.min(...prices);
-                                  const max = Math.max(...prices);
-                                  return min === max ? `₹${min}` : `₹${min} – ₹${max}`;
-                                })()
+                                    const prices = item.variants.map((v) => Number(v.price) || 0);
+                                    const min = Math.min(...prices);
+                                    const max = Math.max(...prices);
+                                    return min === max ? `₹${min}` : `₹${min} – ₹${max}`;
+                                  })()
                                 : `₹${item.item_price || 0}`}
                             </div>
+                            {item.allow_loose && item.piece_price != null && (
+                              <div className="fw-semibold mt-1" style={{ fontSize: '10px', color: '#0284c7' }}>
+                                Loose: ₹{item.piece_price}/{item.sub_unit_name || 'pc'}
+                              </div>
+                            )}
 
                             {/* Variant details (size / extra) */}
                             {item.has_variants && Array.isArray(item.variants) && item.variants.length > 0 && (
                               <div className="text-muted mt-1" style={{ fontSize: '10px', lineHeight: '1.4' }}>
                                 {item.variants.map((v, idx) => (
                                   <div key={idx} className="d-flex gap-1 align-items-baseline flex-wrap">
-                                    {v.size_name && <span className="fw-semibold" style={{ color: '#334155' }}>{v.size_name}:</span>}
+                                    {v.size_name && (
+                                      <span className="fw-semibold" style={{ color: '#334155' }}>
+                                        {v.size_name}:
+                                      </span>
+                                    )}
                                     <span style={{ color: '#23b3f4', fontWeight: 700 }}>₹{v.price}</span>
                                     {v.extra && <span style={{ fontStyle: 'italic', fontSize: '9px', color: '#94a3b8' }}>({v.extra})</span>}
                                   </div>
@@ -423,30 +501,53 @@ const ManageCatalog = () => {
 
                             {/* Customizable label (matches CatalogGrid) */}
                             {(item.has_variants || (Array.isArray(item.addons) && item.addons.length > 0)) && (
-                              <div className="text-primary fw-bold" style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                              <div
+                                className="text-primary fw-bold"
+                                style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}
+                              >
                                 Customizable
                               </div>
                             )}
 
-                             {/* HSN Code label */}
-                             {(item.hsn_sac_code || item.hsn_code) && (
-                               <div className="text-muted fw-bold" style={{ fontSize: '9px', marginTop: '2.5px', letterSpacing: '0.02em' }}>
-                                 HSN: {item.hsn_sac_code || item.hsn_code}
-                               </div>
-                             )}
+                            {/* HSN Code label */}
+                            {(item.hsn_sac_code || item.hsn_code) && (
+                              <div className="text-muted fw-bold" style={{ fontSize: '9px', marginTop: '2.5px', letterSpacing: '0.02em' }}>
+                                HSN: {item.hsn_sac_code || item.hsn_code}
+                              </div>
+                            )}
 
                             {/* Stock Badge */}
                             <div className="mt-2">
                               {item.has_variants && Array.isArray(item.variants) && item.variants.length > 0 ? (
                                 <div className="d-flex flex-wrap gap-1">
                                   {item.variants.map((v, vIdx) => (
-                                    <span key={vIdx} className={`badge ${v.stock_quantity === 0 ? 'bg-danger text-white' : v.stock_quantity != null ? 'bg-info text-white' : 'bg-light text-secondary border'}`} style={{ fontSize: '9px' }}>
-                                      {v.size_name ? `${v.size_name}: ` : ''}{v.stock_quantity != null ? `${v.stock_quantity} in stock` : 'Unlimited'}
+                                    <span
+                                      key={vIdx}
+                                      className={`badge ${
+                                        v.stock_quantity === 0
+                                          ? 'bg-danger text-white'
+                                          : v.stock_quantity != null
+                                          ? 'bg-info text-white'
+                                          : 'bg-light text-secondary border'
+                                      }`}
+                                      style={{ fontSize: '9px' }}
+                                    >
+                                      {v.size_name ? `${v.size_name}: ` : ''}
+                                      {v.stock_quantity != null ? `${v.stock_quantity} in stock` : 'Unlimited'}
                                     </span>
                                   ))}
                                 </div>
                               ) : (
-                                <span className={`badge ${item.stock_quantity === 0 ? 'bg-danger text-white' : item.stock_quantity != null ? 'bg-info text-white' : 'bg-light text-secondary border'}`} style={{ fontSize: '9px' }}>
+                                <span
+                                  className={`badge ${
+                                    item.stock_quantity === 0
+                                      ? 'bg-danger text-white'
+                                      : item.stock_quantity != null
+                                      ? 'bg-info text-white'
+                                      : 'bg-light text-secondary border'
+                                  }`}
+                                  style={{ fontSize: '9px' }}
+                                >
                                   Stock: {item.stock_quantity != null ? `${item.stock_quantity} in stock` : 'Unlimited'}
                                 </span>
                               )}
@@ -464,7 +565,15 @@ const ManageCatalog = () => {
       )}
 
       {selectedItem && (
-        <EditItemModal show={editMenuModalShow} handleClose={() => setEditMenuModalShow(false)} data={selectedItem} fetchCatalogData={fetchCatalogData} catalogData={catalogData} storePreferences={storePreferences} shopType={shopType} />
+        <EditItemModal
+          show={editMenuModalShow}
+          handleClose={() => setEditMenuModalShow(false)}
+          data={selectedItem}
+          fetchCatalogData={fetchCatalogData}
+          catalogData={catalogData}
+          storePreferences={storePreferences}
+          shopType={shopType}
+        />
       )}
 
       {selectedCategory && (
@@ -475,6 +584,78 @@ const ManageCatalog = () => {
           fetchCatalogData={fetchCatalogData}
           storePreferences={storePreferences}
         />
+      )}
+
+      {/* Full Image Preview Modal */}
+      {previewModalItem && (
+        <Modal show={Boolean(previewModalItem)} onHide={() => setPreviewModalItem(null)} centered size="md">
+          <Modal.Header closeButton className="border-bottom pb-2">
+            <Modal.Title className="fs-6 fw-bold text-dark d-flex align-items-center gap-2">
+              <CsLineIcons icon="eye" size="18" className="text-primary" />
+              {previewModalItem.item_name}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-3 text-center" style={{ background: '#f8fafc' }}>
+            {previewModalItem.item_img && (
+              <div
+                className="d-flex align-items-center justify-content-center bg-white rounded-3 p-3 shadow-sm border mb-3"
+                style={{ minHeight: '300px', maxHeight: '68vh' }}
+              >
+                <img
+                  src={`${uploadDir}/${previewModalItem.item_img}`}
+                  alt={previewModalItem.item_name}
+                  className="img-fluid rounded"
+                  style={{ maxHeight: '64vh', maxWidth: '100%', objectFit: 'contain' }}
+                />
+              </div>
+            )}
+            <div className="text-start bg-white p-3 rounded-3 border">
+              <div className="d-flex justify-content-between align-items-center">
+                <h5 className="fw-bold mb-0 text-dark">{previewModalItem.item_name}</h5>
+                <span className="fs-5 fw-bold text-primary">₹{previewModalItem.item_price || 0}</span>
+              </div>
+              {previewModalItem.allow_loose && (
+                <div className="small text-muted mt-2 d-flex align-items-center gap-2 flex-wrap">
+                  <span className="badge rounded-pill bg-info text-white" style={{ fontSize: '10px' }}>
+                    Loose Available
+                  </span>
+                  <span>
+                    1 {previewModalItem.unit_name || 'Box'} = ₹{previewModalItem.item_price || 0}
+                  </span>
+                  <span>•</span>
+                  <span>
+                    1 {previewModalItem.sub_unit_name || 'Piece'} = ₹{previewModalItem.piece_price || 0} ({previewModalItem.pieces_per_box || 10} pcs/box)
+                  </span>
+                </div>
+              )}
+              {previewModalItem.stock_quantity != null && (
+                <div className="small mt-2" style={{ color: '#475569' }}>
+                  <strong>Stock:</strong> {previewModalItem.stock_quantity} {previewModalItem.unit_name || 'Boxes'} in stock
+                </div>
+              )}
+              {previewModalItem.description && <p className="small text-muted mb-0 mt-2 pt-2 border-top">{previewModalItem.description}</p>}
+            </div>
+          </Modal.Body>
+          <Modal.Footer className="border-top pt-2 d-flex justify-content-between">
+            <Button variant="outline-secondary" size="sm" className="rounded-pill px-3 fw-bold" onClick={() => setPreviewModalItem(null)}>
+              Close
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              className="rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
+              onClick={() => {
+                const toEdit = previewModalItem;
+                setPreviewModalItem(null);
+                setSelectedItem(toEdit);
+                setEditMenuModalShow(true);
+              }}
+            >
+              <CsLineIcons icon="edit" size="14" />
+              Edit Item
+            </Button>
+          </Modal.Footer>
+        </Modal>
       )}
 
       {itemToDelete && (

@@ -177,7 +177,11 @@ const CatalogGrid = ({
                             {addedQty > 0 && <div className="pos-added-badge">{addedQty} Added</div>}
 
                             {/* Type Indicator */}
-                            <div className={`pos-type-dot ${(item.type || 'veg') === 'veg' ? 'veg-dot' : (item.type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'}`} />
+                            <div
+                              className={`pos-type-dot ${
+                                (item.type || 'veg') === 'veg' ? 'veg-dot' : (item.type || 'veg') === 'egg' ? 'egg-dot' : 'nonveg-dot'
+                              }`}
+                            />
 
                             {/* Image */}
                             <div className="pos-catalog-img-wrap">
@@ -185,7 +189,7 @@ const CatalogGrid = ({
                                 <img src={`${uploadDir}/${item.item_img}`} alt={item.item_name} className="pos-catalog-img" />
                               ) : (
                                 <div className="d-flex align-items-center justify-content-center h-100 text-muted">
-                                  <CsLineIcons icon="cupcake" size="30" opacity="0.3" />
+                                  <CsLineIcons icon="box" size="30" opacity="0.3" />
                                 </div>
                               )}
                             </div>
@@ -208,19 +212,25 @@ const CatalogGrid = ({
                                 )}
                               </div>
                               <div className="pos-item-price">
-                                {item.has_variants && Array.isArray(item.variants) && item.variants.length > 0 ? (
-                                  (() => {
-                                    const prices = item.variants.map((v) => Number(v.price) || 0);
-                                    const min = Math.min(...prices);
-                                    const max = Math.max(...prices);
-                                    return min === max ? `₹${min}` : `₹${min} - ₹${max}`;
-                                  })()
-                                ) : (
-                                  `₹${item.item_price || 0}`
-                                )}
+                                {item.has_variants && Array.isArray(item.variants) && item.variants.length > 0
+                                  ? (() => {
+                                      const prices = item.variants.map((v) => Number(v.price) || 0);
+                                      const min = Math.min(...prices);
+                                      const max = Math.max(...prices);
+                                      return min === max ? `₹${min}` : `₹${min} - ₹${max}`;
+                                    })()
+                                  : `₹${item.item_price || 0}`}
                               </div>
+                              {item.allow_loose && item.piece_price != null && (
+                                <div style={{ fontSize: '10px', color: '#0284c7', fontWeight: 600 }}>
+                                  Loose: ₹{item.piece_price}/{item.sub_unit_name || 'pc'}
+                                </div>
+                              )}
                               {(item.has_variants || (Array.isArray(item.addons) && item.addons.length > 0)) && (
-                                <div className="text-primary fw-bold" style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                                <div
+                                  className="text-primary fw-bold"
+                                  style={{ fontSize: '9px', marginTop: '2px', letterSpacing: '0.02em', textTransform: 'uppercase' }}
+                                >
                                   Customizable
                                 </div>
                               )}
@@ -365,7 +375,9 @@ const CatalogGrid = ({
               <Modal.Title className="fw-bold mb-1" style={{ color: '#23b3f4', fontSize: '1.35rem' }}>
                 Customize Item
               </Modal.Title>
-              <div className="text-dark fw-bold" style={{ fontSize: '1.05rem', marginTop: '3px' }}>{selectedCustomizeDish.item_name}</div>
+              <div className="text-dark fw-bold" style={{ fontSize: '1.05rem', marginTop: '3px' }}>
+                {selectedCustomizeDish.item_name}
+              </div>
             </div>
           </Modal.Header>
           <Modal.Body className="pt-2">
@@ -382,10 +394,12 @@ const CatalogGrid = ({
                   {selectedCustomizeDish.variants
                     .filter((v) => v.is_available !== false)
                     .map((v, idx) => {
-                      const isActive = selectedVariant && (
-                        (selectedVariant._id && v._id && selectedVariant._id === v._id) ||
-                        (selectedVariant.size_name === v.size_name && Number(selectedVariant.price) === Number(v.price) && selectedVariant.extra === v.extra)
-                      );
+                      const isActive =
+                        selectedVariant &&
+                        ((selectedVariant._id && v._id && selectedVariant._id === v._id) ||
+                          (selectedVariant.size_name === v.size_name &&
+                            Number(selectedVariant.price) === Number(v.price) &&
+                            selectedVariant.extra === v.extra));
                       return (
                         <div key={v._id || idx} className={`customize-option-card ${isActive ? 'active' : ''}`} onClick={() => setSelectedVariant(v)}>
                           <div className="d-flex align-items-center gap-3">
@@ -480,10 +494,10 @@ const CatalogGrid = ({
                   item_price: finalItemPrice,
                   selected_variant: selectedVariant
                     ? {
-                      size_name: selectedVariant.size_name,
-                      price: Number(selectedVariant.price),
-                      extra: selectedVariant.extra || '',
-                    }
+                        size_name: selectedVariant.size_name,
+                        price: Number(selectedVariant.price),
+                        extra: selectedVariant.extra || '',
+                      }
                     : undefined,
                   selected_addons: selectedAddons.map((addon) => ({
                     addon_name: addon.addon_name,
