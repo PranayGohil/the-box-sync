@@ -99,11 +99,22 @@ const addCatalog = async (req, res) => {
 
       const effectiveBarcode = item.barcode || (Array.isArray(parsedVariants) && parsedVariants[0] ? parsedVariants[0].barcode : null) || Math.floor(100000000000 + Math.random() * 900000000000).toString();
 
+      const isAllowLoose = item.allow_loose === true || item.allow_loose === 'true';
+      const pcsPerBox = Number(item.pieces_per_box) > 0 ? Number(item.pieces_per_box) : 1;
+      const pcPrice = item.piece_price != null && item.piece_price !== ''
+        ? Number(item.piece_price)
+        : (isAllowLoose ? Number((effectivePrice / pcsPerBox).toFixed(2)) : null);
+
       return {
         ...item,
         type: item.type || "veg",
         barcode: effectiveBarcode,
         item_price: effectivePrice,
+        allow_loose: isAllowLoose,
+        pieces_per_box: pcsPerBox,
+        piece_price: pcPrice,
+        unit_name: item.unit_name || "Box",
+        sub_unit_name: item.sub_unit_name || "Pcs",
         stock_quantity: effectiveStock,
         initial_stock: effectiveInitialStock,
         has_variants: Array.isArray(parsedVariants) ? parsedVariants.length > 1 : false,
@@ -575,10 +586,32 @@ const updateCatalog = async (req, res) => {
       type: type !== undefined ? type : currentDishObj.type || "veg",
       hsn_sac_code: hsn_sac_code !== undefined ? hsn_sac_code : currentDishObj.hsn_sac_code || "",
       hsn_code: hsn_code !== undefined ? hsn_code : currentDishObj.hsn_code || "",
+      allow_loose:
+        req.body.allow_loose !== undefined
+          ? (typeof req.body.allow_loose === "string" ? req.body.allow_loose === "true" : !!req.body.allow_loose)
+          : currentDishObj.allow_loose || false,
+      pieces_per_box:
+        req.body.pieces_per_box !== undefined && req.body.pieces_per_box !== ""
+          ? Number(req.body.pieces_per_box)
+          : (currentDishObj.pieces_per_box || 10),
+      piece_price:
+        req.body.piece_price !== undefined && req.body.piece_price !== ""
+          ? Number(req.body.piece_price)
+          : currentDishObj.piece_price,
+      unit_name:
+        req.body.unit_name !== undefined
+          ? req.body.unit_name
+          : (currentDishObj.unit_name || "Box"),
+      sub_unit_name:
+        req.body.sub_unit_name !== undefined
+          ? req.body.sub_unit_name
+          : (currentDishObj.sub_unit_name || "Pcs"),
     };
 
     if (req.file) {
       updatedDishObj.item_img = "/catalog/items/" + req.file.filename;
+    } else if (req.body.remove_image === "true" || req.body.remove_image === true) {
+      updatedDishObj.item_img = "";
     }
 
     const updateFields = {};
@@ -686,10 +719,11 @@ const deductStockForOrderItems = async (userId, orderItems, orderId, orderType =
 
     for (const orderItem of orderItems) {
       const itemName = orderItem.item_name || orderItem.name;
-      const orderedQty = Number(orderItem.quantity || orderItem.qty || 1);
+      const rawOrderedQty = Number(orderItem.quantity || orderItem.qty || 1);
       const selectedVariant = orderItem.selected_variant ? (orderItem.selected_variant.size_name || orderItem.selected_variant.name || orderItem.selected_variant) : null;
+      const selectedUnit = orderItem.selected_unit || 'box';
 
-      if (!itemName || orderedQty <= 0) continue;
+      if (!itemName || rawOrderedQty <= 0) continue;
 
       for (const catalogDoc of catalogs) {
         let modified = false;
@@ -701,7 +735,10 @@ const deductStockForOrderItems = async (userId, orderItems, orderId, orderType =
               ) || item.variants[0];
 
               if (variant && variant.stock_quantity !== null && variant.stock_quantity !== undefined) {
-                variant.stock_quantity = Math.max(0, variant.stock_quantity - orderedQty);
+                const isPiece = selectedUnit === 'piece' && item.allow_loose;
+                const pcsPerBox = Number(item.pieces_per_box) > 0 ? Number(item.pieces_per_box) : 1;
+                const deductAmount = isPiece ? Number((rawOrderedQty / pcsPerBox).toFixed(3)) : rawOrderedQty;
+                variant.stock_quantity = Math.max(0, Number((variant.stock_quantity - deductAmount).toFixed(3)));
                 if (variant.stock_quantity === 0) {
                   variant.is_available = false;
                 }
@@ -721,7 +758,7 @@ const deductStockForOrderItems = async (userId, orderItems, orderId, orderType =
                   variant_name: variant.size_name,
                   category: catalogDoc.category,
                   type: 'Sale',
-                  quantity_changed: -orderedQty,
+                  quantity_changed: -deductAmount,
                   balance_stock: variant.stock_quantity,
                   order_id: orderId || null,
                   order_type: orderType,
@@ -729,7 +766,10 @@ const deductStockForOrderItems = async (userId, orderItems, orderId, orderType =
                 });
               }
             } else if (item.stock_quantity !== null && item.stock_quantity !== undefined) {
-              item.stock_quantity = Math.max(0, item.stock_quantity - orderedQty);
+              const isPiece = selectedUnit === 'piece' && item.allow_loose;
+              const pcsPerBox = Number(item.pieces_per_box) > 0 ? Number(item.pieces_per_box) : 1;
+              const deductAmount = isPiece ? Number((rawOrderedQty / pcsPerBox).toFixed(3)) : rawOrderedQty;
+              item.stock_quantity = Math.max(0, Number((item.stock_quantity - deductAmount).toFixed(3)));
               if (item.stock_quantity === 0) {
                 item.is_available = false;
               }
@@ -750,7 +790,7 @@ const deductStockForOrderItems = async (userId, orderItems, orderId, orderType =
                 variant_name: '',
                 category: catalogDoc.category,
                 type: 'Sale',
-                quantity_changed: -orderedQty,
+                quantity_changed: -deductAmount,
                 balance_stock: item.stock_quantity,
                 order_id: orderId || null,
                 order_type: orderType,

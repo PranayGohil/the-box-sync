@@ -3,6 +3,9 @@ import { useEffect } from 'react';
 const areItemsEqual = (itemA, itemB) => {
   if (itemA.item_name !== itemB.item_name) return false;
 
+  // Check unit matching (Box vs Piece)
+  if ((itemA.selected_unit || 'box') !== (itemB.selected_unit || 'box')) return false;
+
   // Check variant matching
   const varA = itemA.selected_variant;
   const varB = itemB.selected_variant;
@@ -63,8 +66,18 @@ const useOrderCart = ({ setOrderItems, socket, orderId, fetchOrderDetails }) => 
       }
     }
 
+    // Preserve box and piece pricing for loose-enabled items
+    if (itemWithVariant.allow_loose) {
+      const boxPrice = itemWithVariant.box_price != null ? Number(itemWithVariant.box_price) : Number(itemWithVariant.item_price || 0);
+      const unit = itemWithVariant.selected_unit || 'box';
+      const activePrice = unit === 'piece' && itemWithVariant.piece_price != null ? Number(itemWithVariant.piece_price) : boxPrice;
+      itemWithVariant.box_price = boxPrice;
+      itemWithVariant.selected_unit = unit;
+      itemWithVariant.item_price = activePrice;
+    }
+
     setOrderItems((prevItems) => {
-      // ONLY merge with non-completed items that have identical customizations
+      // ONLY merge with non-completed items that have identical customizations and unit
       const existingItemIndex = prevItems.findIndex(
         (orderItem) => areItemsEqual(orderItem, itemWithVariant) && (orderItem.status === 'Pending' || orderItem.status === 'Preparing')
       );
@@ -73,7 +86,7 @@ const useOrderCart = ({ setOrderItems, socket, orderId, fetchOrderDetails }) => 
         return prevItems.map((orderItem, index) => (index === existingItemIndex ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem));
       }
 
-      // ✅ Always add NEW item if completed already or customization differs
+      // Always add NEW item if completed already or customization/unit differs
       return [
         ...prevItems,
         {
@@ -89,6 +102,23 @@ const useOrderCart = ({ setOrderItems, socket, orderId, fetchOrderDetails }) => 
     setOrderItems((prevItems) => prevItems.map((item, index) => (index === itemIndex ? { ...item, quantity: Math.max(1, item.quantity + change) } : item)));
   };
 
+  const updateItemUnit = (itemIndex, newUnit) => {
+    setOrderItems((prevItems) =>
+      prevItems.map((item, index) => {
+        if (index !== itemIndex) return item;
+        const boxPrice = item.box_price != null ? Number(item.box_price) : Number(item.item_price || 0);
+        const pcPrice = item.piece_price != null ? Number(item.piece_price) : (item.pieces_per_box ? Number((boxPrice / item.pieces_per_box).toFixed(2)) : boxPrice);
+        const targetPrice = newUnit === 'piece' ? pcPrice : boxPrice;
+        return {
+          ...item,
+          selected_unit: newUnit,
+          box_price: boxPrice,
+          item_price: targetPrice,
+        };
+      })
+    );
+  };
+
   const removeItem = (itemIndex) => {
     setOrderItems((prevItems) => prevItems.filter((_, index) => index !== itemIndex));
   };
@@ -96,6 +126,7 @@ const useOrderCart = ({ setOrderItems, socket, orderId, fetchOrderDetails }) => 
   return {
     addItemToOrder,
     updateItemQuantity,
+    updateItemUnit,
     removeItem,
   };
 };

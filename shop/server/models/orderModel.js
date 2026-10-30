@@ -30,6 +30,18 @@ const orderSchema = new Schema({
       item_price: {
         type: Number,
       },
+      selected_unit: {
+        type: String, // "box" or "piece"
+        default: "box",
+      },
+      pieces_per_box: {
+        type: Number,
+        default: 1,
+      },
+      piece_price: {
+        type: Number,
+        default: null,
+      },
       counter: {
         type: String,
         default: "Default"

@@ -7,7 +7,7 @@ const statusConfig = {
   Pending: { label: 'Pend', bg: '#fef9c3', color: '#ca8a04' },
 };
 
-const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
+const OrderCartTable = ({ orderItems, updateItemQuantity, updateItemUnit, removeItem }) => {
   if (orderItems.length === 0) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', color: '#94a3b8' }}>
@@ -26,6 +26,8 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
       {orderItems.map((item, index) => {
         const st = statusConfig[item.status] || null;
         const isLocked = item.status === 'Completed';
+        const isPiece = item.selected_unit === 'piece';
+
         return (
           <div
             key={index}
@@ -39,7 +41,7 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
               transition: 'background 0.15s',
             }}
           >
-            {/* Name + Status Pill */}
+            {/* Name + Status Pill + Unit Toggle */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
@@ -54,6 +56,49 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
               >
                 {item.item_name}
               </div>
+
+              {/* Loose Selling Unit Toggle: Box vs Pcs */}
+              {item.allow_loose && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', background: '#e2e8f0', borderRadius: '6px', padding: '1px', marginTop: '3px' }}>
+                  <button
+                    type="button"
+                    onClick={() => updateItemUnit && updateItemUnit(index, 'box')}
+                    disabled={isLocked}
+                    style={{
+                      border: 'none',
+                      background: !isPiece ? '#23b3f4' : 'transparent',
+                      color: !isPiece ? '#fff' : '#475569',
+                      fontWeight: 700,
+                      fontSize: '10px',
+                      padding: '2px 7px',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {item.unit_name || 'Box'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateItemUnit && updateItemUnit(index, 'piece')}
+                    disabled={isLocked}
+                    style={{
+                      border: 'none',
+                      background: isPiece ? '#23b3f4' : 'transparent',
+                      color: isPiece ? '#fff' : '#475569',
+                      fontWeight: 700,
+                      fontSize: '10px',
+                      padding: '2px 7px',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {item.sub_unit_name || 'Pcs'}
+                  </button>
+                </div>
+              )}
+
               {(item.selected_variant || (Array.isArray(item.selected_addons) && item.selected_addons.length > 0)) && (
                 <div
                   style={{
@@ -76,6 +121,7 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                   {Array.isArray(item.selected_addons) && item.selected_addons.map((addon) => `${addon.addon_name} (+₹${addon.price})`).join(' • ')}
                 </div>
               )}
+
               {st && item.status !== 'Pending' && (
                 <span
                   style={{
@@ -146,9 +192,12 @@ const OrderCartTable = ({ orderItems, updateItemQuantity, removeItem }) => {
                 </button>
               </div>
 
-              <div style={{ minWidth: '55px', textAlign: 'right', display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+              <div style={{ minWidth: '58px', textAlign: 'right', display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
                 <span style={{ fontWeight: 800, fontSize: '13px', color: '#23b3f4' }}>₹{(item.item_price * item.quantity).toFixed(0)}</span>
-                <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textDecoration: 'underline' }}>₹{Number(item.item_price).toFixed(0)}</span>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8' }}>
+                  ₹{Number(item.item_price).toFixed(0)}
+                  {item.allow_loose ? `/${isPiece ? (item.sub_unit_name || 'pc') : (item.unit_name || 'box')}` : ''}
+                </span>
               </div>
 
               <button

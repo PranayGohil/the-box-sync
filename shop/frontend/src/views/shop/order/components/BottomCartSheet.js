@@ -4,7 +4,7 @@ import CsLineIcons from 'cs-line-icons/CsLineIcons';
 import OrderCartTable from './OrderCartTable';
 
 const BottomCartSheet = ({
-  showCartSheet, setShowCartSheet, orderItems, updateItemQuantity, removeItem,
+  showCartSheet, setShowCartSheet, orderItems, updateItemQuantity, updateItemUnit, removeItem,
   isDirty, orderStatus, isLoading, printing, paymentData, orderId,
   handleSaveOrder, handleOpenPaymentModal, setShowCancelModal, handlePrint, history, children,
   alreadyPaid = 0, canKOT = false,
@@ -54,7 +54,7 @@ const BottomCartSheet = ({
           <div className="p-3 h-100 overflow-auto bg-white">
             {children && <div className="mb-3">{children}</div>}
             <h6 className="mb-3 fw-bold text-muted border-bottom pb-2">Cart Items</h6>
-            <OrderCartTable orderItems={orderItems} updateItemQuantity={updateItemQuantity} removeItem={removeItem} />
+            <OrderCartTable orderItems={orderItems} updateItemQuantity={updateItemQuantity} updateItemUnit={updateItemUnit} removeItem={removeItem} />
 
             {/* History buttons removed */}
           </div>

@@ -326,7 +326,7 @@ const UnifiedOrder = () => {
   // ── Hooks ─────────────────────────────────────────────────────────────────
   const { catalogData, categories, filteredCatalogData, searchText, setSearchText, selectedCategory, setSelectedCategory, showSpecial, setShowSpecial } = useCatalogFetcher();
 
-  const { addItemToOrder, updateItemQuantity, removeItem } = useOrderCart({ setOrderItems, socket, orderId, fetchOrderDetails });
+  const { addItemToOrder, updateItemQuantity, updateItemUnit, removeItem } = useOrderCart({ setOrderItems, socket, orderId, fetchOrderDetails });
 
   const { handleDiscountTypeChange, handleDiscountValueChange, handlePaidAmountChange } = useOrderCalculations({
     orderItems,
@@ -1020,7 +1020,7 @@ const UnifiedOrder = () => {
             </div>
 
             <div className="pos-cart-section">
-              <OrderCartTable orderItems={orderItems} updateItemQuantity={updateItemQuantity} removeItem={removeItem} />
+              <OrderCartTable orderItems={orderItems} updateItemQuantity={updateItemQuantity} updateItemUnit={updateItemUnit} removeItem={removeItem} />
             </div>
 
             <div className="pos-total-section">

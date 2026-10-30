@@ -102,6 +102,11 @@ const createEmptyItem = () => ({
   price: '',
   description: '',
   stock_quantity: '',
+  allow_loose: false,
+  pieces_per_box: 10,
+  piece_price: '',
+  unit_name: 'Box',
+  sub_unit_name: 'Pcs',
   item_img: null,
 });
 
@@ -129,22 +134,28 @@ const AddItems = () => {
       .of(
         Yup.object().shape({
           item_name: Yup.string().trim().required('Item name is required'),
-          price: Yup.number()
-            .typeError('Price must be a valid number')
-            .min(0, 'Price cannot be negative')
-            .required('Price is required'),
+          price: Yup.number().typeError('Price must be a valid number').min(0, 'Price cannot be negative').required('Price is required'),
           description: Yup.string(),
-          stock_quantity: Yup.number()
-            .typeError('Stock quantity must be a number')
-            .min(0, 'Stock quantity cannot be negative')
-            .nullable(),
+          stock_quantity: Yup.number().typeError('Stock quantity must be a number').min(0, 'Stock quantity cannot be negative').nullable(),
+          allow_loose: Yup.boolean(),
+          pieces_per_box: Yup.number().when('allow_loose', {
+            is: true,
+            then: (schema) => schema.typeError('Must be a number').min(1, 'Min 1 piece per box').required('Required'),
+            otherwise: (schema) => schema.nullable(),
+          }),
+          piece_price: Yup.number().when('allow_loose', {
+            is: true,
+            then: (schema) => schema.typeError('Must be a number').min(0, 'Cannot be negative').required('Required'),
+            otherwise: (schema) => schema.nullable(),
+          }),
         })
       )
       .min(1, 'Please add at least one item'),
   });
 
   const handleImageChange = (e, index, setFieldValue) => {
-    const file = e.currentTarget.files && e.currentTarget.files[0];
+    const { files } = e.currentTarget;
+    const file = files && files[0];
     if (file) {
       setFieldValue(`items[${index}].item_img`, file);
       setImagePreviews((prev) => ({ ...prev, [index]: URL.createObjectURL(file) }));
@@ -174,8 +185,14 @@ const AddItems = () => {
         }
 
         const numPrice = Number(item.price) || 0;
-        const numStock =
-          item.stock_quantity !== '' && item.stock_quantity != null ? Number(item.stock_quantity) : null;
+        const numStock = item.stock_quantity !== '' && item.stock_quantity != null ? Number(item.stock_quantity) : null;
+        const isLoose = item.allow_loose === true;
+        const pcsPerBox = isLoose && Number(item.pieces_per_box) > 0 ? Number(item.pieces_per_box) : 1;
+        const pcPrice = isLoose
+          ? item.piece_price !== '' && item.piece_price != null
+            ? Number(item.piece_price)
+            : Number((numPrice / pcsPerBox).toFixed(2))
+          : null;
 
         return {
           item_name: item.item_name.trim(),
@@ -184,6 +201,11 @@ const AddItems = () => {
           description: item.description ? item.description.trim() : '',
           stock_quantity: numStock,
           initial_stock: numStock != null ? numStock : 0,
+          allow_loose: isLoose,
+          pieces_per_box: pcsPerBox,
+          piece_price: pcPrice,
+          unit_name: item.unit_name ? item.unit_name.trim() : 'Box',
+          sub_unit_name: item.sub_unit_name ? item.sub_unit_name.trim() : 'Pcs',
           type: 'veg',
           barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(),
           variants: [
@@ -245,12 +267,7 @@ const AddItems = () => {
           </Row>
         </div>
 
-        <Formik
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          onSubmit={handleSubmit}
-          enableReinitialize
-        >
+        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit} enableReinitialize>
           {({ values, handleChange, setFieldValue, errors }) => (
             <Form>
               <Card className="glass-card mb-4 border-0">
@@ -300,34 +317,24 @@ const AddItems = () => {
                               {/* 1. Item Name */}
                               <Col xs={12} md={6}>
                                 <BForm.Group>
-                                  <BForm.Label
-                                    className="fw-bold text-muted text-uppercase mb-1"
-                                    style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}
-                                  >
+                                  <BForm.Label className="fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
                                     Item Name <span className="text-danger">*</span>
                                   </BForm.Label>
                                   <Field
                                     type="text"
                                     name={`items[${index}].item_name`}
                                     className="form-control pill-input"
-                                    placeholder="e.g. Wireless Mouse, Cotton Shirt"
+                                    placeholder="e.g. Electric Sparklers, Flower Pots, Rocket"
                                   />
-                                  <ErrorMessage
-                                    name={`items[${index}].item_name`}
-                                    component="div"
-                                    className="text-danger small mt-1"
-                                  />
+                                  <ErrorMessage name={`items[${index}].item_name`} component="div" className="text-danger small mt-1" />
                                 </BForm.Group>
                               </Col>
 
-                              {/* 2. Price */}
+                              {/* 2. Price (Box / Pack) */}
                               <Col xs={12} sm={6} md={3}>
                                 <BForm.Group>
-                                  <BForm.Label
-                                    className="fw-bold text-muted text-uppercase mb-1"
-                                    style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}
-                                  >
-                                    Price (₹) <span className="text-danger">*</span>
+                                  <BForm.Label className="fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                                    Box Price (₹) <span className="text-danger">*</span>
                                   </BForm.Label>
                                   <Field
                                     type="number"
@@ -335,23 +342,24 @@ const AddItems = () => {
                                     name={`items[${index}].price`}
                                     className="form-control pill-input"
                                     placeholder="0.00"
+                                    onChange={(e) => {
+                                      const { value: val } = e.target;
+                                      setFieldValue(`items[${index}].price`, val);
+                                      if (item.allow_loose && Number(val) > 0) {
+                                        const pcs = Number(item.pieces_per_box) || 10;
+                                        setFieldValue(`items[${index}].piece_price`, (Number(val) / pcs).toFixed(2));
+                                      }
+                                    }}
                                   />
-                                  <ErrorMessage
-                                    name={`items[${index}].price`}
-                                    component="div"
-                                    className="text-danger small mt-1"
-                                  />
+                                  <ErrorMessage name={`items[${index}].price`} component="div" className="text-danger small mt-1" />
                                 </BForm.Group>
                               </Col>
 
                               {/* 3. Stock Qty */}
                               <Col xs={12} sm={6} md={3}>
                                 <BForm.Group>
-                                  <BForm.Label
-                                    className="fw-bold text-muted text-uppercase mb-1"
-                                    style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}
-                                  >
-                                    Stock Qty
+                                  <BForm.Label className="fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                                    Stock Qty (Boxes)
                                   </BForm.Label>
                                   <Field
                                     type="number"
@@ -359,21 +367,14 @@ const AddItems = () => {
                                     className="form-control pill-input"
                                     placeholder="e.g. 50 (Optional)"
                                   />
-                                  <ErrorMessage
-                                    name={`items[${index}].stock_quantity`}
-                                    component="div"
-                                    className="text-danger small mt-1"
-                                  />
+                                  <ErrorMessage name={`items[${index}].stock_quantity`} component="div" className="text-danger small mt-1" />
                                 </BForm.Group>
                               </Col>
 
                               {/* 4. Description */}
                               <Col xs={12} md={7}>
                                 <BForm.Group>
-                                  <BForm.Label
-                                    className="fw-bold text-muted text-uppercase mb-1"
-                                    style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}
-                                  >
+                                  <BForm.Label className="fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
                                     Description
                                   </BForm.Label>
                                   <Field
@@ -390,10 +391,7 @@ const AddItems = () => {
                               {/* 5. Add Image */}
                               <Col xs={12} md={5}>
                                 <BForm.Group>
-                                  <BForm.Label
-                                    className="fw-bold text-muted text-uppercase mb-1"
-                                    style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}
-                                  >
+                                  <BForm.Label className="fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.78rem', letterSpacing: '0.04em' }}>
                                     Item Image
                                   </BForm.Label>
                                   <div className="d-flex align-items-center gap-2 pt-1">
@@ -443,6 +441,124 @@ const AddItems = () => {
                                   </div>
                                 </BForm.Group>
                               </Col>
+
+                              {/* 6. Loose / Piece Selling Option (Crackers & Retail) */}
+                              <Col xs={12}>
+                                <div
+                                  className="p-3 rounded-3 transition-all"
+                                  style={{
+                                    background: item.allow_loose ? '#f0f9ff' : '#f8fafc',
+                                    border: item.allow_loose ? '1px solid #bae6fd' : '1px dashed #cbd5e1',
+                                    borderRadius: '12px',
+                                  }}
+                                >
+                                  <div className="d-flex align-items-center justify-content-between">
+                                    <label className="d-flex align-items-center gap-2 mb-0 cursor-pointer user-select-none">
+                                      <input
+                                        type="checkbox"
+                                        className="form-check-input mt-0"
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        checked={item.allow_loose}
+                                        onChange={(e) => {
+                                          const { checked } = e.target;
+                                          setFieldValue(`items[${index}].allow_loose`, checked);
+                                          if (checked && !item.piece_price && Number(item.price) > 0) {
+                                            const pcs = Number(item.pieces_per_box) || 10;
+                                            setFieldValue(`items[${index}].piece_price`, (Number(item.price) / pcs).toFixed(2));
+                                          }
+                                        }}
+                                      />
+                                      <span className="fw-bold" style={{ fontSize: '0.86rem', color: item.allow_loose ? '#0284c7' : '#475569' }}>
+                                        Sell in Loose / Individual Pieces? (e.g. crackers, sparkler sticks)
+                                      </span>
+                                    </label>
+                                  </div>
+
+                                  {item.allow_loose && (
+                                    <div className="mt-3 pt-3 border-top" style={{ borderColor: '#e0f2fe' }}>
+                                      <Row className="g-2 g-md-3 align-items-center">
+                                        <Col xs={6} md={3}>
+                                          <BForm.Group>
+                                            <BForm.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.72rem' }}>
+                                              Pack Unit
+                                            </BForm.Label>
+                                            <Field
+                                              type="text"
+                                              name={`items[${index}].unit_name`}
+                                              className="form-control pill-input bg-white"
+                                              placeholder="Box"
+                                            />
+                                          </BForm.Group>
+                                        </Col>
+
+                                        <Col xs={6} md={3}>
+                                          <BForm.Group>
+                                            <BForm.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.72rem' }}>
+                                              Pieces per Box <span className="text-danger">*</span>
+                                            </BForm.Label>
+                                            <Field
+                                              type="number"
+                                              min="1"
+                                              name={`items[${index}].pieces_per_box`}
+                                              className="form-control pill-input bg-white"
+                                              placeholder="10"
+                                              onChange={(e) => {
+                                                const val = e.target.value;
+                                                setFieldValue(`items[${index}].pieces_per_box`, val);
+                                                if (Number(val) > 0 && Number(item.price) > 0) {
+                                                  setFieldValue(`items[${index}].piece_price`, (Number(item.price) / Number(val)).toFixed(2));
+                                                }
+                                              }}
+                                            />
+                                            <ErrorMessage name={`items[${index}].pieces_per_box`} component="div" className="text-danger small mt-1" />
+                                          </BForm.Group>
+                                        </Col>
+
+                                        <Col xs={6} md={3}>
+                                          <BForm.Group>
+                                            <BForm.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.72rem' }}>
+                                              Piece Unit
+                                            </BForm.Label>
+                                            <Field
+                                              type="text"
+                                              name={`items[${index}].sub_unit_name`}
+                                              className="form-control pill-input bg-white"
+                                              placeholder="Pcs"
+                                            />
+                                          </BForm.Group>
+                                        </Col>
+
+                                        <Col xs={6} md={3}>
+                                          <BForm.Group>
+                                            <BForm.Label className="small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.72rem' }}>
+                                              Loose Piece Price (₹) <span className="text-danger">*</span>
+                                            </BForm.Label>
+                                            <Field
+                                              type="number"
+                                              step="any"
+                                              min="0"
+                                              name={`items[${index}].piece_price`}
+                                              className="form-control pill-input bg-white"
+                                              placeholder="0.00"
+                                            />
+                                            <ErrorMessage name={`items[${index}].piece_price`} component="div" className="text-danger small mt-1" />
+                                          </BForm.Group>
+                                        </Col>
+                                      </Row>
+
+                                      <div className="small text-muted mt-2 d-flex align-items-center gap-1" style={{ fontSize: '0.78rem' }}>
+                                        <span className="badge rounded-pill bg-info text-white" style={{ fontSize: '9px' }}>
+                                          Auto Calc
+                                        </span>
+                                        <span>
+                                          1 {item.unit_name || 'Box'} = ₹{item.price || '0'} • 1 {item.sub_unit_name || 'Piece'} = ₹{item.piece_price || '0'} (
+                                          {item.pieces_per_box || 1} {item.sub_unit_name || 'pcs'}/{item.unit_name || 'box'})
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </Col>
                             </Row>
                           </div>
                         ))}
@@ -478,11 +594,7 @@ const AddItems = () => {
                             disabled={isSubmitting}
                             onClick={() => setSubmitAction('close')}
                           >
-                            {isSubmitting && submitAction === 'close' ? (
-                              <Spinner size="sm" />
-                            ) : (
-                              <CsLineIcons icon="save" size="18" />
-                            )}
+                            {isSubmitting && submitAction === 'close' ? <Spinner size="sm" /> : <CsLineIcons icon="save" size="18" />}
                             Save Items
                           </Button>
                           <Button
@@ -492,11 +604,7 @@ const AddItems = () => {
                             disabled={isSubmitting}
                             onClick={() => setSubmitAction('add_another')}
                           >
-                            {isSubmitting && submitAction === 'add_another' ? (
-                              <Spinner size="sm" />
-                            ) : (
-                              <CsLineIcons icon="plus" size="18" />
-                            )}
+                            {isSubmitting && submitAction === 'add_another' ? <Spinner size="sm" /> : <CsLineIcons icon="plus" size="18" />}
                             Save & Add More
                           </Button>
                         </div>

@@ -57,6 +57,26 @@ const catalog = new Schema({
         type: Number,
         default: 0,
       },
+      allow_loose: {
+        type: Boolean,
+        default: false,
+      },
+      pieces_per_box: {
+        type: Number,
+        default: 1,
+      },
+      piece_price: {
+        type: Number,
+        default: null,
+      },
+      unit_name: {
+        type: String,
+        default: "Box",
+      },
+      sub_unit_name: {
+        type: String,
+        default: "Pcs",
+      },
       has_variants: {
         type: Boolean,
         default: false,
