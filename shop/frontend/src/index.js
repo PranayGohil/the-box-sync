@@ -4,6 +4,43 @@ import ReactDOM from 'react-dom';
 import axios from 'axios';
 import reportWebVitals from 'reportWebVitals.js';
 
+// import redux requirements
+import { Provider } from 'react-redux';
+import { PersistGate } from 'reduxjs-toolkit-persist/integration/react';
+import { store, persistedStore } from 'store.js';
+
+// import html head tags requirements
+import { Helmet } from 'react-helmet';
+import { REACT_HELMET_PROPS } from 'config.js';
+
+// import multi language
+import LangProvider from 'lang/LangProvider';
+
+// import contexts
+import { AuthProvider } from 'contexts/AuthContext';
+import { SocketProvider } from 'contexts/SocketContext';
+
+// import routing modules
+import { BrowserRouter as Router } from 'react-router-dom';
+import RouteIdentifier from 'routing/components/RouteIdentifier';
+import Loading from 'components/loading/Loading';
+
+// import routes
+import { getLayoutlessRoutes } from 'routing/helper';
+import defaultRoutes from 'routing/default-routes';
+import allRoutes from 'routes.js';
+
+// import toastify for notification
+import { Slide, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// import global custom css architecture
+import './assets/css/global.css';
+import './assets/css/layout.css';
+import './assets/css/components.css';
+import './assets/css/utilities.css';
+import './assets/css/responsive.css';
+
 // Fallback environment settings for Shop
 if (!process.env.REACT_APP_API) {
   process.env.REACT_APP_API = 'http://localhost:5003/api';
@@ -42,44 +79,6 @@ axios.interceptors.request.use((config) => {
 
   return config;
 });
-
-// import redux requirements
-import { Provider } from 'react-redux';
-import { PersistGate } from 'reduxjs-toolkit-persist/integration/react';
-import { store, persistedStore } from 'store.js';
-
-// import html head tags requirements
-import { Helmet } from 'react-helmet';
-import { REACT_HELMET_PROPS } from 'config.js';
-
-// import multi language
-import LangProvider from 'lang/LangProvider';
-
-// import contexts
-import { AuthProvider } from 'contexts/AuthContext';
-import { SocketProvider } from 'contexts/SocketContext';
-
-// import routing modules
-import { BrowserRouter as Router } from 'react-router-dom';
-import RouteIdentifier from 'routing/components/RouteIdentifier';
-import Loading from 'components/loading/Loading';
-
-// import routes
-import { getLayoutlessRoutes } from 'routing/helper';
-import defaultRoutes from 'routing/default-routes';
-import allRoutes from 'routes.js';
-
-// import toastify for notification
-import { Slide, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-// import global custom css architecture
-import './assets/css/global.css';
-import './assets/css/layout.css';
-import './assets/css/components.css';
-import './assets/css/utilities.css';
-import './assets/css/responsive.css';
-
 
 // Suppress ResizeObserver loop errors
 if (typeof window !== 'undefined') {
