@@ -100,6 +100,16 @@ const userSchema = new Schema({
   purchasedPlan: {
     type: String,
   },
+  isTrial: {
+    type: Boolean,
+    default: false,
+  },
+  trialStartDate: {
+    type: Date,
+  },
+  trialEndDate: {
+    type: Date,
+  },
   isApproved: {
     type: Boolean,
     default: false,

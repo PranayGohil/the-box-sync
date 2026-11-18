@@ -127,10 +127,13 @@ const SelectPlan = () => {
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API}/subscription/buy-complete`,
-        { planType: selectedPlan, chosenAddons: selectedAddons },
+        { planType: selectedPlan, chosenAddons: selectedAddons, isTrial: true },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       if (response.data.success) {
+        if (response.data.user) {
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
         setShowSuccessModal(true);
       } else {
         toast.error(response.data.message);
@@ -615,9 +618,9 @@ const SelectPlan = () => {
         <div className="container-fluid px-lg-5" style={{ position: 'relative', zIndex: 3, maxWidth: '1650px' }}>
           {/* Header */}
           <div className="text-center mb-5 pb-3">
-            <h1 className="display-4 fw-bold mb-4 text-white" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>Value-packed features at Wallet-friendly cost</h1>
-            <p className="rounded-pill px-4 py-2 mb-4 d-inline-block shadow-sm" style={{ fontWeight: 500, fontSize: '1.1rem', background: 'rgba(35, 179, 244, 0.12)', border: '1.5px solid rgba(35, 179, 244, 0.25)', color: '#23b3f4', backdropFilter: 'blur(10px)' }}>
-              No hidden costs & no additional charges. Just transparent & affordable pricing.
+            <h1 className="display-4 fw-bold mb-4 text-white" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>Start Your 6-Month Free Trial</h1>
+            <p className="rounded-pill px-4 py-2 mb-4 d-inline-block shadow-sm" style={{ fontWeight: 500, fontSize: '1.1rem', background: 'rgba(74, 222, 128, 0.15)', border: '1.5px solid rgba(74, 222, 128, 0.3)', color: '#4ade80', backdropFilter: 'blur(10px)' }}>
+              🎉 Special Launch Offer: Choose any plan and enjoy 6 months completely free. No credit card required.
             </p>
           </div>
           <div className="row g-4 justify-content-center">
@@ -711,8 +714,9 @@ const SelectPlan = () => {
                     </div>
 
                     <div className="d-flex align-items-baseline mb-2">
-                      <span className="plan-price-large">{plan.price}</span>
-                      <span className="plan-price-original">{plan.originalPrice}</span>
+                      <span className="plan-price-large">₹0</span>
+                      <span className="ms-2 badge bg-success" style={{ fontSize: '0.8rem', padding: '4px 8px' }}>6 Months Free</span>
+                      <span className="plan-price-original text-decoration-line-through ms-2">{plan.price}</span>
                     </div>
 
                     <p className="plan-subtitle">
@@ -783,7 +787,7 @@ const SelectPlan = () => {
                             className={`rounded-pill w-100 ${plan.recommended ? 'btn-glass-primary' : 'btn-glass'}`}
                             onClick={() => handlePlanSelect(plan.name.replace(' Plan', ''))}
                           >
-                            Select Plan
+                            Start 6-Month Free Trial
                           </Button>
                         );
                       })()}
@@ -891,32 +895,33 @@ const SelectPlan = () => {
                 <CsLineIcons icon="shield" size="40" style={{ color: '#23b3f4' }} />
               </div>
               <h4 className="fw-bold text-white mb-3">
-                Select <span style={{ color: '#23b3f4' }}>{selectedPlan}</span> Plan?
+                Activate <span style={{ color: '#23b3f4' }}>{selectedPlan} Plan</span> Trial?
               </h4>
-              <p className="text-white-50 mb-0 px-3">Please confirm your selection to proceed with the activation process.</p>
+              <p className="text-white-50 mb-0 px-3">Confirm to start your 6-month free trial with instant dashboard access.</p>
             </div>
           )}
 
           {(() => {
             const activePlanObj = plans.find((p) => p.name.startsWith(selectedPlan));
             const basePrice = activePlanObj ? parseInt(activePlanObj.price.replace(/[^\d]/g, ''), 10) : 0;
-            if (basePrice === 0) return null;
-            const gst = Math.round(basePrice * 0.18);
-            const total = basePrice + gst;
             return (
               <div className="mt-4 p-3 rounded-3 mx-auto" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '400px' }}>
                 <div className="d-flex justify-content-between mb-2">
-                  <span className="text-white-50">Plan Price:</span>
-                  <span className="text-white fw-bold">₹{basePrice.toLocaleString()}</span>
+                  <span className="text-white-50">Plan Duration:</span>
+                  <span className="text-white fw-bold">6 Months Full Access</span>
                 </div>
                 <div className="d-flex justify-content-between mb-2">
-                  <span className="text-white-50">Taxes (18% GST):</span>
-                  <span className="text-white fw-bold">₹{gst.toLocaleString()}</span>
+                  <span className="text-white-50">Standard Value:</span>
+                  <span className="text-white-50 text-decoration-line-through">₹{basePrice.toLocaleString()} / yr</span>
+                </div>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-white-50">Launch Offer:</span>
+                  <span className="text-success fw-bold">100% Free (₹0)</span>
                 </div>
                 <div className="my-2" style={{ borderTop: '1px dashed rgba(255,255,255,0.2)' }} />
                 <div className="d-flex justify-content-between align-items-center mt-2">
-                  <span className="text-white fw-bold" style={{ fontSize: '1.1rem' }}>Total Amount:</span>
-                  <span className="fw-bold" style={{ fontSize: '1.4rem', color: '#4ade80' }}>₹{total.toLocaleString()}</span>
+                  <span className="text-white fw-bold" style={{ fontSize: '1.1rem' }}>Total Amount Payable:</span>
+                  <span className="fw-bold" style={{ fontSize: '1.4rem', color: '#4ade80' }}>₹0</span>
                 </div>
               </div>
             );
@@ -928,7 +933,7 @@ const SelectPlan = () => {
           </Button>
           <Button className="btn-glass-primary rounded-pill px-4" onClick={handleConfirm}>
             <CsLineIcons icon="check" size="16" className="me-2" />
-            Confirm
+            Start Free Trial
           </Button>
         </Modal.Footer>
       </Modal>
@@ -936,9 +941,7 @@ const SelectPlan = () => {
       <Modal
         show={showSuccessModal}
         onHide={() => {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
+          window.location.href = '/dashboard';
         }}
         centered
         dialogClassName="glass-modal"
@@ -948,19 +951,17 @@ const SelectPlan = () => {
             <CsLineIcons icon="check" size="40" style={{ color: '#4ade80' }} />
           </div>
           <h4 className="fw-bold text-white mb-3 px-3" style={{ lineHeight: '1.4' }}>
-            Thank you for choosing the <span style={{ color: '#4ade80' }}>{selectedPlan}</span> Plan!
+            🎉 Your 6-Month Free Trial is Active!
           </h4>
           <p className="text-white-50 mb-0 px-4" style={{ fontSize: '1.05rem', lineHeight: '1.6' }}>
-            Our team will contact you shortly regarding payment. Your panel will be activated within 24 hours after successful payment confirmation.
+            Welcome to TheBox! You have full access to the <strong className="text-white">{selectedPlan} Plan</strong> completely free for the next 6 months. Your restaurant dashboard is ready.
           </p>
         </Modal.Body>
         <Modal.Footer className="justify-content-center border-0 pt-0 pb-4">
           <Button className="btn-glass-primary rounded-pill px-5" onClick={() => {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
+            window.location.href = '/dashboard';
           }}>
-            Okay
+            Go to Dashboard
           </Button>
         </Modal.Footer>
       </Modal>

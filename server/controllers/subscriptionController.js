@@ -427,16 +427,25 @@ const buyCompletePlan = async (req, res) => {
     );
 
     const startDate = new Date();
+    const isTrial = req.body.isTrial === true || req.body.isTrial === "true";
+    const TRIAL_MONTHS = 6;
+    const trialEndDate = new Date(startDate);
+    trialEndDate.setMonth(trialEndDate.getMonth() + TRIAL_MONTHS);
+
     const subsToCreate = selectedPlans
       .filter((plan) => !existingPlanIds.has(plan._id.toString()))
       .map((plan) => {
         const endDate = new Date(startDate);
-        endDate.setMonth(endDate.getMonth() + plan.plan_duration);
+        if (isTrial) {
+          endDate.setMonth(endDate.getMonth() + TRIAL_MONTHS);
+        } else {
+          endDate.setMonth(endDate.getMonth() + plan.plan_duration);
+        }
         return {
           user_id: userId,
           plan_id: plan._id,
           plan_name: plan.plan_name,
-          plan_price: plan.plan_price,
+          plan_price: isTrial ? 0 : plan.plan_price,
           start_date: startDate,
           end_date: endDate,
           status: "active",
@@ -448,15 +457,37 @@ const buyCompletePlan = async (req, res) => {
         ? await Subscription.insertMany(subsToCreate)
         : [];
 
+    const userUpdate = {
+      purchasedPlan: planType,
+    };
+
+    if (isTrial) {
+      userUpdate.isApproved = true;
+      userUpdate.isTrial = true;
+      userUpdate.trialStartDate = startDate;
+      userUpdate.trialEndDate = trialEndDate;
+      userUpdate.approvalDetails = {
+        price: 0,
+        discount: 0,
+        paymentMode: "6-Month Free Trial",
+        paymentDetails: "Trial Activation",
+        approvedAt: new Date(),
+        startDate: startDate,
+        endDate: trialEndDate,
+      };
+    }
+
     const updatedUser = await User.findOneAndUpdate(
       { _id: userId },
-      { purchasedPlan: planType },
+      userUpdate,
       { new: true }
     ).lean();
 
     res.status(200).json({
       success: true,
-      message: "Plan(s) subscribed successfully.",
+      message: isTrial
+        ? "6-Month Free Trial activated successfully."
+        : "Plan(s) subscribed successfully.",
       subscriptions: createdSubscriptions,
       user: updatedUser,
     });
@@ -469,7 +500,7 @@ const buyCompletePlan = async (req, res) => {
 const getAllSubscriptions = async (req, res) => {
   try {
     const users = await User.find({})
-      .select("_id name email mobile restaurant_code isApproved is_street_food purchasedPlan")
+      .select("_id name email mobile restaurant_code isApproved is_street_food purchasedPlan isTrial trialEndDate")
       .lean();
     
     let shopUsers = [];
