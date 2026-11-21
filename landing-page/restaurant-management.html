@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zxx">
+<html lang="en">
 <!--<< Header Area >>-->
 
 <head>
@@ -32,9 +32,10 @@
     <link rel="stylesheet" href="assets/css/nice-select.css">
     <!--<< Main.css >>-->
     <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/restaurant-management.css">
 </head>
 
-<body>
+<body class="restaurant-page">
 
     <!-- Preloader Start -->
     <div id="preloader" class="preloader">
@@ -107,90 +108,50 @@
         </div>
     </div>
 
-    <!-- Breadcrumb Section -->
-    <div class="breadcumb-section fix">
-        <div class="breadcumb-container-wrapper" data-bg-src="assets/images/bg/breadcumgBg.png">
-            <div class="container">
-                <div class="shape1"><img src="assets/images/shape/breadCumbShape1_1.png" alt="shape"></div>
-                <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape"></div>
-                <div class="breadcumb-wrapper">
-                    <div class="page-heading">
-                        <h1>Restaurant Management</h1>
-                        <div class="links">
-                            <a href="index.html">Home<span class="slash">/</span></a>Restaurant Management
-                        </div>
+    <main id="restaurant-main">
+    <section class="rm-hero" aria-labelledby="restaurant-title">
+        <div class="container">
+            <nav class="rm-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Home</a><span aria-hidden="true">/</span><span aria-current="page">Restaurant Management</span></nav>
+            <div class="rm-hero-grid">
+                <div class="rm-hero-copy">
+                    <p class="rm-eyebrow">THEBOX · RESTAURANT MANAGEMENT</p>
+                    <h1 id="restaurant-title">Your entire restaurant.<br><span>One connected platform.</span></h1>
+                    <p class="rm-lead">Bring your tables, orders, kitchen, billing, and team together. Keep every part of service in sync with TheBox.</p>
+                    <div class="rm-offer">
+                        <div class="rm-offer-heading"><strong>6 months free</strong><span>₹0 to get started</span></div>
+                        <a class="rm-button" href="https://admin.theboxsync.com/register">Start your 6-month free trial</a>
+                        <p>No card required</p>
                     </div>
+                    <a class="rm-explore" href="#explore-features">Explore the platform <span aria-hidden="true">↓</span></a>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 1. Overview Section -->
-    <section class="wcu-section pb-lg-5">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2 section-padding fix bg-white">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Features <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Complete Restaurant Management Ecosystem</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Transform dining operations into a structured, high-efficiency workflow. TheBox restaurant management coordinates front-of-house service, kitchen prep lines, and back-office analytics into a single synchronized platform.
-                                        </p>
-                                    </div>
-                                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Monitor dine-in occupancy, active tables, and live order stages in real time.</li>
-                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Eliminate order misplacement & enhance guest satisfaction with structured table tracking.</li>
-                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Route orders to kitchen displays, captain devices, and billing counters with zero delay.</li>
-                                    </ul>
-                                    <div class="d-flex flex-wrap align-items-center gap-3 mt-4 wow fadeInUp" data-wow-delay=".2s">
-                                        <div class="position-relative d-inline-block">
-                                            <span class="badge position-absolute" style="top: -12px; right: -8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); letter-spacing: 0.5px; z-index: 2;">
-                                                6 MONTHS FREE
-                                            </span>
-                                            <a class="theme-btn" href="http://localhost:4001/register">Register Now
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                    viewBox="0 0 16 16" fill="none">
-                                                    <g clip-path="url(#clip0_18_41)">
-                                                        <path
-                                                            d="M11.6118 3.61182L10.8991 4.32454L14.0706 7.49603H0V8.50398H14.0706L10.8991 11.6754L11.6118 12.3882L16 7.99997L11.6118 3.61182Z"
-                                                            fill="white" />
-                                                    </g>
-                                                    <defs>
-                                                        <clipPath id="clip0_18_41">
-                                                            <rect width="16" height="16" fill="white" />
-                                                        </clipPath>
-                                                    </defs>
-                                                </svg>
-                                            </a>
-                                        </div>
-                                        <span class="text-muted fw-semibold" style="font-size: 14px; display: inline-flex; align-items: center; gap: 8px;">
-                                            <span style="display:inline-block; width:9px; height:9px; background:#10b981; border-radius:50%; box-shadow: 0 0 8px #10b981;"></span>
-                                            6 Months Free Trial (₹0) • No Card Required
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - dashboard.png" width="600" alt="Dashboard Overview">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="rm-product">
+                    <div class="rm-product-top"><span class="rm-product-mark" aria-hidden="true">T</span><span>TheBox workspace</span><span>Restaurant dashboard</span></div>
+                    <img src="assets/images/admin/admin - dashboard.png" alt="TheBox restaurant dashboard showing an overview of restaurant operations" fetchpriority="high">
+                    <div class="rm-product-bottom"><span>Front of house</span><span>Kitchen</span><span>Back office</span></div>
+                    <p class="rm-product-caption">From the first order to the final bill.<br><strong>Everything works together.</strong></p>
                 </div>
             </div>
         </div>
     </section>
-
+    <section class="rm-overview" id="explore-features" aria-labelledby="overview-title">
+        <div class="container">
+            <div class="rm-overview-heading"><p class="rm-eyebrow">ONE ECOSYSTEM. EVERY PART OF YOUR BUSINESS.</p><h2 id="overview-title">Complete Restaurant Management Ecosystem</h2><p>Transform dining operations into a structured, high-efficiency workflow. TheBox restaurant management coordinates front-of-house service, kitchen prep lines, and back-office analytics into a single synchronized platform.</p></div>
+            <div class="rm-feature-map">
+                <a href="#service"><i class="fa-solid fa-utensils" aria-hidden="true"></i><h3>Serve effortlessly</h3><p>Tables, QR ordering, menus & kitchen display</p><span>Explore service</span></a>
+                <a href="#billing"><i class="fa-solid fa-receipt" aria-hidden="true"></i><h3>Keep orders moving</h3><p>Billing, digital invoices & order management</p><span>Explore billing</span></a>
+                <a href="#operations"><i class="fa-solid fa-users" aria-hidden="true"></i><h3>Run your operations</h3><p>Team panels, payroll, attendance & inventory</p><span>Explore operations</span></a>
+                <a href="#growth"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><h3>Build your business</h3><p>Loyalty, feedback, your website & reports</p><span>Explore growth</span></a>
+            </div>
+            <div class="rm-overview-points"><ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Monitor dine-in occupancy, active tables, and live order stages in real time.</li>
+                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Eliminate order misplacement & enhance guest satisfaction with structured table tracking.</li>
+                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Route orders to kitchen displays, captain devices, and billing counters with zero delay.</li>
+                                    </ul></div>
+        </div>
+    </section>
+    <nav class="rm-section-nav" aria-label="Restaurant features"><div class="container"><span>Explore TheBox</span><a href="#service">Service & kitchen</a><a href="#billing">Orders & billing</a><a href="#operations">Team & inventory</a><a href="#growth">Customer growth</a><a href="#reports">Reports</a><a href="#getting-started">Getting started</a></div></nav>
     <!-- 2. Table Management -->
-    <section class="wcu-section">
+    <section id="service" class="wcu-section">
         <div class="wcu-container-wrapper style2">
             <div class="container">
                 <div class="wcu-wrapper style2 section-padding fix">
@@ -200,7 +161,7 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Unified Platform <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Unified Platform <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Table & Floor Management</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Large groups, family dinners, or quick two-seaters—manage every floor layout effortlessly. TheBox simplifies table tracking by allowing you to merge, move, and split tables seamlessly while keeping every order perfectly aligned.
@@ -208,20 +169,11 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/table-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/table-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Interactive Floor Layout</h4>
                                             <p class="text">View live table occupancy, guest seating status, and elapsed dining times directly from a visual floor map.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/table-2.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Merge, Shift & Split Tables</h4>
-                                            <p class="text">Transfer orders between tables or split bills across seats without disrupting ongoing kitchen preparation.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -230,7 +182,7 @@
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp pt-2"
                                         data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - table management.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - table management.png" width="600"
                                             alt="Table Management">
                                     </div>
                                 </div>
@@ -253,22 +205,18 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Self-Service Dining <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Self-Service Dining <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Contactless QR Table Ordering (Scan & Order)</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Empower guests to order directly from their smartphones. By scanning an on-table dynamic QR code, diners browse your visual menu, customize dishes, and place orders straight to the kitchen—accelerating table turnover and reducing staffing pressure.
+                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Contactless QR Ordering (Scan & Order)</h2>
+                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Empower guests to order directly from their smartphones. By scanning an on-table dynamic QR code, diners browse your visual menu, customize dishes, and place orders straight to the kitchen—accelerating turnover and reducing staffing pressure.
                                         </p>
                                     </div>
-                                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/menu.png" alt="icon"> <strong>Dynamic Table-Wise QR Generation:</strong> Generate and print table-mapped QR codes directly from the admin panel with a single click.</li>
-                                        <li><img src="assets/images/icon/order-1.png" alt="icon"> <strong>Zero-App Customer Ordering:</strong> Guests scan via their mobile camera to explore high-res dish photos, filter dietary tags (veg/non-veg), and submit orders straight to the KDS.</li>
-                                    </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - QR for menu.png" width="600" alt="QR Code Ordering">
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - QR for menu.png" width="600" alt="QR Code Ordering">
                                     </div>
                                 </div>
                             </div>
@@ -290,27 +238,18 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Smart Catalog <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Smart Catalog <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Dynamic Menu Management</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Keep your food catalog agile and synchronized in real time. TheBox provides centralized menu oversight, letting you update prices, toggle item availability, and manage categories across all billing and ordering terminals instantly.
                                         </p>
                                     </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/menu.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Rapid Touch Navigation</h4>
-                                            <p class="text">Optimize menu layouts for quick taps, favorites, and variant selectors to speed up counter billing during peak rush hours.</p>
-                                        </div>
-                                    </div>
                                     <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/inv-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/inv-1.png" alt="icon">
                                         </div>
                                         <div class="content">
-                                            <h4>Instant 86 & Sold-Out Toggles</h4>
+                                            <h4>Instant Sold-Out Toggles</h4>
                                             <p class="text">Mark raw materials or dishes out of stock with one click, automatically reflecting across all captain apps, QR menus, and counters.</p>
                                         </div>
                                     </div>
@@ -319,7 +258,7 @@
                             <div class="col-xl-6 order-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/manager/manager - menu management1.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/manager/manager - menu management1.png" width="600"
                                             alt="Menu Management">
                                     </div>
                                 </div>
@@ -342,22 +281,21 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Kitchen Sync <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Kitchen Sync <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Live Kitchen Display System (KDS)</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Replace paper ticket clutter and missed orders with a modern, real-time Kitchen Display System. Orders punched from any billing terminal, captain device, or table QR appear instantly on kitchen screens for synchronized culinary execution.
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/kot-1.png" alt="icon"> <strong>Real-Time WebSocket Sync:</strong> Automatically routes each item to its designated station screen with zero delay and instant preparation alerts.</li>
-                                        <li><img src="assets/images/icon/kot-2.png" alt="icon"> <strong>Visual Prep Timers & Bump Bars:</strong> Color-coded 3D status cards categorize tickets into Preparing and Ready with elapsed timers to prevent delay bottlenecks.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/kot-1.png" alt="icon"> <strong>Real-Time WebSocket Sync:</strong> Automatically routes each item to its designated station screen with zero delay and instant preparation alerts.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/manager/manager - KOT.png" width="600" alt="Kitchen Display System">
+                                        <img loading="lazy" decoding="async" src="assets/images/manager/manager - KOT.png" width="600" alt="Kitchen Display System">
                                     </div>
                                 </div>
                             </div>
@@ -369,7 +307,7 @@
     </section>
 
     <!-- 6. Multi-Terminal Billing & Cashier Panel [NEW FEATURE] -->
-    <section class="wcu-section">
+    <section id="billing" class="wcu-section">
         <div class="wcu-container-wrapper style2">
             <div class="container">
                 <div class="wcu-wrapper style2 section-padding fix">
@@ -379,7 +317,7 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            High-Speed Checkout <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            High-Speed Checkout <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Multi-Terminal Billing & Cashier Panel</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Eliminate billing bottlenecks during peak rush hours. TheBox allows restaurants to provision multiple independent cashier terminals across billing counters, bars, and takeaway windows directly from the subscription control center.
@@ -387,20 +325,11 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/order-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/order-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Independent Counter Logins</h4>
                                             <p class="text">Deploy separate QSR or dine-in cashier accounts with secured credentials and independent cash drawer till tracking.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/finan.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Split Payments & Shift Close</h4>
-                                            <p class="text">Seamlessly split bills across Cash, Card, and UPI modes with automated discount calculations and end-of-shift till handovers.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -408,7 +337,7 @@
                             <div class="col-xl-6 order-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - manage subscription.png" width="600" alt="Cashier Management">
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin-multiterminal_cashier.png" width="600" alt="Cashier Management">
                                     </div>
                                 </div>
                             </div>
@@ -430,22 +359,22 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Green Billing <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Green Billing <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">WhatsApp Invoicing & Digital Billing</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Slash expensive thermal paper roll costs and delight your customers with modern digital receipts. Send legally compliant, itemized invoices directly to customer WhatsApp numbers in one click.
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/icon-1.png" alt="icon"> <strong>One-Click WhatsApp Delivery:</strong> Send itemized bills with GSTIN, FSSAI numbers, item breakdowns, and personalized greeting notes directly to diner smartphones.</li>
-                                        <li><img src="assets/images/icon/cust-1.png" alt="icon"> <strong>Organic Customer Data Capture:</strong> Build your marketing database organically at checkout by capturing verified customer contact numbers with zero friction.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/icon-1.png" alt="icon"> <strong>One-Click WhatsApp Delivery:</strong> Send itemized bills with GSTIN, FSSAI numbers, item breakdowns, and personalized greeting notes directly to diner smartphones.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/cust-1.png" alt="icon"> <strong>Organic Customer Data Capture:</strong> Build your marketing database organically at checkout by capturing verified customer contact numbers with zero friction.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - order details.png" width="600" alt="WhatsApp Invoicing">
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin-whatsapp_invoice.png" width="600" alt="WhatsApp Invoicing">
                                     </div>
                                 </div>
                             </div>
@@ -467,7 +396,7 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Swift Handling <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Swift Handling <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Centralized Order Management</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Manage incoming, running, and past orders seamlessly with centralized visibility. Track dine-in, takeaway, and delivery orders from initial punch to final settlement with comprehensive audit trails.
@@ -475,7 +404,7 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/order-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/order-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Role-Based Access</h4>
@@ -484,7 +413,7 @@
                                     </div>
                                     <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/about-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/about-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Complete Audit Trails</h4>
@@ -496,7 +425,7 @@
                             <div class="col-xl-6 order-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/manager/manager - order History.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/manager/manager-Centralized Order Management.png" width="600"
                                             alt="Order History">
                                     </div>
                                 </div>
@@ -509,7 +438,7 @@
     </section>
 
     <!-- 9. Multi-Role Specialized Panels (Manager, Cashier, Captain) [NEW FEATURE] -->
-    <section class="wcu-section pb-lg-5">
+    <section id="operations" class="wcu-section pb-lg-5">
         <div class="wcu-container-wrapper style2">
             <div class="container">
                 <div class="wcu-wrapper style2 section-padding fix bg-white">
@@ -519,22 +448,22 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Role-Based Control <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Role-Based Control <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Multi-Role Specialized Operational Panels</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Empower your entire team with purpose-built applications tailored to their exact operational workflows. Keep captains, cashiers, kitchen staff, and managers focused with zero interface clutter.
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/staff.png" alt="icon"> <strong>Captain Handheld App:</strong> Mobile-first table ordering for waitstaff to punch orders table-side directly to the kitchen, cutting dining room turnaround time.</li>
-                                        <li><img src="assets/images/icon/about.png" alt="icon"> <strong>Manager Override & Floor Control:</strong> Dedicated manager panel for bill wave-offs, discount approvals, item cancellations, and live shift audits.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/staff.png" alt="icon"> <strong>Captain Handheld App:</strong> Mobile-first table ordering for waitstaff to punch orders table-side directly to the kitchen, cutting dining room turnaround time.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/about.png" alt="icon"> <strong>Manager Override & Floor Control:</strong> Dedicated manager panel for bill wave-offs, discount approvals, item cancellations, and live shift audits.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/captain/captain - manage order.png" width="600" alt="Captain Handheld App">
+                                        <img loading="lazy" decoding="async" src="assets/images/manager/manager-captain-dashboard.png" width="600" alt="Captain Handheld App">
                                     </div>
                                 </div>
                             </div>
@@ -556,36 +485,18 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Workforce & HR <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Workforce & HR <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Integrated Restaurant Payroll & Attendance</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Say goodbye to disconnected spreadsheets and third-party HR tools. TheBoxSync Payroll manages staff biometric attendance, shift rotations, salary advances, overtime, and salary slip generation right inside your POS platform.
                                         </p>
-                                    </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/staff.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Shift Attendance & Biometrics</h4>
-                                            <p class="text">Track daily staff clock-ins, late marks, shift rotations, and overtime hours automatically integrated with employee rosters.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/finan.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Salary Advances & Payroll Generation</h4>
-                                            <p class="text">Log staff salary advances, calculate net wages with automated deductions, and generate detailed monthly pay slips in one click.</p>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-xl-6 order-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/payroll/payroll_hero.png" width="600" alt="Payroll Management">
+                                        <img loading="lazy" decoding="async" src="assets/images/payroll/manager-payroll.png" width="600" alt="Payroll Management">
                                     </div>
                                 </div>
                             </div>
@@ -607,73 +518,21 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Stock Control <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Stock Control <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Smart Inventory & Recipe Management</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Control food costs and prevent kitchen shortages. TheBox monitors raw material stock with automatic ingredient consumption linked to menu orders, keeping inventory accurate and wastage minimal.
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/inv-1.png" alt="icon"> <strong>Real-Time Stock Depletion:</strong> Automatically deduct raw ingredients based on standardized recipe portions every time an order is completed.</li>
-                                        <li><img src="assets/images/icon/inv-2.png" alt="icon"> <strong>Purchase Orders & Wastage Reports:</strong> Monitor vendor bills, track usage trends, and make smarter purchasing decisions based on real-time consumption data.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/inv-2.png" alt="icon"> <strong>Purchase Orders & Wastage Reports:</strong> Monitor vendor bills, track usage trends, and make smarter purchasing decisions based on real-time consumption data.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - inventory history.png" width="600" alt="Inventory Management">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 12. Waiter Calling System -->
-    <section class="wcu-section">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2 section-padding fix">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Service Speed <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Table-Side Waiter Calling System</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Enhance guest satisfaction and responsiveness with digital table call alerts. Customers can request steward assistance or request their bill directly from their table with zero frustration.
-                                        </p>
-                                    </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/table-1.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Instant Steward Alerts</h4>
-                                            <p class="text">Notify captains and managers in real time whenever a table requests assistance, drinks, or the final check.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/about-1.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Faster Table Turnaround</h4>
-                                            <p class="text">Eliminate guest waiting times and optimize floor staff allocation across busy dining sections during rush hours.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6 order-1">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - waiter management.png" width="600" alt="Waiter Management">
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - inventory history.png" width="600" alt="Inventory Management">
                                     </div>
                                 </div>
                             </div>
@@ -685,32 +544,31 @@
     </section>
 
     <!-- 13. Loyalty Engine & Automated CRM Campaigns [NEW FEATURE] -->
-    <section class="wcu-section pb-lg-5">
+    <section id="growth" class="wcu-section pb-lg-5">
         <div class="wcu-container-wrapper style2">
             <div class="container">
-                <div class="wcu-wrapper style2 section-padding fix bg-white">
+                <div class="wcu-wrapper style2 section-padding fix">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
+                            <div class="col-xl-6 order-1 order-xl-1">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Customer Retention <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Customer Retention <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Loyalty Engine & Automated CRM Campaigns</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Turn occasional diners into loyal regulars. TheBox integrates a point-based loyalty rewards system directly into billing, paired with automated marketing triggers that bring customers back through your doors.
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/cust-1.png" alt="icon"> <strong>Configurable Earn & Burn at POS:</strong> Reward customers with points per rupee spent and allow cashiers to apply instant point redemptions as bill discounts.</li>
-                                        <li><img src="assets/images/icon/cust-2.png" alt="icon"> <strong>Automated Retention Campaigns:</strong> Trigger automated WhatsApp/SMS messages with bonus points for 30-day inactive diners, birthdays, and quest milestones.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/cust-1.png" alt="icon"> <strong>Configurable Earn & Burn at POS:</strong> Reward customers with points per rupee spent and allow cashiers to apply instant point redemptions as bill discounts.</li>
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-xl-6">
+                            <div class="col-xl-6 order-2 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - customer insights (statistics).png" width="600" alt="Loyalty and CRM">
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - customer insights (statistics).png" width="600" alt="Loyalty and CRM">
                                     </div>
                                 </div>
                             </div>
@@ -725,43 +583,25 @@
     <section class="wcu-section">
         <div class="wcu-container-wrapper style2">
             <div class="container">
-                <div class="wcu-wrapper style2 section-padding fix">
+                <div class="wcu-wrapper style2 section-padding fix bg-white">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
+                            <div class="col-xl-6 order-1 order-xl-2">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Opinion Metrics <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Opinion Metrics <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">QR-Based Feedback Management</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Never miss an opportunity to improve. Collect direct digital feedback through table QR codes right after dining, helping you identify service issues before they turn into negative public reviews.
                                         </p>
                                     </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/icon-1.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Real-Time Alerts</h4>
-                                            <p class="text">Smart alerts notify managers immediately on new customer reviews, allowing quick resolution of any guest concerns.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/cust-2.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Station & Staff Ratings</h4>
-                                            <p class="text">Analyze sentiment trends across food quality, ambiance, and individual steward service to continuously improve standards.</p>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 order-1">
+                            <div class="col-xl-6 order-2 order-xl-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - feedback management.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - feedback management.png" width="600"
                                             alt="Feedback Management">
                                     </div>
                                 </div>
@@ -777,29 +617,29 @@
     <section class="wcu-section pb-lg-5">
         <div class="wcu-container-wrapper style2">
             <div class="container">
-                <div class="wcu-wrapper style2 section-padding fix bg-white">
+                <div class="wcu-wrapper style2 section-padding fix">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
+                            <div class="col-xl-6 order-1 order-xl-1">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Digital Storefront <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Digital Storefront <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Branded 3D Restaurant Website & Direct Ordering</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Stop losing up to 30% of your delivery revenues to food aggregator commissions. TheBox equips your brand with a stunning 3D interactive web storefront for direct online pickup and delivery orders.
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/web-1.png" alt="icon"> <strong>Interactive 3D Visual Storefront:</strong> Captivate hungry diners with interactive 3D hero scenes, dish showcases, and chef recommendations.</li>
-                                        <li><img src="assets/images/icon/web-2.png" alt="icon"> <strong>Commission-Free Direct Orders:</strong> Take direct customer orders and online reservations straight into your POS, keeping 100% of your earnings.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/web-1.png" alt="icon"> <strong>Interactive 3D Visual Storefront:</strong> Captivate hungry diners with interactive 3D hero scenes, dish showcases, and chef recommendations.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/web-2.png" alt="icon"> <strong>Commission-Free Direct Orders:</strong> Take direct customer orders and online reservations straight into your POS, keeping 100% of your earnings.</li>
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-xl-6">
+                            <div class="col-xl-6 order-2 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - manage website.png" width="600" alt="Branded Restaurant Website">
+                                        <img loading="lazy" decoding="async" src="assets/images/restaurant-website/Restaurant-website.png" width="600" alt="Branded Restaurant Website">
                                     </div>
                                 </div>
                             </div>
@@ -818,20 +658,20 @@
         <div class="cta-container-wrapper style1">
             <div class="container">
                 <div class="cta-wrapper style1 section-padding fix">
-                    <div class="shape1 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_1.png" alt="shape"></div>
-                    <div class="shape2 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_2.png" alt="shape"></div>
-                    <div class="shape3 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_3.png" alt="shape"></div>
-                    <div class="shape4 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_4.png" alt="shape"></div>
+                    <div class="shape1 d-none d-xxl-block"><img loading="lazy" decoding="async" src="assets/images/shape/ctaShape1_1.png" alt="shape"></div>
+                    <div class="shape2 d-none d-xxl-block"><img loading="lazy" decoding="async" src="assets/images/shape/ctaShape1_2.png" alt="shape"></div>
+                    <div class="shape3 d-none d-xxl-block"><img loading="lazy" decoding="async" src="assets/images/shape/ctaShape1_3.png" alt="shape"></div>
+                    <div class="shape4 d-none d-xxl-block"><img loading="lazy" decoding="async" src="assets/images/shape/ctaShape1_4.png" alt="shape"></div>
                     <div class="container">
                         <div class="row gy-5">
                             <div class="col-xl-6 order-2 order-xl-1">
                                 <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
-                                    <img src="assets/images/admin/admin - staff details.png" alt="Staff Management" class="w-100">
+                                    <img loading="lazy" decoding="async" src="assets/images/admin/admin - staff details.png" alt="Staff Management" class="w-100">
                                 </div>
                                 <div class="cta-content">
                                     <div class="section-title mt-4">
                                         <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
-                                            Staff <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Staff <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Staff & Access Control</h2>
                                         <p class="section-desc text-white mxw-651 wow fadeInUp" data-wow-delay=".6s">
@@ -839,20 +679,20 @@
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li class="text-white"><img src="assets/images/icon/staff.png" alt="icon"> Regulate staff permissions and role levels for organized restaurant operations.</li>
-                                        <li class="text-white"><img src="assets/images/icon/staff.png" alt="icon"> Maintain accountability with secure PIN-protected authorization overrides.</li>
+                                        <li class="text-white"><img loading="lazy" decoding="async" src="assets/images/icon/staff.png" alt="icon"> Regulate staff permissions and role levels for organized restaurant operations.</li>
+                                        <li class="text-white"><img loading="lazy" decoding="async" src="assets/images/icon/staff.png" alt="icon"> Maintain accountability with secure PIN-protected authorization overrides.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6 order-1 order-xl-2">
                                 <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
-                                    <img src="assets/images/admin/admin - overview (statistics).png" alt="Analytics Overview" class="w-100 h-100">
+                                    <img loading="lazy" decoding="async" src="assets/images/admin/admin - overview (statistics).png" alt="Analytics Overview" class="w-100 h-100">
                                 </div>
                                 <br />
                                 <div class="cta-content">
                                     <div class="section-title">
                                         <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
-                                            Analytics <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Analytics <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Executive Analytics Overview</h2>
                                         <p class="section-desc text-white mxw-651 wow fadeInUp" data-wow-delay=".6s">
@@ -860,8 +700,8 @@
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li class="text-white"><img src="assets/images/icon/anay-1.png" alt="icon"> Analyze restaurant performance with real-time revenue and order insights.</li>
-                                        <li class="text-white"><img src="assets/images/icon/anay-1.png" alt="icon"> Monitor top-grossing hours, order channels, and peak service volume.</li>
+                                        <li class="text-white"><img loading="lazy" decoding="async" src="assets/images/icon/anay-1.png" alt="icon"> Analyze restaurant performance with real-time revenue and order insights.</li>
+                                        <li class="text-white"><img loading="lazy" decoding="async" src="assets/images/icon/anay-1.png" alt="icon"> Monitor top-grossing hours, order channels, and peak service volume.</li>
                                     </ul>
                                 </div>
                             </div>
@@ -875,7 +715,7 @@
     <!-- 17. POS Business Reports & Intelligence -->
 
     <!-- Sales Report -->
-    <section class="wcu-section pb-lg-5">
+    <section id="reports" class="wcu-section pb-lg-5">
         <div class="wcu-container-wrapper style2">
             <div class="container">
                 <div class="wcu-wrapper style2 section-padding fix bg-white">
@@ -885,22 +725,22 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Business Insights <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Business Insights <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Sales Performance Report</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Get a crystal-clear overview of your restaurant’s sales trajectory with detailed reports. Track revenue trends, payment splits, and daily sales totals to optimize profitability.
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/sales.png" alt="icon"> Analyze order patterns and sales growth from a single dashboard.</li>
-                                        <li><img src="assets/images/icon/sales.png" alt="icon"> Monitor revenue trends and identify your highest-margin menu items.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png" alt="icon"> Analyze order patterns and sales growth from a single dashboard.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png" alt="icon"> Monitor revenue trends and identify your highest-margin menu items.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - sales report (statistics).png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - sales report (statistics).png" width="600"
                                             alt="Sales Report">
                                     </div>
                                 </div>
@@ -923,7 +763,7 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Customer Analytics <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Customer Analytics <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Customer Insights Report</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Gain actionable insights into customer visit patterns, spending frequency, and ordering preferences to build stronger relationships and higher lifetime value.
@@ -931,7 +771,7 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/cust-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/cust-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Customer Segmentation</h4>
@@ -940,7 +780,7 @@
                                     </div>
                                     <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/cust-2.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/cust-2.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Repeat Visit Tracking</h4>
@@ -952,7 +792,7 @@
                             <div class="col-xl-6 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - customer insights (statistics)-1.png"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - customer insights (statistics)-1.png"
                                             width="600" alt="Customer Insights">
                                     </div>
                                 </div>
@@ -975,22 +815,22 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Operational Efficiency <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Operational Efficiency <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Operational Performance Report</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Monitor key service speed and prep metrics to ensure smooth restaurant operations. Gain real-time visibility into kitchen turnaround times and table occupancy cycles.
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/sales.png" alt="icon"> Access key operational metrics to improve overall dining room efficiency.</li>
-                                        <li><img src="assets/images/icon/sales.png" alt="icon"> Monitor service speed and kitchen preparation times in real time.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png" alt="icon"> Access key operational metrics to improve overall dining room efficiency.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png" alt="icon"> Monitor service speed and kitchen preparation times in real time.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - operational performance (statistics).png"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - operational performance (statistics).png"
                                             width="600" alt="Operational Performance">
                                     </div>
                                 </div>
@@ -1013,7 +853,7 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Dish Analysis <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Dish Analysis <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Menu Performance & Dish Demand</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Analyze the sales velocity of your menu items with detailed demand insights. Identify best-selling signature dishes and optimize your menu engineering to maximize revenue.
@@ -1021,7 +861,7 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/menuper-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/menuper-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Demand & Velocity</h4>
@@ -1030,7 +870,7 @@
                                     </div>
                                     <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/menuper-2.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/menuper-2.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Low Performing Items</h4>
@@ -1042,7 +882,7 @@
                             <div class="col-xl-6 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - menu performance (statistics).png"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - menu performance (statistics).png"
                                             width="600" alt="Menu Performance">
                                     </div>
                                 </div>
@@ -1065,22 +905,22 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Business Reports <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Business Reports <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Financial & P&L Report</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Get a comprehensive overview of your restaurant’s fiscal health with detailed revenue, tax, and expense summaries. Monitor profitability and make data-backed growth decisions.
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/finan.png" alt="icon"> Access detailed financial summaries for tax filing and business planning.</li>
-                                        <li><img src="assets/images/icon/finan.png" alt="icon"> Monitor complete breakdown of revenue, discounts, taxes, and net profits.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/finan.png" alt="icon"> Access detailed financial summaries for tax filing and business planning.</li>
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/finan.png" alt="icon"> Monitor complete breakdown of revenue, discounts, taxes, and net profits.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/finanical-report.jpg" width="600" alt="Financial Report">
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/finanical-report.jpg" width="600" alt="Financial Report">
                                     </div>
                                 </div>
                             </div>
@@ -1102,7 +942,7 @@
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Stock Dashboard <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Stock Dashboard <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Inventory & Consumption Report</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Monitor stock levels and ingredient depletion with precision. Track inventory movement to prevent shortages, reduce food waste, and maintain healthy cost-of-goods-sold (COGS).
@@ -1110,7 +950,7 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/inverep-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/inverep-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Waste & Variance Control</h4>
@@ -1119,7 +959,7 @@
                                     </div>
                                     <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/inverep-2.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/inverep-2.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Stock Movement Audits</h4>
@@ -1131,7 +971,7 @@
                             <div class="col-xl-6 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/inventory-report.jpg" alt="Inventory Report">
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/inventory-report.jpg" alt="Inventory Report">
                                     </div>
                                 </div>
                             </div>
@@ -1143,17 +983,17 @@
     </section>
 
     <!-- Work Process Section S T A R T -->
-    <section class="work-process-section section-padding fix">
+    <section id="getting-started" class="work-process-section section-padding fix">
         <div class="work-process-container-wrapper style1">
             <div class="container">
                 <div class="section-title text-center mxw-565 mx-auto">
                     <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                        How It Works <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                        How It Works <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                     </div>
                     <h2 class="title wow fadeInUp" data-wow-delay=".4s">Make Your Device Manage Everything For You!</h2>
                 </div>
                 <div class="work-process-wrapper style1">
-                    <div class="shape"><img src="assets/images/shape/workProcessShape1_1.png" alt="shape"></div>
+                    <div class="shape"><img loading="lazy" decoding="async" src="assets/images/shape/workProcessShape1_1.png" alt="shape"></div>
                     <div class="row">
                         <div class="col-xl-4">
                             <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".2s">
@@ -1187,12 +1027,12 @@
         <div class="testimonial-container-wrapper style1">
             <div class="container">
                 <div class="testimonial-wrapper style1 section-padding fix">
-                    <div class="shape1"><img src="assets/images/shape/testimonialShape1_1.png" alt="shape"></div>
-                    <div class="shape2"><img src="assets/images/shape/testimonialShape1_2.png" alt="shape"></div>
+                    <div class="shape1"><img loading="lazy" decoding="async" src="assets/images/shape/testimonialShape1_1.png" alt="shape"></div>
+                    <div class="shape2"><img loading="lazy" decoding="async" src="assets/images/shape/testimonialShape1_2.png" alt="shape"></div>
                     <div class="container">
                         <div class="section-title text-center mxw-685 mx-auto">
                             <div class="subtitle">
-                                Testimonials <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                Testimonials <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                             </div>
                             <h2 class="title">What Restaurant Owners Say About TheBox?</h2>
                         </div>
@@ -1204,7 +1044,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/logo/2.png" width="80px" alt="thumb">
+                                                    <img loading="lazy" decoding="async" src="assets/images/logo/2.png" width="80px" alt="thumb">
                                                 </div>
                                                 <div class="content">
                                                     <h5>E Sala Cup Namde</h5>
@@ -1212,16 +1052,16 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">TheBox simplifies and organizes restaurant management. Streamlined orders, kitchen coordination, and inventory keep us efficient every day.
                                                 </p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -1229,7 +1069,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/logo/3.png" width="50px" alt="thumb">
+                                                    <img loading="lazy" decoding="async" src="assets/images/logo/3.png" width="50px" alt="thumb">
                                                 </div>
                                                 <div class="content">
                                                     <h5>Chat Magic</h5>
@@ -1237,15 +1077,15 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">TheBox simplifies restaurant management by streamlining orders, staff, and inventory. It has improved our kitchen coordination and daily operations significantly.</p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -1253,7 +1093,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/testimoial/user.png" width="30px"
+                                                    <img loading="lazy" decoding="async" src="assets/images/testimoial/user.png" width="30px"
                                                         alt="thumb">
                                                 </div>
                                                 <div class="content">
@@ -1262,15 +1102,15 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">Since using TheBox, managing orders, staff, and inventory is much easier. It keeps our kitchen organized and our restaurant running smoothly every day.</p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -1278,7 +1118,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/logo/4.png" width="50px" alt="thumb">
+                                                    <img loading="lazy" decoding="async" src="assets/images/logo/4.png" width="50px" alt="thumb">
                                                 </div>
                                                 <div class="content">
                                                     <h5>Soul & Spoon</h5>
@@ -1286,15 +1126,15 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">TheBox simplifies restaurant management by streamlining orders, staff, and inventory. It has significantly improved our kitchen coordination and daily operations.</p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -1302,7 +1142,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/logo/1.png" width="50px" alt="thumb">
+                                                    <img loading="lazy" decoding="async" src="assets/images/logo/1.png" width="50px" alt="thumb">
                                                 </div>
                                                 <div class="content">
                                                     <h5>Harvest & Bean</h5>
@@ -1310,15 +1150,15 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">With TheBox, handling orders, inventory, and daily operations has become much more organized. It helps our team work faster and more efficiently.</p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -1326,7 +1166,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/logo/5.png" width="50px" alt="thumb">
+                                                    <img loading="lazy" decoding="async" src="assets/images/logo/5.png" width="50px" alt="thumb">
                                                 </div>
                                                 <div class="content">
                                                     <h5>Wilderness Campfire Cooking</h5>
@@ -1334,16 +1174,16 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">TheBox organizes everything in one simple dashboard. Orders, billing, and tables run smoothly across all our shifts.
                                                 </p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -1356,6 +1196,15 @@
             </div>
         </div>
     </section>
+
+    <section class="rm-final-trial" id="start-trial" aria-labelledby="trial-title">
+        <div class="container"><div class="rm-final-panel">
+            <div><p class="rm-eyebrow">YOUR NEXT CHAPTER STARTS HERE</p><h2 id="trial-title">Get your restaurant in sync.<br><span>Try TheBox free for 6 months.</span></h2><p>Orders, kitchen, billing, inventory, and your team. One connected platform.</p></div>
+            <div class="rm-final-action"><a class="rm-button" href="https://admin.theboxsync.com/register">Start your 6-month free trial</a><p>₹0 to get started · No card required</p><a href="contact.html">Have questions? Talk to us</a></div>
+        </div></div>
+    </section>
+    </main>
+    <aside class="rm-trial-dock" aria-label="Free trial"><div class="container"><div><strong>6 months free. Your restaurant, connected.</strong><span>₹0 to get started · No card required</span></div><a class="rm-button" href="https://admin.theboxsync.com/register">Start 6-month free trial</a></div></aside>
 
     <!-- Centralized Footer Area -->
     <script src="assets/js/footer.js"></script>
@@ -1384,6 +1233,7 @@
     <script src="assets/js/nice-select.min.js"></script>
     <!--<< Main.js >>-->
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/restaurant-management.js"></script>
 </body>
 
 </html>

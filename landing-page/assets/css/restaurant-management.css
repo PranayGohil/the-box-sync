@@ -1,0 +1,128 @@
+/* Restaurant landing page: scoped to preserve the shared website theme. */
+.restaurant-page { --rm-ink: #193446; --rm-muted: #506575; --rm-blue: #087caf; color: var(--rm-muted); }
+.restaurant-page main { overflow: clip; }
+.restaurant-page main h1, .restaurant-page main h2, .restaurant-page main h3 { text-transform: none; }
+.restaurant-page main [id] { scroll-margin-top: 155px; }
+.restaurant-page a:focus-visible, .restaurant-page button:focus-visible { outline: 3px solid #087caf; outline-offset: 5px; }
+.rm-hero { background: linear-gradient(115deg, #f1faff 0%, #e8f6fd 62%, #d8f3ff 100%); padding: 22px 0 62px; border-bottom: 1px solid #d5e9f3; }
+.rm-breadcrumb { display: flex; gap: 12px; font-size: .875rem; margin-bottom: 38px; color: #506575; }
+.rm-breadcrumb a { color: #37637b; }
+.rm-hero-grid { display: grid; grid-template-columns: 1fr 1.08fr; gap: 48px; align-items: center; }
+.rm-eyebrow { color: var(--rm-blue); font-weight: 800; font-size: .8125rem; letter-spacing: .11em; margin-bottom: 18px; line-height: 1.6; }
+.rm-hero h1 { font-size: clamp(2.5rem, 3.7vw, 3.6rem); line-height: 1.08; letter-spacing: -.045em; font-weight: 800; color: var(--rm-ink); }
+.rm-hero h1 span { color: var(--rm-blue); }
+.rm-lead { font-size: 1.125rem; line-height: 1.7; margin: 22px 0 24px; max-width: 510px; }
+.rm-offer { max-width: 440px; }
+.rm-offer-heading { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+.rm-offer-heading strong { font-size: 1.75rem; color: var(--rm-ink); font-weight: 800; }
+.rm-offer-heading > span { background: #fff; border: 1px solid #b7dcec; border-radius: 6px; padding: 2px 10px; color: #35596c; font-size: .875rem; font-weight: 600; }
+.rm-button { display: inline-flex; align-items: center; justify-content: center; background: var(--rm-blue); border: 1px solid var(--rm-blue); color: #fff; padding: 16px 24px; border-radius: 10px; font-weight: 800; font-size: 1rem; line-height: 1.4; text-align: center; transition: background .2s, box-shadow .2s; box-shadow: 0 6px 16px #087caf20; }
+.rm-button:hover { background: #075e87; border-color: #075e87; color: #fff; box-shadow: 0 8px 24px #087caf30; }
+.rm-offer .rm-button { width: 100%; }
+.rm-offer > p { font-size: .875rem; margin: 8px 0 0; text-align: center; color: #486575; }
+.rm-explore { display: inline-flex; gap: 12px; margin-top: 22px; color: var(--rm-ink); font-weight: 700; }
+.rm-product { min-width: 0; background: #fff; padding: 10px; border-radius: 18px; border: 1px solid #c0dce9; box-shadow: 0 28px 65px #174f6c17; }
+.rm-product-top { display: flex; align-items: center; gap: 10px; padding: 5px 5px 14px; color: #314d60; font-size: .875rem; font-weight: 700; }
+.rm-product-top > span:last-child { margin-left: auto; color: #607583; font-size: .75rem; font-weight: 500; }
+.rm-product-mark { background: #1fadef; color: white; border-radius: 6px; width: 27px; height: 27px; text-align: center; }
+.rm-product > img { width: 100%; height: auto; display: block; border: 1px solid #e0edf3; border-radius: 8px; }
+.rm-product-bottom { display: flex; justify-content: space-around; gap: 8px; padding: 16px 6px; font-size: .875rem; font-weight: 700; color: #36596e; border-bottom: 1px solid #e0edf3; }
+.rm-product-caption { text-align: center; margin: 16px 0 8px; font-size: 1rem; line-height: 1.6; }
+.rm-product-caption strong { color: var(--rm-ink); }
+.rm-overview { padding: 72px 0 42px; }
+.rm-overview-heading { max-width: 760px; margin: 0 auto 32px; text-align: center; }
+.rm-overview-heading h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); line-height: 1.2; letter-spacing: -.025em; margin-bottom: 20px; }
+.rm-overview-heading > p:last-child { line-height: 1.8; }
+.rm-feature-map { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.rm-feature-map > a { padding: 24px; border: 1px solid #d9e7ee; border-radius: 16px; background: #f7fbfd; display: flex; flex-direction: column; color: var(--rm-muted); transition: border-color .2s, background .2s; }
+.rm-feature-map > a:hover { background: #e8f6fd; border-color: #1fadef; }
+.rm-feature-map i { color: var(--rm-blue); font-size: 1.5rem; margin-bottom: 22px; }
+.rm-feature-map h3 { color: var(--rm-ink); font-size: 1.2rem; margin-bottom: 10px; }
+.rm-feature-map p { font-size: 1rem; line-height: 1.6; margin-bottom: 20px; }
+.rm-feature-map span { color: var(--rm-blue); font-size: .875rem; font-weight: 800; margin-top: auto; }
+.rm-overview-points { margin-top: 28px; }
+.restaurant-page .rm-overview-points .checklist { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.restaurant-page .rm-overview-points .checklist li { align-items: flex-start; font-size: .9375rem; line-height: 1.6; color: var(--rm-muted); margin: 0; }
+.rm-section-nav { background: #fff; border-block: 1px solid #e0eaf0; }
+.rm-section-nav .container { display: flex; align-items: center; gap: 24px; padding-top: 18px; padding-bottom: 18px; overflow-x: auto; }
+.rm-section-nav a { white-space: nowrap; font-size: .875rem; font-weight: 700; color: #37586d; }
+.rm-section-nav a:hover { color: var(--rm-blue); text-decoration: underline; }
+.rm-section-nav .container > span { color: var(--rm-ink); font-weight: 800; white-space: nowrap; margin-right: auto; }
+.restaurant-page .wcu-section { padding: 24px 0 !important; }
+.restaurant-page .wcu-section .wcu-wrapper { padding: 48px 28px; border-radius: 24px; }
+.restaurant-page .wcu-section .section-title .title { font-size: clamp(1.75rem, 2.6vw, 2.35rem); line-height: 1.2; letter-spacing: -.025em; margin-bottom: 18px; }
+.restaurant-page .wcu-section .section-title .text1 { color: var(--rm-muted); line-height: 1.8; margin-bottom: 22px; }
+.restaurant-page .wcu-section .subtitle { background: transparent !important; color: var(--rm-blue); padding: 0; border: 0; font-size: .875rem; font-weight: 800; margin-bottom: 14px; }
+.restaurant-page .wcu-section .subtitle img { display: none; }
+.restaurant-page .wcu-section .checklist li, .restaurant-page .wcu-section .fancy-box .text { color: var(--rm-muted); line-height: 1.75; }
+.restaurant-page .wcu-section .main-thumb img { width: 100%; height: auto; border-radius: 12px; border: 1px solid #d6e5ed; box-shadow: 0 12px 32px #19344612; }
+.restaurant-page .wcu-section .row { row-gap: 28px; }
+.restaurant-page .wcu-section .checklist li { align-items: flex-start; }
+.restaurant-page .wcu-section .checklist li img { flex-shrink: 0; }
+.restaurant-page .cta-section { padding-top: 36px; }
+.restaurant-page .cta-section > .section-title { padding: 0 24px 28px; max-width: 800px; }
+.restaurant-page .work-process-section { padding: 64px 0; }
+.rm-final-trial { padding: 24px 0 72px; }
+.rm-final-panel { background: #e8f6fd; border: 1px solid #cce5f2; padding: 48px; border-radius: 24px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 36px; align-items: center; }
+.rm-final-panel h2 { font-size: clamp(1.75rem, 2.8vw, 2.6rem); line-height: 1.2; letter-spacing: -.025em; margin-bottom: 20px; }
+.rm-final-panel h2 span { color: var(--rm-blue); }
+.rm-final-panel p { margin-bottom: 0; }
+.rm-final-panel .rm-eyebrow { margin-bottom: 14px; }
+.rm-final-action { text-align: center; }
+.rm-final-action > p { font-size: .875rem; margin: 12px 0; }
+.rm-final-action > a:last-child { color: var(--rm-blue); text-decoration: underline; font-weight: 700; }
+.rm-trial-dock { position: fixed; inset: auto 0 0; z-index: 90; background: #fffffffa; border-top: 1px solid #cadfe9; box-shadow: 0 -8px 30px #1934460c; padding: 12px 0 max(12px, env(safe-area-inset-bottom)); visibility: hidden; transform: translateY(110%); transition: transform .2s, visibility .2s; }
+.rm-trial-dock.is-visible { visibility: visible; transform: translateY(0); }
+.rm-trial-dock > .container { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+.rm-trial-dock strong { display: block; color: var(--rm-ink); font-size: 1rem; }
+.rm-trial-dock span { display: block; font-size: .875rem; }
+.restaurant-page { padding-bottom: 90px; }
+.restaurant-page .back-to-top { bottom: 105px; }
+@media (max-width: 1199px) {
+ .rm-hero-grid { gap: 28px; }
+ .rm-feature-map { grid-template-columns: repeat(2, 1fr); }
+ .restaurant-page .wcu-section .row > div:has(.wcu-content) { order: 1 !important; }
+ .restaurant-page .wcu-section .row > div:has(.wcu-thumb) { order: 2 !important; }
+ .restaurant-page .wcu-section .wcu-thumb { max-width: 800px; margin: auto; }
+}
+@media (max-width: 767px) {
+ .rm-hero { padding: 20px 0 36px; }
+ .rm-breadcrumb { margin-bottom: 28px; }
+ .rm-hero-grid { grid-template-columns: 1fr; gap: 36px; }
+ .rm-hero h1 { font-size: clamp(2.3rem, 8vw, 3.4rem); }
+ .rm-lead { font-size: 1rem; margin: 18px 0; }
+ .rm-offer { max-width: none; }
+ .rm-overview { padding: 44px 0 28px; }
+ .rm-feature-map { gap: 12px; }
+ .rm-feature-map > a { padding: 18px; }
+ .restaurant-page .rm-overview-points .checklist { grid-template-columns: 1fr; gap: 14px; }
+ .rm-section-nav .container > span { display: none; }
+ .restaurant-page .wcu-section { padding: 10px 0 !important; }
+ .restaurant-page .wcu-section .wcu-wrapper { padding: 28px 8px; border-radius: 18px; }
+ .rm-final-panel { grid-template-columns: 1fr; padding: 28px 22px; gap: 24px; }
+ .rm-final-action .rm-button { width: 100%; }
+ .rm-trial-dock > .container { gap: 12px; }
+ .rm-trial-dock strong { font-size: .875rem; line-height: 1.4; }
+ .rm-trial-dock span { font-size: .75rem; line-height: 1.5; }
+ .rm-trial-dock .rm-button { padding: 12px 14px; font-size: .875rem; flex: 0 0 48%; }
+}
+@media (max-width: 380px) { .rm-feature-map { grid-template-columns: 1fr; } .rm-product-top > span:last-child { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+ .restaurant-page *, .restaurant-page *::before, .restaurant-page *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+/* Product details stay readable even when scroll animation scripts are unavailable. */
+.restaurant-page main .wow { visibility: visible !important; animation: none !important; }
+.restaurant-page main .img-custom-anim-right {
+ animation: none !important;
+ opacity: 1;
+ transform: none;
+ clip-path: none;
+}
+/* The shared header normally overlays a tall breadcrumb; this page uses a compact hero. */
+.restaurant-page .header-section-1 { position: relative; top: 0; min-height: 100px; background: #fff; }
+.restaurant-page .header-main { padding-top: 16px; padding-bottom: 16px; }
+@media (max-width: 767px) { .restaurant-page .header-section-1 { min-height: 82px; } }
+.restaurant-page .rm-hero h1 span { display: block; }
+.restaurant-page .rm-hero h1 br { display: none; }
+/* Let visitors see the offer immediately instead of waiting behind the shared loader. */
+.restaurant-page #preloader { display: none; }
