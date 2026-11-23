@@ -1,65 +1,224 @@
 <!DOCTYPE html>
-<html lang="zxx">
-<!--<< Header Area >>-->
+<html lang="en">
 
 <head>
-    <!-- ========== Meta Tags ========== -->
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="Gramentheme">
+    <meta name="author" content="TheBox">
     <meta name="keywords"
-        content="payroll software India, salary calculation tool, employee attendance tracker, leave management system, EPF ESI calculator, salary slips generator India, HR management software, TheBox">
+        content="payroll management software, HR payroll India, salary slip generator, attendance management, ESI PF statutory compliance, biometric payroll, leave management, salary advance">
     <meta name="description"
-        content="All-in-one HR and payroll solution for modern businesses. Automate payroll calculations, statutory compliance (EPF, ESI, TDS), track attendance, and manage leave requests seamlessly using TheBox.">
-    <!-- ======== Page title ============ -->
-    <title>TheBox - Payroll Management</title>
-    <!--<< Favcion >>-->
+        content="Complete HR & Payroll platform — attendance, salary config, leave policy, payslips, advances, ESI/PF/PT compliance & expense management. 6 months free, ₹0 to start.">
+    <title>TheBox - HR & Payroll Management</title>
     <link rel="shortcut icon" href="assets/images/favicon.png">
-    <!--<< Bootstrap min.css >>-->
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <!--<< All Min Css >>-->
     <link rel="stylesheet" href="assets/css/all.min.css">
-    <!--<< Animate.css >>-->
     <link rel="stylesheet" href="assets/css/animate.css">
-    <!--<< Magnific popup.css >>-->
     <link rel="stylesheet" href="assets/css/magnific-popup.css">
-    <!--<< MeanMenu.css >>-->
     <link rel="stylesheet" href="assets/css/meanmenu.css">
-    <!--<< Swiper Bundle.css >>-->
     <link rel="stylesheet" href="assets/css/swiper-bundle.min.css">
-    <!--<< NiceSelect.css >>-->
     <link rel="stylesheet" href="assets/css/nice-select.css">
-    <!--<< Main.css >>-->
     <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/restaurant-management.css">
+    <style>
+        /* ── Payroll page scoped tokens ── */
+        .payroll-page {
+            --rm-ink: #193446;
+            --rm-muted: #506575;
+            --rm-blue: #087caf;
+            color: var(--rm-muted);
+        }
+
+        .payroll-page main {
+            overflow: clip;
+        }
+
+        .payroll-page main h1,
+        .payroll-page main h2,
+        .payroll-page main h3 {
+            text-transform: none;
+        }
+
+        .payroll-page main [id] {
+            scroll-margin-top: 155px;
+        }
+
+        .payroll-page a:focus-visible,
+        .payroll-page button:focus-visible {
+            outline: 3px solid #087caf;
+            outline-offset: 5px;
+        }
+
+        /* ── Header: compact, no overlap ── */
+        .payroll-page .header-section-1 {
+            position: relative;
+            top: 0;
+            min-height: 100px;
+            background: #fff;
+        }
+
+        .payroll-page .header-main {
+            padding-top: 16px;
+            padding-bottom: 16px;
+        }
+
+        .payroll-page #preloader {
+            display: none;
+        }
+
+        /* ── Hero ── */
+        .payroll-page .rm-hero h1 span {
+            display: block;
+            color: var(--rm-blue);
+        }
+
+        .payroll-page .rm-hero h1 br {
+            display: none;
+        }
+
+        /* ── Feature sections ── */
+        .payroll-page .wcu-section .section-title .subtitle img {
+            display: none;
+        }
+
+        .payroll-page .wcu-section .checklist li,
+        .payroll-page .wcu-section .fancy-box .text {
+            color: var(--rm-muted);
+            line-height: 1.75;
+        }
+
+        .payroll-page .wcu-section .main-thumb img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid #d6e5ed;
+            box-shadow: 0 12px 32px #19344612;
+        }
+
+        .payroll-page .wcu-section .row {
+            row-gap: 28px;
+        }
+
+        .payroll-page .wcu-section .checklist li {
+            align-items: flex-start;
+        }
+
+        .payroll-page .wcu-section .checklist li img {
+            flex-shrink: 0;
+        }
+
+        /* ── CTA & process ── */
+        .payroll-page .cta-section {
+            padding-top: 36px;
+        }
+
+        .payroll-page .cta-section>.section-title {
+            padding: 0 24px 28px;
+            max-width: 800px;
+        }
+
+        .payroll-page .work-process-section {
+            padding: 64px 0;
+        }
+
+        /* ── Bottom spacing for dock ── */
+        .payroll-page {
+            padding-bottom: 90px;
+        }
+
+        .payroll-page .back-to-top {
+            bottom: 105px;
+        }
+
+        /* ── Suppress WOW on images ── */
+        .payroll-page main .wow {
+            visibility: visible !important;
+            animation: none !important;
+        }
+
+        .payroll-page main .img-custom-anim-right {
+            animation: none !important;
+            opacity: 1;
+            transform: none;
+            clip-path: none;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 1199px) {
+            .payroll-page .wcu-section .row>div:has(.wcu-content) {
+                order: 1 !important;
+            }
+
+            .payroll-page .wcu-section .row>div:has(.wcu-thumb) {
+                order: 2 !important;
+            }
+
+            .payroll-page .wcu-section .wcu-thumb {
+                max-width: 800px;
+                margin: auto;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .payroll-page .header-section-1 {
+                min-height: 82px;
+            }
+
+            .payroll-page .wcu-section {
+                padding: 10px 0 !important;
+            }
+
+            .payroll-page .wcu-section .wcu-wrapper {
+                padding: 28px 8px;
+                border-radius: 18px;
+            }
+
+            .rm-final-panel {
+                grid-template-columns: 1fr;
+                padding: 28px 22px;
+                gap: 24px;
+            }
+
+            .rm-final-action .rm-button {
+                width: 100%;
+            }
+
+            .rm-trial-dock>.container {
+                gap: 12px;
+            }
+
+            .rm-trial-dock .rm-button {
+                padding: 12px 14px;
+                font-size: .875rem;
+                flex: 0 0 48%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .payroll-page *,
+            .payroll-page *::before,
+            .payroll-page *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
 </head>
 
-<body>
+<body class="payroll-page">
 
-    <!-- Preloader Start -->
     <div id="preloader" class="preloader">
         <div class="animation-preloader">
-            <div class="spinner">
-            </div>
+            <div class="spinner"></div>
             <div class="txt-loading">
-                <span data-text-preloader="T" class="letters-loading">
-                    T
-                </span>
-                <span data-text-preloader="H" class="letters-loading">
-                    H
-                </span>
-                <span data-text-preloader="E" class="letters-loading">
-                    E
-                </span>
-                <span data-text-preloader="B" class="letters-loading">
-                    B
-                </span>
-                <span data-text-preloader="O" class="letters-loading">
-                    O
-                </span>
-                <span data-text-preloader="X" class="letters-loading">
-                    X
-                </span>
+                <span data-text-preloader="T" class="letters-loading">T</span>
+                <span data-text-preloader="H" class="letters-loading">H</span>
+                <span data-text-preloader="E" class="letters-loading">E</span>
+                <span data-text-preloader="B" class="letters-loading">B</span>
+                <span data-text-preloader="O" class="letters-loading">O</span>
+                <span data-text-preloader="X" class="letters-loading">X</span>
             </div>
             <p class="text-center">Loading</p>
         </div>
@@ -81,19 +240,13 @@
         </div>
     </div>
 
-    <!-- Mouse Cursor Start -->
     <div class="mouse-cursor cursor-outer"></div>
     <div class="mouse-cursor cursor-inner"></div>
 
-    <!-- Back To Top Start -->
-    <button id="back-top" class="back-to-top">
-        <i class="fa-solid fa-chevron-up"></i>
-    </button>
+    <button id="back-top" class="back-to-top"><i class="fa-solid fa-chevron-up"></i></button>
 
-    <!-- Centralized Header Area -->
-  <script src="assets/js/header.js"></script>
+    <script src="assets/js/header.js"></script>
 
-    <!-- Search Area Start -->
     <div class="search-wrap">
         <div class="search-inner">
             <i class="fas fa-times search-close" id="search-close"></i>
@@ -107,684 +260,1119 @@
         </div>
     </div>
 
-    <!-- Breadcrumb section -->
-    <div class="breadcumb-section fix">
-        <div class="breadcumb-container-wrapper" data-bg-src="assets/images/bg/breadcumgBg.png">
+    <main id="payroll-main">
+
+        <!-- ══════════════════════════════════════════════
+         HERO
+    ══════════════════════════════════════════════ -->
+        <section class="rm-hero" aria-labelledby="payroll-title">
             <div class="container">
-                <div class="shape1"><img src="assets/images/shape/breadCumbShape1_1.png" alt="shape"></div>
-                <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape"></div>
-                <div class="breadcumb-wrapper">
-                    <div class="page-heading">
-                        <h1>Payroll Management</h1>
-                        <div class="links">
-                            <a href="index.html">Home<span class="slash">/</span></a>Payroll Management
+                <nav class="rm-breadcrumb" aria-label="Breadcrumb">
+                    <a href="index.html">Home</a><span aria-hidden="true">/</span><span aria-current="page">Payroll
+                        Management</span>
+                </nav>
+                <div class="rm-hero-grid">
+                    <div class="rm-hero-copy">
+                        <p class="rm-eyebrow">THEBOX · HR &amp; PAYROLL MANAGEMENT</p>
+                        <h1 id="payroll-title">Your entire workforce.<br><span>One automated payroll.</span></h1>
+                        <p class="rm-lead">Manage attendance, configure salaries, process leave, generate payslips and
+                            stay statutory compliant — all from one platform. TheBox handles every HR task so you don't
+                            have to.</p>
+                        <div class="rm-offer">
+                            <div class="rm-offer-heading"><strong>6 months free</strong><span>₹0 to get started</span>
+                            </div>
+                            <a class="rm-button" href="https://payroll.theboxsync.com/register">Start your 6-month free
+                                trial</a>
+                            <p>No card required · Unlimited employees</p>
                         </div>
+                        <a class="rm-explore" href="#explore-payroll">Explore the platform <span
+                                aria-hidden="true">↓</span></a>
+                    </div>
+                    <div class="rm-product">
+                        <div class="rm-product-top">
+                            <span class="rm-product-mark" aria-hidden="true">T</span>
+                            <span>TheBox workspace</span>
+                            <span>HR &amp; Payroll dashboard</span>
+                        </div>
+                        <img src="assets/images/payroll/Payroll Overview.png"
+                            alt="TheBox HR & Payroll dashboard — salary overview and attendance" fetchpriority="high">
+                        <div class="rm-product-bottom"><span>Attendance</span><span>Salary</span><span>Compliance</span>
+                        </div>
+                        <p class="rm-product-caption">From the first punch-in to the final
+                            payslip.<br><strong>Everything automated.</strong></p>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Main payroll features section -->
-    <section class="wcu-section pb-lg-5 ">
-        <div class="wcu-container-wrapper style2">
+        <!-- ══════════════════════════════════════════════
+         FEATURE MAP OVERVIEW
+    ══════════════════════════════════════════════ -->
+        <section class="rm-overview" id="explore-payroll" aria-labelledby="payroll-overview-title">
             <div class="container">
-                <div class="wcu-wrapper style2  section-padding fix bg-white">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Features <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">HR & Payroll Management</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Streamline employee operations,
-                                            automate statutory compliance, and generate professional salary slips in a single
-                                            click. TheBox helps reduce manual calculations, track real-time attendance, and
-                                            keep payroll perfectly aligned with business performance.
-                                        </p>
-                                    </div>
-                                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Auto-calculate monthly salaries
-                                            based on integrated attendance punch logs.</li>
-                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Manage statutory deductions
-                                            like EPF, ESI, Professional Tax, and TDS automatically.</li>
-                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Keep employees updated with a
-                                            modern self-service dashboard for salary slips.</li>
-                                    </ul>
-                                    <a class="theme-btn wow fadeInUp" data-wow-delay=".2s" href="pricing-payroll.html">Discover More
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                            viewBox="0 0 16 16" fill="none">
-                                            <g clip-path="url(#clip0_18_41)">
-                                                <path
-                                                    d="M11.6118 3.61182L10.8991 4.32454L14.0706 7.49603H0V8.50398H14.0706L10.8991 11.6754L11.6118 12.3882L16 7.99997L11.6118 3.61182Z"
-                                                    fill="white" />
-                                            </g>
-                                            <defs>
-                                                <clipPath id="clip0_18_41">
-                                                    <rect width="16" height="16" fill="white" />
-                                                </clipPath>
-                                            </defs>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="col-xl-6">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/payroll/payroll_hero.png" width="600" alt="TheBox Payroll Dashboard">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="rm-overview-heading">
+                    <p class="rm-eyebrow">ONE PLATFORM. COMPLETE HR AUTOMATION.</p>
+                    <h2 id="payroll-overview-title">Complete HR &amp; Payroll Management Ecosystem</h2>
+                    <p>TheBox Payroll brings attendance tracking, salary computation, leave management, expense control,
+                        and statutory compliance into a single synchronized platform — built specifically for Indian
+                        businesses.</p>
+                </div>
+                <div class="rm-feature-map">
+                    <a href="#attendance">
+                        <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                        <h3>Attendance &amp; Shifts</h3>
+                        <p>Biometric sync, timesheets, WFH tracking &amp; shift rules</p>
+                        <span>Explore attendance</span>
+                    </a>
+                    <a href="#salary">
+                        <i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i>
+                        <h3>Salary &amp; Payslips</h3>
+                        <p>Salary config, payroll generation &amp; WhatsApp payslips</p>
+                        <span>Explore salary</span>
+                    </a>
+                    <a href="#leave">
+                        <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+                        <h3>Leave Management</h3>
+                        <p>Leave policy, requests, approvals &amp; balance tracking</p>
+                        <span>Explore leave</span>
+                    </a>
+                    <a href="#compliance">
+                        <i class="fa-solid fa-shield-check" aria-hidden="true"></i>
+                        <h3>Finance &amp; Compliance</h3>
+                        <p>ESI, PF, PT, TDS, advances &amp; expense management</p>
+                        <span>Explore compliance</span>
+                    </a>
+                </div>
+                <div class="rm-overview-points">
+                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                        <li><img src="assets/images/icon/checkmarkIcon.svg" alt="icon"> Auto-calculate monthly salaries
+                            from biometric attendance — Basic, HRA, Conveyance, Medical &amp; Special Allowances.</li>
+                        <li><img src="assets/images/icon/checkmarkIcon.svg" alt="icon"> Generate and share professional
+                            PDF payslips to every employee via WhatsApp in one click.</li>
+                        <li><img src="assets/images/icon/checkmarkIcon.svg" alt="icon"> Stay penalty-free with
+                            auto-computed ESI (0.75% / 3.25%), PF (12% / 12%) and state-wise Professional Tax.</li>
+                    </ul>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Section 1 - Attendance & Timesheet Tracking -->
-    <section class="wcu-section">
-        <div class="wcu-container-wrapper style2">
+        <!-- Section nav -->
+        <nav class="rm-section-nav" aria-label="Payroll features">
             <div class="container">
-                <div class="wcu-wrapper style2  section-padding fix">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-lg-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Unified Platform <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Attendance & Time Tracking</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Manage clock-ins, clock-outs,
-                                            shifts, and working hours for all employees seamlessly. TheBox Sync integrates
-                                            attendance tracking directly into salary calculations, ensuring absolute transparency
-                                            and eliminating human errors.
-                                        </p>
-                                    </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/table-1.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Biometric & Shift Sync</h4>
-                                            <p class="text">Synchronize biometric machines or app-based punches in real time
-                                                with assigned shift rosters and working calendars.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/table-2.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Overtime & Late Logs</h4>
-                                            <p class="text">Track working hour metrics automatically, calculate overtime,
-                                                and apply late-arrival or early-departure deductions.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6 order-1">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp pt-2"
-                                        data-wow-delay=".4s">
-                                        <img src="assets/images/payroll/attendance_timesheet.png" width="600"
-                                            alt="TheBox Attendance Tracker">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <span>Explore TheBox</span>
+                <a href="#attendance">Attendance</a>
+                <a href="#salary">Salary &amp; Payslips</a>
+                <a href="#leave">Leave &amp; Holidays</a>
+                <a href="#compliance">Finance &amp; Compliance</a>
+                <a href="#reports">Reports</a>
+                <a href="#getting-started">Getting started</a>
             </div>
-        </div>
-    </section>
+        </nav>
 
-    <!-- Section 2 - Salary Configuration -->
-    <section class="wcu-section pb-lg-5 ">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2  section-padding fix bg-white">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Smart Structures <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Salary Configurations</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Configure complex salary structures
-                                            for your entire workforce from a single dashboard. Define base salaries, add dynamic
-                                            allowances, and set automatic deductions for quick payouts.
-                                        </p>
-                                    </div>
-                                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/menu.png" alt="icon"> Custom earnings configurations
-                                            for Basic, HRA, Special Allowance, and overtime pay.</li>
-                                        <li><img src="assets/images/icon/menu.png" alt="icon"> Configurable deductions matching
-                                            Indian statutory requirements (EPF, ESI, PT, and TDS).</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="col-xl-6">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/payroll/salary_configuration.png" width="600"
-                                            alt="Salary Structure Setup">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Section 3 - Leave & Holiday Workflows -->
-    <section class="wcu-section">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2  section-padding fix">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Leave Sync <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Leave & Holiday Workflows</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Manage staff leaves and public holidays
-                                            without manual spreadsheets. TheBox provides an approval workflow where managers can
-                                            review, approve, or reject leave requests in seconds.
-                                        </p>
-                                    </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/kot-1.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Automated Balance Deduction</h4>
-                                            <p class="text">Deduct approved leaves automatically from employee leave balances
-                                                and compute LOP (Loss of Pay) days for payroll runs.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/kot-2.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Calendar Overview</h4>
-                                            <p class="text">View team-wise leave calendars to ensure optimal staff allocation
-                                                during busy festival days or peak business hours.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6 order-1">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/payroll/leave_requests.png" width="600" alt="Leave Requests Dashboard">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Section 4 - Salary Slip Generation -->
-    <section class="wcu-section pb-lg-5 ">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2  section-padding fix bg-white">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-2">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Automated Payouts <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">One-Click Salary Slips</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Generate digital payslips for all
-                                            active employees with a single click. TheBox automates basic pay calculations,
-                                            extra earnings additions, and tax/compliance deductions based on active records.
-                                        </p>
-                                    </div>
-                                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/order-1.png" alt="icon">Secure role-based access for HR
-                                            and managers to generate and lock salary sheets.</li>
-                                        <li><img src="assets/images/icon/order-1.png" alt="icon">Centralized archive containing
-                                            downloadable PDF payslips accessible for employees.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="col-xl-6">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - financial report (statistics).png" width="600"
-                                            alt="Financial Slip Reports">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Section 5 - Advances & Loans -->
-    <section class="wcu-section">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2  section-padding fix">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 col-xl-6 order-2">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Advance Tracker <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Advances & Expense Tracking</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Manage salary advance requests, approve
-                                            payments, and track outstanding balances. TheBox integrates advance trackers directly
-                                            into final monthly payouts, preventing double-payments.
-                                        </p>
-                                    </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/inv-1.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Advance Approvals</h4>
-                                            <p class="text">Approve or reject advance requests instantly with predefined balance
-                                                limits based on employee designation and monthly wages.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/inv-2.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Auto Deductions</h4>
-                                            <p class="text">Automatically deduct outstanding advance balances from the final
-                                                monthly salary slip generated by the platform.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6 order-1 order-xl-2">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - manager attendace.png" width="600"
-                                            alt="Manage Salary Advances">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Cta / Reports Section -->
-    <section class="cta-section">
-        <div class="section-title text-center  mx-auto">
-            <h2 class="title wow fadeInUp" data-wow-delay=".4s"
-                style="visibility: visible; animation-delay: 0.4s; animation-name: fadeInUp;">HR analytics to optimize
-                company payroll performance</h2>
-        </div>
-        <div class="cta-container-wrapper style1">
-            <div class="container">
-                <div class="cta-wrapper style1  section-padding fix">
-                    <div class="shape1 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_1.png" alt="shape"></div>
-                    <div class="shape2 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_2.png" alt="shape"></div>
-                    <div class="shape3 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_3.png" alt="shape"></div>
-                    <div class="shape4 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_4.png" alt="shape"></div>
-                    <div class="container">
-                        <div class="row gy-5">
-                            <div class="col-xl-6 order-2 order-xl-1">
-                                <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
-                                    <img src="assets/images/admin/admin - staff details.png" alt="thumb" class="w-100">
-                                </div>
-                                <div class="cta-content">
-                                    <div class="section-title mt-4">
-                                        <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
-                                            Staff <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Employee Management</h2>
-                                        <p class="section-desc text-white mxw-651 wow fadeInUp" data-wow-delay=".6s">
-                                            Effortlessly manage roles, permissions, designations, and department structures.
-                                            TheBox helps track employee history, verify bank details, and organize employee records
-                                            in a secure database.
-                                        </p>
-                                    </div>
-                                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li class="text-white"><img src="assets/images/icon/staff.png" alt="icon">
-                                            Regulate roles, permissions, and designations for streamlined operations.</li>
-                                        <li class="text-white"><img src="assets/images/icon/staff.png" alt="icon">
-                                            Manage details, bank account info, and official documents of staff in one place.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="col-xl-6 order-1 order-xl-2">
-                                <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
-                                    <img src="assets/images/admin/admin - overview (statistics).png" alt="thumb"
-                                        class="w-100 h-100">
-                                </div>
-                                <br />
-                                <div class="cta-content">
-                                    <div class="section-title ">
-                                        <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
-                                            Analytics <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Payroll Analytics</h2>
-                                        <p class="section-desc text-white mxw-651 wow fadeInUp" data-wow-delay=".6s">
-                                            Get a clear overview of your monthly payroll expenses, employee count changes, and
-                                            statutory cost distributions from a single clean dashboard.
-                                        </p>
-                                    </div>
-                                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li class="text-white"><img src="assets/images/icon/anay-1.png" alt="icon">
-                                            Monitor salary disbursements and statutory payments over time.</li>
-                                        <li class="text-white"><img src="assets/images/icon/anay-1.png" alt="icon">
-                                            Understand your HR expenditure using clean visual charts and tables.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Additional Reports List -->
-    <section class="wcu-section pb-lg-5 ">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2  section-padding fix bg-white">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Business Insights <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Attendance Reports</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Get detailed daily, weekly, and
-                                            monthly attendance reports. Review LOP (Loss of Pay) days, overtime hours, late-in and
-                                            early-out counts to finalize salary computations with maximum confidence.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6 order-1 order-xl-2">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - attendance report.png" width="600"
-                                            alt="Employee Attendance Reports">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="wcu-section">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2  section-padding fix">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - GST management.png" width="600"
-                                            alt="Statutory Compliance Reports">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Compliance Metrics <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Statutory & Tax Filings</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Generate statutory tax reports with
-                                            pre-calculated values. TheBox exports EPF monthly returns, ESI returns, Professional Tax
-                                            slabs, and TDS deduction details, making monthly tax filings simple.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Work Process Section S T A R T -->
-    <section class="work-process-section section-padding pt-0 fix">
-        <div class="work-process-container-wrapper style1">
-            <div class="container">
-                <div class="section-title text-center mxw-585 mx-auto">
-                    <div class="subtitle">
-                        How It Works <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                    </div>
-                    <h2 class="title">Simple Setup, Faster Payroll Runs</h2>
-                </div>
-                <div class="work-process-wrapper style1">
-                    <div class="shape"><img src="assets/images/shape/workProcessShape1_1.png" alt="shape"></div>
-                    <div class="row gy-5">
-                        <div class="col-xl-4">
-                            <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".2s">
-                                <div class="step">STEP - 01</div>
-                                <div class="title">Create Company Account</div>
-                                <div class="text">Register your company profile on TheBox and define departments, designations,
-                                    and official bank accounts.</div>
-                            </div>
-                        </div>
-                        <div class="col-xl-4">
-                            <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".4s">
-                                <div class="step">STEP - 02</div>
-                                <div class="title">Add Staff & Define Salary</div>
-                                <div class="text">Import your employee directory, assign salary configurations, and map attendance
-                                    rosters.</div>
-                            </div>
-                        </div>
-                        <div class="col-xl-4">
-                            <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".6s">
-                                <div class="step">STEP - 03</div>
-                                <div class="title">Run Monthly Payroll</div>
-                                <div class="text">Click calculate to process monthly wages, account for leaves/advances, and lock
-                                    digital payslips.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Testimonial Section S T A R T -->
-    <section class="testimonial-section mb-5">
-        <div class="testimonial-container-wrapper style1">
-            <div class="container">
-                <div class="testimonial-wrapper style1 section-padding fix">
-                    <div class="shape1"><img src="assets/images/shape/testimonialShape1_1.png" alt="shape"></div>
-                    <div class="shape2"><img src="assets/images/shape/testimonialShape1_2.png" alt="shape"></div>
-                    <div class="container">
-                        <div class="section-title text-center mxw-685 mx-auto">
-                            <div class="subtitle">
-                                Testimonial <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                            </div>
-                            <h2 class="title">What Clients Say About TheBox?</h2>
-                        </div>
-                        <div class="slider-area testimonialSliderOne">
-                            <div class="swiper gt-slider" id="testimonialSliderOne"
-                                data-slider-options='{"loop": true,"breakpoints":{"0":{"slidesPerView":1},"576":{"slidesPerView":1,"centeredSlides":true},"768":{"slidesPerView":2},"992":{"slidesPerView":2},"1200":{"slidesPerView":3}}}'>
-                                <div class="swiper-wrapper">
-                                    <div class="swiper-slide">
-                                        <div class="testimonial-card style1">
-                                            <div class="testimonial-header">
-                                                <div class="profile-thumb">
-                                                    <img src="assets/images/logo/2.png" width="80px" alt="thumb">
-                                                </div>
-                                                <div class="content">
-                                                    <h5>E Sala Cup Namde</h5>
-                                                </div>
+        <!-- ══════════════════════════════════════════════
+         1. ATTENDANCE & TIMESHEET
+    ══════════════════════════════════════════════ -->
+        <section id="attendance" class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-lg-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Workforce Tracking <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
                                             </div>
-                                            <div class="testimonial-body">
-                                                <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                </ul>
-                                                <p class="desc">TheBox simplifies and organizes HR operations. Streamlined
-                                                    attendance, salary calculations, and leave tracking keep us efficient
-                                                    every month.
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Attendance, Timesheets
+                                                &amp; WFH Monitoring</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Capture every attendance
+                                                event automatically via biometric device sync. TheBox records punch-in,
+                                                punch-out, work hours, late arrivals, and overtime — generating
+                                                tamper-proof monthly timesheets for every employee. Work-from-home
+                                                sessions are tracked with configurable webcam verification intervals.
+                                            </p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/table-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Biometric &amp; WFH Sync</h4>
+                                                <p class="text">Biometric punch data syncs in real time to your payroll
+                                                    dashboard. WFH attendance is captured with configurable webcam
+                                                    check-in intervals (3–15 mins) to ensure active presence.</p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/about-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Shift Rules &amp; Network Restrictions</h4>
+                                                <p class="text">Define shift start/end time, late-arrival grace period
+                                                    (minutes), half-day threshold hours, and optional IP-based network
+                                                    restrictions so attendance can only be marked from approved
+                                                    locations.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp pt-2"
+                                            data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/attendance_timesheet.png" width="600"
+                                                alt="Attendance & Timesheet">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         2. SALARY CONFIGURATION
+    ══════════════════════════════════════════════ -->
+        <section id="salary" class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-xl-2 order-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Smart Salary Engine <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Salary Configuration
+                                                &amp; Payroll Generation</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Build each employee's
+                                                complete pay structure with active earning modules — Basic Salary, HRA,
+                                                Conveyance, Medical Allowance, and Special Allowance. Set deduction
+                                                rules for TDS, Loan Recovery, and Salary Advances. TheBox generates
+                                                payroll for all staff or a single employee for any month with a live
+                                                preview before you finalise.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Branch &amp; Paying-Entity Wise Payroll:</strong> Run payroll
+                                                separately per branch or paying entity — supporting multi-outlet
+                                                businesses from a single dashboard.</li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Attendance-Linked Auto-Deduction:</strong> Salary auto-adjusts
+                                                for absent days, half-days (configurable hours threshold), and
+                                                loss-of-pay policy with zero manual overrides.</li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon"> <strong>Bulk
+                                                    Mark Paid:</strong> Select multiple employees and mark payroll as
+                                                paid in one click after disbursement.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/Salary Configuration.png" width="600"
+                                                alt="Salary Configuration">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         3. PAYSLIPS & SALARY ADVANCES
+    ══════════════════════════════════════════════ -->
+        <section class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Instant Payslips <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">1-Click Payslip
+                                                Generation &amp; Salary Advances</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Generate professional
+                                                salary slips for every employee with full earnings and deduction
+                                                breakdowns. Send instantly via WhatsApp or PDF. Manage mid-month salary
+                                                advances with flexible recovery — either full deduction in next payroll
+                                                or EMI-style monthly installments that auto-carry until fully recovered.
+                                            </p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/order-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>WhatsApp &amp; PDF Payslip Delivery</h4>
+                                                <p class="text">Send itemised salary slips showing gross, net, and all
+                                                    deduction components directly to employees' WhatsApp in seconds.</p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/about.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Advance Recovery — Single or EMI</h4>
+                                                <p class="text">Issue salary advances with single next-payroll deduction
+                                                    or split across multiple installments. The system tracks status
+                                                    (Active / Fully Recovered) automatically.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/Payslip Generation.png" width="600"
+                                                alt="Payslip Generation">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         4. LEAVE MANAGEMENT & POLICY
+    ══════════════════════════════════════════════ -->
+        <section id="leave" class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-xl-2 order-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Leave Control <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Leave Policy, Requests
+                                                &amp; Holiday Management</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Create fully custom leave
+                                                types — Paid Leave, Unpaid (LWP), Casual, Sick, Earned — with
+                                                configurable annual days, monthly accrual or upfront credit, and
+                                                per-employee policy assignments. Staff submit requests digitally,
+                                                managers approve with one click, and balances update instantly. Add
+                                                public and company holidays with optional leave impact rules.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Custom Leave Types:</strong> Define CL, PL, SL and any custom
+                                                type with short codes, paid/unpaid flag, and accrual method (upfront or
+                                                monthly).</li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon"> <strong>Leave
+                                                    Year Cycle:</strong> Set your organisation's leave year —
+                                                January–December or April–March — with full balance carryforward logic.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Week-off Rules per Branch:</strong> Configure different
+                                                weekly-off days (e.g., alternate Saturdays, every Sunday) for each
+                                                outlet or branch independently.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/Leave Policy.png" width="600"
+                                                alt="Leave Management">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         5. STATUTORY COMPLIANCE — ESI / PF / PT / TDS
+    ══════════════════════════════════════════════ -->
+        <section id="compliance" class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Zero Penalty <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Statutory Compliance —
+                                                ESI, PF, PT &amp; TDS</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">TheBox auto-computes
+                                                every statutory deduction. ESI is applied at 0.75% employee / 3.25%
+                                                employer for gross salary ≤ ₹21,000. PF is calculated at 12% (employee)
+                                                / 12% (employer) on basic up to ₹15,000 salary cap. Professional Tax
+                                                slabs are pre-loaded for all Indian states — select your state and PT
+                                                applies automatically.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>All-State PT Slabs Built-in:</strong> Pre-loaded Professional
+                                                Tax slabs for Maharashtra, Karnataka, Gujarat, Tamil Nadu, West Bengal
+                                                &amp; 20+ more states — zero manual entry.</li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon"> <strong>TDS
+                                                    &amp; Loan Recovery Deductions:</strong> Toggle Income Tax (TDS),
+                                                Loan Recovery, and other custom deductions per employee and let the
+                                                payroll engine do the maths.</li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon"> <strong>Fully
+                                                    Configurable:</strong> Set each statutory component as mandatory or
+                                                optional, override percentages, and set salary applicability limits per
+                                                your organisation's policies.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/Statutory Compliance.png" width="600"
+                                                alt="Statutory Compliance">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         6. EXPENSE MANAGEMENT
+    ══════════════════════════════════════════════ -->
+        <section class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-xl-2 order-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Expense Control <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Staff Expense Claims
+                                                &amp; Finance Management</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Employees submit expense
+                                                claims with receipts directly from the ESS (Employee Self-Service)
+                                                panel. Managers approve or reject with reason from a centralised
+                                                dashboard — filtering by date range, category, status, or staff name.
+                                                Export filtered expense logs as a CSV report instantly for accounting.
+                                            </p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/inv-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Digital Approval Workflow</h4>
+                                                <p class="text">Staff submit expense claims with receipt images; HR
+                                                    approves or rejects with a reason in one click — full audit trail
+                                                    maintained automatically.</p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/finan.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>CSV Report Export</h4>
+                                                <p class="text">Filter expenses by date, category, and status — then
+                                                    download a ready-to-use CSV report for your accountant or audit
+                                                    filing.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/Staff Expense Claims.png" width="600"
+                                                alt="Expense Management">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         7. JOINING LETTERS & DOCUMENT TEMPLATES
+    ══════════════════════════════════════════════ -->
+        <section class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                HR Documents <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Joining Letters &amp;
+                                                Document Template Management</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Create and manage custom
+                                                joining letter templates — directly in-browser or by uploading a Word
+                                                (.docx) file. Auto-fill dynamic fields like employee name, job title,
+                                                joining date, basic salary, and staff ID. Download ready-to-sign PDF
+                                                letters for new hires instantly from within the payroll dashboard.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Rich-Text &amp; Word Template Editor:</strong> Edit joining
+                                                letters in a built-in WYSIWYG editor or upload your branded Word
+                                                template for consistent, professional documents.</li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon"> <strong>Smart
+                                                    Variable Substitution:</strong> Use placeholders like [First Name],
+                                                [Job Title], [Basic Salary], and [Staff ID] — the system fills them
+                                                automatically per employee.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/Joining Letters.png" width="600"
+                                                alt="Joining Letter Template">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         8. CTA SPLIT — Staff Management & Payroll Analytics
+    ══════════════════════════════════════════════ -->
+        <section class="cta-section">
+            <div class="section-title text-center mx-auto">
+                <h2 class="title wow fadeInUp" data-wow-delay=".4s">Complete Control Over Your Team &amp; Payroll Costs
+                </h2>
+            </div>
+            <div class="cta-container-wrapper style1">
+                <div class="container">
+                    <div class="cta-wrapper style1 section-padding fix">
+                        <div class="shape1 d-none d-xxl-block"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/ctaShape1_1.png" alt="shape"></div>
+                        <div class="shape2 d-none d-xxl-block"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/ctaShape1_2.png" alt="shape"></div>
+                        <div class="shape3 d-none d-xxl-block"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/ctaShape1_3.png" alt="shape"></div>
+                        <div class="shape4 d-none d-xxl-block"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/ctaShape1_4.png" alt="shape"></div>
+                        <div class="container">
+                            <div class="row gy-5">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
+                                        <img loading="lazy" decoding="async"
+                                            src="assets/images/payroll/Staff & Employee Management.png"
+                                            alt="Staff Management" class="w-100">
+                                    </div>
+                                    <div class="cta-content">
+                                        <div class="section-title mt-4">
+                                            <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
+                                                Staff <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Staff &amp;
+                                                Employee Management</h2>
+                                            <p class="section-desc text-white mxw-651 wow fadeInUp"
+                                                data-wow-delay=".6s">Manage every employee's profile, department,
+                                                branch, role, joining date, documents, and salary structure from a
+                                                single centralised dashboard — with full audit history.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li class="text-white"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/staff.png" alt="icon"> Maintain complete
+                                                employee files — Aadhaar, PAN, bank details, ID cards &amp; profile
+                                                photos.</li>
+                                            <li class="text-white"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/staff.png" alt="icon"> Set per-employee
+                                                leave policy, notice period, and payroll configuration independently.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1 order-xl-2">
+                                    <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
+                                        <img loading="lazy" decoding="async"
+                                            src="assets/images/payroll/Payroll Cost.png" alt="Payroll Analytics"
+                                            class="w-100 h-100">
+                                    </div>
+                                    <br />
+                                    <div class="cta-content">
+                                        <div class="section-title">
+                                            <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
+                                                Analytics <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Payroll Cost
+                                                &amp; Financial Analytics</h2>
+                                            <p class="section-desc text-white mxw-651 wow fadeInUp"
+                                                data-wow-delay=".6s">Get a real-time view of total payroll disbursed,
+                                                department-wise salary costs, deduction summaries, and month-on-month
+                                                trends — all from the financial report dashboard.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li class="text-white"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/anay-1.png" alt="icon"> Track total payroll
+                                                expenditure and cost-per-department in real time.</li>
+                                            <li class="text-white"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/anay-1.png" alt="icon"> Monitor statutory
+                                                payment totals — PF, ESI, PT — across the entire organisation.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         9. REPORTS
+    ══════════════════════════════════════════════ -->
+
+        <!-- Attendance Report -->
+        <section id="reports" class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                HR Insights <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Attendance Performance
+                                                Report</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Get a crystal-clear view
+                                                of your team's monthly attendance — present, absent, late, half-day, and
+                                                overtime counts for every employee. Filter by branch and date range.
+                                                Export payroll-ready monthly attendance sheets in seconds for
+                                                verification and processing.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png"
+                                                    alt="icon"> Analyse branch-wise attendance trends and identify
+                                                habitual absenteeism at a glance.</li>
+                                            <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png"
+                                                    alt="icon"> Export monthly attendance data for payroll verification
+                                                — no manual counting required.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/Attendance Performance.png" width="600"
+                                                alt="Attendance Report">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Financial & Payroll Cost Report -->
+        <section class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Financial Overview <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Financial &amp; Payroll
+                                                Cost Report</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Gain actionable insight
+                                                into your total payroll spend, deduction summaries, and net disbursement
+                                                across any date range. Download PF, ESI, PT, and TDS compliance reports
+                                                per month. Make data-backed HR budgeting decisions with comprehensive
+                                                financial visibility.</p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/cust-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Month-on-Month Payroll Comparison</h4>
+                                                <p class="text">Compare payroll costs across months to track salary
+                                                    growth, statutory deductions, and net payout trends for smarter
+                                                    planning.</p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/cust-2.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Compliance Report Downloads</h4>
+                                                <p class="text">Download PF, ESI, PT, and TDS compliance reports per
+                                                    month — ready for government filing directly from your dashboard.
                                                 </p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
-                                                    alt="icon"></div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="testimonial-card style1">
-                                            <div class="testimonial-header">
-                                                <div class="profile-thumb">
-                                                    <img src="assets/images/logo/3.png" width="50px" alt="thumb">
-                                                </div>
-                                                <div class="content">
-                                                    <h5>Chat Magic</h5>
-                                                </div>
-                                            </div>
-                                            <div class="testimonial-body">
-                                                <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                </ul>
-                                                <p class="desc">TheBox simplifies payroll management by streamlining staff
-                                                    attendance, salary slip generation, and statutory compliance. It has
-                                                    improved our HR team's efficiency significantly.</p>
-                                            </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
-                                                    alt="icon"></div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="testimonial-card style1">
-                                            <div class="testimonial-header">
-                                                <div class="profile-thumb">
-                                                    <img src="assets/images/testimoial/user.png" width="30px"
-                                                        alt="thumb">
-                                                </div>
-                                                <div class="content">
-                                                    <h5>Jignesh Mehta</h5>
-                                                </div>
-                                            </div>
-                                            <div class="testimonial-body">
-                                                <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                </ul>
-                                                <p class="desc">Since using TheBox, managing staff attendance, salaries,
-                                                    and advances is much easier. It keeps our payroll organized and our
-                                                    business running smoothly every day.</p>
-                                            </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
-                                                    alt="icon"></div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="testimonial-card style1">
-                                            <div class="testimonial-header">
-                                                <div class="profile-thumb">
-                                                    <img src="assets/images/logo/4.png" width="50px" alt="thumb">
-                                                </div>
-                                                <div class="content">
-                                                    <h5>Soul & Spoon</h5>
-                                                </div>
-                                            </div>
-                                            <div class="testimonial-body">
-                                                <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                </ul>
-                                                <p class="desc">TheBox simplifies our HR and payroll operations by linking
-                                                    attendance automatically. It has significantly improved our team
-                                                    coordination and reduced manual verification.</p>
-                                            </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
-                                                    alt="icon"></div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="slider-pagination"></div>
+                                <div class="col-xl-6 order-xl-2">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/Financial & Payroll Cost Report.png"
+                                                width="600" alt="Financial Report">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <!-- Overview Stats Report -->
+        <section class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Executive Dashboard <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Payroll Overview &amp;
+                                                KPI Dashboard</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Monitor all critical HR
+                                                metrics from a single command centre. Track active headcount, total
+                                                payroll disbursed per month, pending payroll processing, branch-wise
+                                                salary distribution, and statutory payment status — no spreadsheets
+                                                needed.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png"
+                                                    alt="icon"> Access key payroll KPIs — total gross, total net, total
+                                                deductions, branch-wise breakdown.</li>
+                                            <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png"
+                                                    alt="icon"> Monitor payroll processing status (pending / paid) for
+                                                all employees at a glance.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/payroll/Payroll Overview.png" width="600"
+                                                alt="Payroll Overview Dashboard">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         10. HOW IT WORKS
+    ══════════════════════════════════════════════ -->
+        <section id="getting-started" class="work-process-section section-padding fix">
+            <div class="work-process-container-wrapper style1">
+                <div class="container">
+                    <div class="section-title text-center mxw-565 mx-auto">
+                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                            How It Works <img loading="lazy" decoding="async" src="assets/images/icon/calendarIcon.svg"
+                                alt="icon">
+                        </div>
+                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Make Payroll Run On Autopilot in 3 Steps!
+                        </h2>
+                    </div>
+                    <div class="work-process-wrapper style1">
+                        <div class="shape"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/workProcessShape1_1.png" alt="shape"></div>
+                        <div class="row">
+                            <div class="col-xl-4">
+                                <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".2s">
+                                    <div class="step">STEP - 01</div>
+                                    <div class="title">Register &amp; Set Up</div>
+                                    <div class="text">Sign up free and configure your company profile, add employees,
+                                        set salary structures, leave policy, statutory rules, and shift timings in
+                                        minutes.</div>
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="work-process-box style1 child2 wow fadeInUp" data-wow-delay=".4s">
+                                    <div class="step">STEP - 02</div>
+                                    <div class="title">Track Attendance</div>
+                                    <div class="text">Sync your biometric device or let staff mark WFH attendance.
+                                        TheBox auto-calculates work hours, leaves, week-offs, and overtime throughout
+                                        the month.</div>
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".6s">
+                                    <div class="step">STEP - 03</div>
+                                    <div class="title">Generate &amp; Share</div>
+                                    <div class="text">Click generate payroll — salaries auto-compute with all
+                                        deductions, payslips are created, compliance figures are ready, and you share
+                                        slips on WhatsApp. Done.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         11. TESTIMONIALS
+    ══════════════════════════════════════════════ -->
+        <section class="testimonial-section mb-5">
+            <div class="testimonial-container-wrapper style1">
+                <div class="container">
+                    <div class="testimonial-wrapper style1 section-padding fix">
+                        <div class="shape1"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/testimonialShape1_1.png" alt="shape"></div>
+                        <div class="shape2"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/testimonialShape1_2.png" alt="shape"></div>
+                        <div class="container">
+                            <div class="section-title text-center mxw-685 mx-auto">
+                                <div class="subtitle">Testimonials <img loading="lazy" decoding="async"
+                                        src="assets/images/icon/calendarIcon.svg" alt="icon"></div>
+                                <h2 class="title">What Business Owners Say About TheBox Payroll?</h2>
+                            </div>
+                            <div class="slider-area testimonialSliderOne">
+                                <div class="swiper gt-slider" id="testimonialSliderOne"
+                                    data-slider-options='{"loop": true,"breakpoints":{"0":{"slidesPerView":1},"576":{"slidesPerView":1,"centeredSlides":true},"768":{"slidesPerView":2},"992":{"slidesPerView":2},"1200":{"slidesPerView":3}}}'>
+                                    <div class="swiper-wrapper">
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb"><img loading="lazy" decoding="async"
+                                                            src="assets/images/logo/2.png" width="80px" alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>E Sala Cup Namde</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">TheBox payroll eliminated all our manual salary
+                                                        errors. Attendance syncs from biometric and payslips are ready
+                                                        in one click every month. Incredible time-saver for our HR.</p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb"><img loading="lazy" decoding="async"
+                                                            src="assets/images/logo/3.png" width="50px" alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>Chat Magic</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">Managing payroll for 45 staff used to take us 3
+                                                        days. With TheBox it takes 20 minutes. ESI, PF and PT are all
+                                                        auto-calculated. We haven't had a single compliance error since.
+                                                    </p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb"><img loading="lazy" decoding="async"
+                                                            src="assets/images/testimoial/user.png" width="30px"
+                                                            alt="thumb"></div>
+                                                    <div class="content">
+                                                        <h5>Jignesh Mehta</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">The leave management and WhatsApp payslip feature is
+                                                        a game changer. Staff get their salary slips on their phone the
+                                                        same day. The advance recovery system also works flawlessly.</p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb"><img loading="lazy" decoding="async"
+                                                            src="assets/images/logo/4.png" width="50px" alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>Soul &amp; Spoon</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">Statutory compliance used to be our biggest HR
+                                                        headache. TheBox auto-computes PF, ESI, and PT and generates the
+                                                        reports for filing. Zero penalties this financial year!</p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb"><img loading="lazy" decoding="async"
+                                                            src="assets/images/logo/1.png" width="50px" alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>Harvest &amp; Bean</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">We switched from an expensive HR software to TheBox
+                                                        and saved ₹18,000 per year. The 6-month free trial sealed the
+                                                        deal — and we have never looked back since.</p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slider-pagination"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         12. FINAL TRIAL PANEL
+    ══════════════════════════════════════════════ -->
+        <section class="rm-final-trial" id="start-trial" aria-labelledby="payroll-trial-title">
+            <div class="container">
+                <div class="rm-final-panel">
+                    <div>
+                        <p class="rm-eyebrow">YOUR PAYROLL TRANSFORMATION STARTS HERE</p>
+                        <h2 id="payroll-trial-title">Get your team paid right.<br><span>Try TheBox Payroll free for 6
+                                months.</span></h2>
+                        <p>Attendance · Salary config · Leave · Payslips · ESI/PF/PT · Advances · Expenses. One
+                            connected platform.</p>
+                    </div>
+                    <div class="rm-final-action">
+                        <a class="rm-button" href="https://admin.theboxsync.com/register">Start your 6-month free
+                            trial</a>
+                        <p>₹0 to get started · No card required · Unlimited employees</p>
+                        <a href="contact.html">Have questions? Talk to us</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Sticky Trial Dock -->
+    <aside class="rm-trial-dock" aria-label="Free trial">
+        <div class="container">
+            <div>
+                <strong>6 months free. Payroll on autopilot.</strong>
+                <span>₹0 to get started · No card required</span>
+            </div>
+            <a class="rm-button" href="https://admin.theboxsync.com/register">Start 6-month free trial</a>
         </div>
-    </section>
+    </aside>
 
-    <!-- Footer Section Start -->
-    <!-- Centralized Footer Area -->
-  <script src="assets/js/footer.js"></script>
+    <script src="assets/js/footer.js"></script>
 
-    <!--<< All JS Plugins >>-->
     <script src="assets/js/jquery-3.7.1.min.js"></script>
-    <!--<< Bootstrap Js >>-->
     <script src="assets/js/bootstrap.bundle.min.js"></script>
-    <!--<< Waypoints Js >>-->
     <script src="assets/js/jquery.waypoints.js"></script>
-    <!--<< Counterup Js >>-->
     <script src="assets/js/jquery.counterup.min.js"></script>
-    <!--<< Viewport Js >>-->
     <script src="assets/js/viewport.jquery.js"></script>
-    <!--<< Tilt Js >>-->
     <script src="assets/js/tilt.min.js"></script>
-    <!--<< Swiper Slider Js >>-->
     <script src="assets/js/swiper-bundle.min.js"></script>
-    <!--<< MeanMenu Js >>-->
     <script src="assets/js/jquery.meanmenu.min.js"></script>
-    <!--<< Magnific popup Js >>-->
     <script src="assets/js/magnific-popup.min.js"></script>
-    <!--<< Wow Animation Js >>-->
     <script src="assets/js/wow.min.js"></script>
-    <!--<< NIce Select Js >>-->
     <script src="assets/js/nice-select.min.js"></script>
-    <!--<< Main.js >>-->
     <script src="assets/js/main.js"></script>
+    <script>
+        (() => {
+            const hero = document.querySelector('.rm-hero');
+            const finalOffer = document.querySelector('.rm-final-trial');
+            const dock = document.querySelector('.rm-trial-dock');
+            if (!hero || !finalOffer || !dock || !('IntersectionObserver' in window)) return;
+            let pastHero = false, finalVisible = false;
+            const update = () => dock.classList.toggle('is-visible', pastHero && !finalVisible);
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.target === hero) pastHero = !entry.isIntersecting && entry.boundingClientRect.bottom <= 0;
+                    if (entry.target === finalOffer) finalVisible = entry.isIntersecting;
+                });
+                update();
+            });
+            observer.observe(hero);
+            observer.observe(finalOffer);
+        })();
+    </script>
 </body>
 
 </html>

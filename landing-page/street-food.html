@@ -1,19 +1,20 @@
 <!DOCTYPE html>
-<html lang="zxx">
+<html lang="en">
+<!--<< Header Area >>-->
 
 <head>
     <!-- ========== Meta Tags ========== -->
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="Gramentheme">
+    <meta name="author" content="TheBox">
     <meta name="keywords"
         content="street food POS software, food truck POS, quick billing app, street food stall software, food cart billing, WhatsApp invoice food stall, inventory tracking food stall, TheBox">
     <meta name="description"
-        content="All-in-one POS and operations solution for street food stalls and food trucks. Manage billing, setup menus, track inventory levels, and run WhatsApp loyalty campaigns with real-time control using TheBox.">
+        content="All-in-one POS and operations solution for street food stalls and food trucks. Fast billing, recipe stock control, WhatsApp invoices & loyalty. 6 months free, ₹0 to start.">
     <!-- ======== Page title ============ -->
-    <title>TheBox - Street Food Management</title>
-    <!--<< Favcion >>-->
+    <title>TheBox - Street Food &amp; Food Truck Management</title>
+    <!--<< Favicon >>-->
     <link rel="shortcut icon" href="assets/images/favicon.png">
     <!--<< Bootstrap min.css >>-->
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
@@ -31,22 +32,223 @@
     <link rel="stylesheet" href="assets/css/nice-select.css">
     <!--<< Main.css >>-->
     <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/restaurant-management.css">
+    <style>
+        /* ── Street Food Scoped Tokens ── */
+        .street-food-page {
+            --rm-ink: #193446;
+            --rm-muted: #506575;
+            --rm-blue: #087caf;
+            color: var(--rm-muted);
+        }
+
+        .street-food-page main {
+            overflow: clip;
+        }
+
+        .street-food-page main h1,
+        .street-food-page main h2,
+        .street-food-page main h3 {
+            text-transform: none;
+        }
+
+        .street-food-page main [id] {
+            scroll-margin-top: 155px;
+        }
+
+        .street-food-page a:focus-visible,
+        .street-food-page button:focus-visible {
+            outline: 3px solid #087caf;
+            outline-offset: 5px;
+        }
+
+        /* ── Header: Compact, No Overlay ── */
+        .street-food-page .header-section-1 {
+            position: relative;
+            top: 0;
+            min-height: 100px;
+            background: #fff;
+        }
+
+        .street-food-page .header-main {
+            padding-top: 16px;
+            padding-bottom: 16px;
+        }
+
+        .street-food-page #preloader {
+            display: none;
+        }
+
+        /* ── Hero ── */
+        .street-food-page .rm-hero {
+            background: linear-gradient(115deg, #f1faff 0%, #e8f6fd 62%, #d8f3ff 100%);
+            padding: 22px 0 62px;
+            border-bottom: 1px solid #d5e9f3;
+        }
+
+        .street-food-page .rm-hero h1 span {
+            display: block;
+            color: var(--rm-blue);
+        }
+
+        .street-food-page .rm-hero h1 br {
+            display: none;
+        }
+
+        /* ── Sections ── */
+        .street-food-page .wcu-section .section-title .subtitle img {
+            display: none;
+        }
+
+        .street-food-page .wcu-section .checklist li,
+        .street-food-page .wcu-section .fancy-box .text {
+            color: var(--rm-muted);
+            line-height: 1.75;
+        }
+
+        .street-food-page .wcu-section .main-thumb img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid #d6e5ed;
+            box-shadow: 0 12px 32px #19344612;
+        }
+
+        .street-food-page .wcu-section .row {
+            row-gap: 28px;
+        }
+
+        .street-food-page .wcu-section .checklist li {
+            align-items: flex-start;
+        }
+
+        .street-food-page .wcu-section .checklist li img {
+            flex-shrink: 0;
+        }
+
+        /* ── CTA & Process ── */
+        .street-food-page .cta-section {
+            padding-top: 36px;
+        }
+
+        .street-food-page .cta-section>.section-title {
+            padding: 0 24px 28px;
+            max-width: 800px;
+        }
+
+        .street-food-page .work-process-section {
+            padding: 64px 0;
+        }
+
+        /* ── Sticky Dock ── */
+        .street-food-page {
+            padding-bottom: 90px;
+        }
+
+        .street-food-page .back-to-top {
+            bottom: 105px;
+        }
+
+        /* ── Suppress WOW on Images ── */
+        .street-food-page main .wow {
+            visibility: visible !important;
+            animation: none !important;
+        }
+
+        .street-food-page main .img-custom-anim-right,
+        .street-food-page main .img-custom-anim-left {
+            animation: none !important;
+            opacity: 1;
+            transform: none;
+            clip-path: none;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 1199px) {
+            .street-food-page .wcu-section .row>div:has(.wcu-content) {
+                order: 1 !important;
+            }
+
+            .street-food-page .wcu-section .row>div:has(.wcu-thumb) {
+                order: 2 !important;
+            }
+
+            .street-food-page .wcu-section .wcu-thumb {
+                max-width: 800px;
+                margin: auto;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .street-food-page .header-section-1 {
+                min-height: 82px;
+            }
+
+            .street-food-page .wcu-section {
+                padding: 10px 0 !important;
+            }
+
+            .street-food-page .wcu-section .wcu-wrapper {
+                padding: 28px 8px;
+                border-radius: 18px;
+            }
+
+            .rm-final-panel {
+                grid-template-columns: 1fr;
+                padding: 28px 22px;
+                gap: 24px;
+            }
+
+            .rm-final-action .rm-button {
+                width: 100%;
+            }
+
+            .rm-trial-dock>.container {
+                gap: 12px;
+            }
+
+            .rm-trial-dock strong {
+                font-size: .875rem;
+                line-height: 1.4;
+            }
+
+            .rm-trial-dock span {
+                font-size: .75rem;
+                line-height: 1.5;
+            }
+
+            .rm-trial-dock .rm-button {
+                padding: 12px 14px;
+                font-size: .875rem;
+                flex: 0 0 48%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .street-food-page *,
+            .street-food-page *::before,
+            .street-food-page *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
 </head>
 
-<body>
+<body class="restaurant-page street-food-page">
 
     <!-- Preloader Start -->
     <div id="preloader" class="preloader">
         <div class="animation-preloader">
-            <div class="spinner">
-            </div>
+            <div class="spinner"></div>
             <div class="txt-loading">
-                <span data-text-preloader="T" class="letters-loading"> T </span>
-                <span data-text-preloader="H" class="letters-loading"> H </span>
-                <span data-text-preloader="E" class="letters-loading"> E </span>
-                <span data-text-preloader="B" class="letters-loading"> B </span>
-                <span data-text-preloader="O" class="letters-loading"> O </span>
-                <span data-text-preloader="X" class="letters-loading"> X </span>
+                <span data-text-preloader="T" class="letters-loading">T</span>
+                <span data-text-preloader="H" class="letters-loading">H</span>
+                <span data-text-preloader="E" class="letters-loading">E</span>
+                <span data-text-preloader="B" class="letters-loading">B</span>
+                <span data-text-preloader="O" class="letters-loading">O</span>
+                <span data-text-preloader="X" class="letters-loading">X</span>
             </div>
             <p class="text-center">Loading</p>
         </div>
@@ -94,308 +296,744 @@
         </div>
     </div>
 
-    <!-- Breadcrumb section -->
-    <div class="breadcumb-section fix">
-        <div class="breadcumb-container-wrapper" data-bg-src="assets/images/bg/breadcumgBg.png">
+    <main id="street-food-main">
+
+        <!-- ══════════════════════════════════════════════
+         1. HERO
+    ══════════════════════════════════════════════ -->
+        <section class="rm-hero" aria-labelledby="street-food-title">
             <div class="container">
-                <div class="shape1"><img src="assets/images/shape/breadCumbShape1_1.png" alt="shape"></div>
-                <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape"></div>
-                <div class="breadcumb-wrapper">
-                    <div class="page-heading">
-                        <h1>Street Food Management</h1>
-                        <div class="links">
-                            <a href="index.html">Home<span class="slash">/</span></a>Street Food Management
+                <nav class="rm-breadcrumb" aria-label="Breadcrumb">
+                    <a href="index.html">Home</a><span aria-hidden="true">/</span><span aria-current="page">Street Food
+                        Management</span>
+                </nav>
+                <div class="rm-hero-grid">
+                    <div class="rm-hero-copy">
+                        <p class="rm-eyebrow">THEBOX · STREET FOOD &amp; FOOD TRUCK POS</p>
+                        <h1 id="street-food-title">Your food stall &amp; truck.<br><span>Lightning-fast POS
+                                control.</span></h1>
+                        <p class="rm-lead">Speed up checkout, eliminate long queues, auto-deduct recipe ingredients, and
+                            delight customers with instant WhatsApp invoices. Built for high-volume street stalls, food
+                            trucks, and quick-service counters.</p>
+                        <div class="rm-offer">
+                            <div class="rm-offer-heading"><strong>6 months free</strong><span>₹0 to get started</span>
+                            </div>
+                            <a class="rm-button" href="https://streetfoods.theboxsync.com/">Start your 6-month free
+                                trial</a>
+                            <p>No card required · Zero hardware lock-in</p>
                         </div>
+                        <a class="rm-explore" href="#explore-features">Explore the platform <span
+                                aria-hidden="true">↓</span></a>
+                    </div>
+                    <div class="rm-product">
+                        <div class="rm-product-top">
+                            <span class="rm-product-mark" aria-hidden="true">T</span>
+                            <span>TheBox workspace</span>
+                            <span>Street food POS dashboard</span>
+                        </div>
+                        <img src="assets/images/street-food/street_food_hero.png"
+                            alt="TheBox Street Food & Food Truck POS Dashboard" fetchpriority="high">
+                        <div class="rm-product-bottom"><span>Counter POS</span><span>Ingredient
+                                Sync</span><span>WhatsApp Bills</span></div>
+                        <p class="rm-product-caption">From rapid counter punches to real-time stock
+                            sync.<br><strong>Everything works seamlessly.</strong></p>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Main street food features section -->
-    <section class="wcu-section pb-lg-5 ">
-        <div class="wcu-container-wrapper style2">
+        <!-- ══════════════════════════════════════════════
+         2. FEATURE MAP OVERVIEW
+    ══════════════════════════════════════════════ -->
+        <section class="rm-overview" id="explore-features" aria-labelledby="overview-title">
             <div class="container">
-                <div class="wcu-wrapper style2 section-padding fix bg-white">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Features <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Stall & Food Truck POS Operations</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Take control of your street food business or food truck with a super-fast billing panel, live inventory deductions, and automatic WhatsApp invoices. Keep your service quick and your stock levels accurate even during the rush hours.
-                                        </p>
-                                    </div>
-                                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Speed up billing with a touch-friendly tablet/mobile interface.</li>
-                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Share modern PDF receipt invoices instantly over WhatsApp.</li>
-                                        <li><img src="assets/images/icon/icon.png" alt="icon"> Prevent raw material wastage with automated ingredient inventory sync.</li>
-                                    </ul>
-                                    <a class="theme-btn wow fadeInUp" data-wow-delay=".2s" href="pricing-street-food.html">Discover More
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                            viewBox="0 0 16 16" fill="none">
-                                            <g clip-path="url(#clip0_18_41)">
-                                                <path
-                                                    d="M11.6118 3.61182L10.8991 4.32454L14.0706 7.49603H0V8.50398H14.0706L10.8991 11.6754L11.6118 12.3882L16 7.99997L11.6118 3.61182Z"
-                                                    fill="white" />
-                                            </g>
-                                            <defs>
-                                                <clipPath id="clip0_18_41">
-                                                    <rect width="16" height="16" fill="white" />
-                                                </clipPath>
-                                            </defs>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="col-xl-6">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/street-food/street_food_hero.png" width="600" alt="TheBox Street Food Dashboard">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="rm-overview-heading">
+                    <p class="rm-eyebrow">ONE PLATFORM. BUILT FOR STREET FOOD SPEED.</p>
+                    <h2 id="overview-title">Complete Street Food &amp; Food Truck Ecosystem</h2>
+                    <p>Cut customer wait times to zero and keep your daily operations synchronized. TheBox equips food
+                        trucks, street food stalls, and quick-service kiosks with touch-friendly billing, live recipe
+                        deductions, and automated WhatsApp CRM.</p>
+                </div>
+                <div class="rm-feature-map">
+                    <a href="#billing">
+                        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                        <h3>Rapid Counter Billing</h3>
+                        <p>Touch POS, thermal printing &amp; fast checkout</p>
+                        <span>Explore billing</span>
+                    </a>
+                    <a href="#orders">
+                        <i class="fa-solid fa-utensils" aria-hidden="true"></i>
+                        <h3>Orders &amp; Tokens</h3>
+                        <p>QR scan-and-order, pickup tokens &amp; station routing</p>
+                        <span>Explore orders</span>
+                    </a>
+                    <a href="#inventory">
+                        <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+                        <h3>Recipe Stock Control</h3>
+                        <p>Automatic ingredient consumption &amp; low-stock alerts</p>
+                        <span>Explore inventory</span>
+                    </a>
+                    <a href="#growth">
+                        <i class="fa-solid fa-bullhorn" aria-hidden="true"></i>
+                        <h3>Loyalty &amp; WhatsApp CRM</h3>
+                        <p>Cashback rewards, customer profiles &amp; WhatsApp blasts</p>
+                        <span>Explore growth</span>
+                    </a>
+                </div>
+                <div class="rm-overview-points">
+                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                        <li><img src="assets/images/icon/checkmarkIcon.svg" alt="icon"> Process orders in under 5
+                            seconds with a responsive mobile/tablet touch layout.</li>
+                        <li><img src="assets/images/icon/checkmarkIcon.svg" alt="icon"> Eliminate counter chaos with
+                            table/counter QR ordering and live order token status.</li>
+                        <li><img src="assets/images/icon/checkmarkIcon.svg" alt="icon"> Stop raw material shortages with
+                            automated ingredient depletion tracking.</li>
+                    </ul>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Section 1 - Unified Order Management -->
-    <section class="wcu-section">
-        <div class="wcu-container-wrapper style2">
+        <!-- Section Navigation -->
+        <nav class="rm-section-nav" aria-label="Street food features">
             <div class="container">
-                <div class="wcu-wrapper style2 section-padding fix">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-lg-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Unified Platform <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Unified Multi-Channel Sales</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Manage counter sales, takeaway orders, and QR-scan table requests inside a single interface. TheBox connects with your local USB or Bluetooth thermal printer for instant printing, and prints digital receipts via WhatsApp dynamically.
-                                        </p>
-                                    </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/table-1.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Mobile-Friendly POS Interface</h4>
-                                            <p class="text">Clean and responsive design built for simple click operations on tablets, POS terminals, and phones.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/table-2.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Thermal Printing & WhatsApp Bills</h4>
-                                            <p class="text">Instantly print physical receipts or generate eco-friendly PDF invoices shared to the customer's phone number.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6 order-1">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp pt-2"
-                                        data-wow-delay=".4s">
-                                        <img src="assets/images/street-food/street_food_orders.png" width="600"
-                                            alt="TheBox Unified Order Panel">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <span>Explore TheBox</span>
+                <a href="#billing">Fast Billing</a>
+                <a href="#orders">Orders &amp; QR</a>
+                <a href="#inventory">Live Inventory</a>
+                <a href="#growth">Loyalty &amp; CRM</a>
+                <a href="#getting-started">Getting started</a>
             </div>
-        </div>
-    </section>
+        </nav>
 
-    <!-- Section 2 - Real-time Inventory Control -->
-    <section class="wcu-section pb-lg-5 ">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2 section-padding fix bg-white">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Inventory Sync <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Ingredient Stock & Recipe Control</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Link ingredients to menu items to automatically deduct raw stock when orders are placed. Never run out of materials with smart low-stock warnings and real-time inventory alerts.
-                                        </p>
-                                    </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/kot-1.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Automatic Ingredient Deductions</h4>
-                                            <p class="text">Selling a wrap or dish automatically deducts raw components (buns, cheese, sauces) from your stock inventory logs.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/kot-2.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Low Stock Alerts</h4>
-                                            <p class="text">Set thresholds for crucial ingredients and receive real-time notifications on your screen to restock on time.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6 col-md-6 order-xl-1 order-2">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-left wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/street-food/street_food_inventory.png" width="600" alt="Real-time Inventory Tracking">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Section 3 - WhatsApp CRM & Loyalty Engine -->
-    <section class="wcu-section">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2 section-padding fix">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-lg-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Customer Growth <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Loyalty Reward Points & CRM</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Maintain dynamic customer profiles database and run automated promotion campaigns. Reward returning customers with integrated cashback points systems and send custom deals directly to their WhatsApp inbox.
-                                        </p>
-                                    </div>
-                                    <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/table-1.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>Cashback & Reward Engine</h4>
-                                            <p class="text">Auto-credit loyalty reward points on customer phone profiles with custom rules for redemptions.</p>
-                                        </div>
-                                    </div>
-                                    <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
-                                        <div class="icon">
-                                            <img src="assets/images/icon/table-2.png" alt="icon">
-                                        </div>
-                                        <div class="content">
-                                            <h4>WhatsApp Broadcast Campaigns</h4>
-                                            <p class="text">Announce new dishes, discounts, or stall relocations with customizable WhatsApp marketing blasts.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-6 order-1">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp pt-2"
-                                        data-wow-delay=".4s">
-                                        <img src="assets/images/street-food/street_food_crm.png" width="600"
-                                            alt="Customer Loyalty & CRM System">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section class="testimonial-section-1 section-padding fix pb-lg-5">
-        <div class="container">
-            <div class="testimonial-wrapper style2 bg-white">
+        <!-- ══════════════════════════════════════════════
+         3. SECTION 1: COUNTER POS & THERMAL PRINTING
+    ══════════════════════════════════════════════ -->
+        <section id="billing" class="wcu-section">
+            <div class="wcu-container-wrapper style2">
                 <div class="container">
-                    <div class="section-title text-center max-width-600">
-                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                            Testimonials <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                        </div>
-                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">What Vendors Say About Us</h2>
-                    </div>
-                    <div class="row">
-                        <div class="col-xl-12">
-                            <div class="swiper testimonial-slider-1">
-                                <div class="swiper-wrapper">
-                                    <div class="swiper-slide">
-                                        <div class="testimonial-card style1">
-                                            <div class="testimonial-header">
-                                                <div class="profile-thumb">
-                                                    <img src="assets/images/logo/3.png" width="50px" alt="thumb">
-                                                </div>
-                                                <div class="content">
-                                                    <h5>Rolls & Wraps Hub</h5>
-                                                </div>
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-lg-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Rapid Checkout <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
                                             </div>
-                                            <div class="testimonial-body">
-                                                <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                </ul>
-                                                <p class="desc">TheBox simplifies our daily food truck billing. Sending receipts directly to customer WhatsApp keeps checkout extremely quick and paperless.</p>
-                                            </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
-                                                    alt="icon"></div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Touch-First Counter POS
+                                                &amp; Thermal Printing</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Built specifically for
+                                                fast-paced street counters and food trucks. Punch orders in seconds,
+                                                support cash, UPI, card, and split payments. Connect seamlessly to USB,
+                                                Bluetooth, or WiFi thermal printers, or dispatch instant digital
+                                                receipts via WhatsApp.</p>
                                         </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="testimonial-card style1">
-                                            <div class="testimonial-header">
-                                                <div class="profile-thumb">
-                                                    <img src="assets/images/logo/4.png" width="50px" alt="thumb">
-                                                </div>
-                                                <div class="content">
-                                                    <h5>Taco Express</h5>
-                                                </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon">
+                                                <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/table-1.png" alt="icon">
                                             </div>
-                                            <div class="testimonial-body">
-                                                <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                </ul>
-                                                <p class="desc">We love the recipe ingredient tracking. Selling a taco automatically reduces our cheese and salsa stock, helping us manage fresh daily supply logs easily.</p>
+                                            <div class="content">
+                                                <h4>Quick-Tap Touch Interface</h4>
+                                                <p class="text">Clean and responsive design built for fast one-tap
+                                                    operations on tablets, POS terminals, and smartphones — zero lag
+                                                    during rush hours.</p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
-                                                    alt="icon"></div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon">
+                                                <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/table-2.png" alt="icon">
+                                            </div>
+                                            <div class="content">
+                                                <h4>Dual Printing: Physical &amp; Digital</h4>
+                                                <p class="text">Instantly print physical receipts on standard 2-inch /
+                                                    3-inch thermal printers or send paperless PDF invoices straight to
+                                                    customer WhatsApp.</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="slider-pagination"></div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp pt-2"
+                                            data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/street-food/street_food_orders.png" width="600"
+                                                alt="TheBox Street Food Counter POS">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer Section Start -->
+        <!-- ══════════════════════════════════════════════
+         4. SECTION 2: QR TABLE & STALL ORDERING
+    ══════════════════════════════════════════════ -->
+        <section id="orders" class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-xl-2 order-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Self-Service Dining <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Contactless QR Ordering
+                                                &amp; Live Visual Menu</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Eliminate order lines
+                                                completely. Place dynamic QR standees on your counter or standing
+                                                tables. Hungry diners scan with their smartphones, browse dishes with
+                                                mouth-watering photos, select spicy/sweet preferences, and order
+                                                directly to your prep station.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Instant Sold-Out Toggles:</strong> Run out of an ingredient?
+                                                Mark the dish out of stock with one click across all QR menus instantly.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Direct Kitchen Punching:</strong> QR orders appear directly on
+                                                your cashier screen and prep station with zero verbal miscommunication.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/qsr/qsr - QR for menu.png" width="600"
+                                                alt="QR Code Ordering for Street Food">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         5. SECTION 3: KDS & PREP STATION ROUTING
+    ══════════════════════════════════════════════ -->
+        <section class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Kitchen Sync <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Live Token Display &amp;
+                                                Station KOT Routing</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Replace shouted orders
+                                                and chaotic counters with synchronized digital order management. Orders
+                                                punched from the POS or QR automatically generate running token numbers
+                                                and route items to grill, fry, or beverage prep screens.</p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon">
+                                                <img loading="lazy" decoding="async" src="assets/images/icon/kot-1.png"
+                                                    alt="icon">
+                                            </div>
+                                            <div class="content">
+                                                <h4>Sequential Token Numbers</h4>
+                                                <p class="text">Generate clear numeric tokens printed on receipts or
+                                                    displayed on an external pickup screen so customers know exactly
+                                                    when their order is ready.</p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon">
+                                                <img loading="lazy" decoding="async" src="assets/images/icon/kot-2.png"
+                                                    alt="icon">
+                                            </div>
+                                            <div class="content">
+                                                <h4>Prep Station Segregation</h4>
+                                                <p class="text">Separate chaat, tawa, fryer, and beverage orders
+                                                    automatically to distinct kitchen tickets or screens for fast,
+                                                    organized preparation.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async" src="assets/images/qsr/qsr - kot.png"
+                                                width="600" alt="Kitchen KDS and Token System">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         6. SECTION 4: REAL-TIME INVENTORY & RECIPES
+    ══════════════════════════════════════════════ -->
+        <section id="inventory" class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-xl-2 order-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Stock Control <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Ingredient Stock &amp;
+                                                Recipe Depletion</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Food stall margins depend
+                                                on controlling raw ingredient waste. Link raw supplies (buns, cheese,
+                                                paneer, sauces, oil) to menu dishes. As items are billed, TheBox
+                                                auto-deducts the exact recipe quantities from your stock inventory logs
+                                                in real time.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Automated Component Deduction:</strong> Selling a wrap, burger,
+                                                or pav bhaji automatically deducts butter, buns, and sauces from your
+                                                inventory.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Low-Stock Notifications:</strong> Receive live on-screen
+                                                notifications when critical raw materials drop below your safety buffer
+                                                limit.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/street-food/street_food_inventory.png" width="600"
+                                                alt="Real-time Inventory Tracking">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         7. SECTION 5: LOYALTY & WHATSAPP CRM
+    ══════════════════════════════════════════════ -->
+        <section id="growth" class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Customer Retention <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Loyalty Reward Points
+                                                &amp; WhatsApp CRM</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Turn occasional foodies
+                                                into daily regulars. Build your customer database organically at
+                                                checkout by capturing mobile numbers. Reward points on every rupee spent
+                                                and send customized discount announcements straight to customer WhatsApp
+                                                inboxes.</p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon">
+                                                <img loading="lazy" decoding="async" src="assets/images/icon/cust-1.png"
+                                                    alt="icon">
+                                            </div>
+                                            <div class="content">
+                                                <h4>Cashback &amp; Point Redemptions</h4>
+                                                <p class="text">Auto-credit reward points linked to customer phone
+                                                    numbers with instant point redemption applied as bill discounts at
+                                                    checkout.</p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon">
+                                                <img loading="lazy" decoding="async" src="assets/images/icon/cust-2.png"
+                                                    alt="icon">
+                                            </div>
+                                            <div class="content">
+                                                <h4>WhatsApp Broadcast Campaigns</h4>
+                                                <p class="text">Broadcast weekend specials, happy-hour combos, or truck
+                                                    relocation notices to all past customers with one click.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp pt-2"
+                                            data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/street-food/street_food_crm.png" width="600"
+                                                alt="Customer Loyalty & CRM System">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         8. SECTION 6: WHATSAPP DIGITAL INVOICING
+    ══════════════════════════════════════════════ -->
+        <section class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-xl-2 order-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Paperless Billing <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">WhatsApp Invoicing &amp;
+                                                Digital Billing</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Slash expensive thermal
+                                                roll expenses and offer modern digital receipts. Send clean, branded,
+                                                itemized bills directly to customer WhatsApp in one click. Include your
+                                                social handles, Google review link, and loyalty points summary on every
+                                                receipt.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>1-Click WhatsApp Delivery:</strong> Send itemized bills with
+                                                order items, prices, GSTIN, and custom greeting notes directly to
+                                                smartphone numbers.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Organic Contact Capture:</strong> Grow your marketing audience
+                                                automatically with 100% verified customer WhatsApp numbers captured at
+                                                billing.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/admin/admin-whatsapp_invoice.png" width="600"
+                                                alt="WhatsApp Digital Invoicing">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         HOW IT WORKS
+    ══════════════════════════════════════════════ -->
+        <section id="getting-started" class="work-process-section section-padding fix">
+            <div class="work-process-container-wrapper style1">
+                <div class="container">
+                    <div class="section-title text-center mxw-565 mx-auto">
+                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                            How It Works <img loading="lazy" decoding="async" src="assets/images/icon/calendarIcon.svg"
+                                alt="icon">
+                        </div>
+                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Start Managing Your Stall in 3 Easy Steps!
+                        </h2>
+                    </div>
+                    <div class="work-process-wrapper style1">
+                        <div class="shape"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/workProcessShape1_1.png" alt="shape"></div>
+                        <div class="row">
+                            <div class="col-xl-4">
+                                <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".2s">
+                                    <div class="step">STEP - 01</div>
+                                    <div class="title">Setup Menu &amp; Stall</div>
+                                    <div class="text">Open TheBox on your phone, tablet, or browser. Configure your food
+                                        items, prices, combos, and recipes in under 5 minutes.</div>
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="work-process-box style1 child2 wow fadeInUp" data-wow-delay=".4s">
+                                    <div class="step">STEP - 02</div>
+                                    <div class="title">Punch &amp; Bill Instantly</div>
+                                    <div class="text">Tap to bill orders, accept UPI/cash, print thermal receipts, or
+                                        dispatch digital PDF bills to customer WhatsApp in 1 click.</div>
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".6s">
+                                    <div class="step">STEP - 03</div>
+                                    <div class="title">Track Sales &amp; Grow</div>
+                                    <div class="text">Monitor live ingredient deductions, cash till reconciliations, and
+                                        daily profit analytics from anywhere in real time.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         12. TESTIMONIALS
+    ══════════════════════════════════════════════ -->
+        <section class="testimonial-section mb-5">
+            <div class="testimonial-container-wrapper style1">
+                <div class="container">
+                    <div class="testimonial-wrapper style1 section-padding fix">
+                        <div class="shape1"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/testimonialShape1_1.png" alt="shape"></div>
+                        <div class="shape2"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/testimonialShape1_2.png" alt="shape"></div>
+                        <div class="container">
+                            <div class="section-title text-center mxw-685 mx-auto">
+                                <div class="subtitle">
+                                    Testimonials <img loading="lazy" decoding="async"
+                                        src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                </div>
+                                <h2 class="title">What Food Stall Owners Say About TheBox?</h2>
+                            </div>
+                            <div class="slider-area testimonialSliderOne">
+                                <div class="swiper gt-slider" id="testimonialSliderOne"
+                                    data-slider-options='{"loop": true,"breakpoints":{"0":{"slidesPerView":1},"576":{"slidesPerView":1,"centeredSlides":true},"768":{"slidesPerView":2},"992":{"slidesPerView":2},"1200":{"slidesPerView":3}}}'>
+                                    <div class="swiper-wrapper">
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb">
+                                                        <img loading="lazy" decoding="async"
+                                                            src="assets/images/logo/3.png" width="50px" alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>Rolls &amp; Wraps Hub</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">TheBox simplifies our daily food truck billing.
+                                                        Sending receipts directly to customer WhatsApp keeps checkout
+                                                        extremely quick, organized, and 100% paperless.</p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb">
+                                                        <img loading="lazy" decoding="async"
+                                                            src="assets/images/logo/4.png" width="50px" alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>Taco Express Truck</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">We love the recipe ingredient tracking. Selling a
+                                                        taco automatically reduces our cheese and salsa stock, helping
+                                                        us manage fresh daily kitchen supply logs easily.</p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb">
+                                                        <img loading="lazy" decoding="async"
+                                                            src="assets/images/testimoial/user.png" width="30px"
+                                                            alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>Mumbai Pav Bhaji Corner</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">During peak evening rush, speed is everything.
+                                                        TheBox touch POS lets us punch orders in under 5 seconds with
+                                                        zero lag. Our daily counter queues move twice as fast.</p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb">
+                                                        <img loading="lazy" decoding="async"
+                                                            src="assets/images/logo/2.png" width="80px" alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>Chaat Magic Kiosk</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="icon">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">The QR ordering and token numbers on receipts
+                                                        stopped all the counter confusion. Customers know their number
+                                                        and pick up food smoothly without crowding.</p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slider-pagination"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         13. FINAL TRIAL PANEL
+    ══════════════════════════════════════════════ -->
+        <section class="rm-final-trial" id="start-trial" aria-labelledby="trial-title">
+            <div class="container">
+                <div class="rm-final-panel">
+                    <div>
+                        <p class="rm-eyebrow">YOUR FOOD TRUCK &amp; STALL GROWTH STARTS HERE</p>
+                        <h2 id="trial-title">Get your food business in sync.<br><span>Try TheBox free for 6
+                                months.</span></h2>
+                        <p>Counter POS, live inventory, KDS tokens, WhatsApp receipts, and sales reports. One connected
+                            platform.</p>
+                    </div>
+                    <div class="rm-final-action">
+                        <a class="rm-button" href="https://admin.theboxsync.com/register">Start your 6-month free
+                            trial</a>
+                        <p>₹0 to get started · No card required · Zero hardware lock-in</p>
+                        <a href="contact.html">Have questions? Talk to us</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Sticky Trial Dock -->
+    <aside class="rm-trial-dock" aria-label="Free trial">
+        <div class="container">
+            <div>
+                <strong>6 months free. High-speed street food billing.</strong>
+                <span>₹0 to get started · No card required</span>
+            </div>
+            <a class="rm-button" href="https://admin.theboxsync.com/register">Start 6-month free trial</a>
+        </div>
+    </aside>
+
     <!-- Centralized Footer Area -->
     <script src="assets/js/footer.js"></script>
 
@@ -419,10 +1057,30 @@
     <script src="assets/js/magnific-popup.min.js"></script>
     <!--<< Wow Animation Js >>-->
     <script src="assets/js/wow.min.js"></script>
-    <!--<< NIce Select Js >>-->
+    <!--<< Nice Select Js >>-->
     <script src="assets/js/nice-select.min.js"></script>
     <!--<< Main.js >>-->
     <script src="assets/js/main.js"></script>
+    <script>
+        /* Keep registration within reach once the main offer leaves the viewport. */
+        (() => {
+            const hero = document.querySelector('.rm-hero');
+            const finalOffer = document.querySelector('.rm-final-trial');
+            const dock = document.querySelector('.rm-trial-dock');
+            if (!hero || !finalOffer || !dock || !('IntersectionObserver' in window)) return;
+            let pastHero = false, finalVisible = false;
+            const update = () => dock.classList.toggle('is-visible', pastHero && !finalVisible);
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.target === hero) pastHero = !entry.isIntersecting && entry.boundingClientRect.bottom <= 0;
+                    if (entry.target === finalOffer) finalVisible = entry.isIntersecting;
+                });
+                update();
+            });
+            observer.observe(hero);
+            observer.observe(finalOffer);
+        })();
+    </script>
 </body>
 
 </html>
