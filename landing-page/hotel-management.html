@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zxx">
+<html lang="en">
 <!--<< Header Area >>-->
 
 <head>
@@ -32,9 +32,11 @@
     <link rel="stylesheet" href="assets/css/nice-select.css">
     <!--<< Main.css >>-->
     <link rel="stylesheet" href="assets/css/main.css">
+    <!-- Shared product-page design, also used by Restaurant Management. -->
+    <link rel="stylesheet" href="assets/css/restaurant-management.css">
 </head>
 
-<body>
+<body class="hotel-page">
 
     <!-- Preloader Start -->
     <div id="preloader" class="preloader">
@@ -107,95 +109,66 @@
         </div>
     </div>
 
-    <!-- Breadcrumb Section -->
-    <div class="breadcumb-section fix">
-        <div class="breadcumb-container-wrapper" data-bg-src="assets/images/bg/breadcumgBg.png">
-            <div class="container">
-                <div class="shape1"><img src="assets/images/shape/breadCumbShape1_1.png" alt="shape"></div>
-                <div class="shape2"><img src="assets/images/shape/breadCumbShape1_2.png" alt="shape"></div>
-                <div class="breadcumb-wrapper">
-                    <div class="page-heading">
-                        <h1>Hotel Management</h1>
-                        <div class="links">
-                            <a href="index.html">Home<span class="slash">/</span></a>Hotel Management
-                        </div>
+    <main id="hotel-main">
+    <section class="rm-hero" aria-labelledby="hotel-title">
+        <div class="container">
+            <nav class="rm-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Home</a><span aria-hidden="true">/</span><span aria-current="page">Hotel Management</span></nav>
+            <div class="rm-hero-grid">
+                <div class="rm-hero-copy">
+                    <p class="rm-eyebrow">THEBOX · HOTEL MANAGEMENT</p>
+                    <h1 id="hotel-title">Your entire hotel.<br><span>One connected platform.</span></h1>
+                    <p class="rm-lead">Bring reservations, rooms, housekeeping, billing, and your team together. Keep every guest stay in sync with TheBox.</p>
+                    <div class="rm-offer">
+                        <div class="rm-offer-heading"><strong>See TheBox in action</strong></div>
+                        <a class="rm-button" href="contact.html">Book a hotel demo</a>
+                        <p>Explore the hotel management platform</p>
                     </div>
+                    <a class="rm-explore" href="#explore-features">Explore the platform <span aria-hidden="true">↓</span></a>
+                </div>
+                <div class="rm-product">
+                    <div class="rm-product-top"><span class="rm-product-mark" aria-hidden="true">T</span><span>TheBox workspace</span><span>Hotel dashboard</span></div>
+                    <img src="assets/images/hotel/Hotel.png" alt="TheBox hotel property management dashboard" fetchpriority="high">
+                    <div class="rm-product-bottom"><span>Front desk</span><span>Housekeeping</span><span>Back office</span></div>
+                    <p class="rm-product-caption">From the first booking to the final check-out.<br><strong>Everything works together.</strong></p>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Hero/Intro section -->
-    <section class="wcu-section pb-lg-5 ">
-        <div class="wcu-container-wrapper style2">
-            <div class="container">
-                <div class="wcu-wrapper style2  section-padding fix bg-white">
-                    <div class="container">
-                        <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
-                                <div class="wcu-content">
-                                    <div class="section-title">
-                                        <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Features <img src="assets/images/icon/fireIcon.svg" alt="icon">
-                                        </div>
-                                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Hotel Property Management</h2>
-                                        <p class="text1 wow fadeInUp" data-wow-delay=".6s">Manage guest stays, automate staff
+    </section>
+    <section class="rm-overview" id="explore-features" aria-labelledby="overview-title">
+        <div class="container">
+            <div class="rm-overview-heading"><p class="rm-eyebrow">ONE ECOSYSTEM. EVERY PART OF YOUR BUSINESS.</p><h2 id="overview-title">Hotel Property Management</h2><p>Manage guest stays, automate staff
                                             workflows, and optimize room utilization from a single platform. TheBox Property
                                             Management System (PMS) simplifies front desk reservations, guest check-ins, room
-                                            shifting, and daily night audits to ensure smooth operations.
-                                        </p>
-                                    </div>
-                                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            shifting, and daily night audits to ensure smooth operations.</p></div>
+            <div class="rm-feature-map">
+                <a href="#reservations"><i class="fa-solid fa-calendar" aria-hidden="true"></i><h3>Welcome every guest</h3><p>Reservations, room allocation & check-in workflows</p><span>Explore the front desk</span></a>
+                <a href="#operations"><i class="fa-solid fa-bed" aria-hidden="true"></i><h3>Keep stays running smoothly</h3><p>Housekeeping, maintenance & room readiness</p><span>Explore operations</span></a>
+                <a href="#billing"><i class="fa-solid fa-receipt" aria-hidden="true"></i><h3>Simplify every settlement</h3><p>Billing, GST, refunds & night audits</p><span>Explore billing</span></a>
+                <a href="#reports"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><h3>See the bigger picture</h3><p>Attendance, tax reports, feedback & supplies</p><span>Explore reports</span></a>
+            </div>
+            <div class="rm-overview-points"><ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
                                         <li><img src="assets/images/icon/icon.png" alt="icon"> Track active bookings, room
                                             statuses, and category occupancy in real time.</li>
                                         <li><img src="assets/images/icon/icon.png" alt="icon"> Coordinate housekeeping schedules
                                             and maintenance statuses instantly.</li>
                                         <li><img src="assets/images/icon/icon.png" alt="icon"> Generate tax invoices (GST), manage
                                             refunds, and track payment transactions.</li>
-                                    </ul>
-                                    <a class="theme-btn wow fadeInUp" data-wow-delay=".2s" href="pricing.html">Discover More
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                            viewBox="0 0 16 16" fill="none">
-                                            <g clip-path="url(#clip0_18_41)">
-                                                <path
-                                                    d="M11.6118 3.61182L10.8991 4.32454L14.0706 7.49603H0V8.50398H14.0706L10.8991 11.6754L11.6118 12.3882L16 7.99997L11.6118 3.61182Z"
-                                                    fill="white" />
-                                            </g>
-                                            <defs>
-                                                <clipPath id="clip0_18_41">
-                                                    <rect width="16" height="16" fill="white" />
-                                                </clipPath>
-                                            </defs>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="col-xl-6">
-                                <div class="wcu-thumb">
-                                    <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/hotel/Hotel.png" width="600" alt="TheBox Hotel Dashboard">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                                    </ul></div>
         </div>
     </section>
-
+    <nav class="rm-section-nav" aria-label="Hotel features"><div class="container"><span>Explore TheBox</span><a href="#reservations">Reservations & rooms</a><a href="#operations">Housekeeping</a><a href="#billing">Billing & audits</a><a href="#team">Team & analytics</a><a href="#reports">Reports</a><a href="#getting-started">Getting started</a></div></nav>
     <!-- Section 1 - Booking Engine -->
-    <section class="wcu-section">
+    <section id="reservations" class="wcu-section">
         <div class="wcu-container-wrapper style2">
             <div class="container">
                 <div class="wcu-wrapper style2  section-padding fix">
                     <div class="container">
                         <div class="row gy-lg-5 gx-lg-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
+                            <div class="col-xl-6 order-1 order-xl-1">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Unified Platform <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Unified Platform <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Reservation & Booking Management</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Eliminate double bookings and manual
@@ -206,7 +179,7 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/table-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/table-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Overlapping Date Checks</h4>
@@ -216,7 +189,7 @@
                                     </div>
                                     <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/table-2.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/table-2.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Corporate & Agent Portals</h4>
@@ -226,11 +199,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 order-1">
+                            <div class="col-xl-6 order-2 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp pt-2"
                                         data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - table management1.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - table management1.png" width="600"
                                             alt="TheBox Reservation Board">
                                     </div>
                                 </div>
@@ -249,11 +222,11 @@
                 <div class="wcu-wrapper style2  section-padding fix bg-white">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
+                            <div class="col-xl-6 order-1 order-xl-2">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Smart Allocation <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Smart Allocation <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Room Assignment & Shifting</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Assign guest rooms dynamically based on
@@ -263,17 +236,17 @@
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/menu.png" alt="icon"> Auto-assign vacant clean rooms
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/menu.png" alt="icon"> Auto-assign vacant clean rooms
                                             based on guest category preferences and requests.</li>
-                                        <li><img src="assets/images/icon/menu.png" alt="icon"> Block rooms for scheduled
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/menu.png" alt="icon"> Block rooms for scheduled
                                             maintenance or deep cleaning without losing upcoming queues.</li>
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-xl-6">
+                            <div class="col-xl-6 order-2 order-xl-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - add table.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - add table.png" width="600"
                                             alt="Room Allocation Form">
                                     </div>
                                 </div>
@@ -292,11 +265,11 @@
                 <div class="wcu-wrapper style2  section-padding fix">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
+                            <div class="col-xl-6 order-1 order-xl-1">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Front Desk Sync <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Front Desk Sync <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Check-In & Check-Out Workflows</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Synchronize reception and operations
@@ -307,7 +280,7 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/kot-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/kot-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Fast Reception Desk</h4>
@@ -317,7 +290,7 @@
                                     </div>
                                     <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/kot-2.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/kot-2.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Precise Tariff Calculations</h4>
@@ -327,10 +300,10 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 order-1">
+                            <div class="col-xl-6 order-2 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - add staff.png" width="600" alt="Reception Workstation">
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - add staff.png" width="600" alt="Reception Workstation">
                                     </div>
                                 </div>
                             </div>
@@ -342,17 +315,17 @@
     </section>
 
     <!-- Section 4 - Housekeeping & Maintenance -->
-    <section class="wcu-section pb-lg-5 ">
+    <section id="operations" class="wcu-section pb-lg-5 ">
         <div class="wcu-container-wrapper style2">
             <div class="container">
                 <div class="wcu-wrapper style2  section-padding fix bg-white">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-2">
+                            <div class="col-xl-6 order-1 order-xl-2">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Room Status Sync <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Room Status Sync <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Housekeeping & Maintenance</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Keep your rooms guest-ready. Housekeeping
@@ -361,17 +334,17 @@
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/order-1.png" alt="icon">Auto-alert housekeeping teams of
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/order-1.png" alt="icon">Auto-alert housekeeping teams of
                                             check-outs to trigger priority room cleanings.</li>
-                                        <li><img src="assets/images/icon/order-1.png" alt="icon">Set maintenance blocks for AC,
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/order-1.png" alt="icon">Set maintenance blocks for AC,
                                             plumbing, or electrical repairs with assigned work orders.</li>
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-xl-6">
+                            <div class="col-xl-6 order-2 order-xl-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - add staff.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - add staff.png" width="600"
                                             alt="Housekeeping and Staff Operations">
                                     </div>
                                 </div>
@@ -384,17 +357,17 @@
     </section>
 
     <!-- Section 5 - Billing, Payments & Refunds -->
-    <section class="wcu-section">
+    <section id="billing" class="wcu-section">
         <div class="wcu-container-wrapper style2">
             <div class="container">
                 <div class="wcu-wrapper style2  section-padding fix">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 col-xl-6 order-2">
+                            <div class="col-xl-6 order-1 order-xl-1">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Accurate Invoicing <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Accurate Invoicing <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Billing, GST & Refund Processing</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Simplify payment reconciliations. TheBox
@@ -404,7 +377,7 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/inv-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/inv-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Corporate Folio & Billing</h4>
@@ -414,7 +387,7 @@
                                     </div>
                                     <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/inv-2.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/inv-2.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Secure Refund Flows</h4>
@@ -424,10 +397,10 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 order-1 order-xl-2">
+                            <div class="col-xl-6 order-2 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - financial report (statistics).png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - financial report (statistics).png" width="600"
                                             alt="Billing & Invoicing Panel">
                                     </div>
                                 </div>
@@ -446,11 +419,11 @@
                 <div class="wcu-wrapper style2  section-padding fix bg-white">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-xl-2 order-1">
+                            <div class="col-xl-6 order-1 order-xl-2">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Security & HR Sync <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Security & HR Sync <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Biometric Attendance & Security</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Ensure high security and accurate staff
@@ -459,17 +432,17 @@
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li><img src="assets/images/icon/menu.png" alt="icon"> Secure biometric check-in/out
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/menu.png" alt="icon"> Secure biometric check-in/out
                                             and shift punches to eliminate buddy punching.</li>
-                                        <li><img src="assets/images/icon/menu.png" alt="icon"> Restrict access to facial encodings
+                                        <li><img loading="lazy" decoding="async" src="assets/images/icon/menu.png" alt="icon"> Restrict access to facial encodings
                                             database and administrative controls with strict permission checking.</li>
                                     </ul>
                                 </div>
                             </div>
-                            <div class="col-xl-6">
+                            <div class="col-xl-6 order-2 order-xl-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - manager attendace.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - manager attendace.png" width="600"
                                             alt="Biometric Attendance Monitor">
                                     </div>
                                 </div>
@@ -488,11 +461,11 @@
                 <div class="wcu-wrapper style2  section-padding fix">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 col-xl-6 order-2">
+                            <div class="col-xl-6 order-1 order-xl-1">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Daily Closings <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Daily Closings <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Night Audits & Daily Reconciliation</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Execute night audits at the end of each day
@@ -502,7 +475,7 @@
                                     </div>
                                     <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/inv-1.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/inv-1.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Occupied Logs Audit</h4>
@@ -512,7 +485,7 @@
                                     </div>
                                     <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
                                         <div class="icon">
-                                            <img src="assets/images/icon/inv-2.png" alt="icon">
+                                            <img loading="lazy" decoding="async" src="assets/images/icon/inv-2.png" alt="icon">
                                         </div>
                                         <div class="content">
                                             <h4>Financial Balance Ledgers</h4>
@@ -522,10 +495,10 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 order-1 order-xl-2">
+                            <div class="col-xl-6 order-2 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - overview (statistics)1.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - overview (statistics)1.png" width="600"
                                             alt="Night Audit Worksheets">
                                     </div>
                                 </div>
@@ -538,7 +511,7 @@
     </section>
 
     <!-- Cta / Analytics Section -->
-    <section class="cta-section">
+    <section id="team" class="cta-section">
         <div class="section-title text-center  mx-auto">
             <h2 class="title wow fadeInUp" data-wow-delay=".4s"
                 style="visibility: visible; animation-delay: 0.4s; animation-name: fadeInUp;">PMS reports to improve
@@ -547,20 +520,20 @@
         <div class="cta-container-wrapper style1">
             <div class="container">
                 <div class="cta-wrapper style1  section-padding fix">
-                    <div class="shape1 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_1.png" alt="shape"></div>
-                    <div class="shape2 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_2.png" alt="shape"></div>
-                    <div class="shape3 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_3.png" alt="shape"></div>
-                    <div class="shape4 d-none d-xxl-block"><img src="assets/images/shape/ctaShape1_4.png" alt="shape"></div>
+                    <div class="shape1 d-none d-xxl-block"><img loading="lazy" decoding="async" src="assets/images/shape/ctaShape1_1.png" alt="shape"></div>
+                    <div class="shape2 d-none d-xxl-block"><img loading="lazy" decoding="async" src="assets/images/shape/ctaShape1_2.png" alt="shape"></div>
+                    <div class="shape3 d-none d-xxl-block"><img loading="lazy" decoding="async" src="assets/images/shape/ctaShape1_3.png" alt="shape"></div>
+                    <div class="shape4 d-none d-xxl-block"><img loading="lazy" decoding="async" src="assets/images/shape/ctaShape1_4.png" alt="shape"></div>
                     <div class="container">
                         <div class="row gy-5">
                             <div class="col-xl-6 order-2 order-xl-1">
                                 <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
-                                    <img src="assets/images/admin/admin - staff details.png" alt="thumb" class="w-100">
+                                    <img loading="lazy" decoding="async" src="assets/images/admin/admin - staff details.png" alt="thumb" class="w-100">
                                 </div>
                                 <div class="cta-content">
                                     <div class="section-title mt-4">
                                         <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
-                                            Staff <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Staff <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Staff & Operations</h2>
                                         <p class="section-desc text-white mxw-651 wow fadeInUp" data-wow-delay=".6s">
@@ -570,23 +543,23 @@
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li class="text-white"><img src="assets/images/icon/staff.png" alt="icon">
+                                        <li class="text-white"><img loading="lazy" decoding="async" src="assets/images/icon/staff.png" alt="icon">
                                             Coordinate shifts and task sheets for housekeeping and front desk staff.</li>
-                                        <li class="text-white"><img src="assets/images/icon/staff.png" alt="icon">
+                                        <li class="text-white"><img loading="lazy" decoding="async" src="assets/images/icon/staff.png" alt="icon">
                                             Regulate access permissions for staff users to protect customer records.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-xl-6 order-1 order-xl-2">
                                 <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
-                                    <img src="assets/images/admin/admin - overview (statistics).png" alt="thumb"
+                                    <img loading="lazy" decoding="async" src="assets/images/admin/admin - overview (statistics).png" alt="thumb"
                                         class="w-100 h-100">
                                 </div>
                                 <br />
                                 <div class="cta-content">
                                     <div class="section-title ">
                                         <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
-                                            Analytics <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Analytics <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Hotel Analytics</h2>
                                         <p class="section-desc text-white mxw-651 wow fadeInUp" data-wow-delay=".6s">
@@ -595,9 +568,9 @@
                                         </p>
                                     </div>
                                     <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
-                                        <li class="text-white"><img src="assets/images/icon/anay-1.png" alt="icon">
+                                        <li class="text-white"><img loading="lazy" decoding="async" src="assets/images/icon/anay-1.png" alt="icon">
                                             Track revenue streams, occupied counts, and occupancy percentages in real time.</li>
-                                        <li class="text-white"><img src="assets/images/icon/anay-1.png" alt="icon">
+                                        <li class="text-white"><img loading="lazy" decoding="async" src="assets/images/icon/anay-1.png" alt="icon">
                                             Make informed decisions based on comprehensive reservation forecast models.</li>
                                     </ul>
                                 </div>
@@ -610,17 +583,17 @@
     </section>
 
     <!-- Additional Reports List -->
-    <section class="wcu-section pb-lg-5 ">
+    <section id="reports" class="wcu-section pb-lg-5 ">
         <div class="wcu-container-wrapper style2">
             <div class="container">
                 <div class="wcu-wrapper style2  section-padding fix bg-white">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
+                            <div class="col-xl-6 order-1 order-xl-2">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Business Insights <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Business Insights <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Attendance Reports</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Review employee attendance timesheets
@@ -630,10 +603,10 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 order-1 order-xl-2">
+                            <div class="col-xl-6 order-2 order-xl-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - attendance report.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - attendance report.png" width="600"
                                             alt="Employee Attendance Reports">
                                     </div>
                                 </div>
@@ -651,19 +624,19 @@
                 <div class="wcu-wrapper style2  section-padding fix">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6">
+                            <div class="col-xl-6 order-2 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - GST management.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - GST management.png" width="600"
                                             alt="Statutory Compliance Reports">
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6">
+                            <div class="col-xl-6 order-1 order-xl-1">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Compliance Metrics <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Compliance Metrics <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">GST & Billing Reports</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Generate statutory tax reports showing
@@ -686,11 +659,11 @@
                 <div class="wcu-wrapper style2  section-padding fix bg-white">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6 order-2 order-xl-1">
+                            <div class="col-xl-6 order-1 order-xl-2">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
-                                            Opinion Metrics <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Opinion Metrics <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Guest Feedback Management</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Collect and audit guest feedback
@@ -700,10 +673,10 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 order-1 order-xl-2">
+                            <div class="col-xl-6 order-2 order-xl-1">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - feedback management.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - feedback management.png" width="600"
                                             alt="Guest Feedback Reports">
                                     </div>
                                 </div>
@@ -721,19 +694,19 @@
                 <div class="wcu-wrapper style2  section-padding fix">
                     <div class="container">
                         <div class="row gy-lg-5 gx-60 d-flex align-items-center">
-                            <div class="col-xl-6">
+                            <div class="col-xl-6 order-2 order-xl-2">
                                 <div class="wcu-thumb">
                                     <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
-                                        <img src="assets/images/admin/admin - inventory history.png" width="600"
+                                        <img loading="lazy" decoding="async" src="assets/images/admin/admin - inventory history.png" width="600"
                                             alt="Linen & Supply Inventory Reports">
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6">
+                            <div class="col-xl-6 order-1 order-xl-1">
                                 <div class="wcu-content">
                                     <div class="section-title">
                                         <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
-                                            Supply Sync <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                            Supply Sync <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                                         </div>
                                         <h2 class="title wow fadeInUp" data-wow-delay=".4s">Linen & Supply Inventories</h2>
                                         <p class="text1 wow fadeInUp" data-wow-delay=".6s">Track guest amenities, hotel consumables,
@@ -751,17 +724,17 @@
     </section>
 
     <!-- Work Process Section S T A R T -->
-    <section class="work-process-section section-padding pt-0 fix">
+    <section id="getting-started" class="work-process-section section-padding pt-0 fix">
         <div class="work-process-container-wrapper style1">
             <div class="container">
                 <div class="section-title text-center mxw-585 mx-auto">
                     <div class="subtitle">
-                        How It Works <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                        How It Works <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                     </div>
                     <h2 class="title">Simple Setup, Faster Check-ins</h2>
                 </div>
                 <div class="work-process-wrapper style1">
-                    <div class="shape"><img src="assets/images/shape/workProcessShape1_1.png" alt="shape"></div>
+                    <div class="shape"><img loading="lazy" decoding="async" src="assets/images/shape/workProcessShape1_1.png" alt="shape"></div>
                     <div class="row gy-5">
                         <div class="col-xl-4">
                             <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".2s">
@@ -798,12 +771,12 @@
         <div class="testimonial-container-wrapper style1">
             <div class="container">
                 <div class="testimonial-wrapper style1 section-padding fix">
-                    <div class="shape1"><img src="assets/images/shape/testimonialShape1_1.png" alt="shape"></div>
-                    <div class="shape2"><img src="assets/images/shape/testimonialShape1_2.png" alt="shape"></div>
+                    <div class="shape1"><img loading="lazy" decoding="async" src="assets/images/shape/testimonialShape1_1.png" alt="shape"></div>
+                    <div class="shape2"><img loading="lazy" decoding="async" src="assets/images/shape/testimonialShape1_2.png" alt="shape"></div>
                     <div class="container">
                         <div class="section-title text-center mxw-685 mx-auto">
                             <div class="subtitle">
-                                Testimonial <img src="assets/images/icon/fireIcon.svg" alt="icon">
+                                Testimonial <img loading="lazy" decoding="async" src="assets/images/icon/fireIcon.svg" alt="icon">
                             </div>
                             <h2 class="title">What Clients Say About TheBox?</h2>
                         </div>
@@ -815,7 +788,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/logo/2.png" width="80px" alt="thumb">
+                                                    <img loading="lazy" decoding="async" src="assets/images/logo/2.png" width="80px" alt="thumb">
                                                 </div>
                                                 <div class="content">
                                                     <h5>E Sala Cup Namde</h5>
@@ -823,18 +796,18 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">TheBox simplifies and organizes hotel operations. Streamlined
                                                     reservations, night audits, and billing invoices keep us efficient
                                                     every single day.
                                                 </p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -842,7 +815,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/logo/3.png" width="50px" alt="thumb">
+                                                    <img loading="lazy" decoding="async" src="assets/images/logo/3.png" width="50px" alt="thumb">
                                                 </div>
                                                 <div class="content">
                                                     <h5>Chat Magic</h5>
@@ -850,17 +823,17 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">TheBox simplifies hotel management by streamlining room bookings,
                                                     housekeeping updates, and billing reconciliations. It has improved our
                                                     staff's efficiency significantly.</p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -868,7 +841,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/testimoial/user.png" width="30px"
+                                                    <img loading="lazy" decoding="async" src="assets/images/testimoial/user.png" width="30px"
                                                         alt="thumb">
                                                 </div>
                                                 <div class="content">
@@ -877,17 +850,17 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">Since using TheBox, managing check-ins, room shifts, and
                                                     housekeeping is much easier. It keeps our front desk organized and our
                                                     hotel running smoothly every day.</p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -895,7 +868,7 @@
                                         <div class="testimonial-card style1">
                                             <div class="testimonial-header">
                                                 <div class="profile-thumb">
-                                                    <img src="assets/images/logo/4.png" width="50px" alt="thumb">
+                                                    <img loading="lazy" decoding="async" src="assets/images/logo/4.png" width="50px" alt="thumb">
                                                 </div>
                                                 <div class="content">
                                                     <h5>Soul & Spoon</h5>
@@ -903,17 +876,17 @@
                                             </div>
                                             <div class="testimonial-body">
                                                 <ul class="star-wrapper style1">
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
-                                                    <li><img src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
+                                                    <li><img loading="lazy" decoding="async" src="assets/images/icon/starIcon1_1.svg" alt="icon"></li>
                                                 </ul>
                                                 <p class="desc">We upgraded our property management to TheBox and check-in times
                                                     reduced by half. Housekeeping tracking and automated billing invoices work
                                                     great.</p>
                                             </div>
-                                            <div class="quote-icon"><img src="assets/images/icon/quoteIcon.svg"
+                                            <div class="quote-icon"><img loading="lazy" decoding="async" src="assets/images/icon/quoteIcon.svg"
                                                     alt="icon"></div>
                                         </div>
                                     </div>
@@ -928,6 +901,15 @@
     </section>
 
     <!-- Footer Section Start -->
+    <section class="rm-final-trial" id="start-trial" aria-labelledby="trial-title">
+        <div class="container"><div class="rm-final-panel">
+            <div><p class="rm-eyebrow">YOUR NEXT CHAPTER STARTS HERE</p><h2 id="trial-title">Get your hotel in sync.<br><span>Discover a more connected stay.</span></h2><p>Reservations, rooms, housekeeping, billing, and your team. One connected platform.</p></div>
+            <div class="rm-final-action"><a class="rm-button" href="contact.html">Book a hotel demo</a><p><a href="pricing.html">View plans & pricing</a></p><a href="contact.html">Have questions? Talk to us</a></div>
+        </div></div>
+    </section>
+    </main>
+    <aside class="rm-trial-dock" aria-label="Hotel demo"><div class="container"><div><strong>Your hotel, connected.</strong><span><a href="pricing.html">View plans & pricing</a></span></div><a class="rm-button" href="contact.html">Book a hotel demo</a></div></aside>
+
     <!-- Centralized Footer Area -->
   <script src="assets/js/footer.js"></script>
 
@@ -955,6 +937,7 @@
     <script src="assets/js/nice-select.min.js"></script>
     <!--<< Main.js >>-->
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/restaurant-management.js"></script>
 </body>
 
 </html>

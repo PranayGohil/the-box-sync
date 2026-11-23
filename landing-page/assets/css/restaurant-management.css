@@ -1,9 +1,9 @@
 /* Restaurant landing page: scoped to preserve the shared website theme. */
-.restaurant-page { --rm-ink: #193446; --rm-muted: #506575; --rm-blue: #087caf; color: var(--rm-muted); }
-.restaurant-page main { overflow: clip; }
-.restaurant-page main h1, .restaurant-page main h2, .restaurant-page main h3 { text-transform: none; }
-.restaurant-page main [id] { scroll-margin-top: 155px; }
-.restaurant-page a:focus-visible, .restaurant-page button:focus-visible { outline: 3px solid #087caf; outline-offset: 5px; }
+:is(.restaurant-page, .hotel-page) { --rm-ink: #193446; --rm-muted: #506575; --rm-blue: #087caf; color: var(--rm-muted); }
+:is(.restaurant-page, .hotel-page) main { overflow: clip; }
+:is(.restaurant-page, .hotel-page) main h1, :is(.restaurant-page, .hotel-page) main h2, :is(.restaurant-page, .hotel-page) main h3 { text-transform: none; }
+:is(.restaurant-page, .hotel-page) main [id] { scroll-margin-top: 155px; }
+:is(.restaurant-page, .hotel-page) a:focus-visible, :is(.restaurant-page, .hotel-page) button:focus-visible { outline: 3px solid #087caf; outline-offset: 5px; }
 .rm-hero { background: linear-gradient(115deg, #f1faff 0%, #e8f6fd 62%, #d8f3ff 100%); padding: 22px 0 62px; border-bottom: 1px solid #d5e9f3; }
 .rm-breadcrumb { display: flex; gap: 12px; font-size: .875rem; margin-bottom: 38px; color: #506575; }
 .rm-breadcrumb a { color: #37637b; }
@@ -41,27 +41,27 @@
 .rm-feature-map p { font-size: 1rem; line-height: 1.6; margin-bottom: 20px; }
 .rm-feature-map span { color: var(--rm-blue); font-size: .875rem; font-weight: 800; margin-top: auto; }
 .rm-overview-points { margin-top: 28px; }
-.restaurant-page .rm-overview-points .checklist { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.restaurant-page .rm-overview-points .checklist li { align-items: flex-start; font-size: .9375rem; line-height: 1.6; color: var(--rm-muted); margin: 0; }
+:is(.restaurant-page, .hotel-page) .rm-overview-points .checklist { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+:is(.restaurant-page, .hotel-page) .rm-overview-points .checklist li { align-items: flex-start; font-size: .9375rem; line-height: 1.6; color: var(--rm-muted); margin: 0; }
 .rm-section-nav { background: #fff; border-block: 1px solid #e0eaf0; }
 .rm-section-nav .container { display: flex; align-items: center; gap: 24px; padding-top: 18px; padding-bottom: 18px; overflow-x: auto; }
 .rm-section-nav a { white-space: nowrap; font-size: .875rem; font-weight: 700; color: #37586d; }
 .rm-section-nav a:hover { color: var(--rm-blue); text-decoration: underline; }
 .rm-section-nav .container > span { color: var(--rm-ink); font-weight: 800; white-space: nowrap; margin-right: auto; }
-.restaurant-page .wcu-section { padding: 24px 0 !important; }
-.restaurant-page .wcu-section .wcu-wrapper { padding: 48px 28px; border-radius: 24px; }
-.restaurant-page .wcu-section .section-title .title { font-size: clamp(1.75rem, 2.6vw, 2.35rem); line-height: 1.2; letter-spacing: -.025em; margin-bottom: 18px; }
-.restaurant-page .wcu-section .section-title .text1 { color: var(--rm-muted); line-height: 1.8; margin-bottom: 22px; }
-.restaurant-page .wcu-section .subtitle { background: transparent !important; color: var(--rm-blue); padding: 0; border: 0; font-size: .875rem; font-weight: 800; margin-bottom: 14px; }
-.restaurant-page .wcu-section .subtitle img { display: none; }
-.restaurant-page .wcu-section .checklist li, .restaurant-page .wcu-section .fancy-box .text { color: var(--rm-muted); line-height: 1.75; }
-.restaurant-page .wcu-section .main-thumb img { width: 100%; height: auto; border-radius: 12px; border: 1px solid #d6e5ed; box-shadow: 0 12px 32px #19344612; }
-.restaurant-page .wcu-section .row { row-gap: 28px; }
-.restaurant-page .wcu-section .checklist li { align-items: flex-start; }
-.restaurant-page .wcu-section .checklist li img { flex-shrink: 0; }
-.restaurant-page .cta-section { padding-top: 36px; }
-.restaurant-page .cta-section > .section-title { padding: 0 24px 28px; max-width: 800px; }
-.restaurant-page .work-process-section { padding: 64px 0; }
+:is(.restaurant-page, .hotel-page) .wcu-section { padding: 24px 0 !important; }
+:is(.restaurant-page, .hotel-page) .wcu-section .wcu-wrapper { padding: 48px 28px; border-radius: 24px; }
+:is(.restaurant-page, .hotel-page) .wcu-section .section-title .title { font-size: clamp(1.75rem, 2.6vw, 2.35rem); line-height: 1.2; letter-spacing: -.025em; margin-bottom: 18px; }
+:is(.restaurant-page, .hotel-page) .wcu-section .section-title .text1 { color: var(--rm-muted); line-height: 1.8; margin-bottom: 22px; }
+:is(.restaurant-page, .hotel-page) .wcu-section .subtitle { background: transparent !important; color: var(--rm-blue); padding: 0; border: 0; font-size: .875rem; font-weight: 800; margin-bottom: 14px; }
+:is(.restaurant-page, .hotel-page) .wcu-section .subtitle img { display: none; }
+:is(.restaurant-page, .hotel-page) .wcu-section .checklist li, :is(.restaurant-page, .hotel-page) .wcu-section .fancy-box .text { color: var(--rm-muted); line-height: 1.75; }
+:is(.restaurant-page, .hotel-page) .wcu-section .main-thumb img { width: 100%; height: auto; border-radius: 12px; border: 1px solid #d6e5ed; box-shadow: 0 12px 32px #19344612; }
+:is(.restaurant-page, .hotel-page) .wcu-section .row { row-gap: 28px; }
+:is(.restaurant-page, .hotel-page) .wcu-section .checklist li { align-items: flex-start; }
+:is(.restaurant-page, .hotel-page) .wcu-section .checklist li img { flex-shrink: 0; }
+:is(.restaurant-page, .hotel-page) .cta-section { padding-top: 36px; }
+:is(.restaurant-page, .hotel-page) .cta-section > .section-title { padding: 0 24px 28px; max-width: 800px; }
+:is(.restaurant-page, .hotel-page) .work-process-section { padding: 64px 0; }
 .rm-final-trial { padding: 24px 0 72px; }
 .rm-final-panel { background: #e8f6fd; border: 1px solid #cce5f2; padding: 48px; border-radius: 24px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 36px; align-items: center; }
 .rm-final-panel h2 { font-size: clamp(1.75rem, 2.8vw, 2.6rem); line-height: 1.2; letter-spacing: -.025em; margin-bottom: 20px; }
@@ -76,14 +76,14 @@
 .rm-trial-dock > .container { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
 .rm-trial-dock strong { display: block; color: var(--rm-ink); font-size: 1rem; }
 .rm-trial-dock span { display: block; font-size: .875rem; }
-.restaurant-page { padding-bottom: 90px; }
-.restaurant-page .back-to-top { bottom: 105px; }
+:is(.restaurant-page, .hotel-page) { padding-bottom: 90px; }
+:is(.restaurant-page, .hotel-page) .back-to-top { bottom: 105px; }
 @media (max-width: 1199px) {
  .rm-hero-grid { gap: 28px; }
  .rm-feature-map { grid-template-columns: repeat(2, 1fr); }
- .restaurant-page .wcu-section .row > div:has(.wcu-content) { order: 1 !important; }
- .restaurant-page .wcu-section .row > div:has(.wcu-thumb) { order: 2 !important; }
- .restaurant-page .wcu-section .wcu-thumb { max-width: 800px; margin: auto; }
+ :is(.restaurant-page, .hotel-page) .wcu-section .row > div:has(.wcu-content) { order: 1 !important; }
+ :is(.restaurant-page, .hotel-page) .wcu-section .row > div:has(.wcu-thumb) { order: 2 !important; }
+ :is(.restaurant-page, .hotel-page) .wcu-section .wcu-thumb { max-width: 800px; margin: auto; }
 }
 @media (max-width: 767px) {
  .rm-hero { padding: 20px 0 36px; }
@@ -95,10 +95,10 @@
  .rm-overview { padding: 44px 0 28px; }
  .rm-feature-map { gap: 12px; }
  .rm-feature-map > a { padding: 18px; }
- .restaurant-page .rm-overview-points .checklist { grid-template-columns: 1fr; gap: 14px; }
+ :is(.restaurant-page, .hotel-page) .rm-overview-points .checklist { grid-template-columns: 1fr; gap: 14px; }
  .rm-section-nav .container > span { display: none; }
- .restaurant-page .wcu-section { padding: 10px 0 !important; }
- .restaurant-page .wcu-section .wcu-wrapper { padding: 28px 8px; border-radius: 18px; }
+ :is(.restaurant-page, .hotel-page) .wcu-section { padding: 10px 0 !important; }
+ :is(.restaurant-page, .hotel-page) .wcu-section .wcu-wrapper { padding: 28px 8px; border-radius: 18px; }
  .rm-final-panel { grid-template-columns: 1fr; padding: 28px 22px; gap: 24px; }
  .rm-final-action .rm-button { width: 100%; }
  .rm-trial-dock > .container { gap: 12px; }
@@ -108,21 +108,21 @@
 }
 @media (max-width: 380px) { .rm-feature-map { grid-template-columns: 1fr; } .rm-product-top > span:last-child { display: none; } }
 @media (prefers-reduced-motion: reduce) {
- .restaurant-page *, .restaurant-page *::before, .restaurant-page *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+ :is(.restaurant-page, .hotel-page) *, :is(.restaurant-page, .hotel-page) *::before, :is(.restaurant-page, .hotel-page) *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 /* Product details stay readable even when scroll animation scripts are unavailable. */
-.restaurant-page main .wow { visibility: visible !important; animation: none !important; }
-.restaurant-page main .img-custom-anim-right {
+:is(.restaurant-page, .hotel-page) main .wow { visibility: visible !important; animation: none !important; }
+:is(.restaurant-page, .hotel-page) main .img-custom-anim-right {
  animation: none !important;
  opacity: 1;
  transform: none;
  clip-path: none;
 }
 /* The shared header normally overlays a tall breadcrumb; this page uses a compact hero. */
-.restaurant-page .header-section-1 { position: relative; top: 0; min-height: 100px; background: #fff; }
-.restaurant-page .header-main { padding-top: 16px; padding-bottom: 16px; }
-@media (max-width: 767px) { .restaurant-page .header-section-1 { min-height: 82px; } }
-.restaurant-page .rm-hero h1 span { display: block; }
-.restaurant-page .rm-hero h1 br { display: none; }
+:is(.restaurant-page, .hotel-page) .header-section-1 { position: relative; top: 0; min-height: 100px; background: #fff; }
+:is(.restaurant-page, .hotel-page) .header-main { padding-top: 16px; padding-bottom: 16px; }
+@media (max-width: 767px) { :is(.restaurant-page, .hotel-page) .header-section-1 { min-height: 82px; } }
+:is(.restaurant-page, .hotel-page) .rm-hero h1 span { display: block; }
+:is(.restaurant-page, .hotel-page) .rm-hero h1 br { display: none; }
 /* Let visitors see the offer immediately instead of waiting behind the shared loader. */
-.restaurant-page #preloader { display: none; }
+:is(.restaurant-page, .hotel-page) #preloader { display: none; }
