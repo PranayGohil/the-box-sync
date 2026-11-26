@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="TheBox">
+    <meta name="keywords"
+        content="GST billing software India, POS billing software, multi-warehouse inventory management, double entry accounting software, GSTR-1 GSTR-3B software, B2B invoicing UPI QR, TDS accounting ERP, TheBox">
+    <meta name="description"
+        content="Complete multi-business GST Billing, POS Counter, Multi-Warehouse Inventory & Double-Entry Accounting ERP — built for Indian businesses. 6 months free, ₹0 to start.">
+    <title>TheBox - GST Billing, Inventory &amp; Accounting ERP</title>
+    <link rel="shortcut icon" href="assets/images/favicon.png">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/animate.css">
+    <link rel="stylesheet" href="assets/css/magnific-popup.css">
+    <link rel="stylesheet" href="assets/css/meanmenu.css">
+    <link rel="stylesheet" href="assets/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="assets/css/nice-select.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/restaurant-management.css">
+    <style>
+        /* ── Billing page scoped tokens ── */
+        .billing-page {
+            --rm-ink: #193446;
+            --rm-muted: #506575;
+            --rm-blue: #087caf;
+            color: var(--rm-muted);
+        }
+
+        .billing-page main {
+            overflow: clip;
+        }
+
+        .billing-page main h1,
+        .billing-page main h2,
+        .billing-page main h3 {
+            text-transform: none;
+        }
+
+        .billing-page main [id] {
+            scroll-margin-top: 155px;
+        }
+
+        .billing-page a:focus-visible,
+        .billing-page button:focus-visible {
+            outline: 3px solid #087caf;
+            outline-offset: 5px;
+        }
+
+        /* ── Header: compact, no overlap ── */
+        .billing-page .header-section-1 {
+            position: relative;
+            top: 0;
+            min-height: 100px;
+            background: #fff;
+        }
+
+        .billing-page .header-main {
+            padding-top: 16px;
+            padding-bottom: 16px;
+        }
+
+        .billing-page #preloader {
+            display: none;
+        }
+
+        /* ── Hero ── */
+        .billing-page .rm-hero h1 span {
+            display: block;
+            color: var(--rm-blue);
+        }
+
+        .billing-page .rm-hero h1 br {
+            display: none;
+        }
+
+        /* ── Feature sections ── */
+        .billing-page .wcu-section .section-title .subtitle img {
+            display: none;
+        }
+
+        .billing-page .wcu-section .checklist li,
+        .billing-page .wcu-section .fancy-box .text {
+            color: var(--rm-muted);
+            line-height: 1.75;
+        }
+
+        .billing-page .wcu-section .main-thumb img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid #d6e5ed;
+            box-shadow: 0 12px 32px #19344612;
+        }
+
+        .billing-page .wcu-section .row {
+            row-gap: 28px;
+        }
+
+        .billing-page .wcu-section .checklist li {
+            align-items: flex-start;
+        }
+
+        .billing-page .wcu-section .checklist li img {
+            flex-shrink: 0;
+        }
+
+        /* ── CTA & process ── */
+        .billing-page .cta-section {
+            padding-top: 36px;
+        }
+
+        .billing-page .cta-section>.section-title {
+            padding: 0 24px 28px;
+            max-width: 800px;
+        }
+
+        .billing-page .work-process-section {
+            padding: 64px 0;
+        }
+
+        /* ── Bottom spacing for dock ── */
+        .billing-page {
+            padding-bottom: 90px;
+        }
+
+        .billing-page .back-to-top {
+            bottom: 105px;
+        }
+
+        /* ── Suppress WOW on images ── */
+        .billing-page main .wow {
+            visibility: visible !important;
+            animation: none !important;
+        }
+
+        .billing-page main .img-custom-anim-right {
+            animation: none !important;
+            opacity: 1;
+            transform: none;
+            clip-path: none;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 1199px) {
+            .billing-page .wcu-section .row>div:has(.wcu-content) {
+                order: 1 !important;
+            }
+
+            .billing-page .wcu-section .row>div:has(.wcu-thumb) {
+                order: 2 !important;
+            }
+
+            .billing-page .wcu-section .wcu-thumb {
+                max-width: 800px;
+                margin: auto;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .billing-page .header-section-1 {
+                min-height: 82px;
+            }
+
+            .billing-page .wcu-section {
+                padding: 10px 0 !important;
+            }
+
+            .billing-page .wcu-section .wcu-wrapper {
+                padding: 28px 8px;
+                border-radius: 18px;
+            }
+
+            .rm-final-panel {
+                grid-template-columns: 1fr;
+                padding: 28px 22px;
+                gap: 24px;
+            }
+
+            .rm-final-action .rm-button {
+                width: 100%;
+            }
+
+            .rm-trial-dock>.container {
+                gap: 12px;
+            }
+
+            .rm-trial-dock .rm-button {
+                padding: 12px 14px;
+                font-size: .875rem;
+                flex: 0 0 48%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .billing-page *,
+            .billing-page *::before,
+            .billing-page *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="billing-page">
+
+    <div id="preloader" class="preloader">
+        <div class="animation-preloader">
+            <div class="spinner"></div>
+            <div class="txt-loading">
+                <span data-text-preloader="T" class="letters-loading">T</span>
+                <span data-text-preloader="H" class="letters-loading">H</span>
+                <span data-text-preloader="E" class="letters-loading">E</span>
+                <span data-text-preloader="B" class="letters-loading">B</span>
+                <span data-text-preloader="O" class="letters-loading">O</span>
+                <span data-text-preloader="X" class="letters-loading">X</span>
+            </div>
+            <p class="text-center">Loading</p>
+        </div>
+        <div class="loader">
+            <div class="row">
+                <div class="col-3 loader-section section-left">
+                    <div class="bg"></div>
+                </div>
+                <div class="col-3 loader-section section-left">
+                    <div class="bg"></div>
+                </div>
+                <div class="col-3 loader-section section-right">
+                    <div class="bg"></div>
+                </div>
+                <div class="col-3 loader-section section-right">
+                    <div class="bg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mouse-cursor cursor-outer"></div>
+    <div class="mouse-cursor cursor-inner"></div>
+
+    <button id="back-top" class="back-to-top"><i class="fa-solid fa-chevron-up"></i></button>
+
+    <script src="assets/js/header.js"></script>
+
+    <div class="search-wrap">
+        <div class="search-inner">
+            <i class="fas fa-times search-close" id="search-close"></i>
+            <div class="search-cell">
+                <form method="get">
+                    <div class="search-field-holder">
+                        <input type="search" class="main-search-input" placeholder="Search...">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <main id="billing-main">
+
+        <!-- ══════════════════════════════════════════════
+         HERO
+    ══════════════════════════════════════════════ -->
+        <section class="rm-hero" aria-labelledby="billing-title">
+            <div class="container">
+                <nav class="rm-breadcrumb" aria-label="Breadcrumb">
+                    <a href="index.html">Home</a><span aria-hidden="true">/</span><span aria-current="page">GST Billing
+                        &amp; Accounting</span>
+                </nav>
+                <div class="rm-hero-grid">
+                    <div class="rm-hero-copy">
+                        <p class="rm-eyebrow">THEBOX · GST BILLING, INVENTORY &amp; ACCOUNTING</p>
+                        <h1 id="billing-title">Billing, stock &amp; books.<br><span>One GST-ready ERP.</span></h1>
+                        <p class="rm-lead">Bill customers in seconds at the POS counter, convert quotes into tax
+                            invoices, track multi-warehouse batches, and maintain live double-entry accounting &amp;
+                            GSTR-1/3B filings — all from one multi-business workspace.</p>
+                        <div class="rm-offer">
+                            <div class="rm-offer-heading"><strong>6 months free</strong><span>₹0 to get started</span>
+                            </div>
+                            <a class="rm-button" href="https://billing.theboxsync.com/register">Book your 6-month free
+                                trial</a>
+                            <p>No card required · Multi-business &amp; multi-warehouse</p>
+                        </div>
+                        <a class="rm-explore" href="#explore-billing">Explore the platform <span
+                                aria-hidden="true">↓</span></a>
+                    </div>
+                    <div class="rm-product">
+                        <div class="rm-product-top">
+                            <span class="rm-product-mark" aria-hidden="true">T</span>
+                            <span>TheBox workspace</span>
+                            <span>GST Billing &amp; ERP dashboard</span>
+                        </div>
+                        <img src="assets/images/billing/Billing Overview.png"
+                            alt="TheBox GST Billing & Accounting ERP overview dashboard with revenue, purchases, and receivables KPIs"
+                            fetchpriority="high">
+                        <div class="rm-product-bottom"><span>POS &amp;
+                                Invoices</span><span>Multi-Warehouse</span><span>Double-Entry Books</span>
+                        </div>
+                        <p class="rm-product-caption">From barcode checkout to live balance sheet.<br><strong>Always
+                                balanced.</strong></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         FEATURE MAP OVERVIEW
+    ══════════════════════════════════════════════ -->
+        <section class="rm-overview" id="explore-billing" aria-labelledby="billing-overview-title">
+            <div class="container">
+                <div class="rm-overview-heading">
+                    <p class="rm-eyebrow">ONE PLATFORM. COMPLETE BUSINESS ACCOUNTING.</p>
+                    <h2 id="billing-overview-title">Complete GST Billing, Inventory &amp; Accounting Ecosystem</h2>
+                    <p>Built from the ground up for Indian traders, wholesalers, retailers, and service businesses —
+                        TheBox
+                        connects fast POS billing, B2B invoicing, warehouse stock control, and double-entry ledgers in
+                        real time.</p>
+                </div>
+                <div class="rm-feature-map">
+                    <a href="#pos-billing">
+                        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                        <h3>POS Fast Billing</h3>
+                        <p>Barcode scan, category grid, cash/UPI checkout &amp; 80mm print</p>
+                        <span>Explore POS billing</span>
+                    </a>
+                    <a href="#invoicing">
+                        <i class="fa-solid fa-file-invoice" aria-hidden="true"></i>
+                        <h3>Sales &amp; Purchases</h3>
+                        <p>Quotations, orders, challans, GRN, GST invoices &amp; 5 templates</p>
+                        <span>Explore invoicing</span>
+                    </a>
+                    <a href="#inventory">
+                        <i class="fa-solid fa-boxes" aria-hidden="true"></i>
+                        <h3>Warehouse Inventory</h3>
+                        <p>Physical vs reserved stock, batches, serial warranty &amp; transfers</p>
+                        <span>Explore inventory</span>
+                    </a>
+                    <a href="#accounting">
+                        <i class="fa-solid fa-calculator" aria-hidden="true"></i>
+                        <h3>Accounting &amp; GST</h3>
+                        <p>Double-entry Trial Balance, P&amp;L, GSTR-1/3B, 2B match &amp; TDS</p>
+                        <span>Explore accounting</span>
+                    </a>
+                </div>
+                <div class="rm-overview-points">
+                    <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                        <li><img src="assets/images/icon/checkmarkIcon.svg" alt="icon"> Automatic Place-of-Supply GST
+                            determination — splits CGST+SGST for intra-state and IGST for inter-state orders.</li>
+                        <li><img src="assets/images/icon/checkmarkIcon.svg" alt="icon"> Every finalized invoice,
+                            purchase
+                            bill, payment, and expense posts a balanced double-entry journal automatically.</li>
+                        <li><img src="assets/images/icon/checkmarkIcon.svg" alt="icon"> Print or export A4 GST invoices
+                            in 5 templates (including 80mm thermal slip) with dynamic UPI payment QR codes.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section nav -->
+        <nav class="rm-section-nav" aria-label="Billing features">
+            <div class="container">
+                <span>Explore TheBox</span>
+                <a href="#pos-billing">POS Billing</a>
+                <a href="#invoicing">Invoicing &amp; Purchases</a>
+                <a href="#inventory">Inventory &amp; Stock</a>
+                <a href="#accounting">Accounting &amp; GST</a>
+                <a href="#reports">Reports</a>
+                <a href="#getting-started">Getting started</a>
+            </div>
+        </nav>
+
+        <!-- ══════════════════════════════════════════════
+         1. POS FAST BILLING
+    ══════════════════════════════════════════════ -->
+        <section id="pos-billing" class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-lg-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Retail Counter <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Split-Screen POS Fast
+                                                Billing &amp; Barcode Checkout</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Keep retail queues moving
+                                                with a dedicated split-screen POS counter. Scan barcodes or search by
+                                                SKU, filter categories with live item counts, toggle tax-inclusive or
+                                                exclusive pricing, and settle bills via Cash, UPI QR, or Card in
+                                                seconds.</p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/table-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Instant Barcode &amp; SKU Lookup</h4>
+                                                <p class="text">Press Enter after scanning any product barcode or typing
+                                                    its SKU to add units straight to the cart with live stock and HSN
+                                                    mapping.</p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/about-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Auto Tax Split &amp; Cash Change</h4>
+                                                <p class="text">Displays live CGST/SGST or IGST breakup, automatic
+                                                    round-off, tendered cash change calculation, and instant thermal
+                                                    receipt printing.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp pt-2"
+                                            data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/billing/POS Fast Billing.png" width="600"
+                                                alt="Split-screen POS Fast Billing counter">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         2. SALES SUITE & 5 INVOICE TEMPLATES
+    ══════════════════════════════════════════════ -->
+        <section id="invoicing" class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-xl-2 order-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Sales Pipeline <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">GST Tax Invoicing,
+                                                Document Pipeline &amp; 5 Print Layouts</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Manage your complete B2B
+                                                and B2C sales lifecycle without re-entering line items. Convert
+                                                Quotations into Sales Orders, dispatch Delivery Challans with
+                                                configurable stock policies, and finalize GST or Without-GST Invoices
+                                                with Sales Returns &amp; Credit Notes.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Quote → Sales Order → Challan → Invoice:</strong> 1-click
+                                                document conversion preserves customer, shipping address, extra
+                                                charges, and item taxes.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon"> <strong>5
+                                                    Built-in Print &amp; PDF Templates:</strong> Switch between
+                                                Classic, Modern, Minimal, Professional A4, and 80mm Thermal Receipt
+                                                layouts anytime.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon"> <strong>UPI
+                                                    QR Code on Every Bill:</strong> Embeds a dynamic "Scan to Pay via
+                                                UPI" QR code with your bank details and multi-currency (INR / USD)
+                                                support.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/billing/GST Invoicing & Templates.png" width="600"
+                                                alt="GST Tax Invoice with UPI QR and 5 templates">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         3. PURCHASES, GRN & DEBIT NOTES
+    ══════════════════════════════════════════════ -->
+        <section class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Procurement Flow <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Purchase Orders, Goods
+                                                Receipt (GRN) &amp; Vendor Bills</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Eliminate inward
+                                                discrepancies and never miss eligible Input Tax Credit. Issue Purchase
+                                                Orders, verify ordered vs. received vs. rejected quantities on Goods
+                                                Receipt Notes (GRN), record supplier bills, and raise Debit Notes for
+                                                returns.</p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/order-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>GRN Quantity &amp; Batch Verification</h4>
+                                                <p class="text">Log manufacturing/expiry dates and rejected quantities
+                                                    upon delivery before converting GRNs into payable Purchase Bills.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/about.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Debit Notes &amp; Input GST Posting</h4>
+                                                <p class="text">Automatically credits Sundry Creditors, posts Input
+                                                    CGST/SGST/IGST ledgers, and reverses inventory on purchase returns.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/billing/Purchase & GRN.png" width="600"
+                                                alt="Purchase Orders, GRN and Supplier Bills">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         4. MULTI-WAREHOUSE INVENTORY & BATCH CONTROL
+    ══════════════════════════════════════════════ -->
+        <section id="inventory" class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-xl-2 order-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Stock Engine <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Multi-Warehouse Stock,
+                                                Batches &amp; Serial Tracking</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Know the exact physical,
+                                                reserved, and available-for-sale quantity in every godown and retail
+                                                branch. Track weighted average costs, alternating unit conversions
+                                                (e.g., Box → Pieces), product batches with expiry dates, and serial
+                                                number warranties.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Reserved vs. Available Stock:</strong> Confirmed Sales Orders
+                                                reserve stock automatically so two counters never oversell the same
+                                                units.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Inter-Warehouse Transfers &amp; Adjustments:</strong> Move stock
+                                                between hubs with in-transit status or log damage/expiry adjustments
+                                                with reason codes.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Immutable Stock Movement Trail:</strong> Every IN and OUT entry
+                                                records voucher reference, rate, and running balance stock after
+                                                transaction.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/billing/Multi-Warehouse Inventory.png" width="600"
+                                                alt="Multi-Warehouse Stock Summary and Valuation">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         5. DOUBLE-ENTRY ACCOUNTING & FINANCIAL STATEMENTS
+    ══════════════════════════════════════════════ -->
+        <section id="accounting" class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Double-Entry Core <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Automated Double-Entry
+                                                Accounting &amp; Live Statements</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Skip end-of-year manual
+                                                bookkeeping. TheBox pre-loads a complete Indian Chart of Accounts
+                                                (Assets, Liabilities, Income, Expenses, Equity) and enforces strict
+                                                Total Debit == Total Credit double-entry posting on every single
+                                                voucher.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon"> <strong>Live
+                                                    Trial Balance &amp; Day Book:</strong> Inspect real-time account
+                                                balances, debit/credit totals, and voucher narrations anytime.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Profit &amp; Loss + Balance Sheet:</strong> Auto-compiled
+                                                financial statements with 1-click Excel, CSV, and Print/PDF export for
+                                                your CA.
+                                            </li>
+                                            <li><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/checkmarkIcon.svg" alt="icon">
+                                                <strong>Audited
+                                                    Reversal Engine:</strong> Cancelling an invoice or return posts a
+                                                clean reversal journal entry instead of corrupting audit history.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/billing/Double-Entry Accounting.png" width="600"
+                                                alt="Double-Entry Financial Statements and Trial Balance">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         6. GST COMPLIANCE & TDS MANAGEMENT
+    ══════════════════════════════════════════════ -->
+        <section class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-xl-2 order-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Tax Compliance <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">GSTR-1, GSTR-3B, 2B
+                                                Reconciliation &amp; TDS 26Q</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Stay 100% GST and TDS
+                                                compliant without juggling spreadsheets. Compare Output GST against
+                                                Eligible Input ITC for GSTR-3B, export Table 12 HSN/SAC summaries for
+                                                GSTR-1, reconcile GSTR-2B portal records, and track Section 194 TDS
+                                                deductions.</p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/inv-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>GSTR-2B Auto-Reconciliation</h4>
+                                                <p class="text">Flags Matched, Mismatched, and Missing-in-Books supplier
+                                                    invoices instantly before you file returns.</p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/finan.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Built-in TDS Section Masters</h4>
+                                                <p class="text">Pre-loaded TDS rates and exemption thresholds (Form 26Q)
+                                                    with pending vs. deposited status logs.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/billing/GST & TDS Compliance.png" width="600"
+                                                alt="GSTR-3B Summary, GSTR-1 and 2B Reconciliation">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         7. CTA SPLIT — CRM & Expenses / Payments
+    ══════════════════════════════════════════════ -->
+        <section class="cta-section">
+            <div class="section-title text-center mx-auto">
+                <h2 class="title wow fadeInUp" data-wow-delay=".4s">Complete Control Over Party Ledgers, Expenses &amp;
+                    Cash Flow
+                </h2>
+            </div>
+            <div class="cta-container-wrapper style1">
+                <div class="container">
+                    <div class="cta-wrapper style1 section-padding fix">
+                        <div class="shape1 d-none d-xxl-block"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/ctaShape1_1.png" alt="shape"></div>
+                        <div class="shape2 d-none d-xxl-block"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/ctaShape1_2.png" alt="shape"></div>
+                        <div class="shape3 d-none d-xxl-block"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/ctaShape1_3.png" alt="shape"></div>
+                        <div class="shape4 d-none d-xxl-block"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/ctaShape1_4.png" alt="shape"></div>
+                        <div class="container">
+                            <div class="row gy-5">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
+                                        <img loading="lazy" decoding="async"
+                                            src="assets/images/billing/Customers & Suppliers CRM.png"
+                                            alt="Customers & Suppliers CRM with GSTIN and Credit Limits" class="w-100">
+                                    </div>
+                                    <div class="cta-content">
+                                        <div class="section-title mt-4">
+                                            <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
+                                                Party CRM <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Customers
+                                                &amp;
+                                                Suppliers CRM</h2>
+                                            <p class="section-desc text-white mxw-651 wow fadeInUp"
+                                                data-wow-delay=".6s">Maintain B2B/B2C customer and supplier profiles
+                                                with GSTIN, PAN, billing/shipping state codes, credit limits, and credit
+                                                days — plus 1-click ledger statements and bulk CSV import.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li class="text-white"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/staff.png" alt="icon"> Enforce customer
+                                                credit limits and monitor receivables aging automatically.</li>
+                                            <li class="text-white"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/staff.png" alt="icon"> Assign retail,
+                                                wholesale, or dealer Price Lists per customer tier.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-1 order-xl-2">
+                                    <div class="cta-thumb wow fadeInUp" data-wow-delay=".2s">
+                                        <img loading="lazy" decoding="async"
+                                            src="assets/images/billing/Expenses & Cash Flow.png"
+                                            alt="Expenses, Payment Allocations & TDS Vouchers" class="w-100 h-100">
+                                    </div>
+                                    <br />
+                                    <div class="cta-content">
+                                        <div class="section-title">
+                                            <div class="subtitle text-white bg2 wow fadeInUp" data-wow-delay=".2s">
+                                                Cash &amp; Expenses <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title text-white wow fadeInUp" data-wow-delay=".4s">Payments,
+                                                Allocations &amp; Expenses</h2>
+                                            <p class="section-desc text-white mxw-651 wow fadeInUp"
+                                                data-wow-delay=".6s">Settle multiple open invoices in a single Payment
+                                                In receipt, manage vendor payouts via Cash, UPI, Bank, or Cheque, and
+                                                log operating expenses with automatic TDS deductions and Chart of
+                                                Accounts posting.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li class="text-white"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/anay-1.png" alt="icon"> Multi-invoice
+                                                allocation settles partial and full balances cleanly.</li>
+                                            <li class="text-white"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/anay-1.png" alt="icon"> Live Cash Book and
+                                                Bank Account reconciliation across branches.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         8. REPORTS & ANALYTICS HUB
+    ══════════════════════════════════════════════ -->
+        <section id="reports" class="wcu-section pb-lg-5">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix bg-white">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2 order-xl-1">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle bg-info wow fadeInUp" data-wow-delay=".2s">
+                                                Reports Hub <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Statutory Registers,
+                                                Stock Valuation &amp; Aging Reports</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Export board-ready and
+                                                auditor-ready reports in Excel, CSV, or Print/PDF from one hub. Inspect
+                                                your complete Sales Register, Purchase Register, Warehouse Stock
+                                                Valuation, and Customer Receivables Aging (overdue days &amp; buckets)
+                                                instantly.</p>
+                                        </div>
+                                        <ul class="checklist style1 wow fadeInUp" data-wow-delay=".2s">
+                                            <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png"
+                                                    alt="icon"> One-click Excel (`.xlsx`), CSV &amp; PDF exports across
+                                                every accounting and tax screen.</li>
+                                            <li><img loading="lazy" decoding="async" src="assets/images/icon/sales.png"
+                                                    alt="icon"> Track overdue debtor invoices by aging bucket to speed
+                                                up
+                                                collections.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/billing/Reports & Analytics Hub.png" width="600"
+                                                alt="Reports & Analytics Hub">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Multi-Business, Team RBAC & Audit Logs -->
+        <section class="wcu-section">
+            <div class="wcu-container-wrapper style2">
+                <div class="container">
+                    <div class="wcu-wrapper style2 section-padding fix">
+                        <div class="container">
+                            <div class="row gy-lg-5 gx-60 d-flex align-items-center">
+                                <div class="col-xl-6 order-2">
+                                    <div class="wcu-content">
+                                        <div class="section-title">
+                                            <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                                                Enterprise Governance <img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/calendarIcon.svg" alt="icon">
+                                            </div>
+                                            <h2 class="title wow fadeInUp" data-wow-delay=".4s">Multi-Business Switcher,
+                                                Team RBAC &amp; Audit Logs</h2>
+                                            <p class="text1 wow fadeInUp" data-wow-delay=".6s">Manage multiple GSTINs,
+                                                branches, and companies from a single login with strict tenant
+                                                isolation. Assign role-based permissions to Accountants, Billing Staff,
+                                                and Inventory Managers — with an immutable audit log recording every
+                                                create, approve, or cancel action.</p>
+                                        </div>
+                                        <div class="fancy-box style3 mb-20 wow fadeInUp" data-wow-delay=".4s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/cust-1.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Granular Role-Based Access (RBAC)</h4>
+                                                <p class="text">Control view, create, edit, delete, export, print, and
+                                                    approve rights per module for each team member.</p>
+                                            </div>
+                                        </div>
+                                        <div class="fancy-box style3 wow fadeInUp" data-wow-delay=".6s">
+                                            <div class="icon"><img loading="lazy" decoding="async"
+                                                    src="assets/images/icon/cust-2.png" alt="icon"></div>
+                                            <div class="content">
+                                                <h4>Global Search &amp; Real-Time Alerts</h4>
+                                                <p class="text">Instantly search invoices, products, or customers from
+                                                    the topbar and get low-stock or overdue alerts.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-6 order-xl-2">
+                                    <div class="wcu-thumb">
+                                        <div class="main-thumb img-custom-anim-right wow fadeInUp" data-wow-delay=".4s">
+                                            <img loading="lazy" decoding="async"
+                                                src="assets/images/billing/Billing Overview.png" width="600"
+                                                alt="Executive Dashboard & Multi-Business Switcher">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         9. HOW IT WORKS
+    ══════════════════════════════════════════════ -->
+        <section id="getting-started" class="work-process-section section-padding fix">
+            <div class="work-process-container-wrapper style1">
+                <div class="container">
+                    <div class="section-title text-center mxw-565 mx-auto">
+                        <div class="subtitle wow fadeInUp" data-wow-delay=".2s">
+                            How It Works <img loading="lazy" decoding="async" src="assets/images/icon/calendarIcon.svg"
+                                alt="icon">
+                        </div>
+                        <h2 class="title wow fadeInUp" data-wow-delay=".4s">Launch Your GST Billing ERP in 3 Simple
+                            Steps!
+                        </h2>
+                    </div>
+                    <div class="work-process-wrapper style1">
+                        <div class="shape"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/workProcessShape1_1.png" alt="shape"></div>
+                        <div class="row">
+                            <div class="col-xl-4">
+                                <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".2s">
+                                    <div class="step">STEP - 01</div>
+                                    <div class="title">Set Up Your Business</div>
+                                    <div class="text">Add your GSTIN, bank &amp; UPI details, logo, branches, and
+                                        warehouses — Chart of Accounts and invoice series initialize automatically.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="work-process-box style1 child2 wow fadeInUp" data-wow-delay=".4s">
+                                    <div class="step">STEP - 02</div>
+                                    <div class="title">Import Catalog &amp; Parties</div>
+                                    <div class="text">Upload products (HSN, barcodes, tax slabs, opening stock) and
+                                        customers/suppliers via Excel/CSV or create them in seconds.</div>
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="work-process-box style1 wow fadeInUp" data-wow-delay=".6s">
+                                    <div class="step">STEP - 03</div>
+                                    <div class="title">Bill, Track &amp; File GST</div>
+                                    <div class="text">Start POS &amp; B2B billing immediately — stock, double-entry
+                                        ledgers, P&amp;L, and GSTR-1/3B reports stay synced automatically.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         10. TESTIMONIALS
+    ══════════════════════════════════════════════ -->
+        <section class="testimonial-section mb-5">
+            <div class="testimonial-container-wrapper style1">
+                <div class="container">
+                    <div class="testimonial-wrapper style1 section-padding fix">
+                        <div class="shape1"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/testimonialShape1_1.png" alt="shape"></div>
+                        <div class="shape2"><img loading="lazy" decoding="async"
+                                src="assets/images/shape/testimonialShape1_2.png" alt="shape"></div>
+                        <div class="container">
+                            <div class="section-title text-center mxw-685 mx-auto">
+                                <div class="subtitle">Testimonials <img loading="lazy" decoding="async"
+                                        src="assets/images/icon/calendarIcon.svg" alt="icon"></div>
+                                <h2 class="title">What Businesses Say About TheBox Billing ERP?</h2>
+                            </div>
+                            <div class="slider-area testimonialSliderOne">
+                                <div class="swiper gt-slider" id="testimonialSliderOne"
+                                    data-slider-options='{"loop": true,"breakpoints":{"0":{"slidesPerView":1},"576":{"slidesPerView":1,"centeredSlides":true},"768":{"slidesPerView":2},"992":{"slidesPerView":2},"1200":{"slidesPerView":3}}}'>
+                                    <div class="swiper-wrapper">
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb"><img loading="lazy" decoding="async"
+                                                            src="assets/images/logo/2.png" width="80px" alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>Shree Ganesh Traders</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">Converting quotations into sales orders and tax
+                                                        invoices takes one click now. Our CA loves that the Trial
+                                                        Balance
+                                                        and GSTR-1 HSN summary are always ready without manual entry.
+                                                    </p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb"><img loading="lazy" decoding="async"
+                                                            src="assets/images/logo/3.png" width="50px" alt="thumb">
+                                                    </div>
+                                                    <div class="content">
+                                                        <h5>Metro Electronics Hub</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">The POS fast billing screen with barcode scanning
+                                                        and instant UPI QR thermal receipts doubled our counter checkout
+                                                        speed. Multi-warehouse stock tracking also stopped stockouts.
+                                                    </p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                        <div class="swiper-slide">
+                                            <div class="testimonial-card style1">
+                                                <div class="testimonial-header">
+                                                    <div class="profile-thumb"><img loading="lazy" decoding="async"
+                                                            src="assets/images/testimoial/user.png" width="30px"
+                                                            alt="thumb"></div>
+                                                    <div class="content">
+                                                        <h5>Rajeshwari Distributors</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="testimonial-body">
+                                                    <ul class="star-wrapper style1">
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                        <li><img loading="lazy" decoding="async"
+                                                                src="assets/images/icon/starIcon1_1.svg" alt="star">
+                                                        </li>
+                                                    </ul>
+                                                    <p class="desc">Managing two companies and three warehouses from a
+                                                        single switcher saves us hours every week. GSTR-2B
+                                                        reconciliation
+                                                        immediately catches missing vendor bills before filing.</p>
+                                                </div>
+                                                <div class="quote-icon"><img loading="lazy" decoding="async"
+                                                        src="assets/images/icon/quoteIcon.svg" alt="icon"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="slider-pagination"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════
+         11. FINAL TRIAL PANEL
+    ══════════════════════════════════════════════ -->
+        <section class="rm-final-trial" id="start-trial" aria-labelledby="billing-trial-title">
+            <div class="container">
+                <div class="rm-final-panel">
+                    <div>
+                        <p class="rm-eyebrow">YOUR BILLING &amp; ACCOUNTING TRANSFORMATION STARTS HERE</p>
+                        <h2 id="billing-trial-title">Get your GST, stock &amp; books in sync.<br><span>Try TheBox
+                                Billing free for 6 months.</span></h2>
+                        <p>POS billing · GST invoices · Multi-warehouse inventory · Double-entry books · GSTR-1/3B · TDS
+                            &amp; CRM. One unified platform.</p>
+                    </div>
+                    <div class="rm-final-action">
+                        <a class="rm-button" href="https://billing.theboxsync.com/register">Book your 6-month free
+                            trial</a>
+                        <p>₹0 to get started · No card required · Multi-business ready</p>
+                        <a href="contact.html">Have questions? Talk to us</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Sticky Trial Dock -->
+    <aside class="rm-trial-dock" aria-label="Free trial">
+        <div class="container">
+            <div>
+                <strong>6 months free. GST billing &amp; accounting in sync.</strong>
+                <span>₹0 to get started · No card required</span>
+            </div>
+            <a class="rm-button" href="https://billing.theboxsync.com/register">Start 6-month free trial</a>
+        </div>
+    </aside>
+
+    <script src="assets/js/footer.js"></script>
+
+    <script src="assets/js/jquery-3.7.1.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/jquery.waypoints.js"></script>
+    <script src="assets/js/jquery.counterup.min.js"></script>
+    <script src="assets/js/viewport.jquery.js"></script>
+    <script src="assets/js/tilt.min.js"></script>
+    <script src="assets/js/swiper-bundle.min.js"></script>
+    <script src="assets/js/jquery.meanmenu.min.js"></script>
+    <script src="assets/js/magnific-popup.min.js"></script>
+    <script src="assets/js/wow.min.js"></script>
+    <script src="assets/js/nice-select.min.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        (() => {
+            const hero = document.querySelector('.rm-hero');
+            const finalOffer = document.querySelector('.rm-final-trial');
+            const dock = document.querySelector('.rm-trial-dock');
+            if (!hero || !finalOffer || !dock || !('IntersectionObserver' in window)) return;
+            let pastHero = false, finalVisible = false;
+            const update = () => dock.classList.toggle('is-visible', pastHero && !finalVisible);
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.target === hero) pastHero = !entry.isIntersecting && entry.boundingClientRect.bottom <= 0;
+                    if (entry.target === finalOffer) finalVisible = entry.isIntersecting;
+                });
+                update();
+            });
+            observer.observe(hero);
+            observer.observe(finalOffer);
+        })();
+    </script>
+</body>
+
+</html>

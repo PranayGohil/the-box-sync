@@ -78,6 +78,7 @@
                           <li><a href="street-food.html">Street Food Management</a></li>
                           <li><a href="hotel-management.html">Hotel Management</a></li>
                           <li><a href="payroll.html">Payroll Management</a></li>
+                          <li><a href="billing.html">GST Billing &amp; Accounting</a></li>
                           <li><a href="safarplug.html">Safarplug</a></li>
                         </ul>
                       </li>
